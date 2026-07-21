@@ -1,0 +1,22 @@
+# =============================================================================
+#  Helix Thready — BILLING request collection (HTTPie CLI)
+#  Tag: billing  |  Source of truth: ../../openapi.yaml
+#  design maturity; subscription/usage require billing:read + account_admin.
+# =============================================================================
+
+# GET /plans — list subscription plans
+http GET "$THREADY_BASE/plans" -A bearer -a "$THREADY_TOKEN"
+
+# GET /accounts/{accountId}/subscription — current subscription
+http GET "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/subscription" -A bearer -a "$THREADY_TOKEN"
+
+# PUT /accounts/{accountId}/subscription — change plan
+http PUT "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/subscription" -A bearer -a "$THREADY_TOKEN" \
+  plan_id=pro-monthly
+
+# GET /accounts/{accountId}/usage — metered usage (current period)
+http GET "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/usage" -A bearer -a "$THREADY_TOKEN"
+
+# GET /accounts/{accountId}/usage — a named period
+http GET "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/usage" -A bearer -a "$THREADY_TOKEN" \
+  period_start==2026-07-01T00:00:00Z

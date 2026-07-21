@@ -1,0 +1,43 @@
+# =============================================================================
+# Helix Thready — Prometheus scrape config (per env; PROD shown)
+# Location : /home/thready/prod/config/prometheus/prometheus.yml  (mounted read-only by thready-prometheus)
+# Source   : materialized from compose-files.md §7 + monitoring-observability.md.
+# Targets  : in-network compose DNS names (NOT host ports), so a dev Prometheus can never scrape prod.
+#            For sta/dev, change every `env: prod` label to `sta`/`dev` (and copy under that env dir).
+# =============================================================================
+global:
+  scrape_interval: 15s
+  external_labels:
+    env: prod
+
+# Backup-integrity alert rules referenced by backup-dr.md §8 (WALArchiveStalled / DailyBaseBackupMissing).
+rule_files:
+  - rules/backup-integrity.rules.yml
+
+scrape_configs:
+  - job_name: thready-api
+    static_configs:
+      - targets: ["thready-api:8443"]
+        labels: { env: prod }
+
+  - job_name: thready-herald
+    static_configs:
+      - targets: ["thready-herald:7080"]
+        labels: { env: prod }
+
+  - job_name: thready-processing
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["thready-processing:8080"]
+        labels: { env: prod }
+
+  - job_name: thready-postgres
+    static_configs:
+      - targets: ["thready-postgres:9187"]     # postgres_exporter (if enabled — [OPEN: postgres-exporter])
+        labels: { env: prod }
+
+  - job_name: pushgateway
+    honor_labels: true
+    static_configs:
+      - targets: ["thready-pushgateway:9091"]   # backup scripts push thready_backup_* timestamps here
+        labels: { env: prod }

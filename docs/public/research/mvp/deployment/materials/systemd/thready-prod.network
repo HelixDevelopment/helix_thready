@@ -1,0 +1,20 @@
+# =============================================================================
+# Helix Thready — Quadlet .network unit (rootless)
+# Install : ~/.config/containers/systemd/thready-prod.network   (as the thready user)
+# Reload  : systemctl --user daemon-reload   (quadlet generates thready-prod-network.service)
+# Source  : materialized from podman-compose.md §7 + container-topology.md §5.
+#
+# Quadlet turns this file into a generated `thready-prod-network.service`; the .container units below
+# reference it with `Network=thready-prod.network`. Rootless netavark + aardvark-dns give in-network
+# DNS by service name (thready-postgres, thready-nats, ...). Per env, install thready-{dev,sta,prod}.network.
+# =============================================================================
+[Unit]
+Description=Helix Thready prod bridge network (rootless)
+
+[Network]
+NetworkName=thready-prod-net
+Driver=bridge
+# One isolated bridge per environment — no cross-env routing even by IP (§8.2 separation).
+
+[Install]
+WantedBy=default.target

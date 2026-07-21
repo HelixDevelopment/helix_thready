@@ -1,0 +1,39 @@
+# =============================================================================
+# Helix Thready — Quadlet .container unit for the EDGE (rootless auto-start, host-wide)
+# Install : ~/.config/containers/systemd/caddy.container   (as the thready user)
+# Reload  : systemctl --user daemon-reload && systemctl --user enable --now caddy.service
+# Source  : materialized from compose.edge.yaml + environments.md §4 + tls-lets-encrypt.md §8.
+#
+# The edge is the ONLY unit bound to public 0.0.0.0:80/443. Binding <1024 rootless requires the one-time
+# root sysctl `net.ipv4.ip_unprivileged_port_start=80` (hetzner-provisioning.md §4). TLS certs come from
+# vasic-digital/lets_encrypt (Caddy ACME disabled in the Caddyfile); the renewal deploy-hook reloads this
+# container with `podman kill -s HUP caddy`, which is why ContainerName is fixed to `caddy`.
+# =============================================================================
+[Unit]
+Description=Helix Thready edge — Caddy reverse proxy (rootless quadlet, host-wide)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/library/caddy:2.8-alpine
+ContainerName=caddy
+PublishPort=0.0.0.0:80:80
+PublishPort=0.0.0.0:443:443/tcp
+PublishPort=0.0.0.0:443:443/udp
+Volume=/home/thready/edge/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+Volume=/home/thready/edge/certs:/certs:ro,Z
+Volume=/var/www/acme:/var/www/acme:ro,Z
+Volume=thready-edge-data:/data:Z
+Volume=thready-edge-config:/config:Z
+HealthCmd=wget -qO- http://127.0.0.1:2019/config/ || exit 1
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=10s
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,324 @@
+# =============================================================================
+# Helix Thready — PRODUCTION rootless Podman Compose stack
+# Location : /home/thready/prod/compose.prod.yaml   (deploy target)
+# Source   : materialized from docs/public/research/mvp/deployment/compose-files.md §4
+#            + container-topology.md §3 (component catalog) + service-discovery-ports.md §4
+# Project  : thready-prod   (namespaces every container/network/volume — cannot collide with dev/sta)
+# Runtime  : ROOTLESS podman-compose only — no Docker daemon, no sudo  [CONSTITUTION §11.4.76/161]
+# Ports    : DYNAMIC via port_prefix band 62 (prod). Each host port is ${PP_<internal>:-<default>};
+#            PP_* are exported by `port_prefix --prefix 62 --ports ... --export` (see .env.deployment.example),
+#            and the literal fallback is the VERIFIED port_prefix mapping (service-discovery-ports.md §4).
+# Secrets  : every credential is injected from ./.env (chmod 600, gitignored) — NEVER a literal.
+#
+# VERIFIED : health-probe idioms, image choices, and the port band mirror
+#            vasic-digital/containers pkg/compose/helix_project.go DefaultHelixServices()
+#            and the verified port_prefix plan.
+# ASSUMED  : localhost/thready-* image tags are built from each submodule Containerfile (not yet built
+#            for BUILD-NEW services); pgvector/pgvector:pg17 vs postgres+ext is [OPEN: pgvector-image].
+# NO-BLUFF : the five `profiles: [buildnew]` services are SCAFFOLD PLACEHOLDERS whose real images do
+#            NOT exist yet (P0/P1 gaps #3/#4/#6/#9/#20). A default `up` MUST NOT start them; they are
+#            declared only so their band slots are reserved. Do not claim they work.
+# =============================================================================
+name: thready-prod
+
+x-restart: &restart unless-stopped
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }   # bounded local logs; ClickHouse holds the durable copy
+
+services:
+
+  # ------------------------------------------------------------------ data plane
+  # (all host ports bound to 127.0.0.1 only — never 0.0.0.0; only the edge is public)
+  thready-postgres:
+    image: docker.io/pgvector/pgvector:pg17        # pg17 + pgvector (system-of-record + vector store)
+    env_file: ./.env
+    environment:
+      POSTGRES_USER: ${THREADY_PG_USER}
+      POSTGRES_PASSWORD: ${THREADY_PG_PASSWORD}
+      POSTGRES_DB: thready
+    command: >
+      postgres -c wal_level=replica -c archive_mode=on
+               -c archive_command='rclone copyto %p thready-secondary:wal/prod/%f'
+               -c archive_timeout=3600 -c max_wal_senders=3
+    ports: ["127.0.0.1:${PP_5432:-62432}:5432"]
+    volumes:
+      - thready-prod-pgdata:/var/lib/postgresql/data:Z
+      - thready-prod-pgwal:/var/lib/postgresql/wal:Z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d thready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy: { resources: { limits: { cpus: "6.0", memory: 24g }, reservations: { memory: 8g } } }
+    pids_limit: 512
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-redis:
+    image: docker.io/library/redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]   # cache only; rebuildable
+    ports: ["127.0.0.1:${PP_6379:-62379}:6379"]
+    volumes: ["thready-prod-redis:/data:Z"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "1.0", memory: 2g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-nats:
+    image: docker.io/library/nats:2.10-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]   # JetStream + monitoring endpoint on 8222
+    ports:
+      - "127.0.0.1:${PP_4222:-62222}:4222"
+      - "127.0.0.1:${PP_8222:-62223}:8222"           # 8222 mod 1000 collides with 4222 → probe → ...223
+    volumes: ["thready-prod-nats:/data:Z"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "2.0", memory: 4g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-minio:
+    image: docker.io/minio/minio:latest              # [OPEN: minio-digest] pin by digest before prod
+    command: ["server", "/data", "--console-address", ":9001"]
+    env_file: ./.env
+    environment:
+      MINIO_ROOT_USER: ${THREADY_MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${THREADY_MINIO_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:${PP_9000:-62000}:9000"
+      - "127.0.0.1:${PP_9001:-62001}:9001"
+    volumes: ["thready-prod-minio:/data:Z"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy: { resources: { limits: { cpus: "2.0", memory: 4g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:24-alpine
+    ports:
+      - "127.0.0.1:${PP_8123:-62123}:8123"
+      - "127.0.0.1:${PP_9009:-62009}:9009"
+    volumes: ["thready-prod-clickhouse:/var/lib/clickhouse:Z"]
+    ulimits: { nofile: { soft: 262144, hard: 262144 } }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "2.0", memory: 4g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  # ---------------------------------------------------- application plane (FOUNDATION)
+  thready-api:
+    image: localhost/thready-api:${THREADY_VERSION}   # digest-pinned in the release manifest
+    env_file: ./.env
+    depends_on: [thready-postgres, thready-redis, thready-nats, thready-minio]
+    ports: ["127.0.0.1:${PP_8443:-62443}:8443"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8443/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy: { resources: { limits: { cpus: "2.0", memory: 2g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-web:
+    image: localhost/thready-web:${THREADY_VERSION}
+    depends_on: [thready-api]
+    ports: ["127.0.0.1:${PP_8088:-62088}:8088"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "0.5", memory: 256m } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-herald:
+    # FOUNDATION for Telegram (gotd/td MTProto); Max path is a P0 gap [GAP: #3] — Max ingest not claimed working.
+    image: localhost/thready-herald:${THREADY_VERSION}
+    env_file: ./.env
+    depends_on: [thready-postgres, thready-nats]
+    ports: ["127.0.0.1:${PP_7080:-62080}:7080"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy: { resources: { limits: { cpus: "1.0", memory: 1g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-processing:
+    # Skill-dispatch engine is a P0 gap [GAP: #6]; BackgroundTasks queue is FOUNDATION.
+    image: localhost/thready-processing:${THREADY_VERSION}
+    env_file: ./.env
+    environment:
+      HELIX_EMBEDDING_PROVIDER: ${HELIX_EMBEDDING_PROVIDER}   # GAP #1 — MUST be "llama"
+      HELIX_LLM_BASE_URL: ${HELIX_LLM_BASE_URL}
+      THREADY_BG_WORKERS: "32"                                 # prod worker count (Q4)
+    depends_on: [thready-postgres, thready-nats, thready-redis]
+    # internal-only: no host port published (container-topology.md §3)
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy: { resources: { limits: { cpus: "4.0", memory: 8g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  # ---------------------------------------------------- 3rd-party download workers
+  boba:
+    image: localhost/boba:${BOBA_VERSION}
+    ports: ["127.0.0.1:${PP_8000:-62002}:8000"]     # 8000 → 000/001 taken (minio) → probe → ...002
+    volumes: ["thready-prod-boba:/downloads:Z"]
+    deploy: { resources: { limits: { cpus: "1.0", memory: 1g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  metube:
+    # FOUNDATION download; async completion webhook is a P0 gap [GAP: #5] — not claimed working.
+    image: localhost/metube:${METUBE_VERSION}
+    ports: ["127.0.0.1:${PP_8091:-62091}:8091"]
+    volumes: ["thready-prod-metube:/downloads:Z"]
+    deploy: { resources: { limits: { cpus: "1.0", memory: 1g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  # ---------------------------------------------------- observability (per env)
+  thready-prometheus:
+    image: docker.io/prom/prometheus:v2.50.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+    ports: ["127.0.0.1:${PP_9090:-62090}:9090"]
+    volumes:
+      - ./config/prometheus:/etc/prometheus:ro,Z
+      - thready-prod-prometheus:/prometheus:Z
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "1.0", memory: 2g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-grafana:
+    image: docker.io/grafana/grafana:10.4.0
+    env_file: ./.env
+    environment:
+      GF_SECURITY_ADMIN_USER: ${THREADY_GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${THREADY_GRAFANA_ADMIN_PASSWORD}
+    depends_on: [thready-prometheus]
+    ports: ["127.0.0.1:${PP_3000:-62003}:3000"]     # 3000 → 000/001/002 taken → probe → ...003
+    volumes: ["thready-prod-grafana:/var/lib/grafana:Z"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy: { resources: { limits: { cpus: "0.5", memory: 512m } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  thready-jaeger:
+    image: docker.io/jaegertracing/all-in-one:1.55
+    environment: { COLLECTOR_OTLP_ENABLED: "true" }
+    ports:
+      - "127.0.0.1:${PP_16686:-62686}:16686"        # UI
+      - "127.0.0.1:${PP_4317:-62317}:4317"          # OTLP gRPC (loopback; scraped in-network)
+    deploy: { resources: { limits: { cpus: "0.5", memory: 1g } } }
+    logging: *logging
+    restart: *restart
+    networks: [thready-prod-net]
+
+  # ------------------------------------------ BUILD-NEW placeholders (SCAFFOLD — kept OUT of default `up`)
+  # These carry `profiles: [buildnew]` so `podman-compose up -d` does NOT start them. Their images do
+  # not exist yet. Do NOT claim they work. Bring up ONLY once the gap is really closed:
+  #   podman-compose -p thready-prod --profile buildnew up -d thready-semsearch
+  thready-assetsvc:
+    image: localhost/thready-assetsvc:${THREADY_VERSION}
+    profiles: ["buildnew"]                           # [GAP: #9/#20]
+    env_file: ./.env
+    depends_on: [thready-minio, thready-postgres]
+    ports: ["127.0.0.1:${PP_8081:-62081}:8081"]
+    networks: [thready-prod-net]
+  thready-downloadmgr:
+    image: localhost/thready-downloadmgr:${THREADY_VERSION}
+    profiles: ["buildnew"]                           # [GAP: #4/#20]
+    env_file: ./.env
+    ports: ["127.0.0.1:${PP_8082:-62082}:8082"]
+    networks: [thready-prod-net]
+  thready-usersvc:
+    image: localhost/thready-usersvc:${THREADY_VERSION}
+    profiles: ["buildnew"]                           # [GAP: #20]
+    env_file: ./.env
+    depends_on: [thready-postgres]
+    ports: ["127.0.0.1:${PP_8083:-62083}:8083"]
+    networks: [thready-prod-net]
+  thready-eventbus-svc:
+    image: localhost/thready-eventbus-svc:${THREADY_VERSION}
+    profiles: ["buildnew"]                           # [GAP: #20]
+    env_file: ./.env
+    depends_on: [thready-nats]
+    ports: ["127.0.0.1:${PP_8084:-62084}:8084"]
+    networks: [thready-prod-net]
+  thready-semsearch:
+    image: localhost/thready-semsearch:${THREADY_VERSION}
+    profiles: ["buildnew"]                           # [GAP: #20 + #1 embedder]
+    env_file: ./.env
+    environment:
+      HELIX_EMBEDDING_PROVIDER: ${HELIX_EMBEDDING_PROVIDER}   # GAP #1 — MUST be "llama"; health probe asserts real embedder
+      HELIX_LLM_BASE_URL: ${HELIX_LLM_BASE_URL}
+    depends_on: [thready-postgres]
+    ports: ["127.0.0.1:${PP_8085:-62085}:8085"]
+    networks: [thready-prod-net]
+
+networks:
+  thready-prod-net:
+    driver: bridge          # rootless: netavark + aardvark-dns provide in-network DNS by service name
+
+volumes:
+  thready-prod-pgdata:
+  thready-prod-pgwal:
+  thready-prod-redis:
+  thready-prod-nats:
+  thready-prod-minio:
+  thready-prod-clickhouse:
+  thready-prod-prometheus:
+  thready-prod-grafana:
+  thready-prod-boba:
+  thready-prod-metube:

@@ -1,0 +1,27 @@
+# =============================================================================
+#  Helix Thready — POSTS / THREADS request collection (HTTPie CLI)
+#  Tag: posts  |  Source of truth: ../../openapi.yaml
+# =============================================================================
+
+# GET /posts — list (default page)
+http GET "$THREADY_BASE/posts" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# GET /posts — only failed posts in one channel
+http GET "$THREADY_BASE/posts" -A bearer -a "$THREADY_TOKEN" \
+  channel_id=="$THREADY_CHANNEL_ID" status==failed limit==50
+
+# GET /posts — by hashtag
+http GET "$THREADY_BASE/posts" -A bearer -a "$THREADY_TOKEN" hashtag==research limit==50
+
+# GET /posts — next page via opaque cursor
+http GET "$THREADY_BASE/posts" -A bearer -a "$THREADY_TOKEN" \
+  limit==50 cursor==b3f0opaqueCursorFromPreviousPage
+
+# GET /posts/{postId}
+http GET "$THREADY_BASE/posts/$THREADY_POST_ID" -A bearer -a "$THREADY_TOKEN"
+
+# GET /posts/{postId}/thread — full thread (root + organic replies)
+http GET "$THREADY_BASE/posts/$THREADY_POST_ID/thread" -A bearer -a "$THREADY_TOKEN"
+
+# GET /posts/{postId}/assets — linked assets (attachments + generated + renditions)
+http GET "$THREADY_BASE/posts/$THREADY_POST_ID/assets" -A bearer -a "$THREADY_TOKEN"

@@ -1,0 +1,43 @@
+# =============================================================================
+# Helix Thready — EDGE reverse proxy (host-wide, shared across dev/sta/prod)
+# Location : /home/thready/edge/compose.edge.yaml
+# Source   : materialized from compose-files.md §3 + environments.md §4 + tls-lets-encrypt.md §8.
+# Project  : thready-edge   (the ONLY stack bound to public 0.0.0.0 — ports 80/443 TCP+UDP)
+# Runtime  : ROOTLESS podman-compose. Binding 80/443 rootless requires the one-time root sysctl
+#            net.ipv4.ip_unprivileged_port_start=80 (hetzner-provisioning.md §4).
+# TLS      : Caddy's own ACME is DISABLED (auto_https off in the Caddyfile). Certificates are issued,
+#            renewed, atomically installed and rolled back by vasic-digital/lets_encrypt, which reloads
+#            this container with `podman kill -s HUP caddy`  [VERIFIED: lets_encrypt/scripts/deploy-hook.sh].
+# ROUTING  : Caddy demultiplexes the single public IP by Host header to each env's loopback API port
+#            (dev→60443, sta→61443, prod→62443). See ./Caddyfile.
+# NOTE     : `:Z` relabels volumes for SELinux under rootless Podman — omit on non-SELinux hosts.
+# =============================================================================
+name: thready-edge
+
+services:
+  caddy:
+    image: docker.io/library/caddy:2.8-alpine
+    container_name: caddy                       # STABLE name so `podman kill -s HUP caddy` targets it
+    ports:
+      - "0.0.0.0:80:80"                          # HTTP-01 ACME challenge + HTTPS redirect
+      - "0.0.0.0:443:443/tcp"                    # HTTP/1.1 + HTTP/2
+      - "0.0.0.0:443:443/udp"                    # HTTP/3 (QUIC) — needs udp/443 open (firewall.rules.md)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro,Z
+      - ./certs:/certs:ro,Z                       # certs/{dev,sta,prod}/ installed by lets_encrypt
+      - /var/www/acme:/var/www/acme:ro,Z          # shared ACME HTTP-01 webroot
+      - thready-edge-data:/data:Z
+      - thready-edge-config:/config:Z
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2019/config/"]  # Caddy admin API liveness
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    # No `networks:` block → the edge reaches each env over the loopback host-ports (62443/61443/60443),
+    # which keeps it decoupled from the three env bridge networks [DEFAULT — adjustable].
+
+volumes:
+  thready-edge-data:
+  thready-edge-config:

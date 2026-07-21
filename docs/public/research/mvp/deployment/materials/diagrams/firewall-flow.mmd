@@ -1,0 +1,9 @@
+flowchart LR
+  NET["Internet\n(clients / ACME CA)"] --> FW{"nftables inet filter\ninput policy: DROP\nallow only 22, 80, 443/tcp, 443/udp"}
+  FW -->|"tcp/22 (key-only)"| SSH["sshd\nno root, no password"]
+  FW -->|"tcp/80 (ACME HTTP-01 + redirect)"| EDGE["caddy edge\n0.0.0.0:80/443"]
+  FW -->|"tcp/443 (H1/H2)"| EDGE
+  FW -->|"udp/443 (HTTP/3 QUIC)"| EDGE
+  FW -.->|"DROP everything else\n(no answer)"| BLOCKED["postgres 5432 · redis 6379\nnats 4222/8222 · minio 9000/9001\nclickhouse · prometheus · grafana ..."]
+  EDGE -->|"Host-header routing\n127.0.0.1:6X443"| APIS["thready-api (dev/sta/prod)\nloopback-only"]
+  BLOCKED --- LOOP["all bound 127.0.0.1 in their\nport_prefix band — reachable ONLY via\ncompose network or an SSH tunnel"]

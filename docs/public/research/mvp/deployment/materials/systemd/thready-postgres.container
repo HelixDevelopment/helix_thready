@@ -1,0 +1,46 @@
+# =============================================================================
+# Helix Thready — Quadlet .container unit EXAMPLE (rootless auto-start)
+# Install : ~/.config/containers/systemd/thready-postgres.container   (as the thready user)
+# Reload  : systemctl --user daemon-reload && systemctl --user enable --now thready-postgres.service
+# Linger  : loginctl enable-linger thready   (so the unit runs while nobody is logged in)
+# Source  : materialized from podman-compose.md §7 + compose.prod.yaml (this file is the quadlet
+#           equivalent of the thready-postgres service, prod band 62).
+#
+# This is the PATTERN for turning ONE compose service into a rootless systemd --user unit. Replicate it
+# per service (thready-nats.container, thready-api.container, ...), each referencing the .network unit.
+# Quadlet is one of two supported unit strategies; the other is a single podman-compose wrapper unit
+# (see thready-prod-compose.service). [OPEN: unit-strategy] — pick one after first host bring-up.
+#
+# VERIFIED : the image, health idiom (pg_isready), volumes and port mapping mirror the verified compose.
+# ASSUMED  : POSTGRES_USER / POSTGRES_PASSWORD are injected from the chmod-600 EnvironmentFile — never literals.
+# =============================================================================
+[Unit]
+Description=Helix Thready prod — PostgreSQL 17 + pgvector (rootless quadlet)
+Wants=thready-prod-network.service
+After=thready-prod-network.service
+
+[Container]
+Image=docker.io/pgvector/pgvector:pg17
+ContainerName=thready-prod-postgres
+Network=thready-prod.network
+EnvironmentFile=/home/thready/prod/.env
+Environment=POSTGRES_DB=thready
+# WAL archiving for PITR (backup-dr.md); archive target is the rclone secondary remote.
+Exec=postgres -c wal_level=replica -c archive_mode=on -c archive_command=rclone copyto %p thready-secondary:wal/prod/%f -c archive_timeout=3600 -c max_wal_senders=3
+PublishPort=127.0.0.1:62432:5432
+Volume=thready-prod-pgdata:/var/lib/postgresql/data:Z
+Volume=thready-prod-pgwal:/var/lib/postgresql/wal:Z
+HealthCmd=pg_isready -U $POSTGRES_USER -d thready
+HealthInterval=5s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=15s
+# Resource limits map to podman flags (container-topology.md §7 prod baseline).
+PodmanArgs=--cpus 6.0 --memory 24g --pids-limit 512
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

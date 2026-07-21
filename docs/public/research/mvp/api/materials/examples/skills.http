@@ -1,0 +1,18 @@
+# =============================================================================
+#  Helix Thready — SKILLS request collection (HTTPie CLI)
+#  Tag: skills  |  Source of truth: ../../openapi.yaml
+#  foundation; registerSkill requires scope skills:write.
+# =============================================================================
+
+# GET /skills — list Skill-Graph knowledge units
+http GET "$THREADY_BASE/skills" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /skills — register a Skill + its typed Skill-Graph edges
+http POST "$THREADY_BASE/skills" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" \
+  id=video.download name="Video Download" version=1.0.0 kind=atomic \
+  edges:='[{"type":"requires","target":"asset.store"},{"type":"recommends","target":"video.convert"}]' \
+  binds_content_types:='["video","movie","series"]' sort_order:=10
+
+# GET /skills/{skillId} — a single Skill and its edges
+http GET "$THREADY_BASE/skills/$THREADY_SKILL_ID" -A bearer -a "$THREADY_TOKEN"

@@ -1,0 +1,28 @@
+flowchart LR
+  subgraph SRC["Schema source of truth"]
+    MIG[migrations/0001..0007]
+    SR[schema-relational.sql]
+    SV[schema-vector.sql]
+    PG[(live PostgreSQL 16\napplied schema)]
+  end
+  MIG --> PG
+  SR -. "hand-authored mirror" .- PG
+  SV -. "hand-authored mirror" .- PG
+
+  subgraph GEN["ERD generation"]
+    DUMP[pg_dump --schema-only\nOR information_schema introspection]
+    TOOL[ERD generator\nmermerd / SchemaSpy / postgresql_autodoc]
+    MMD[diagrams/*.mmd\nMermaid erDiagram sources]
+  end
+  PG --> DUMP --> TOOL --> MMD
+
+  subgraph PUB["Publish"]
+    ERD[erd.md\nembedded mermaid + prose]
+    DC[Docs Chain\n§11.4.65 md->HTML/PDF + PNG/SVG]
+    OUT[(erd.png / erd.svg)]
+  end
+  MMD --> ERD --> DC --> OUT
+
+  DRIFT{{structural diff\nregenerated vs committed}}
+  MMD -.-> DRIFT
+  DRIFT -. "mismatch => fail pre-tag gate" .-> MIG

@@ -1,0 +1,20 @@
+# =============================================================================
+#  Helix Thready — SEARCH request collection (HTTPie CLI)
+#  Tag: search  |  Source of truth: ../../openapi.yaml
+#  build_new; 503 fail-loud on the HashEmbedder stub — see the `embedder` field.
+# =============================================================================
+
+# POST /search — hybrid over posts + generated materials
+http POST "$THREADY_BASE/search" -A bearer -a "$THREADY_TOKEN" \
+  query="self-hosted vector database benchmarks" mode=hybrid \
+  sources:='["posts","generated"]' top_k:=20 rerank:=true
+
+# POST /search — pure semantic, filtered by category + hashtag
+http POST "$THREADY_BASE/search" -A bearer -a "$THREADY_TOKEN" \
+  query="documentary about deep sea" mode=semantic sources:='["posts"]' \
+  filters:='{"categories":["documentary"],"hashtags":["ocean"]}' top_k:=10
+
+# POST /search — keyword mode across posts, generated, and assets
+http POST "$THREADY_BASE/search" -A bearer -a "$THREADY_TOKEN" \
+  query="gitlab runner cache" mode=keyword \
+  sources:='["posts","generated","assets"]' rerank:=false

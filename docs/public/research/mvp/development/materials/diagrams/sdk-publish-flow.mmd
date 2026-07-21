@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph Proto["helix_thready_proto (schema-first SSOT)"]
+    OAPI[openapi/thready.v1.yaml]
+    PROTO[proto/helix/thready/v1/*.proto]
+  end
+  PROTO -->|buf generate| GENCORE["gen/{go,rust,dart} core"]
+  OAPI -->|openapi-generator| GENREST["gen/{ts,python,jvm,swift,cpp,csharp,ruby,php} core"]
+  GENCORE --> THIN[per-language thin layer: auth, retry, paging, events, errors]
+  GENREST --> THIN
+  ZIG[Zig: hand-written over C ABI / REST] --> THIN
+  THIN --> GATES{local git-hook gates}
+  GATES -->|buf lint/breaking, openapi-lint| G1[contract hygiene]
+  GATES -->|generate + check-no-handwritten| G2[drift guard]
+  GATES -->|tsc --noEmit, cargo build, round-trip 401| G3[build + round-trip]
+  G1 & G2 & G3 --> GREEN{all GREEN + 15 mandated test types?}
+  GREEN -->|no| BLOCK[BLOCK publish]
+  GREEN -->|yes| TAG[tag THREADY-&lt;ver&gt;]
+  TAG --> REG[publish per registry: Go proxy, npm, PyPI, Maven, crates.io, CocoaPods/SwiftPM, NuGet, RubyGems, Packagist; C++/Zig source archive]
+  TAG --> UP[push to all four upstreams: GitHub/GitLab/GitFlic/GitVerse]

@@ -1,0 +1,30 @@
+# =============================================================================
+#  Helix Thready — CHANNELS (+ messengers) request collection (HTTPie CLI)
+#  Tags: channels, messengers  |  Source of truth: ../../openapi.yaml
+#  syncChannel is build_new — backfill may 503 until Herald/Max gaps close.
+# =============================================================================
+
+# GET /messengers — supported platforms + capabilities/maturity
+http GET "$THREADY_BASE/messengers" -A bearer -a "$THREADY_TOKEN"
+
+# GET /channels — list registered channels
+http GET "$THREADY_BASE/channels" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /channels — register a channel/group (foundation)
+http POST "$THREADY_BASE/channels" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" \
+  messenger=telegram external_ref=https://t.me/+inviteHash poll_interval_seconds:=300
+
+# GET /channels/{channelId}
+http GET "$THREADY_BASE/channels/$THREADY_CHANNEL_ID" -A bearer -a "$THREADY_TOKEN"
+
+# POST /channels/{channelId}/sync — incremental poll (async 202)
+http POST "$THREADY_BASE/channels/$THREADY_CHANNEL_ID/sync" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" backfill:=false
+
+# POST /channels/{channelId}/sync — full backfill (may 503 unavailable)
+http POST "$THREADY_BASE/channels/$THREADY_CHANNEL_ID/sync" -A bearer -a "$THREADY_TOKEN" \
+  backfill:=true since=2026-01-01T00:00:00Z
+
+# DELETE /channels/{channelId} — stop reading (204)
+http DELETE "$THREADY_BASE/channels/$THREADY_CHANNEL_ID" -A bearer -a "$THREADY_TOKEN"

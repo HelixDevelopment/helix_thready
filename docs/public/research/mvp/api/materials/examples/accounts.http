@@ -1,0 +1,41 @@
+# =============================================================================
+#  Helix Thready — ACCOUNTS + USERS request collection (HTTPie CLI)
+#  Tags: accounts, users  |  Source of truth: ../../openapi.yaml
+# =============================================================================
+
+# GET /accounts — list (root=all, others=own memberships)
+http GET "$THREADY_BASE/accounts" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /accounts — create (creator becomes account_admin)
+http POST "$THREADY_BASE/accounts" -A bearer -a "$THREADY_TOKEN" \
+  name="Tenant One" slug=tenant-one
+
+# GET /accounts/{accountId}
+http GET "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID" -A bearer -a "$THREADY_TOKEN"
+
+# PATCH /accounts/{accountId} — settings (name, retention override)
+http PATCH "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID" -A bearer -a "$THREADY_TOKEN" \
+  id="$THREADY_ACCOUNT_ID" name="Tenant One (renamed)" retention_days:=365 \
+  created_at=2026-01-01T00:00:00Z
+
+# DELETE /accounts/{accountId} — root only (204)
+http DELETE "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID" -A bearer -a "$THREADY_TOKEN"
+
+# PUT /accounts/{accountId}/branding — white-label
+http PUT "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/branding" -A bearer -a "$THREADY_TOKEN" \
+  primary_color="#B6E376" slogan="Made with love ♥ by Helix Development"
+
+# GET /accounts/{accountId}/users — list users
+http GET "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/users" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /accounts/{accountId}/users — invite a user
+http POST "$THREADY_BASE/accounts/$THREADY_ACCOUNT_ID/users" -A bearer -a "$THREADY_TOKEN" \
+  email=newuser@t1.example role=user
+
+# GET /users/{userId} — self, or admin within tenant
+http GET "$THREADY_BASE/users/$THREADY_USER_ID" -A bearer -a "$THREADY_TOKEN"
+
+# PATCH /users/{userId} — update role/profile within tenant
+http PATCH "$THREADY_BASE/users/$THREADY_USER_ID" -A bearer -a "$THREADY_TOKEN" \
+  id="$THREADY_USER_ID" email=newuser@t1.example role=account_admin \
+  created_at=2026-01-01T00:00:00Z

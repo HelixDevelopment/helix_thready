@@ -1,0 +1,49 @@
+# =============================================================================
+#  Helix Thready — AUTH request collection (HTTPie CLI)
+#  Tag: auth  |  Source of truth: ../../openapi.yaml (tag: auth)
+#  Run:  source .env  then paste any block (each line is an `http ...` command).
+#  HTTPie syntax:  key=value (string JSON) · key:=raw (num/bool/array) ·
+#                  ==value (query param) · Header:value · -A bearer -a TOKEN
+# =============================================================================
+
+# POST /auth/login — standard user (TOTP optional)
+http POST "$THREADY_BASE/auth/login" \
+  email="$THREADY_EMAIL" password="$THREADY_PASSWORD"
+
+# POST /auth/login — admin tier (TOTP mandatory)
+http POST "$THREADY_BASE/auth/login" \
+  email=admin@t1.example password=correct-horse-battery totp="$THREADY_TOTP"
+
+# POST /auth/refresh — rotate the refresh token
+http POST "$THREADY_BASE/auth/refresh" refresh_token="$THREADY_REFRESH"
+
+# GET /auth/me
+http GET "$THREADY_BASE/auth/me" -A bearer -a "$THREADY_TOKEN"
+
+# POST /auth/logout — 204
+http POST "$THREADY_BASE/auth/logout" -A bearer -a "$THREADY_TOKEN"
+
+# POST /auth/mfa/totp/enroll
+http POST "$THREADY_BASE/auth/mfa/totp/enroll" -A bearer -a "$THREADY_TOKEN"
+
+# POST /auth/mfa/totp/verify — 204
+http POST "$THREADY_BASE/auth/mfa/totp/verify" -A bearer -a "$THREADY_TOKEN" \
+  code="$THREADY_TOTP"
+
+# GET /auth/oauth2/authorize — 302 to provider consent (provider=dropbox|gdrive|onedrive)
+http --follow GET "$THREADY_BASE/auth/oauth2/authorize" -A bearer -a "$THREADY_TOKEN" \
+  provider==dropbox redirect_uri==https://app.example/oauth/cb
+
+# GET /api-keys — list (masked)
+http GET "$THREADY_BASE/api-keys" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /api-keys — mint a scoped key (secret returned ONCE)
+http POST "$THREADY_BASE/api-keys" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" \
+  name=ci-automation scopes:='["posts:read","search:read"]'
+
+# DELETE /api-keys/{keyId} — 204
+http DELETE "$THREADY_BASE/api-keys/$THREADY_KEY_ID" -A bearer -a "$THREADY_TOKEN"
+
+# GET /.well-known/jwks.json — public JWKS (unauthenticated)
+http GET "$THREADY_BASE/.well-known/jwks.json"

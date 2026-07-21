@@ -1,0 +1,30 @@
+# =============================================================================
+#  Helix Thready — ASSETS request collection (HTTPie CLI)
+#  Tag: assets  |  Source of truth: ../../openapi.yaml
+#  redownload/downloads are build_new (Download Manager P0) — may 503.
+# =============================================================================
+
+# GET /assets — list (optionally filter by kind)
+http GET "$THREADY_BASE/assets" -A bearer -a "$THREADY_TOKEN" limit==50
+http GET "$THREADY_BASE/assets" -A bearer -a "$THREADY_TOKEN" kind==video limit==50
+
+# GET /assets/{assetId} — metadata (renditions, hash, sensitivity)
+http GET "$THREADY_BASE/assets/$THREADY_ASSET_ID" -A bearer -a "$THREADY_TOKEN"
+
+# GET /assets/{assetId}/content — resolve to signed content (follow the 302)
+http --follow --download GET "$THREADY_BASE/assets/$THREADY_ASSET_ID/content" \
+  -A bearer -a "$THREADY_TOKEN"
+
+# GET /assets/{assetId}/content — Range request (206 partial)
+http GET "$THREADY_BASE/assets/$THREADY_ASSET_ID/content" -A bearer -a "$THREADY_TOKEN" \
+  Range:'bytes=0-1048575'
+
+# POST /assets/{assetId}/redownload — re-fetch a broken asset (202; may 503)
+http POST "$THREADY_BASE/assets/$THREADY_ASSET_ID/redownload" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY"
+
+# GET /posts/{postId}/assets — assets linked to a post
+http GET "$THREADY_BASE/posts/$THREADY_POST_ID/assets" -A bearer -a "$THREADY_TOKEN"
+
+# GET /downloads — list download jobs
+http GET "$THREADY_BASE/downloads" -A bearer -a "$THREADY_TOKEN" limit==50

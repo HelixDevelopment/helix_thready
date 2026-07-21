@@ -80,7 +80,7 @@ tagged `[VERIFIED]` were read at module source; proposals are tagged
 ```mermaid
 flowchart TB
   subgraph Clients
-    WEB[Angular 22 Web]
+    WEB[Angular 19 Web]
     CLI[Go CLI]
     TUI[Bubble Tea TUI]
     DESK[Tauri Desktop]

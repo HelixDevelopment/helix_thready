@@ -1,0 +1,33 @@
+# =============================================================================
+#  Helix Thready — PROCESSING request collection (HTTPie CLI)
+#  Tag: processing  |  Source of truth: ../../openapi.yaml
+#  Dispatch is build_new; single-claim => lost race = 409. Callbacks are HMAC.
+# =============================================================================
+
+# POST /posts/{postId}/process — trigger processing (idempotent 202)
+http POST "$THREADY_BASE/posts/$THREADY_POST_ID/process" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" force:=false
+
+# POST /posts/{postId}/process — override auto-selected skills
+http POST "$THREADY_BASE/posts/$THREADY_POST_ID/process" -A bearer -a "$THREADY_TOKEN" \
+  force:=true skills:='["video.download","research.deep"]'
+
+# POST /posts/{postId}/reprocess — force a fresh reprocess (admin)
+http POST "$THREADY_BASE/posts/$THREADY_POST_ID/reprocess" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" force:=true
+
+# GET /posts/{postId}/processing — current state + progress
+http GET "$THREADY_BASE/posts/$THREADY_POST_ID/processing" -A bearer -a "$THREADY_TOKEN"
+
+# GET /processing/jobs — list processing jobs
+http GET "$THREADY_BASE/processing/jobs" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /processing/callbacks/{provider} — inbound 3rd-party completion (HMAC, not JWT)
+# HTTPie sends no signing helper; compute the sig in the shell, then pass it as a header.
+# providers: boba|metube|download_manager. Idempotent on job_id.
+BODY='{"job_id":"dl-9931","provider":"metube","state":"completed","progress":1.0,"result_asset_ref":"asset:5f2a","error":null}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$THREADY_HMAC_SECRET" -binary | xxd -p -c256)
+printf '%s' "$BODY" | http POST "$THREADY_BASE/processing/callbacks/metube" \
+  "X-Thready-Signature:sha256=$SIG" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" \
+  Content-Type:application/json

@@ -1,0 +1,35 @@
+# =============================================================================
+#  Helix Thready — EVENTS request collection (HTTPie CLI)
+#  Tag: events  |  Source of truth: ../../openapi.yaml + ../../event-bus-contract.md
+#  build_new. REST = catalog + sticky + sink CRUD. Live WS/SSE are in
+#  event-bus-contract.md §5 (SSE shown via --stream; WS is not HTTPie-able).
+# =============================================================================
+
+# GET /events — the event catalog (types, sticky flag, required scopes)
+http GET "$THREADY_BASE/events" -A bearer -a "$THREADY_TOKEN"
+
+# GET /events/{entityType}/{entityId}/sticky — last-value snapshot (404 if none)
+http GET "$THREADY_BASE/events/post/$THREADY_POST_ID/sticky" -A bearer -a "$THREADY_TOKEN"
+
+# GET /event-sinks — list sinks (secrets never returned)
+http GET "$THREADY_BASE/event-sinks" -A bearer -a "$THREADY_TOKEN" limit==50
+
+# POST /event-sinks — register a sink (HMAC secret returned ONCE)
+http POST "$THREADY_BASE/event-sinks" -A bearer -a "$THREADY_TOKEN" \
+  "Idempotency-Key:$THREADY_IDEMPOTENCY_KEY" \
+  url=https://ci.example.org/thready-hook \
+  event_types:='["processing.*","asset.ready"]' max_attempts:=8
+
+# GET /event-sinks/{sinkId} — fetch a sink (without its secret)
+http GET "$THREADY_BASE/event-sinks/$THREADY_SINK_ID" -A bearer -a "$THREADY_TOKEN"
+
+# PATCH /event-sinks/{sinkId} — enable/disable or change subscribed types
+http PATCH "$THREADY_BASE/event-sinks/$THREADY_SINK_ID" -A bearer -a "$THREADY_TOKEN" \
+  active:=false event_types:='["processing.completed"]' max_attempts:=10
+
+# DELETE /event-sinks/{sinkId} — delete (cascades the delivery ledger)
+http DELETE "$THREADY_BASE/event-sinks/$THREADY_SINK_ID" -A bearer -a "$THREADY_TOKEN"
+
+# SSE stream (event-bus-contract.md §5; NOT in openapi.yaml). --stream keeps it open.
+http --stream GET "$THREADY_BASE/events/stream" -A bearer -a "$THREADY_TOKEN" \
+  Accept:text/event-stream types==processing.completed,asset.ready

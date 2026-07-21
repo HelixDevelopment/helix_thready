@@ -1,0 +1,34 @@
+# =============================================================================
+# Helix Thready — podman-compose wrapper unit (rootless auto-start) — ALTERNATIVE to quadlets
+# Install : ~/.config/systemd/user/thready-prod-compose.service   (as the thready user)
+# Enable  : systemctl --user daemon-reload && systemctl --user enable --now thready-prod-compose.service
+# Linger  : loginctl enable-linger thready
+# Source  : materialized from podman-compose.md §7 (two supported unit strategies) + hetzner-provisioning.md §7.
+#
+# This is the SECOND supported strategy: instead of one quadlet .container per service, run the whole
+# environment stack via a single `podman-compose up` unit. Pick EITHER quadlets (thready-*.container)
+# OR this wrapper — not both. [OPEN: unit-strategy] is decided after first host bring-up; either
+# satisfies the linger/reboot-survival requirement. Install thready-{dev,sta,prod}-compose.service per env.
+#
+# The `up` (no -d) runs in the foreground so systemd tracks the process (Type=simple). The default `up`
+# does NOT select the `buildnew` profile, so SCAFFOLD placeholders never auto-start.
+# =============================================================================
+[Unit]
+Description=Helix Thready prod stack (rootless podman-compose)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/thready/prod
+Environment=THREADY_ENV=prod
+# Ensure image digests are present, then bring the stack up in the foreground.
+ExecStartPre=/usr/bin/podman-compose -p thready-prod -f compose.prod.yaml pull
+ExecStart=/usr/bin/podman-compose -p thready-prod -f compose.prod.yaml up
+ExecStop=/usr/bin/podman-compose -p thready-prod -f compose.prod.yaml down
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,92 @@
+# =============================================================================
+# Helix Thready — Edge Caddyfile (host-wide reverse proxy)
+# Location : /home/thready/edge/Caddyfile   (mounted read-only into the caddy container)
+# Source   : materialized from environments.md §4 + tls-lets-encrypt.md.
+#
+# Routing  : one public IP → three subdomains → each env's loopback API port.
+#              dev.thready.hxd3v.com  -> 127.0.0.1:60443   (thready-dev  band 60)
+#              sta.thready.hxd3v.com  -> 127.0.0.1:61443   (thready-sta  band 61)
+#              thready.hxd3v.com      -> 127.0.0.1:62443   (thready-prod band 62, apex)
+#            Those loopback ports are the VERIFIED port_prefix mapping of internal 8443
+#            (service-discovery-ports.md §4). Determinism lets us hard-code them here.
+#
+# TLS (DEFAULT, operator's choice §21.5): certificates are managed by vasic-digital/lets_encrypt,
+#   NOT by Caddy. `auto_https off` disables Caddy's built-in ACME; each site is handed the static cert
+#   paths that lets_encrypt atomically installs (per-subdomain cert, independent renewal). "Automatic
+#   Let's Encrypt" is therefore provided by the lets_encrypt renewal timer + risk-free deploy-hook
+#   (tls-lets-encrypt.md §6/§7), which reloads this file with `podman kill -s HUP caddy`.
+#
+#   >> An ALTERNATIVE where Caddy runs its OWN automatic Let's Encrypt is at the bottom of this file
+#      (commented). Use ONE model, not both — do not let two ACME clients fight over the same domain.
+# =============================================================================
+
+{
+	auto_https off                 # certs are managed by lets_encrypt, not Caddy (operator default)
+	admin 127.0.0.1:2019           # local admin API (healthcheck target); never exposed publicly
+	servers {
+		protocols h1 h2 h3         # HTTP/1.1 + HTTP/2 + HTTP/3 (QUIC on udp/443)
+	}
+}
+
+# ---- Development -----------------------------------------------------------
+dev.thready.hxd3v.com {
+	tls /certs/dev/fullchain.pem /certs/dev/privkey.pem
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:60443 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ---- Staging ---------------------------------------------------------------
+sta.thready.hxd3v.com {
+	tls /certs/sta/fullchain.pem /certs/sta/privkey.pem
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:61443 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ---- Production (apex) -----------------------------------------------------
+thready.hxd3v.com {
+	tls /certs/prod/fullchain.pem /certs/prod/privkey.pem
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:62443 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ---- Port 80: ACME HTTP-01 webroot + redirect everything else to HTTPS -----
+http://dev.thready.hxd3v.com, http://sta.thready.hxd3v.com, http://thready.hxd3v.com {
+	handle /.well-known/acme-challenge/* {
+		root * /var/www/acme      # shared webroot where lets_encrypt/acme.sh writes challenge tokens
+		file_server
+	}
+	handle {
+		redir https://{host}{uri} permanent
+	}
+}
+
+# =============================================================================
+# ALTERNATIVE — Caddy-native automatic Let's Encrypt (NOT the default)
+# -----------------------------------------------------------------------------
+# If you prefer Caddy to obtain + renew certificates itself (no lets_encrypt module), replace the
+# global block and the three site blocks above with the following. Caddy then handles the ACME
+# HTTP-01/TLS-ALPN challenge automatically; you no longer need lets_encrypt, the /certs mount, the
+# renewal timer, or the /var/www/acme webroot. This trades the module's validate→backup→probe→rollback
+# guarantee for Caddy's own on-demand issuance.  [DEFAULT — adjustable; operator chose lets_encrypt]
+#
+#   {
+#       email admin@hxd3v.com          # ACME account contact; enables automatic Let's Encrypt
+#       servers { protocols h1 h2 h3 }
+#   }
+#
+#   dev.thready.hxd3v.com { reverse_proxy 127.0.0.1:60443 }   # cert obtained + renewed automatically
+#   sta.thready.hxd3v.com { reverse_proxy 127.0.0.1:61443 }
+#   thready.hxd3v.com     { reverse_proxy 127.0.0.1:62443 }
+#
+# (Optional staging CA while testing, to avoid Let's Encrypt rate limits:)
+#   { acme_ca https://acme-staging-v02.api.letsencrypt.org/directory }
+# =============================================================================

@@ -1,0 +1,30 @@
+# =============================================================================
+#  Helix Thready — buf code generation (helix_proto pattern)
+#  Location : docs/public/research/mvp/api/materials/codegen/buf.gen.yaml
+#  Provenance: [VERIFIED: helix_proto/buf.gen.yaml] reused pattern (sdk-strategy.md §3).
+#  Template  : this is a runnable scaffold — the `generate` Makefile target uses it
+#              once proto/helix/thready/v1/*.proto exists ([OPEN: api-1], produced
+#              in the helix_thready_proto repo). Do NOT claim it is wired until then.
+# =============================================================================
+version: v2
+plugins:
+  # ----- Go (messages) + Connect (service stubs) -----------------------------
+  - remote: buf.build/protocolbuffers/go
+    out: gen/go
+    opt: paths=source_relative
+  - remote: buf.build/connectrpc/go
+    out: gen/go
+    opt: paths=source_relative
+
+  # ----- Rust (prost messages + tonic services) ------------------------------
+  # tonic needs the whole FileDescriptorSet, hence strategy: all.
+  - local: protoc-gen-prost
+    out: gen/rust/src
+    strategy: all
+  - local: protoc-gen-tonic
+    out: gen/rust/src
+    strategy: all
+
+  # ----- Dart proto messages (enable once a protoc-gen-dart toolchain is present)
+  # - remote: buf.build/protocolbuffers/dart
+  #   out: gen/dart
