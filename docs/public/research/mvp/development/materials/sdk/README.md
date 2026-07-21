@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/materials/sdk/README.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (development/materials)
   Related         : ./go/client.go, ./ts/client.ts, ../env.example,
                     ../../../api/sdk-strategy.md, ../../../api/sdk-examples.md,
@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (development/materials) | Initial: per-language SDK layout + publish flow accompanying the Go/TS wrapper skeletons |
+| 2 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 These are the **development materials** that accompany the two client skeletons in this
 directory ([`go/client.go`](./go/client.go), [`ts/client.ts`](./ts/client.ts)). They are the
@@ -127,8 +128,8 @@ flowchart TB
     OAPI[openapi/thready.v1.yaml]
     PROTO[proto/helix/thready/v1/*.proto]
   end
-  PROTO -->|buf generate| GENCORE[gen/{go,rust,dart} core]
-  OAPI -->|openapi-generator| GENREST[gen/{ts,python,jvm,swift,cpp,csharp,ruby,php} core]
+  PROTO -->|buf generate| GENCORE["gen/{go,rust,dart} core"]
+  OAPI -->|openapi-generator| GENREST["gen/{ts,python,jvm,swift,cpp,csharp,ruby,php} core"]
   GENCORE --> THIN[per-language thin layer: auth, retry, paging, events, errors]
   GENREST --> THIN
   ZIG[Zig: hand-written over C ABI / REST] --> THIN

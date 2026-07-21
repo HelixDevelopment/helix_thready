@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — MVP Documentation Integration Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — MVP Documentation Integration
+Report</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#summary" id="toc-summary">1. Summary</a></li>
+<li><a href="#documentation-tree" id="toc-documentation-tree">2.
+Documentation tree</a></li>
+<li><a href="#per-area-file-counts" id="toc-per-area-file-counts">3.
+Per-area file counts</a></li>
+<li><a href="#cross-references-resolved"
+id="toc-cross-references-resolved">4. Cross-references resolved</a></li>
+<li><a href="#upstreamdownstream-reconciliation-with-the-master-map"
+id="toc-upstreamdownstream-reconciliation-with-the-master-map">5.
+Upstream/Downstream reconciliation with the master map</a></li>
+<li><a href="#remaining-open-items-across-all-areas"
+id="toc-remaining-open-items-across-all-areas">6. Remaining open items
+across all areas</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">7.
+Gap-register coverage</a></li>
+<li><a href="#changes-applied-in-this-pass"
+id="toc-changes-applied-in-this-pass">8. Changes applied in this
+pass</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — MVP Documentation Integration Report
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/INTEGRATION_REPORT.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (integration orchestrator)
+  Related         : ./index.md, ./CONVENTIONS.md,
+                    ./architecture/index.md, ./api/index.md, ./database/index.md,
+                    ./deployment/index.md, ./development/index.md, ./testing/index.md,
+                    ./design/index.md, ./user-guides/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>orchestrator (integration)</td>
+<td>Initial integration report — tree, per-area file counts,
+cross-reference verification, open-item &amp; gap register roll-up</td>
+</tr>
+</tbody>
+</table>
+<p>This report records the <strong>integration pass</strong> over the
+eight MVP documentation areas under
+<code>docs/public/research/mvp/</code>. It verifies that every
+cross-area reference resolves, that each area index carries an
+Upstream/Downstream note consistent with the <a
+href="./index.md#cross-area-dependency-map">master dependency map</a>,
+and it rolls up the remaining <code>[OPEN: …]</code> items and
+gap-register coverage across all areas. All content follows <a
+href="./CONVENTIONS.md">CONVENTIONS.md</a>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-summary">Summary</a></li>
+<li><a href="#2-documentation-tree">Documentation tree</a></li>
+<li><a href="#3-per-area-file-counts">Per-area file counts</a></li>
+<li><a href="#4-cross-references-resolved">Cross-references
+resolved</a></li>
+<li><a
+href="#5-upstreamdownstream-reconciliation-with-the-master-map">Upstream/Downstream
+reconciliation with the master map</a></li>
+<li><a href="#6-remaining-open-items-across-all-areas">Remaining open
+items across all areas</a></li>
+<li><a href="#7-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#8-changes-applied-in-this-pass">Changes applied in this
+pass</a></li>
+</ol>
+<hr />
+<h2 id="summary">1. Summary</h2>
+<ul>
+<li><strong>8 areas</strong>, <strong>74 Markdown docs</strong>,
+<strong>84 Mermaid <code>.mmd</code> diagram sources</strong>, and
+<strong>4 machine artifacts</strong> (<code>api/openapi.yaml</code>,
+<code>database/schema-relational.sql</code>,
+<code>database/schema-vector.sql</code>,
+<code>database/migrations/0001_init.sql</code>) — <strong>162
+files</strong> total (incl. the root <code>index.md</code>,
+<code>CONVENTIONS.md</code>, and this report is the 163rd once
+written).</li>
+<li><strong>Cross-references: PASS.</strong> 736 file-targeted Markdown
+links checked; <strong>0 broken</strong>. All 110 cross-parent links
+resolve to real files (the lone regex hit was an inline-code
+<em>example</em> of the link syntax in <code>CONVENTIONS.md §5</code>,
+not a rendered link).</li>
+<li><strong>Status tracker updated</strong> in <a
+href="./index.md">index.md</a>: Pass 1 (draft) + Pass 2 (review) +
+Integrated marked done for all eight areas; Pass 3 (optional polish)
+left open.</li>
+<li><strong>Every area index carries an Upstream/Downstream
+note</strong> and is directionally consistent with the master dependency
+map (see <a
+href="#5-upstreamdownstream-reconciliation-with-the-master-map">§5</a>).</li>
+<li><strong>132 unique <code>[OPEN: …]</code> markers</strong> and
+<strong>82 <code>ATM-*</code> workable-item ids</strong> are tracked;
+<strong>178 <code>[GAP: …]</code> tags</strong> address the P0/P1/P2
+register — none papered over.</li>
+</ul>
+<h2 id="documentation-tree">2. Documentation tree</h2>
+<pre><code>docs/public/research/mvp/
+├── index.md                     (master index &amp; roadmap — status tracker)
+├── CONVENTIONS.md               (documentation conventions)
+├── INTEGRATION_REPORT.md        (this file)
+├── architecture/
+│   ├── index.md
+│   ├── system-overview.md · component-catalog.md · data-flow.md · event-model.md
+│   ├── concurrency-and-idempotency.md · service-discovery.md · security-model.md
+│   ├── messenger-ingestion.md · processing-pipeline.md · semantic-search.md · asset-and-download.md
+│   └── diagrams/                (15 .mmd)
+├── api/
+│   ├── index.md
+│   ├── openapi.yaml             (OpenAPI 3.1 — the REST /v1 contract)
+│   ├── rest-endpoints.md · event-bus-contract.md · authn-authz.md · error-model.md
+│   ├── versioning.md · sdk-strategy.md · contract-tests.md
+│   └── diagrams/                (7 .mmd)
+├── database/
+│   ├── index.md · erd.md · indexing.md · partitioning.md · retention-archive.md · migration-strategy.md
+│   ├── schema-relational.sql · schema-vector.sql
+│   ├── migrations/0001_init.sql
+│   └── diagrams/                (10 .mmd)
+├── deployment/
+│   ├── index.md
+│   ├── container-topology.md · podman-compose.md · environments.md · tls-lets-encrypt.md
+│   ├── deploy-and-rollback.md · backup-dr.md · service-discovery-ports.md
+│   ├── hetzner-provisioning.md · secrets-and-config.md
+│   └── diagrams/                (10 .mmd)
+├── development/
+│   ├── index.md · workable-items.md · agent-orchestration.md · submodule-map.md
+│   ├── coding-standards.md · contribution-guidelines.md · build-new-subsystems.md
+│   └── diagrams/                (9 .mmd)
+├── testing/
+│   ├── index.md · test-strategy.md · test-types.md · tdd-skeletons.md · helixqa-banks.md
+│   ├── challenges-scenarios.md · static-analysis.md · performance-and-chaos.md
+│   └── diagrams/                (8 .mmd)
+├── design/
+│   ├── index.md · design-system.md · brand-assets.md · theming.md · wireframes.md
+│   ├── ux-flows.md · component-library.md · prototypes.md
+│   └── diagrams/                (13 .mmd)
+└── user-guides/
+    ├── index.md · installation.md · configuration.md · root-admin-guide.md · account-admin-guide.md
+    ├── end-user-manual.md · cli-reference.md · tui-usage.md · web-portal-guide.md · mobile-guide.md
+    ├── sdk-quickstart.md · faq.md · troubleshooting.md
+    └── diagrams/                (12 .mmd)</code></pre>
+<h2 id="per-area-file-counts">3. Per-area file counts</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th style="text-align: center;">Markdown</th>
+<th style="text-align: center;"><code>.mmd</code> diagrams</th>
+<th style="text-align: center;">Other</th>
+<th style="text-align: center;">Area total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>architecture</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">15</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">27</td>
+</tr>
+<tr>
+<td>api</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">1 (<code>openapi.yaml</code>)</td>
+<td style="text-align: center;">16</td>
+</tr>
+<tr>
+<td>database</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">3 (2× <code>.sql</code> + 1
+migration)</td>
+<td style="text-align: center;">19</td>
+</tr>
+<tr>
+<td>deployment</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">20</td>
+</tr>
+<tr>
+<td>development</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">16</td>
+</tr>
+<tr>
+<td>testing</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">16</td>
+</tr>
+<tr>
+<td>design</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">21</td>
+</tr>
+<tr>
+<td>user-guides</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">25</td>
+</tr>
+<tr>
+<td><strong>root</strong> (<code>index.md</code>,
+<code>CONVENTIONS.md</code>)</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: center;"><strong>74</strong></td>
+<td style="text-align: center;"><strong>84</strong></td>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: center;"><strong>162</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Every embedded Mermaid diagram has a sibling <code>.mmd</code> source
+under the area’s <code>diagrams/</code> folder per <a
+href="./CONVENTIONS.md">CONVENTIONS.md §4</a>; the <code>.mmd</code>
+count (84) exceeds the doc count because several docs embed multiple
+diagrams.</p>
+<h2 id="cross-references-resolved">4. Cross-references resolved</h2>
+<p>A full link sweep parsed every Markdown link in all 74 docs and
+resolved the file portion of each target relative to its source
+file.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File-targeted Markdown links checked</td>
+<td>736</td>
+</tr>
+<tr>
+<td>Cross-parent (<code>../…</code>) links</td>
+<td>110</td>
+</tr>
+<tr>
+<td><strong>Broken links</strong></td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>Cross-area file-specific links (non-<code>index.md</code>)</td>
+<td><code>design/theming.md → ../database/erd.md</code> (×2) —
+resolves</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Every area <code>index.md</code> links to its own files
+<strong>and</strong> to the sibling area indexes it depends on (<a
+href="./CONVENTIONS.md">CONVENTIONS.md §5</a>); all eight sibling
+<code>index.md</code> targets exist and resolve.</li>
+<li>The private authoritative sources are referenced with correct
+relative depth: <code>../../../private/…</code> from the root
+<code>index.md</code>/<code>CONVENTIONS.md</code>, and
+<code>../../../../private/…</code> from the area subdirectories (both
+verified against the <code>docs/private/research/mvp/</code>
+location).</li>
+<li>The single link-checker hit
+(<code>CONVENTIONS.md → ../architecture/event-model.md</code>) is an
+inline-code <strong>example</strong> of the relative-link convention
+(wrapped in backticks, never rendered), not an actual reference. No fix
+required.</li>
+</ul>
+<h2 id="upstreamdownstream-reconciliation-with-the-master-map">5.
+Upstream/Downstream reconciliation with the master map</h2>
+<p>The <a href="./index.md#cross-area-dependency-map">master dependency
+map</a> draws these contract edges (A → B ≡ “A feeds B”, A upstream):
+<code>architecture → {api, database, deployment, testing}</code>,
+<code>database → {api, testing}</code>,
+<code>api → {user-guides, design, testing}</code>,
+<code>design → user-guides</code>, and
+<code>development → (underpins every area)</code>.</p>
+<p>All eight area indexes carry an explicit
+<strong>Upstream/Downstream</strong> note, and every one is
+directionally consistent with the map:</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 38%" />
+<col style="width: 41%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Area</th>
+<th>Upstream note lists</th>
+<th>Downstream note lists</th>
+<th style="text-align: center;">Consistent with master map</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>architecture</td>
+<td>authoritative sources, in-house engines (root of the DAG)</td>
+<td>api, database, deployment, testing</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>api</td>
+<td>architecture, database, in-house modules</td>
+<td>design, user-guides, testing</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>database</td>
+<td>architecture, research, in-house modules</td>
+<td>api, deployment, testing, development</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>deployment</td>
+<td>architecture, database, api</td>
+<td>development, testing</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>development</td>
+<td>architecture, api, database, decision-matrix + gap register</td>
+<td>testing, deployment, design, user-guides</td>
+<td style="text-align: center;">✔ (process/underpinning axis)</td>
+</tr>
+<tr>
+<td>testing</td>
+<td>architecture, api, database</td>
+<td>deployment, development</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>design</td>
+<td>architecture, api, <code>design_system</code>/OpenDesign,
+sources</td>
+<td>user-guides, testing, impl repos</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td>user-guides</td>
+<td>architecture, api, database, deployment, design</td>
+<td>testing, docs-chain, operators</td>
+<td style="text-align: center;">✔</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on <code>development</code>.</strong> The master map
+renders <code>development → (all)</code> because development is the
+cross-cutting <strong>process/underpinning</strong> area — it defines
+the workable items and standards that <em>produce</em> each section. The
+development index additionally lists architecture/api/database as
+<em>upstream</em> because it <strong>consumes their contracts</strong>
+to author those items. These are two axes (process vs. contract) of the
+same relationship, not a contradiction; the map’s own prose calls
+development the layer that “underpins everything.” Its bidirectional
+edges with testing and deployment (dev feeds the build backlog; those
+areas feed requirements back) are intentional and documented in each
+index.</p>
+<h2 id="remaining-open-items-across-all-areas">6. Remaining open items
+across all areas</h2>
+<p><strong>132 unique <code>[OPEN: …]</code> markers</strong> remain
+tracked (each tied to an <code>ATM-*</code>/plan, none papered over).
+The headline register per area index:</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 85%" />
+</colgroup>
+<thead>
+<tr>
+<th>Area</th>
+<th>Index-level open items (headline)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>architecture</td>
+<td><code>OVERVIEW-1/2</code>, <code>CAT-1/2</code>,
+<code>EVT-1/2</code>, <code>CONC-1/2</code>, <code>DISC-1/2</code>,
+<code>SEC-1/2/3</code>, <code>ING-1/2/3</code>,
+<code>PROC-1/2/3/4</code>, <code>SEM-1/2/3</code>,
+<code>ASSET-1/2/3</code>, <code>DF-1/2/3</code> (source-verification of
+FLAGGED interfaces)</td>
+</tr>
+<tr>
+<td>api</td>
+<td><code>api-1</code> (proto files produced with code),
+<code>api-2</code> (rate-limit tiers pending billing),
+<code>api-3</code> (Zig hand-written SDK)</td>
+</tr>
+<tr>
+<td>database</td>
+<td><code>ATM-DB-001/002/004/011/012/013/021/031/032/033</code> (pg
+placeholders, CONCURRENTLY, partition FK, multi-lang FTS,
+pgvector-vs-Qdrant benchmark, vector tenant isolation, GDPR cold
+erasure, MinIO signed-URL parity, sub-partitioning)</td>
+</tr>
+<tr>
+<td>deployment</td>
+<td><code>dns-provider</code>, <code>host-sizing</code>,
+<code>secondary-store</code>, <code>buildnew-images</code></td>
+</tr>
+<tr>
+<td>development</td>
+<td><code>constitution-anchor-verify</code> (<code>ATM-066</code>),
+<code>max-oneme-go-port</code> (<code>ATM-018</code>),
+<code>agentpool-contract</code> (<code>ATM-067</code>);
+<strong><code>sibling-area-index-missing</code> (<code>ATM-072</code>) —
+CLOSED this pass</strong></td>
+</tr>
+<tr>
+<td>testing</td>
+<td><code>canonical-helixqa-repo</code>, <code>helixstream-scope</code>,
+<code>docs-chain-tooling</code>, <code>mobile-device-farm</code></td>
+</tr>
+<tr>
+<td>design</td>
+<td><code>THREADY-DES-01</code> (Logo eyedrop),
+<code>THREADY-DES-02</code> (PenPot/Lottie bridge),
+<code>THREADY-DES-03</code> (heart glyph color),
+<code>THREADY-DES-14</code> (branding storage+contract reconciliation
+with database/api)</td>
+</tr>
+<tr>
+<td>user-guides</td>
+<td>per-guide open items + the <code>docs_chain</code> honest-SKIP note
+(<code>[GAP: 19]</code>); endpoint/entity names track the api/database
+areas</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-area open items worth tracking to closure at the program
+level:</p>
+<ul>
+<li><strong><code>THREADY-DES-14</code></strong> (design ↔︎ database ↔︎
+api): the <code>account_branding</code> normalized table vs the
+canonical <code>accounts.branding</code> JSONB, and the expanded
+<code>setBranding</code> contract vs <code>api/openapi.yaml</code> —
+must converge on the canonical schema/contract; design MUST NOT
+diverge.</li>
+<li><strong><code>ATM-DB-033</code></strong> (database ↔︎ deployment):
+MinIO signed-URL parity — a storage/deployment concern the schema defers
+to via an opaque <code>storage_key</code>.</li>
+<li><strong><code>docs-chain-tooling</code></strong> (testing ↔︎
+deployment ↔︎ user-guides): <code>pandoc</code>/<code>weasyprint</code>
+provisioning gates md→HTML/PDF/PNG sibling generation; the Markdown
+remains the source of truth meanwhile.</li>
+</ul>
+<h2 id="gap-register-coverage">7. Gap-register coverage</h2>
+<p><strong>178 <code>[GAP: …]</code> tags</strong> across the tree map
+the P0/P1/P2 items from
+<code>helix_thready_subsystem_gaps_and_improvements.md</code> onto
+owning documents. The P0 traps are each owned by a design plan or
+<code>[BUILD-NEW]</code> item — never claimed to “work”:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr>
+<th>P0 gap</th>
+<th>Owning area(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>#1 / 2.1</code> HelixLLM <code>HashEmbedder</code>
+non-semantic default</td>
+<td>architecture (semantic-search), api, database, deployment,
+user-guides</td>
+</tr>
+<tr>
+<td><code>#2 / 2.6</code> VisionEngine has no OCR engine</td>
+<td>architecture (processing-pipeline), user-guides</td>
+</tr>
+<tr>
+<td><code>#6 / 4.1</code> helix_skills has no execution engine</td>
+<td>architecture (processing-pipeline), api, database, user-guides</td>
+</tr>
+<tr>
+<td><code>#3 / 5.1</code> Herald Telegram in QA harness; Max empty
+stub</td>
+<td>architecture (messenger-ingestion), api, user-guides</td>
+</tr>
+<tr>
+<td><code>6.2 / #4</code> filesystem: no HTTP source / download
+semantics</td>
+<td>architecture (asset-and-download), user-guides</td>
+</tr>
+<tr>
+<td><code>6.3</code> Download Manager does not exist</td>
+<td>architecture (asset-and-download), development (build-new),
+user-guides</td>
+</tr>
+<tr>
+<td><code>6.5 / #5</code> MeTube poll-only, no outbound webhook</td>
+<td>architecture (asset-and-download), api, user-guides</td>
+</tr>
+<tr>
+<td><code>7.3</code> Security-KMP mobile secure storage is a stub</td>
+<td>architecture (security-model), design, user-guides</td>
+</tr>
+</tbody>
+</table>
+<p>P1/P2 items (JWT asymmetric keys, partitioning helpers, LLMsVerifier
+port <code>:7061</code> vs <code>:8080</code>, Boba callback contract,
+standardized callback/task module, searchable-sealed credentials,
+VisualRegression CI, docs_chain pandoc/weasyprint) are each addressed in
+the owning area’s gap table with a <code>[GAP: …]</code> tag and a
+tracked plan. The BUILD-NEW subsystem set
+(Asset/Download/User/Max/OCR/webhook/ callback/EventBus
+service/ThreadReader/Semantic-search) is declared as placeholders in
+<code>deployment/container-topology.md</code> and designed in
+<code>development/build-new-subsystems.md</code>.</p>
+<h2 id="changes-applied-in-this-pass">8. Changes applied in this
+pass</h2>
+<ol type="1">
+<li><strong><a href="./index.md">index.md</a></strong> — status tracker:
+Pass 1, Pass 2 and Integrated marked done (☑) for all eight areas; added
+a rev-2 row and a link to this report.</li>
+<li><strong><a
+href="./development/index.md">development/index.md</a></strong> — closed
+<code>[OPEN: sibling-area-index-missing]</code> / <code>ATM-072</code>:
+<code>architecture/index.md</code> and <code>database/index.md</code>
+are present and the §3 cross-links resolve; added a rev-3 row.</li>
+<li><strong><a
+href="./user-guides/index.md">user-guides/index.md</a></strong> —
+updated the §4 cross-area caveat: all upstream sibling indexes are
+committed and every link resolves; added a rev-2 row.</li>
+<li><strong>INTEGRATION_REPORT.md</strong> — this file (new).</li>
+</ol>
+<p>No broken links required fixing; no Upstream/Downstream note required
+a directional correction. The edits above reconcile the two now-stale
+“sibling index not yet committed / link may 404” notices that predated
+area integration.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

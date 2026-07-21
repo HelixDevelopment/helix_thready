@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Performance, Scaling, Stress, Chaos &amp; DDoS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Performance, Scaling, Stress, Chaos
+&amp; DDoS</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#test-topology" id="toc-test-topology">1. Test
+topology</a></li>
+<li><a href="#benchmarking-regression-baselines"
+id="toc-benchmarking-regression-baselines">2. Benchmarking (regression
+baselines)</a></li>
+<li><a href="#performance-slo-tests" id="toc-performance-slo-tests">3.
+Performance SLO tests</a></li>
+<li><a href="#scaling-tests" id="toc-scaling-tests">4. Scaling
+tests</a></li>
+<li><a href="#stress-tests" id="toc-stress-tests">5. Stress
+tests</a></li>
+<li><a href="#ddos-abuse-simulation" id="toc-ddos-abuse-simulation">6.
+DDoS &amp; abuse simulation</a></li>
+<li><a href="#chaos-dr-validation" id="toc-chaos-dr-validation">7. Chaos
+&amp; DR validation</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+<li><a href="#open-items" id="toc-open-items">9. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Performance, Scaling, Stress, Chaos & DDoS
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/performance-and-chaos.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./test-strategy.md, ./test-types.md, ./acceptance-gates.md,
+                    ../architecture/index.md, ../database/index.md, ../deployment/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (testing)</td>
+<td>Initial draft — SLO/benchmark/stress/scaling/chaos/DDoS plans + DR
+validation</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 3 — cited reusable helix_qa perf/chaos banks + verifier
+harnesses; linked G-PERF/G-BENCH/G-SCALE/G-STRESS/G-DDOS/G-CHAOS/G-DR
+gate IDs</td>
+</tr>
+</tbody>
+</table>
+<p>This document covers the six load-and-resilience test types
+(<strong>scaling, chaos, stress, performance, benchmarking,
+DDoS</strong>) against the <strong>Aggressive SLOs</strong> and
+<strong>Large / multi-tenant scale</strong> <code>[OPERATOR §0.1]</code>
+<code>[RESEARCH: final §18 Q2/Q14/Q45]</code>. All non-unit runs execute
+on the production-like <code>sta.</code> tier against the real
+system.</p>
+<p><strong>Target SLOs</strong> <code>[OPERATOR]</code>: <strong>API p95
+&lt; 150 ms · semantic search &lt; 500 ms · page &lt; 1.5 s</strong>;
+processing is async with progress events. <strong>Scale</strong>: 100+
+channels, 10k+ posts/day, 100+ users, 50 TB+ assets.
+<strong>DR</strong>: <strong>RPO ≈ 1 h, RTO ≈ 4 h</strong>.</p>
+<p>The pass/fail lines below map to the acceptance-gate IDs
+<code>G-PERF</code>, <code>G-BENCH</code>, <code>G-SCALE</code>,
+<code>G-STRESS</code>, <code>G-DDOS</code>, <code>G-CHAOS</code> and
+<code>G-DR</code> (<a
+href="./acceptance-gates.md#2-gate-register-one-row-per-type">acceptance-gates.md
+§2</a>). Thready does not start these banks from scratch: HelixQA
+already ships <strong>reusable load-and-resilience banks</strong>
+Thready parameterizes for its own services
+<code>[IN-HOUSE: helix_qa]</code> —
+<code>benchmarking-baselines.yaml</code> (benchstat baselines),
+<code>ddos-ratelimit-comprehensive.yaml</code> (rate-limiter flood), and
+the
+<code>helixllm_coder_{ddos,chaos,memory,race,concurrency,bench}.yaml</code>
+family (per-fault-class service banks), each backed by a
+<code>helixqa-verify-coder-*</code> harness (<a
+href="./helixqa-banks.md#61-behavior-proving-verifier-harnesses-helixqa-verify">helixqa-banks.md
+§6.1</a>).</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-test-topology">1. Test topology</a></li>
+<li><a href="#2-benchmarking-regression-baselines">2. Benchmarking
+(regression baselines)</a></li>
+<li><a href="#3-performance-slo-tests">3. Performance SLO tests</a></li>
+<li><a href="#4-scaling-tests">4. Scaling tests</a></li>
+<li><a href="#5-stress-tests">5. Stress tests</a></li>
+<li><a href="#6-ddos--abuse-simulation">6. DDoS &amp; abuse
+simulation</a></li>
+<li><a href="#7-chaos--dr-validation">7. Chaos &amp; DR
+validation</a></li>
+<li><a href="#8-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+<li><a href="#9-open-items">9. Open items</a></li>
+</ul>
+<h2 id="test-topology">1. Test topology</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2380.75px; background-color: white;" viewBox="0 0 2380.75 781.75537109375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Obs" data-look="classic"><rect style="" x="8" y="312.1999969482422" width="561" height="141.35530853271484"/><g class="cluster-label" transform="translate(242, 312.1999969482422)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Observability</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Chaos" data-look="classic"><rect style="" x="1364" y="8" width="1008.75" height="114.5999984741211"/><g class="cluster-label" transform="translate(1794.875, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Chaos</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> injectors</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-SUT" data-look="classic"><rect style="" x="589" y="172.5999984741211" width="1685.5" height="280.95530700683594"/><g class="cluster-label" transform="translate(1308.75, 172.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">System</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> under</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (production-like)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Load" data-look="classic"><rect style="" x="592.5" y="8" width="751.5" height="114.5999984741211"/><g class="cluster-label" transform="translate(877.75, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Load</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generators</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (sta.</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tier)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M803.825,97.6L812.188,101.767C820.55,105.933,837.275,114.267,845.638,122.6C854,130.933,854,139.267,854,147.6C854,155.933,854,164.267,862.591,172.325C871.183,180.383,888.366,188.166,896.957,192.058L905.548,195.95" id="my-svg-L_K6_API_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K6_API_0" data-points="W3sieCI6ODAzLjgyNTQ3OTI2MjEyNywieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4Ijo4NTQsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjg1NCwieSI6MTQ3LjU5OTk5ODQ3NDEyMTF9LHsieCI6ODU0LCJ5IjoxNzIuNTk5OTk4NDc0MTIxMX0seyJ4Ijo5MDkuMTkxOTcyODExNjYwMywieSI6MTk3LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M733.363,97.6L732.636,101.767C731.909,105.933,730.454,114.267,729.727,122.6C729,130.933,729,139.267,729,147.6C729,155.933,729,164.267,729,173.4C729,182.533,729,192.467,729,197.433L729,202.4" id="my-svg-L_K6_WS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K6_WS_0" data-points="W3sieCI6NzMzLjM2MzAwMTgwMzI5MzMsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6NzI5LCJ5IjoxMjIuNTk5OTk4NDc0MTIxMX0seyJ4Ijo3MjksInkiOjE0Ny41OTk5OTg0NzQxMjExfSx7IngiOjcyOSwieSI6MTcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6NzI5LCJ5IjoyMDYuMzk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M980.5,97.6L980.5,101.767C980.5,105.933,980.5,114.267,980.5,122.6C980.5,130.933,980.5,139.267,980.5,147.6C980.5,155.933,980.5,164.267,980.5,171.933C980.5,179.6,980.5,186.6,980.5,190.1L980.5,193.6" id="my-svg-L_VEG_API_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VEG_API_0" data-points="W3sieCI6OTgwLjUsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6OTgwLjUsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjk4MC41LCJ5IjoxNDcuNTk5OTk4NDc0MTIxMX0seyJ4Ijo5ODAuNSwieSI6MTcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6OTgwLjUsInkiOjE5Ny41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1205.5,97.6L1205.5,101.767C1205.5,105.933,1205.5,114.267,1205.5,122.6C1205.5,130.933,1205.5,139.267,1205.5,147.6C1205.5,155.933,1205.5,164.267,1252.757,175.271C1300.014,186.276,1394.527,199.952,1441.784,206.79L1489.041,213.628" id="my-svg-L_BENCH_PROC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BENCH_PROC_0" data-points="W3sieCI6MTIwNS41LCJ5Ijo5Ny41OTk5OTg0NzQxMjExfSx7IngiOjEyMDUuNSwieSI6MTIyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTIwNS41LCJ5IjoxNDcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMjA1LjUsInkiOjE3Mi41OTk5OTg0NzQxMjExfSx7IngiOjE0OTMsInkiOjIxNC4yMDAzNzY3MDgwOTgxM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1075.5,255.131L1095.625,260.475C1115.75,265.82,1156,276.51,1176.125,286.022C1196.25,295.533,1196.25,303.867,1286.879,318.262C1377.508,332.657,1558.767,353.113,1649.396,363.341L1740.025,373.57" id="my-svg-L_API_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_PG_0" data-points="W3sieCI6MTA3NS41LCJ5IjoyNTUuMTMwNTg4MzM3MDAyMDV9LHsieCI6MTE5Ni4yNSwieSI6Mjg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTE5Ni4yNSwieSI6MzEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTc0NCwieSI6Mzc0LjAxODI1NjYyNzkxODV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M991.633,262.2L993.069,266.367C994.505,270.533,997.378,278.867,998.814,287.2C1000.25,295.533,1000.25,303.867,1059.466,317.36C1118.683,330.853,1237.116,349.506,1296.332,358.833L1355.549,368.159" id="my-svg-L_API_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_NATS_0" data-points="W3sieCI6OTkxLjYzMzA3MTQzODQ5NTcsInkiOjI2Mi4xOTk5OTY5NDgyNDIyfSx7IngiOjEwMDAuMjUsInkiOjI4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjEwMDAuMjUsInkiOjMxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjEzNTkuNSwieSI6MzY4Ljc4MTQ5NTA5OTA4MX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1636.308,262.2L1640.799,266.367C1645.289,270.533,1654.269,278.867,1658.76,287.2C1663.25,295.533,1663.25,303.867,1676.141,315.976C1689.032,328.086,1714.813,343.972,1727.704,351.915L1740.595,359.858" id="my-svg-L_PROC_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_PG_0" data-points="W3sieCI6MTYzNi4zMDg0NjM4NjQ2NjQsInkiOjI2Mi4xOTk5OTY5NDgyNDIyfSx7IngiOjE2NjMuMjUsInkiOjI4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjE2NjMuMjUsInkiOjMxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjE3NDQsInkiOjM2MS45NTY1NTY0ODg3ODI1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1625.034,262.2L1628.07,266.367C1631.106,270.533,1637.178,278.867,1640.214,287.2C1643.25,295.533,1643.25,303.867,1626.297,314.202C1609.344,324.537,1575.438,336.873,1558.485,343.042L1541.532,349.21" id="my-svg-L_PROC_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_NATS_0" data-points="W3sieCI6MTYyNS4wMzQ0Njc0NzEyNTA1LCJ5IjoyNjIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNjQzLjI1LCJ5IjoyODcuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNjQzLjI1LCJ5IjozMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNTM3Ljc3MzEwNTQwMjY0NDQsInkiOjM1MC41Nzc2NTE5Nzc1MzkwNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1590.226,262.2L1588.772,266.367C1587.317,270.533,1584.409,278.867,1582.954,287.2C1581.5,295.533,1581.5,303.867,1585.111,312.8C1588.722,321.733,1595.944,331.266,1599.555,336.033L1603.165,340.799" id="my-svg-L_PROC_MINIO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_MINIO_0" data-points="W3sieCI6MTU5MC4yMjYwMDM2MDY1ODY2LCJ5IjoyNjIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNTgxLjUsInkiOjI4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjE1ODEuNSwieSI6MzEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTYwNS41ODA4NTI3MzA3OTcsInkiOjM0My45ODc4NzE0NTYzMTI1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1750.009,88.8L1767.091,94.433C1784.172,100.067,1818.336,111.333,1835.418,121.133C1852.5,130.933,1852.5,139.267,1852.5,147.6C1852.5,155.933,1852.5,164.267,1829.4,173.707C1806.3,183.147,1760.1,193.694,1737,198.967L1713.9,204.241" id="my-svg-L_KILL_PROC_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_KILL_PROC_0" data-points="W3sieCI6MTc1MC4wMDg3MjY5NTIyODc4LCJ5Ijo4OC43OTk5OTkyMzcwNjA1NX0seyJ4IjoxODUyLjUsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjE4NTIuNSwieSI6MTQ3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTg1Mi41LCJ5IjoxNzIuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNzEwLCJ5IjoyMDUuMTMwODc0NTM1MDAyMDh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1705.921,88.8L1712.434,94.433C1718.947,100.067,1731.974,111.333,1738.487,121.133C1745,130.933,1745,139.267,1745,147.6C1745,155.933,1745,164.267,1745,177.983C1745,191.7,1745,210.8,1745,229.9C1745,249,1745,268.1,1745,281.817C1745,295.533,1745,303.867,1749.104,312.256C1753.208,320.644,1761.417,329.089,1765.521,333.311L1769.625,337.533" id="my-svg-L_KILL_PG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_KILL_PG_0" data-points="W3sieCI6MTcwNS45MjA1OTM3MzAwMDksInkiOjg4Ljc5OTk5OTIzNzA2MDU1fSx7IngiOjE3NDUsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjE3NDUsInkiOjE0Ny41OTk5OTg0NzQxMjExfSx7IngiOjE3NDUsInkiOjE3Mi41OTk5OTg0NzQxMjExfSx7IngiOjE3NDUsInkiOjIyOS44OTk5OTc3MTExODE2NH0seyJ4IjoxNzQ1LCJ5IjoyODcuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNzQ1LCJ5IjozMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNzcyLjQxMzE5MDQ5Mjk3MSwieSI6MzQwLjQwMTI5MTYzMzM1MzM3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1583.75,85.861L1555.458,91.984C1527.167,98.107,1470.583,110.354,1442.292,120.643C1414,130.933,1414,139.267,1414,147.6C1414,155.933,1414,164.267,1414,177.983C1414,191.7,1414,210.8,1414,229.9C1414,249,1414,268.1,1414,281.817C1414,295.533,1414,303.867,1416.872,313.832C1419.743,323.798,1425.487,335.395,1428.358,341.194L1431.23,346.993" id="my-svg-L_KILL_NATS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_KILL_NATS_0" data-points="W3sieCI6MTU4My43NSwieSI6ODUuODYwOTA1NDc4ODc2NDJ9LHsieCI6MTQxNCwieSI6MTIyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTQxNCwieSI6MTQ3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTQxNCwieSI6MTcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTQxNCwieSI6MjI5Ljg5OTk5NzcxMTE4MTY0fSx7IngiOjE0MTQsInkiOjI4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjE0MTQsInkiOjMxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjE0MzMuMDA0ODQ1ODczMzk3NSwieSI6MzUwLjU3NzY1MTk3NzUzOTA2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2051.639,97.6L2060.074,101.767C2068.509,105.933,2085.38,114.267,2093.815,122.6C2102.25,130.933,2102.25,139.267,2102.25,147.6C2102.25,155.933,2102.25,164.267,2102.25,177.983C2102.25,191.7,2102.25,210.8,2102.25,229.9C2102.25,249,2102.25,268.1,2102.25,281.817C2102.25,295.533,2102.25,303.867,2008.954,318.127C1915.659,332.388,1729.068,352.576,1635.772,362.67L1542.477,372.764" id="my-svg-L_NETEM_NATS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NETEM_NATS_0" data-points="W3sieCI6MjA1MS42MzkxNzkwODE3OTgsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjEwMi4yNSwieSI6MTIyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjEwMi4yNSwieSI6MTQ3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjEwMi4yNSwieSI6MTcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjEwMi4yNSwieSI6MjI5Ljg5OTk5NzcxMTE4MTY0fSx7IngiOjIxMDIuMjUsInkiOjI4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjIxMDIuMjUsInkiOjMxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjE1MzguNSwieSI6MzczLjE5NDI5ODY1OTE2Mjk0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1922.129,97.6L1913.858,101.767C1905.586,105.933,1889.043,114.267,1880.772,122.6C1872.5,130.933,1872.5,139.267,1872.5,147.6C1872.5,155.933,1872.5,164.267,1740.332,176.923C1608.164,189.58,1343.828,206.561,1211.66,215.051L1079.492,223.541" id="my-svg-L_NETEM_API_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NETEM_API_0" data-points="W3sieCI6MTkyMi4xMjkxNDU1MTI0NjEzLCJ5Ijo5Ny41OTk5OTg0NzQxMjExfSx7IngiOjE4NzIuNSwieSI6MTIyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTg3Mi41LCJ5IjoxNDcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxODcyLjUsInkiOjE3Mi41OTk5OTg0NzQxMjExfSx7IngiOjEwNzUuNSwieSI6MjIzLjc5NzQxOTMxNzEwMDF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2238.25,97.6L2238.25,101.767C2238.25,105.933,2238.25,114.267,2238.25,122.6C2238.25,130.933,2238.25,139.267,2238.25,147.6C2238.25,155.933,2238.25,164.267,2238.25,177.983C2238.25,191.7,2238.25,210.8,2238.25,229.9C2238.25,249,2238.25,268.1,2238.25,281.817C2238.25,295.533,2238.25,303.867,2182.699,317.477C2127.148,331.087,2016.046,349.975,1960.495,359.419L1904.943,368.862" id="my-svg-L_PITR_PG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PITR_PG_0" data-points="W3sieCI6MjIzOC4yNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjM4LjI1LCJ5IjoxMjIuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjM4LjI1LCJ5IjoxNDcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjM4LjI1LCJ5IjoxNzIuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjM4LjI1LCJ5IjoyMjkuODk5OTk3NzExMTgxNjR9LHsieCI6MjIzOC4yNSwieSI6Mjg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6MjIzOC4yNSwieSI6MzEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTkwMSwieSI6MzY5LjUzMjYyMjA4NjczNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1536.252,262.2L1527.835,266.367C1519.418,270.533,1502.584,278.867,1494.167,287.2C1485.75,295.533,1485.75,303.867,1327.79,319.195C1169.83,334.523,853.91,356.846,695.95,368.007L537.99,379.169" id="my-svg-L_PROC_PPROF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_PPROF_0" data-points="W3sieCI6MTUzNi4yNTE3NDU4NzMxMiwieSI6MjYyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTQ4NS43NSwieSI6Mjg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTQ4NS43NSwieSI6MzEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6NTM0LCJ5IjozNzkuNDUwNjQxNzM1MDUxMTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M314,406.378L314,414.241C314,422.104,314,437.829,314,449.859C314,461.889,314,470.222,314,477.889C314,485.555,314,492.555,314,496.055L314,499.555" id="my-svg-L_PROM_GATE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROM_GATE_0" data-points="W3sieCI6MzE0LCJ5Ijo0MDYuMzc3NjUxMjE0NTk5Nn0seyJ4IjozMTQsInkiOjQ1My41NTUzMDU0ODA5NTcwM30seyJ4IjozMTQsInkiOjQ3OC41NTUzMDU0ODA5NTcwM30seyJ4IjozMTQsInkiOjUwMy41NTUzMDU0ODA5NTd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M589,341.336L390.954,371.741" id="my-svg-L_SUT_PROM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SUT_PROM_0" data-points="W3sieCI6ODg1LjUsInkiOjI2MC43NDEzNTcwNzM5MDU0fSx7IngiOjgwNCwieSI6Mjg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6ODA0LCJ5IjozMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjozODcsInkiOjM3Mi4zNDgxMjMxMzAwMTk4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M589,354.373L194.995,374.829" id="my-svg-L_SUT_CH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SUT_CH_0" data-points="W3sieCI6ODg1LjUsInkiOjI1Ny42MDIyODc0MTg2NjY0fSx7IngiOjc4NCwieSI6Mjg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6Nzg0LCJ5IjozMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxOTEsInkiOjM3NS4wMzYzNTIyNDA1MjA5Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_K6_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_K6_WS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VEG_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_BENCH_PROC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_MINIO_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_KILL_PROC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_KILL_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_KILL_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_NETEM_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_NETEM_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PITR_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_PPROF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROM_GATE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SUT_PROM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SUT_CH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-K6-0" data-look="classic" transform="translate(739, 65.29999923706055)"><rect class="basic label-container" style="" x="-111.5" y="-32.29999923706055" width="223" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">k6</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SLO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thresholds</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ramp</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VEG-1" data-look="classic" transform="translate(980.5, 65.29999923706055)"><rect class="basic label-container" style="" x="-71.5" y="-32.29999923706055" width="143" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">vegeta</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DDoS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> flood</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BENCH-2" data-look="classic" transform="translate(1205.5, 65.29999923706055)"><rect class="basic label-container" style="" x="-103.5" y="-32.29999923706055" width="207" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -bench</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> benchstat</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> baseline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-API-3" data-look="classic" transform="translate(980.5, 229.89999771118164)"><rect class="basic label-container" style="" x="-95" y="-32.29999923706055" width="190" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">REST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /v1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTTP-3</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ratelimiter</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WS-4" data-look="classic" transform="translate(729, 229.89999771118164)"><rect class="basic label-container" style="" x="-105" y="-23.5" width="210" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">WebSocket/SSE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hub</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROC-5" data-look="classic" transform="translate(1601.5, 229.89999771118164)"><rect class="basic label-container" style="" x="-108.5" y="-32.29999923706055" width="217" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Processing</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Engine</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BackgroundTasks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> x32</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PG-6" data-look="classic" transform="translate(1822.5, 382.8776512145996)"><path d="M0,13.918439716312056 a78.5,13.918439716312056 0,0,0 157,0 a78.5,13.918439716312056 0,0,0 -157,0 l0,63.51843819043315 a78.5,13.918439716312056 0,0,0 157,0 l0,-63.51843819043315" class="basic label-container outer-path" style="" transform="translate(-78.5, -45.67765881152863)"/><g class="label" style="" transform="translate(-0.5, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Postgres</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pgvector</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">partitioned</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> replica</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NATS-7" data-look="classic" transform="translate(1449, 382.8776512145996)"><rect class="basic label-container" style="" x="-89.5" y="-32.29999923706055" width="179" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">NATS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JetStream</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">cluster</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MINIO-8" data-look="classic" transform="translate(1640.5, 382.8776512145996)"><path d="M0,11.353711790393012 a52,11.353711790393012 0,0,0 104,0 a52,11.353711790393012 0,0,0 -104,0 l0,60.95371026451411 a52,11.353711790393012 0,0,0 104,0 l0,-60.95371026451411" class="basic label-container outer-path" style="" transform="translate(-52, -41.830566922650064)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MinIO/S3</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">50TB</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> assets</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-KILL-27" data-look="classic" transform="translate(1678.75, 65.29999923706055)"><rect class="basic label-container" style="" x="-95" y="-23.5" width="190" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">podman</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> kill/pause</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NETEM-28" data-look="classic" transform="translate(1986.25, 65.29999923706055)"><rect class="basic label-container" style="" x="-102.5" y="-32.29999923706055" width="205" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tc</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> netem</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">latency/loss/partition</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PITR-29" data-look="classic" transform="translate(2238.25, 65.29999923706055)"><rect class="basic label-container" style="" x="-99.5" y="-32.29999923706055" width="199" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DB</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PITR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> restore</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hourly</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> incrementals</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROM-39" data-look="classic" transform="translate(314, 382.8776512145996)"><rect class="basic label-container" style="" x="-73" y="-23.5" width="146" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Prometheus</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PPROF-40" data-look="classic" transform="translate(485.5, 382.8776512145996)"><rect class="basic label-container" style="" x="-48.5" y="-23.5" width="97" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pprof</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CH-41" data-look="classic" transform="translate(117, 382.8776512145996)"><path d="M0,13.553113553113553 a74,13.553113553113553 0,0,0 148,0 a74,13.553113553113553 0,0,0 -148,0 l0,63.15311202723465 a74,13.553113553113553 0,0,0 148,0 l0,-63.15311202723465" class="basic label-container outer-path" style="" transform="translate(-74, -45.129669566730875)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ClickHouse</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">latency</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> histograms</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GATE-48" data-look="classic" transform="translate(314, 638.6553115844727)"><polygon points="135.0999984741211,0 270.1999969482422,-135.0999984741211 135.0999984741211,-270.1999969482422 0,-135.0999984741211" class="label-container" transform="translate(-134.5999984741211, 135.0999984741211)"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SLO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gate</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">p95&lt;150ms,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">search&lt;500ms,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> page&lt;1.5s</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/perf-chaos-topology.mmd"><code>diagrams/perf-chaos-topology.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> On the <code>sta.</code> tier, three load generators
+drive the system: <strong>k6</strong> applies SLO-threshold and ramp
+profiles to the REST <code>/v1</code> HTTP-3 API and the WebSocket/SSE
+hub; <strong>vegeta</strong> produces DDoS floods against the API; and
+<code>go test -bench</code> with a <code>benchstat</code> baseline
+exercises the hot paths in the Processing Engine. The <strong>system
+under test</strong> is production-like: the API (with the rate-limiter),
+the WS/SSE hub, the Processing Engine (BackgroundTasks worker pool,
+default 32), Postgres+pgvector (time- partitioned with a read replica),
+a NATS JetStream cluster, and MinIO/S3 holding 50 TB of assets.</p>
+<p>A separate <strong>chaos/DR injector</strong> set can
+<code>podman kill</code>/<code>pause</code> the Processing Engine,
+Postgres or NATS; apply <code>tc netem</code> latency/loss/partition to
+NATS and the API; and drive a DB point-in-time restore from hourly
+incrementals. <strong>Observability</strong> (Prometheus,
+<code>pprof</code>, ClickHouse latency histograms via
+<code>digital.vasic.observability</code>) feeds the <strong>SLO
+gate</strong>, which asserts p95 &lt; 150 ms for the API, &lt; 500 ms
+for search, and &lt; 1.5 s page load. A breach fails the run and blocks
+the production tag (gate <code>G-PERF</code>; the injector experiments
+map to <code>G-CHAOS</code>/<code>G-DR</code>).</p>
+<h2 id="benchmarking-regression-baselines">2. Benchmarking (regression
+baselines)</h2>
+<p>Type #11. <code>go test -bench</code> + <code>benchstat</code>
+compares against a versioned baseline; a statistically significant
+regression blocks without a waiver.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> <span class="at">-count</span><span class="op">=</span>10 ./... <span class="op">&gt;</span> new.txt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">benchstat</span> baseline.txt new.txt        <span class="co"># fail the gate on significant regression</span></span></code></pre></div>
+<p>Hot paths benchmarked: embedding + pgvector upsert throughput;
+pgvector <code>&lt;=&gt;</code> cosine query at representative index
+sizes; hashtag parse; the AST/tree-sitter + Markdown chunker; JSON
+(de)serialization at the API boundary; JWT verify. Web bundle/perf
+budgets tracked via Lighthouse and Angular budgets.</p>
+<h2 id="performance-slo-tests">3. Performance SLO tests</h2>
+<p>Type #10. k6 thresholds turn the SLOs into pass/fail:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// perf/api_slo.js</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> http <span class="im">from</span> <span class="st">&#39;k6/http&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { check } <span class="im">from</span> <span class="st">&#39;k6&#39;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> options <span class="op">=</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">scenarios</span><span class="op">:</span> { <span class="dt">steady</span><span class="op">:</span> { <span class="dt">executor</span><span class="op">:</span> <span class="st">&#39;constant-arrival-rate&#39;</span><span class="op">,</span> <span class="dt">rate</span><span class="op">:</span> <span class="dv">200</span><span class="op">,</span> <span class="dt">timeUnit</span><span class="op">:</span> <span class="st">&#39;1s&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                         <span class="dt">duration</span><span class="op">:</span> <span class="st">&#39;5m&#39;</span><span class="op">,</span> <span class="dt">preAllocatedVUs</span><span class="op">:</span> <span class="dv">100</span> } }<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">thresholds</span><span class="op">:</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;http_req_duration{group:api}&#39;</span><span class="op">:</span>    [<span class="st">&#39;p(95)&lt;150&#39;</span>]<span class="op">,</span>   <span class="co">// API p95 &lt; 150 ms</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;http_req_duration{group:search}&#39;</span><span class="op">:</span> [<span class="st">&#39;p(95)&lt;500&#39;</span>]<span class="op">,</span>   <span class="co">// semantic search &lt; 500 ms</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> <span class="kw">function</span> () {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check</span>(http<span class="op">.</span><span class="fu">get</span>(<span class="vs">`</span><span class="sc">${</span>__ENV<span class="op">.</span><span class="at">BASE</span><span class="sc">}</span><span class="vs">/v1/channels`</span><span class="op">,</span> { <span class="dt">tags</span><span class="op">:</span> { <span class="dt">group</span><span class="op">:</span> <span class="st">&#39;api&#39;</span> } })<span class="op">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        { <span class="st">&#39;api 200&#39;</span><span class="op">:</span> r <span class="kw">=&gt;</span> r<span class="op">.</span><span class="at">status</span> <span class="op">===</span> <span class="dv">200</span> })<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check</span>(http<span class="op">.</span><span class="fu">post</span>(<span class="vs">`</span><span class="sc">${</span>__ENV<span class="op">.</span><span class="at">BASE</span><span class="sc">}</span><span class="vs">/v1/search`</span><span class="op">,</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>({ <span class="dt">q</span><span class="op">:</span> <span class="st">&#39;backoff config&#39;</span> })<span class="op">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        { <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json&#39;</span> }<span class="op">,</span> <span class="dt">tags</span><span class="op">:</span> { <span class="dt">group</span><span class="op">:</span> <span class="st">&#39;search&#39;</span> } })<span class="op">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        { <span class="st">&#39;search 200&#39;</span><span class="op">:</span> r <span class="kw">=&gt;</span> r<span class="op">.</span><span class="at">status</span> <span class="op">===</span> <span class="dv">200</span> })<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Page-load (&lt; 1.5 s) is asserted via
+Lighthouse/<code>web-vitals</code> in the Cypress e2e run (<a
+href="./tdd-skeletons.md#11-angular-web-portal-typescript">tdd-skeletons.md
+§11</a>). Server-side percentiles are corroborated from ClickHouse
+histograms so the gate does not rely on the load generator alone. Async
+processing is measured by <strong>progress-event latency</strong>, not
+request latency, since long work is delegated with callbacks.</p>
+<h2 id="scaling-tests">4. Scaling tests</h2>
+<p>Type #7 <code>[OPERATOR: Large scale]</code>
+<code>[RESEARCH: final §19.8]</code>. Validate horizontal scale-out:</p>
+<ul>
+<li><strong>Postgres</strong> — time-partitioned <code>posts</code> (see
+<a
+href="./tdd-skeletons.md#10-migration-updown-sql--go">tdd-skeletons.md
+§10</a>) + <strong>read replicas</strong>; assert query latency stays
+flat as partitions grow to 10k+ posts/day × retention.</li>
+<li><strong>pgvector</strong> — ANN index tuning (lists/probes) so
+<code>/v1/search</code> holds &lt; 500 ms as the index grows toward 50
+TB-scale corpora <code>[GAP: §3.1 tune for &lt; 500 ms SLO]</code>.</li>
+<li><strong>BackgroundTasks</strong> — scale the worker pool (default
+32) and assert throughput scales ~linearly and the <strong>idempotent
+single-claim</strong> holds under a post-event storm (no double
+processing).</li>
+<li><strong>NATS JetStream</strong> — cluster; assert durable consumers
+replay after a node loss with no message loss.</li>
+<li><strong>Assets</strong> — MinIO/S3 tiering; signed-URL serving
+latency flat as object count grows; confirm MinIO signed-URL parity with
+the CloudFront-style path <code>[GAP: §3.2]</code>.</li>
+</ul>
+<h2 id="stress-tests">5. Stress tests</h2>
+<p>Type #9. Push beyond rated capacity with a k6 ramp-to-break and
+confirm <strong>graceful degradation</strong>, not collapse:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// stress/ramp.js — ramp arrival rate until the knee</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> options <span class="op">=</span> { <span class="dt">scenarios</span><span class="op">:</span> { <span class="dt">ramp</span><span class="op">:</span> { <span class="dt">executor</span><span class="op">:</span> <span class="st">&#39;ramping-arrival-rate&#39;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">startRate</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span> <span class="dt">timeUnit</span><span class="op">:</span> <span class="st">&#39;1s&#39;</span><span class="op">,</span> <span class="dt">stages</span><span class="op">:</span> [</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    { <span class="dt">target</span><span class="op">:</span> <span class="dv">500</span><span class="op">,</span> <span class="dt">duration</span><span class="op">:</span> <span class="st">&#39;3m&#39;</span> }<span class="op">,</span> { <span class="dt">target</span><span class="op">:</span> <span class="dv">2000</span><span class="op">,</span> <span class="dt">duration</span><span class="op">:</span> <span class="st">&#39;3m&#39;</span> }<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    { <span class="dt">target</span><span class="op">:</span> <span class="dv">5000</span><span class="op">,</span> <span class="dt">duration</span><span class="op">:</span> <span class="st">&#39;3m&#39;</span> } ]<span class="op">,</span> <span class="dt">preAllocatedVUs</span><span class="op">:</span> <span class="dv">500</span> } } }<span class="op">;</span></span></code></pre></div>
+<p>Pass condition: queues grow and back-pressure/429s engage while
+progress events keep flowing; no OOM/crash; automatic recovery when load
+drops. <code>pprof</code> heap/goroutine snapshots taken at the knee to
+catch leaks (memory-leak prevention is a mandated review angle,
+§9.3).</p>
+<h2 id="ddos-abuse-simulation">6. DDoS &amp; abuse simulation</h2>
+<p>Type #6 <code>[RESEARCH: request §Testing]</code> “DDoS and other
+common/less-common attacks resistance with exhaustive simulations”:</p>
+<ul>
+<li><strong>Volumetric flood</strong> —
+<code>vegeta attack -rate=20000/s</code> against <code>/v1/*</code>;
+assert the rate-limiter (<code>digital.vasic.ratelimiter</code>) sheds
+excess deterministically (429 + <code>Retry-After</code>), legitimate
+p95 stays within SLO or degrades gracefully, no crash/OOM.</li>
+<li><strong>Connection storm</strong> — mass WebSocket
+connect/subscribe/drop; assert the hub bounds resources.</li>
+<li><strong>Credential stuffing</strong> — high-rate login attempts;
+assert lockout/back-off and MFA hold; no user-enumeration timing
+leak.</li>
+<li><strong>Slowloris / slow-body</strong> — assert HTTP/3 + server
+timeouts reject slow-drip connections.</li>
+<li><strong>Amplification via search</strong> — expensive
+<code>/v1/search</code> queries at rate; assert per-tenant query cost
+limits.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;GET https://sta.thready.example/v1/channels&quot;</span> <span class="kw">|</span> <span class="ex">vegeta</span> attack <span class="at">-rate</span><span class="op">=</span>20000 <span class="at">-duration</span><span class="op">=</span>60s <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">vegeta</span> report <span class="at">-type</span><span class="op">=</span><span class="st">&#39;hist[0,50ms,100ms,150ms,300ms,1s]&#39;</span>   <span class="co"># SLO-bucketed histogram</span></span></code></pre></div>
+<p>Network/security angle also covers firewall rules, TLS 1.3,
+encryption-at-rest and CVE scanning; a pen-test pass runs via HelixQA
+security tests <code>[RESEARCH: final §19.14]</code>.</p>
+<h2 id="chaos-dr-validation">7. Chaos &amp; DR validation</h2>
+<p>Type #8 <code>[RESEARCH: final §18 Q45]</code>. Fault injection + the
+documented restore runbook, validated in-test:</p>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Injection</th>
+<th>Pass condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker kill mid-flight</td>
+<td><code>podman kill</code> a BackgroundTasks worker holding a
+claim</td>
+<td>another worker resumes the post <strong>exactly once</strong>; no
+duplicate reply/asset/embedding</td>
+</tr>
+<tr>
+<td>Postgres loss</td>
+<td>kill primary</td>
+<td>replica promoted or PITR restore; reconcile; ≤ RPO data loss</td>
+</tr>
+<tr>
+<td>NATS node loss</td>
+<td>kill a JetStream node</td>
+<td>durable consumers replay missed events on reconnect; clients
+reconcile via REST snapshot</td>
+</tr>
+<tr>
+<td>Network partition</td>
+<td><code>tc netem</code> partition NATS↔︎proc</td>
+<td>at-least-once + idempotent consumers → no double processing</td>
+</tr>
+<tr>
+<td>Asset store loss</td>
+<td>pause MinIO</td>
+<td>serving degrades gracefully; re-hydrate from snapshot or
+re-download</td>
+</tr>
+<tr>
+<td><strong>Full DR drill</strong></td>
+<td>destroy <code>sta.</code> DB + assets</td>
+<td>restore from <strong>daily full + hourly DB incrementals</strong>;
+complete within <strong>RTO ≈ 4 h</strong>, lose ≤ <strong>RPO ≈ 1
+h</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The DR drill is a scheduled, evidence-collected chaos run — its
+report is the proof the recovery plan (<code>§18 Q45</code>) actually
+works, not just documented. The <strong>idempotent single-claim</strong>
+anti-double- processing property is the same one unit/integration tests
+assert (<a
+href="./tdd-skeletons.md#3-idempotent-single-claim-go">tdd-skeletons.md
+§3</a>); chaos proves it under real fault.</p>
+<h2 id="gap-register-items-addressed">8. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §3.1]</code> pgvector/Qdrant ANN tuning + benchmark for
+the &lt; 500 ms SLO — §3, §4.</li>
+<li><code>[GAP: §3.2]</code> Postgres partitioning/replicas + MinIO
+signed-URL parity — §4.</li>
+<li><code>[GAP: §12 CI-equivalent gating]</code> — SLO/chaos gates run
+on <code>sta.</code> via local orchestration, not server CI — §1.</li>
+</ul>
+<h2 id="open-items">9. Open items</h2>
+<ul>
+<li><code>[OPEN: gpu-perf-baseline]</code> — HelixLLM
+embedding/inference throughput depends on the GPU node (workstation 32
+GB vs Hetzner GPU); pin a baseline before asserting search-pipeline SLOs
+at scale (<code>§18 Q5</code>).</li>
+<li><code>[OPEN: nats-cluster-size]</code> — JetStream cluster node
+count for the Large-scale target is a deployment decision; scaling tests
+parameterize it.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

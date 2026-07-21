@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/deployment/hetzner-provisioning.md
   Status          : Review — v0.3
-  Revision        : 3 (2026-07-22)
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (deployment)
   Related         : ./index.md, ./podman-compose.md, ./secrets-and-config.md,
                     ./tls-lets-encrypt.md, ./environments.md, ./compose-files.md,
@@ -17,6 +17,7 @@
 | 1 | 2026-07-21 | swarm (deployment) | Initial root→thready provisioning, rootless Podman, firewall, linger, sysctl, first deploy |
 | 2 | 2026-07-21 | swarm (deployment review) | Split the provisioning-phases prose into multiple paragraphs |
 | 3 | 2026-07-22 | swarm (deployment) | Pass 3: added the candidate Hetzner SKU + object-tier split table (§1.1) to make `[OPEN: host-sizing]` implementation-ready; cross-linked the day-2 operations runbook |
+| 4 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 This document is the step-by-step provisioning of the single Hetzner dedicated host: from **root**
 bootstrap to the unprivileged **`thready`** user under which all three environments run rootless
@@ -109,7 +110,7 @@ flowchart TD
     B3[Place .env + api_keys.sh chmod 600 from private repo]
     B4[podman login registries if needed]
     B5[lets_encrypt setup.sh --install acme.sh rootless]
-    B6[Install systemd --user timers: le-renew-{dev,sta,prod}]
+    B6["Install systemd --user timers: le-renew-{dev,sta,prod}"]
     B1-->B2-->B3-->B4-->B5-->B6
   end
   subgraph FIRST["Phase C — first deploy"]

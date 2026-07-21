@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Documentation Conventions</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Documentation Conventions</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#source-of-truth-do-not-re-decide"
+id="toc-source-of-truth-do-not-re-decide">1. Source of truth (do not
+re-decide)</a></li>
+<li><a href="#file-header-mandatory-top-of-every-file"
+id="toc-file-header-mandatory-top-of-every-file">2. File header
+(mandatory, top of every file)</a></li>
+<li><a href="#provenance-tags-use-inline-as-in-the-source-docs"
+id="toc-provenance-tags-use-inline-as-in-the-source-docs">3. Provenance
+tags (use inline, as in the source docs)</a></li>
+<li><a href="#diagrams-mandatory-rule"
+id="toc-diagrams-mandatory-rule">4. Diagrams (mandatory rule)</a></li>
+<li><a href="#cross-references" id="toc-cross-references">5.
+Cross-references</a></li>
+<li><a href="#code-schema-examples" id="toc-code-schema-examples">6.
+Code &amp; schema examples</a></li>
+<li><a href="#quality-bar-no-bluff" id="toc-quality-bar-no-bluff">7.
+Quality bar (no bluff)</a></li>
+<li><a href="#naming-versioning-repos-constitution"
+id="toc-naming-versioning-repos-constitution">8. Naming, versioning,
+repos <code>[CONSTITUTION]</code></a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Documentation Conventions
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/CONVENTIONS.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (orchestrated)
+  Related         : ./index.md
+-->
+<p><strong>Every</strong> Markdown file under
+<code>docs/public/research/mvp/</code> and
+<code>docs/private/research/mvp/</code> MUST follow these conventions.
+They implement the Helix Constitution documentation rules
+(<code>§11.4.65</code> md→HTML/PDF sync, <code>§11.4.61</code>
+metadata+ToC, <code>§11.4.44</code> revision headers,
+<code>§11.4.212</code> README/index canonical entry) and the original
+request’s diagram/branding rules.</p>
+<h2 id="source-of-truth-do-not-re-decide">1. Source of truth (do not
+re-decide)</h2>
+<p>The authoritative inputs — treat as read-only sources of truth, never
+contradict:</p>
+<ol type="1">
+<li><code>docs/private/research/mvp/helix_thready_research_request_final.md</code>
+— the merged, answered request: the <strong>technology decision
+matrix</strong>, architecture, operator decisions, and Q1–Q45 answers.
+<strong>This is the primary source.</strong></li>
+<li><code>docs/private/research/mvp/helix_thready_research_request.md</code>
+— original request + Part II answers.</li>
+<li><code>docs/private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md</code>
+— the per-subsystem gap register (P0/P1/P2). Every subsystem gap MUST be
+addressed by a design plan or an explicit tracked workable item in the
+relevant section.</li>
+</ol>
+<p><strong>In-house first:</strong> reuse the existing
+<code>vasic-digital</code> / <code>HelixDevelopment</code> /
+<code>milos85vasic</code> submodules named in the decision matrix. Do
+not invent external tech where an in-house module exists. When you need
+a module’s real interface, read its source via <code>gh</code> (e.g.
+<code>gh repo view vasic-digital/&lt;repo&gt;</code>), the local clones
+under <code>/home/milos/Factory/projects/tools_and_research/</code>, or
+CodeGraph — do not guess.</p>
+<h2 id="file-header-mandatory-top-of-every-file">2. File header
+(mandatory, top of every file)</h2>
+<pre><code>&lt;!--
+  Title           : &lt;human title&gt;
+  Classification  : PUBLIC | CLASSIFIED and CONFIDENTIAL
+  Location        : &lt;repo-relative path&gt;
+  Status          : Draft | Review | Active — v&lt;major.minor&gt;
+  Revision        : &lt;n&gt; (YYYY-MM-DD)
+  Author          : Helix Thready documentation swarm (&lt;area&gt;)
+  Related         : &lt;relative links to related docs&gt;
+--&gt;</code></pre>
+<p>Immediately below the <code># H1</code> title, include a
+<strong>revision-history</strong> table:</p>
+<table>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (<area>)</td>
+<td>Initial draft</td>
+</tr>
+</tbody>
+</table>
+<p>Then a <strong>Table of Contents</strong> (for files longer than ~2
+screens).</p>
+<h2 id="provenance-tags-use-inline-as-in-the-source-docs">3. Provenance
+tags (use inline, as in the source docs)</h2>
+<p><code>[CONSTITUTION §x]</code> authoritative ·
+<code>[IN-HOUSE: module]</code> reuse existing submodule ·
+<code>[RESEARCH]</code> web/source research · <code>[OPERATOR]</code>
+operator decision · <code>[DEFAULT — adjustable]</code> proposed default
+· <code>[BUILD-NEW]</code> confirmed new-submodule gap ·
+<code>[GAP: id]</code> addresses a gap-register item.</p>
+<h2 id="diagrams-mandatory-rule">4. Diagrams (mandatory rule)</h2>
+<ul>
+<li>Author diagrams as <strong>Mermaid</strong> in fenced ```mermaid
+blocks embedded in the Markdown.</li>
+<li><strong>Every diagram MUST be immediately followed by a
+multi-paragraph Markdown explanation</strong> (“Explanation (for
+readers/models that cannot see the diagram): …”) describing every node,
+edge, and flow in prose. A diagram without a prose explanation is
+incomplete.</li>
+<li>Also save the Mermaid source as a sibling <code>.mmd</code> file
+next to the doc (e.g. <code>diagrams/&lt;name&gt;.mmd</code>) so Docs
+Chain / a renderer can export PNG/SVG later. Note in the doc:
+<code>&gt; Rendered PNG/SVG exported via Docs Chain (§11.4.65).</code></li>
+</ul>
+<h2 id="cross-references">5. Cross-references</h2>
+<p>Use <strong>relative links</strong> between docs:
+<code>[Event model](../architecture/event-model.md)</code>. Every
+section’s <code>index.md</code> links to its files AND to the sibling
+area indexes it depends on. Keep an “Upstream/Downstream dependencies”
+note at the top of each area index.</p>
+<h2 id="code-schema-examples">6. Code &amp; schema examples</h2>
+<ul>
+<li>Include <strong>code-level examples</strong> (Go / TypeScript / SQL)
+illustrating key interfaces, algorithms, and contracts — real snippets
+or clearly-labelled pseudo-code.</li>
+<li><strong>Database:</strong> schemas as PostgreSQL
+<strong>DDL</strong> (<code>CREATE TABLE …</code>), pgvector DDL for
+vectors, indexes, partitioning, and forward/rollback
+<strong>migration</strong> scripts.</li>
+<li><strong>API:</strong> endpoints as <strong>OpenAPI 3.1</strong>
+(YAML), plus the WebSocket/SSE event contract.</li>
+<li><strong>Testing:</strong> TDD <strong>reproduce-first</strong>
+skeletons (RED test first), covering the <strong>15 mandated test
+types</strong> <code>[CONSTITUTION §11.4.27]</code>.</li>
+</ul>
+<h2 id="quality-bar-no-bluff">7. Quality bar (no bluff)</h2>
+<ul>
+<li>No skinny docs, no gaps, no danger zones left unaddressed. Where
+something is unresolved, mark it <code>[OPEN: …]</code> and add a
+tracked workable item — never paper over it.</li>
+<li>Distinguish <strong>verified</strong> facts from
+<strong>assumptions</strong>; do not claim a module “works” if the gap
+register flagged it a scaffold/stub — reference the gap and the design
+plan to close it.</li>
+<li>Enterprise-grade, implementation-ready, self-consistent with the
+decision matrix.</li>
+</ul>
+<h2 id="naming-versioning-repos-constitution">8. Naming, versioning,
+repos <code>[CONSTITUTION]</code></h2>
+<p>Project-prefixed release tags <code>&lt;PREFIX&gt;-&lt;ver&gt;</code>
+(§11.4.151); commit + push to <strong>all four upstreams</strong>
+(GitHub/GitLab/GitFlic/GitVerse, §2.1); no server-side CI (§11.4.156);
+decoupled submodules (§11.4.28). Public docs live in the <strong>main
+repo</strong> (<code>docs/public/…</code>); sensitive materials
+(credentials, access, gap register) live in the <strong>private
+submodule</strong> (<code>docs/private/…</code>).</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

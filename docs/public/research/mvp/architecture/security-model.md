@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/architecture/security-model.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (System Architecture)
   Related         : ./system-overview.md, ./component-catalog.md, ./data-flow.md,
                     ./asset-and-download.md, ./semantic-search.md, ./service-discovery.md
@@ -16,6 +16,7 @@
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — auth, RBAC, encryption, sensitive content |
 | 2 | 2026-07-22 | swarm (Pass 3 depth) | Close SEC-1 — real `security/pkg/policy` (`Enforcer`, `Policy`/`Rule`/`Condition`, `EvaluationContext`, `Decision` allow/deny/audit, most-restrictive `EvaluateAll`) read at source; replace imagined `Allow(sub,action,resource)`; deepen RBAC explanation |
 | 3 | 2026-07-22 | swarm (Pass 3 depth) | Split the §7 sensitive-content diagram explanation into true multi-paragraph form (fork → dual store → RBAC-gated reveal; never-plaintext-in-vector invariant) per CONVENTIONS §4 |
+| 4 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -264,7 +265,7 @@ flowchart LR
   RED --> EMB[Embed surrogate]
   EMB --> VEC[(pgvector)]
   SEAL --> KV[(sealed secret store)]
-  Q[Search "aws key"] --> VEC --> HIT[match surrogate]
+  Q["Search #quot;aws key#quot;"] --> VEC --> HIT[match surrogate]
   HIT --> GATE{RBAC allow?}
   GATE -->|yes| KV --> REVEAL[reveal raw via Asset/secret API]
   GATE -->|no| DENY[forbidden]

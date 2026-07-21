@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — API Materials (Index)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — API Materials (Index)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#contents" id="toc-contents">Contents</a></li>
+<li><a href="#headline-findings" id="toc-headline-findings">Headline
+findings</a></li>
+<li><a href="#how-this-maps-to-the-parent-area"
+id="toc-how-this-maps-to-the-parent-area">How this maps to the parent
+area</a></li>
+<li><a href="#open-items-rolled-up" id="toc-open-items-rolled-up">Open
+items (rolled up)</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — API Materials (Index)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/materials/README.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (API & SDKs — materials)
+  Related         : ../openapi.yaml, ../event-bus-contract.md, ../sdk-strategy.md,
+                    ../index.md, ../../CONVENTIONS.md,
+                    ./examples/README.md, ./codegen/README.md, ./validation.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs — materials)</td>
+<td>Initial materials pack: request collections, codegen harness,
+OpenAPI validation report</td>
+</tr>
+</tbody>
+</table>
+<p>Concrete, hands-on artifacts derived from the API area’s schema-first
+contracts (<a href="../openapi.yaml"><code>../openapi.yaml</code></a>,
+<a
+href="../event-bus-contract.md"><code>../event-bus-contract.md</code></a>).
+Where the parent area <em>specifies</em> the contract, this folder makes
+it <strong>executable</strong>: copy-pasteable requests, a working
+codegen Makefile, and a validation record.</p>
+<h2 id="contents">Contents</h2>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 39%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it is</th>
+<th>Runnable?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./examples/README.md"><code>examples/</code></a></td>
+<td>Per-endpoint-group request collections — <strong>curl</strong>
+(<code>*.curl.sh</code>) <strong>and HTTPie</strong>
+(<code>*.http</code>) for all 10 groups (auth, accounts, channels,
+posts, processing, assets, search, skills, billing, events), plus
+<code>env.example</code>.</td>
+<td>✅ curl scripts pass <code>bash -n</code>; need a token + base URL
+to hit a server.</td>
+</tr>
+<tr>
+<td><a href="./codegen/README.md"><code>codegen/</code></a></td>
+<td>The <strong>buf + openapi-generator</strong> codegen harness
+(<code>Makefile</code>, <code>buf.gen.yaml</code>,
+<code>buf.yaml</code>) implementing the <code>helix_proto</code> pattern
+→ 11 SDK languages.</td>
+<td>✅ REST/lint targets run now; ⚠️ proto targets skip cleanly until
+<code>proto/</code> exists (<code>[OPEN: api-1]</code>).</td>
+</tr>
+<tr>
+<td><a href="./validation.md"><code>validation.md</code></a></td>
+<td>Structural validation of <code>../openapi.yaml</code> with
+<code>@redocly/cli</code> 2.40.0 + a PyYAML hand-lint of the required
+3.1 fields.</td>
+<td>— record only.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="headline-findings">Headline findings</h2>
+<ul>
+<li><strong>Validation:</strong> <code>../openapi.yaml</code> is a
+structurally valid OpenAPI 3.1 skeleton (46 paths / 59 ops / 40 schemas
+/ 1 webhook, all <code>$ref</code>s resolve) but currently <strong>FAILS
+lint with 2 errors</strong> — two <code>description:</code> values
+contain an unquoted comma, so YAML mis-parses each into a spurious
+schema property (independently confirmed with PyYAML). Both are one-line
+quote fixes in <code>../openapi.yaml</code>; raised as
+<code>[OPEN: val-1]</code> because this pack writes only inside
+<code>materials/</code>. The 39 warnings are style/convention advisories
+(details in <a
+href="./validation.md"><code>validation.md</code></a>).</li>
+<li><strong>Codegen:</strong> the REST-plane and lint targets are real
+and were parse/dry-run verified (<code>make help</code>,
+<code>make tools</code>, <code>make -n</code>); the proto plane is a
+<strong>verified-pattern scaffold</strong> that is inert until the
+<code>helix_thready_proto</code> repo provides <code>proto/…</code>. No
+SDK was actually generated in this environment — see the anti-bluff note
+in <a href="./codegen/README.md"><code>codegen/README.md</code>
+§8</a>.</li>
+</ul>
+<h2 id="how-this-maps-to-the-parent-area">How this maps to the parent
+area</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr>
+<th>Parent doc</th>
+<th>Materials that exercise it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../openapi.yaml"><code>../openapi.yaml</code></a></td>
+<td><code>examples/*</code> (every operation), <code>codegen/</code>
+(<code>openapi-generate-*</code>), <code>validation.md</code></td>
+</tr>
+<tr>
+<td><a
+href="../event-bus-contract.md"><code>../event-bus-contract.md</code></a></td>
+<td><code>examples/events.*</code> (catalog, sticky, sinks, SSE, WS
+note)</td>
+</tr>
+<tr>
+<td><a href="../authn-authz.md"><code>../authn-authz.md</code></a></td>
+<td><code>examples/auth.*</code>, the Bearer/HMAC/idempotency
+conventions</td>
+</tr>
+<tr>
+<td><a
+href="../sdk-strategy.md"><code>../sdk-strategy.md</code></a></td>
+<td><code>codegen/Makefile</code> + <code>buf.gen.yaml</code> +
+<code>buf.yaml</code> (helix_proto pattern)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-items-rolled-up">Open items (rolled up)</h2>
+<ul>
+<li><code>[OPEN: val-1]</code> Fix the two <code>description</code>
+mis-parses in <code>../openapi.yaml</code> (out of this pack’s write
+scope; materials-only).</li>
+<li><code>[OPEN: val-3]</code> Only redocly ran here; re-run Spectral +
+<code>openapi-generator validate</code> with network for independent
+structural opinions.</li>
+<li><code>[OPEN: api-1]</code> Proto plane produced in
+<code>helix_thready_proto</code>; codegen proto targets are
+ready-but-inert until then.</li>
+<li><code>[OPEN: ex-1 / ex-2]</code> WebSocket is not curl/HTTPie-able
+(SSE shown; WS via <code>websocat</code>); no request was run against a
+live server.</li>
+</ul>
+<p>This folder obeys <a
+href="../../CONVENTIONS.md"><code>../../CONVENTIONS.md</code></a> and
+never contradicts the authoritative sources (final answered request,
+subsystem gap register). Facts tagged <code>[VERIFIED]</code> were
+observed in-tool; proposals are <code>[DEFAULT — adjustable]</code>;
+unresolved work is tracked <code>[OPEN: …]</code>.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

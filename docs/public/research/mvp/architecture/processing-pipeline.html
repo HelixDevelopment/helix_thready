@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Processing Pipeline</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Processing Pipeline</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#what-the-pipeline-does" id="toc-what-the-pipeline-does">1.
+What the pipeline does</a></li>
+<li><a href="#helixskills-knowledge-units-not-a-run-engine"
+id="toc-helixskills-knowledge-units-not-a-run-engine">2. HelixSkills:
+knowledge units, not a run engine</a></li>
+<li><a href="#the-skill-dispatch-engine-build-new"
+id="toc-the-skill-dispatch-engine-build-new">3. The Skill Dispatch
+Engine (BUILD-NEW)</a></li>
+<li><a href="#classification-hashtags-indirect-determination"
+id="toc-classification-hashtags-indirect-determination">4.
+Classification: hashtags + indirect determination</a></li>
+<li><a href="#deterministic-stage-order-precedence"
+id="toc-deterministic-stage-order-precedence">5. Deterministic stage
+order &amp; precedence</a>
+<ul>
+<li><a href="#token-optimization-in-the-research-stage-gap-2.9"
+id="toc-token-optimization-in-the-research-stage-gap-2.9">5.1 Token
+optimization in the research stage (GAP 2.9)</a></li>
+</ul></li>
+<li><a href="#pipeline-diagram" id="toc-pipeline-diagram">6. Pipeline
+diagram</a></li>
+<li><a href="#content-type-recipe-matrix"
+id="toc-content-type-recipe-matrix">7. Content-type recipe
+matrix</a></li>
+<li><a href="#ocr-vision-build-new-ocr-adapter"
+id="toc-ocr-vision-build-new-ocr-adapter">8. OCR &amp; Vision (BUILD-NEW
+OCR adapter)</a></li>
+<li><a href="#status-reply" id="toc-status-reply">9. Status
+reply</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">10.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">12. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Processing Pipeline (classification, Skill dispatch, recipes)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/processing-pipeline.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./concurrency-and-idempotency.md, ./event-model.md, ./semantic-search.md,
+                    ./asset-and-download.md, ./messenger-ingestion.md, ./data-flow.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — classification, dispatch, recipe matrix, OCR</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (review pass)</td>
+<td>Add §5.1 token optimization (closes GAP 2.9 token-opt half); PROC-4
+open item</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Split the §6 pipeline-diagram explanation into true multi-paragraph
+form (funnel intent → classify/indirect → map+order → five stages →
+cross-cutting embed/retry/ordering) per CONVENTIONS §4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (critic consistency)</td>
+<td>Close PROC-2 — SkillRegistry
+(<code>dev.helix.agent/skillregistry</code>) &amp; MCP
+(<code>digital.vasic.mcp</code>) import paths source-confirmed via
+CAT-2; carry corrected paths into §2 (was stale FLAGGED docs-only,
+contradicting index §7 “PROC-2 resolved by CAT-2”)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-what-the-pipeline-does">What the pipeline does</a></li>
+<li><a
+href="#2-helixskills-knowledge-units-not-a-run-engine">HelixSkills:
+knowledge units, not a run engine</a></li>
+<li><a href="#3-the-skill-dispatch-engine-build-new">The Skill Dispatch
+Engine (BUILD-NEW)</a></li>
+<li><a
+href="#4-classification-hashtags--indirect-determination">Classification:
+hashtags + indirect determination</a></li>
+<li><a href="#5-deterministic-stage-order--precedence">Deterministic
+stage order &amp; precedence</a> 5.1. <a
+href="#51-token-optimization-in-the-research-stage-gap-29">Token
+optimization in the research stage (GAP 2.9)</a></li>
+<li><a href="#6-pipeline-diagram">Pipeline diagram</a></li>
+<li><a href="#7-content-type-recipe-matrix">Content-type recipe
+matrix</a></li>
+<li><a href="#8-ocr--vision-build-new-ocr-adapter">OCR &amp; Vision
+(BUILD-NEW OCR adapter)</a></li>
+<li><a href="#9-status-reply">Status reply</a></li>
+<li><a href="#10-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#11-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#12-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="what-the-pipeline-does">1. What the pipeline does</h2>
+<p>For each claimed post, the pipeline: classifies it by hashtag +
+content type + thread context; selects the matching Skill(s); runs them
+in a deterministic order (<strong>download → convert → analyze →
+research → reply</strong>); embeds every artifact for semantic search;
+and posts a status reply to the source thread. A post may match
+<strong>multiple</strong> categories at once and runs <em>every</em>
+matching Skill — categories are additive, not exclusive
+<code>[research_request_final §3.2.2, §3.3, Q33]</code>.</p>
+<h2 id="helixskills-knowledge-units-not-a-run-engine">2. HelixSkills:
+knowledge units, not a run engine</h2>
+<p>Thready reuses <code>HelixDevelopment/helix_skills</code>
+<code>[IN-HOUSE: helix_skills]</code>. Skills are versioned
+<strong>knowledge units</strong> organized as a DAG
+(<code>atomic → composite → umbrella</code>) with typed hard-closure
+edges (<code>requires</code>/<code>extends</code>/<code>composes</code>)
+and advisory edges
+(<code>recommends</code>/<code>related_to</code>/<code>alternative_to</code>).
+Discovery is via <code>register.sh</code> symlinks + a generated
+<code>INDEX.md</code>; runtime registration via
+<strong><code>SkillRegistry</code></strong> (module
+<code>dev.helix.agent/skillregistry</code>, a flat package —
+source-confirmed, see <a
+href="./component-catalog.md">component-catalog.md</a> §8
+<code>[CLOSED: CAT-2]</code>); tool exposure via
+<strong><code>MCP_Module</code></strong> (module
+<code>digital.vasic.mcp</code>,
+<code>pkg/{server,client,protocol,registry,adapter,config}</code> —
+source-confirmed).</p>
+<blockquote>
+<p><strong><code>[GAP: 4.1]</code> No processing/execution
+engine.</strong> Skills are knowledge units in a DAG, <strong>not
+runnable jobs</strong>. The Skill-Graph gives
+<em>ordering/knowledge</em>, not <em>task execution</em>. Thready’s
+“recipe per hashtag” therefore needs a <strong>dispatch/execution engine
+built on top</strong> — that is the Skill Dispatch Engine below.
+Additional flagged issues: inconsistent Skill file format
+(<code>SKILL.md</code> with YAML frontmatter vs bare
+<code>skill.md</code>), and a Skill-Graph “Gaps &amp; Risks Register”
+with 95 open findings. <strong>Plan:</strong> build the dispatch engine;
+standardize on one canonical <code>SKILL.md</code> schema and migrate
+the no-frontmatter dirs; triage the open findings relevant to Thready.
+Nothing here claims helix_skills executes work today.</p>
+</blockquote>
+<h2 id="the-skill-dispatch-engine-build-new">3. The Skill Dispatch
+Engine (BUILD-NEW)</h2>
+<p>The engine maps hashtag/content-type → Skill(s), orders them, and
+runs each Skill step via the BackgroundTasks queue with idempotent
+single-claim, retries and events. It keeps the Skill-Graph as the
+<strong>knowledge/ordering source</strong> and adds the
+<strong>execution</strong> layer
+<code>[research_request_final Q33]</code> <code>[GAP: 4.1]</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Skill Dispatch Engine — composition over helix_skills (BUILD-NEW).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Dispatcher <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    graph   skills<span class="op">.</span>Graph       <span class="co">// helix_skills Skill-Graph (knowledge/order)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    queue   background<span class="op">.</span>TaskQueue</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    bus     eventbus<span class="op">.</span>Publisher</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Dispatch selects, orders and runs the Skills for one post.</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>d <span class="op">*</span>Dispatcher<span class="op">)</span> Dispatch<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> post <span class="op">*</span>Post<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    cats <span class="op">:=</span> Classify<span class="op">(</span>post<span class="op">)</span>                     <span class="co">// §4 — hashtags + indirect + content-type</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    skillSet <span class="op">:=</span> d<span class="op">.</span>graph<span class="op">.</span>Resolve<span class="op">(</span>cats<span class="op">)</span>          <span class="co">// knowledge DAG → concrete Skills</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    steps <span class="op">:=</span> OrderByPrecedence<span class="op">(</span>skillSet<span class="op">)</span>        <span class="co">// §5 — download&gt;convert&gt;analyze&gt;research&gt;reply</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> step <span class="op">:=</span> <span class="kw">range</span> steps <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        task <span class="op">:=</span> stepTask<span class="op">(</span>post<span class="op">,</span> step<span class="op">)</span>            <span class="co">// idempotent per (post_id, step)</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> err <span class="op">:=</span> d<span class="op">.</span>queue<span class="op">.</span>Enqueue<span class="op">(</span>ctx<span class="op">,</span> task<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> d<span class="op">.</span>bus<span class="op">.</span>Publish<span class="op">(</span>progress<span class="op">(</span>post<span class="op">,</span> step<span class="op">))</span> <span class="co">// post.processing.progress</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Each Skill step is itself <strong>idempotent</strong> (re-running it
+produces the same result / is a no-op if already done), which is what
+makes per-step retry and stuck-recovery safe (<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</p>
+<h2 id="classification-hashtags-indirect-determination">4.
+Classification: hashtags + indirect determination</h2>
+<ol type="1">
+<li>Extract <strong>all</strong> hashtags from the assembled thread
+(root + organic replies — union across the chain; see <a
+href="./messenger-ingestion.md">messenger-ingestion.md</a>).</li>
+<li>Where tags are absent/insufficient, derive them via <strong>indirect
+determination</strong> <code>[research_request_final §3.5]</code>:
+<ul>
+<li>Torrent/magnet links → <code>Torrent</code> +
+<code>ToDownload</code>.</li>
+<li>GitHub / other coding-service links → full deep Research + docs +
+Skill-tree growth.</li>
+<li>YouTube / streaming / media → Download, and deep Research if
+IT-related.</li>
+</ul></li>
+<li>If still unclassified → <strong>generic ingest</strong> (store +
+embed + index) and queue for manual review; never silently drop
+<code>[research_request_final Q32]</code>.</li>
+<li>Multiple categories may apply simultaneously (e.g. a YouTube link +
+GitHub repo tagged <code>#Research #Video #TODO #ToDownload</code>
+triggers <strong>both</strong> video download <strong>and</strong>
+mandatory deep technology research).</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> Classify<span class="op">(</span>p <span class="op">*</span>Post<span class="op">)</span> CategorySet <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cats <span class="op">:=</span> FromHashtags<span class="op">(</span>p<span class="op">.</span>Hashtags<span class="op">)</span>          <span class="co">// direct</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cats<span class="op">.</span>Weak<span class="op">()</span> <span class="op">{</span>                          <span class="co">// absent/insufficient</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> l <span class="op">:=</span> <span class="kw">range</span> p<span class="op">.</span>Links <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">switch</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">case</span> l<span class="op">.</span>IsTorrentOrMagnet<span class="op">():</span> cats<span class="op">.</span>Add<span class="op">(</span><span class="st">&quot;Torrent&quot;</span><span class="op">,</span> <span class="st">&quot;ToDownload&quot;</span><span class="op">)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">case</span> l<span class="op">.</span>IsCodeHost<span class="op">():</span>        cats<span class="op">.</span>Add<span class="op">(</span><span class="st">&quot;Research&quot;</span><span class="op">,</span> <span class="st">&quot;Technology&quot;</span><span class="op">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">case</span> l<span class="op">.</span>IsMedia<span class="op">():</span>           cats<span class="op">.</span>Add<span class="op">(</span><span class="st">&quot;ToDownload&quot;</span><span class="op">);</span> <span class="cf">if</span> l<span class="op">.</span>IsITRelated<span class="op">()</span> <span class="op">{</span> cats<span class="op">.</span>Add<span class="op">(</span><span class="st">&quot;Research&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cats<span class="op">.</span>Empty<span class="op">()</span> <span class="op">{</span> cats<span class="op">.</span>Add<span class="op">(</span><span class="st">&quot;GenericIngest&quot;</span><span class="op">)</span> <span class="op">}</span> <span class="co">// never drop; manual-review queue</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> cats</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="deterministic-stage-order-precedence">5. Deterministic stage
+order &amp; precedence</h2>
+<p>Categories are additive; ordering is deterministic by a Skill
+<code>SortOrder</code> plus a fixed precedence so later stages consume
+earlier outputs <code>[research_request_final §3.3, §19.2]</code>:</p>
+<blockquote>
+<p><strong>download &gt; convert &gt; analyze &gt; research &gt;
+reply</strong></p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Purpose</th>
+<th>Engines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. download</td>
+<td>Fetch raw media/attachments</td>
+<td>Boba (torrents), MeTube (video), Download Manager (direct)</td>
+</tr>
+<tr>
+<td>2. convert</td>
+<td>Generate <code>…-web</code> optimized renditions; keep raw</td>
+<td>Asset Service transcoder (H.264/AAC fMP4 + H.265/AV1; HLS/DASH)</td>
+</tr>
+<tr>
+<td>3. analyze</td>
+<td>Extract meaning: Vision, OCR, transcript, content
+classification</td>
+<td>VisionEngine + OCR adapter; HelixLLM</td>
+</tr>
+<tr>
+<td>4. research</td>
+<td>Multi-pass deep web research → docs → Skills/MCP/Embeddings</td>
+<td>HelixLLM/LLMProvider/HelixAgent; CodeGraph ingest</td>
+</tr>
+<tr>
+<td>5. reply</td>
+<td>Post status reply to source thread; mark processed</td>
+<td>ThreadReader.Reply</td>
+</tr>
+</tbody>
+</table>
+<p>Within a stage, independent Skills may run concurrently (bounded by
+per-Skill caps); across stages the order is strict. Retry/back-off and
+circuit-breaking are per step (<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</p>
+<h3 id="token-optimization-in-the-research-stage-gap-2.9">5.1 Token
+optimization in the research stage (GAP 2.9)</h3>
+<p>Stage 4 (<strong>research</strong>) is the token-heavy stage: a
+single <code>#Research</code>/<code>#Technology</code> post can fan out
+into multi-pass web research, document synthesis and Skill-Graph growth,
+driving many large LLM calls through HelixLLM/LLMProvider/HelixAgent.
+The Constitution mandates a token-optimization layer
+<code>[CONSTITUTION §11.4.198]</code>, and the gap register flags its
+two owned building blocks as not-yet-usable:</p>
+<blockquote>
+<p><strong><code>[GAP: 2.9]</code> token_optimizer is WIP; TOON is a
+scaffold.</strong> <code>token_optimizer</code> has only
+<code>pkg/config</code> implemented (pipeline/router scaffolded; its six
+declared deps are declared, not integrated) and <code>TOON</code>
+returns <code>ErrTOONEncodingNotImplemented</code> (a prior
+json-delegating “contract bluff” was removed) — <strong>do not use TOON
+yet</strong>. Both are VERIFIED at source. The
+<code>session_orchestrator</code> half of this same gap (the atomic
+claim registry) is closed separately by BackgroundTasks’ Postgres claim
+(<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</p>
+</blockquote>
+<p><strong>Plan (tracked, MVP-scoped — nothing here is claimed to work
+today):</strong></p>
+<ul>
+<li><strong>MVP:</strong> the research stage runs
+<strong>without</strong> a bespoke token-optimizer; it bounds cost with
+the levers that already exist — per-Skill concurrency caps (§8 caps
+LLM-research low), the <code>LLMProvider</code> model-tier fallback
+(small/local model first, escalate only on need), prompt templating that
+ships only the retrieved <code>rag</code> context (not whole documents),
+and the <code>digital.vasic.cache</code> query/embedding cache. This
+keeps the aggressive SLO honest without depending on a scaffold.</li>
+<li><strong>P1 (post-MVP):</strong> implement
+<code>token_optimizer</code>’s pipeline/router and a real
+<code>TOON</code> encoder, or explicitly mark them <strong>out of scope
+for the Thready MVP</strong> — do not wire either until it passes an
+anti-bluff gate (a green test that proves real token reduction, not a
+json passthrough) <code>[CONSTITUTION §11.4.27]</code>. Until then the
+research Skills call the LLM stack directly through the levers above.
+See <code>[OPEN: PROC-4]</code>.</li>
+</ul>
+<h2 id="pipeline-diagram">6. Pipeline diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1115.5px; background-color: white;" viewBox="0 0 1115.5 1716.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .ev rect{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev polygon{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev ellipse{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev circle{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev path{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev tspan{fill:rgb(243, 233, 255)!important;}#my-svg .st rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .st polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .st ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .st circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .st path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .st tspan{fill:rgb(234, 255, 240)!important;}#my-svg .c rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .c polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .c ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .c circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .c path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .c tspan{fill:rgb(230, 246, 255)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Stages" data-look="classic"><rect style="" x="8" y="958" width="841.5" height="653.5999908447266"/><g class="cluster-label" transform="translate(339.75, 958)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Deterministic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stage</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> order</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M671.5,55L671.5,59.167C671.5,63.333,671.5,71.667,671.5,79.333C671.5,87,671.5,94,671.5,97.5L671.5,101" id="my-svg-L_IN_CLS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IN_CLS_0" data-points="W3sieCI6NjcxLjUsInkiOjU1fSx7IngiOjY3MS41LCJ5Ijo4MH0seyJ4Ijo2NzEuNSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M671.5,187.2L671.5,191.367C671.5,195.533,671.5,203.867,671.5,211.533C671.5,219.2,671.5,226.2,671.5,229.7L671.5,233.2" id="my-svg-L_CLS_IND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CLS_IND_0" data-points="W3sieCI6NjcxLjUsInkiOjE4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjY3MS41LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo2NzEuNSwieSI6MjM3LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M618.155,401.855L603.963,416.663C589.77,431.47,561.385,461.085,547.193,481.143C533,501.2,533,511.7,533,516.95L533,522.2" id="my-svg-L_IND_INF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IND_INF_0" data-points="W3sieCI6NjE4LjE1NTQ3NzAzMTgwMjEsInkiOjQwMS44NTU0NzM5ODAwNDQzfSx7IngiOjUzMywieSI6NDkwLjY5OTk5Njk0ODI0MjJ9LHsieCI6NTMzLCJ5Ijo1MjYuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M692.753,433.947L695.045,443.405C697.336,452.864,701.918,471.782,704.209,496.941C706.5,522.1,706.5,553.5,706.5,583.15C706.5,612.8,706.5,640.7,704.835,658.213C703.17,675.725,699.841,682.851,698.176,686.413L696.511,689.976" id="my-svg-L_IND_MAP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IND_MAP_0" data-points="W3sieCI6NjkyLjc1MzQ4MTg5NDE1MDUsInkiOjQzMy45NDY1MTUwNTQwOTE4fSx7IngiOjcwNi41LCJ5Ijo0OTAuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo3MDYuNSwieSI6NTg0Ljg5OTk5NzcxMTE4MTZ9LHsieCI6NzA2LjUsInkiOjY2OC41OTk5OTg0NzQxMjExfSx7IngiOjY5NC44MTc3NTcyNDczMzg5LCJ5Ijo2OTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M533,643.6L533,647.767C533,651.933,533,660.267,540.118,668.283C547.237,676.299,561.473,683.998,568.592,687.848L575.71,691.697" id="my-svg-L_INF_MAP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_INF_MAP_0" data-points="W3sieCI6NTMzLCJ5Ijo2NDMuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1MzMsInkiOjY2OC41OTk5OTg0NzQxMjExfSx7IngiOjU3OS4yMjgzMDM0NjQxMDE2LCJ5Ijo2OTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M671.5,793.4L671.5,797.567C671.5,801.733,671.5,810.067,671.5,817.733C671.5,825.4,671.5,832.4,671.5,835.9L671.5,839.4" id="my-svg-L_MAP_ORD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MAP_ORD_0" data-points="W3sieCI6NjcxLjUsInkiOjc5My40MDAwMDE1MjU4Nzg5fSx7IngiOjY3MS41LCJ5Ijo4MTguNDAwMDAxNTI1ODc4OX0seyJ4Ijo2NzEuNSwieSI6ODQzLjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M671.5,908L671.5,912.167C671.5,916.333,671.5,924.667,671.5,933C671.5,941.333,671.5,949.667,671.5,957.333C671.5,965,671.5,972,671.5,975.5L671.5,979" id="my-svg-L_ORD_S1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ORD_S1_0" data-points="W3sieCI6NjcxLjUsInkiOjkwOH0seyJ4Ijo2NzEuNSwieSI6OTMzfSx7IngiOjY3MS41LCJ5Ijo5NTh9LHsieCI6NjcxLjUsInkiOjk4M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M563.5,1033.528L524.917,1040.04C486.333,1046.552,409.167,1059.576,370.583,1069.588C332,1079.6,332,1086.6,332,1090.1L332,1093.6" id="my-svg-L_S1_S2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_S2_0" data-points="W3sieCI6NTYzLjUsInkiOjEwMzMuNTI3OTgxMzIxMzA5N30seyJ4IjozMzIsInkiOjEwNzIuNTk5OTk4NDc0MTIxfSx7IngiOjMzMiwieSI6MTA5Ny41OTk5OTg0NzQxMjF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M306.274,1162.2L301.562,1168.117C296.85,1174.033,287.425,1185.867,282.712,1197.033C278,1208.2,278,1218.7,278,1223.95L278,1229.2" id="my-svg-L_S2_S3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S2_S3_0" data-points="W3sieCI6MzA2LjI3NDMzNjYwMTM1MTE0LCJ5IjoxMTYyLjE5OTk5Njk0ODI0MjJ9LHsieCI6Mjc4LCJ5IjoxMTk3LjY5OTk5Njk0ODI0MjJ9LHsieCI6Mjc4LCJ5IjoxMjMzLjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M242.508,1297.8L236.007,1303.717C229.505,1309.633,216.503,1321.467,210.001,1332.633C203.5,1343.8,203.5,1354.3,203.5,1359.55L203.5,1364.8" id="my-svg-L_S3_S4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S3_S4_0" data-points="W3sieCI6MjQyLjUwODExMjUzMzM0NTU1LCJ5IjoxMjk3Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjAzLjUsInkiOjEzMzMuMjk5OTk1NDIyMzYzM30seyJ4IjoyMDMuNSwieSI6MTM2OC43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M183.111,1451L180.176,1456.917C177.241,1462.833,171.37,1474.667,168.435,1485.833C165.5,1497,165.5,1507.5,165.5,1512.75L165.5,1518" id="my-svg-L_S4_S5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S4_S5_0" data-points="W3sieCI6MTgzLjExMDk2NjQwODI1MzMsInkiOjE0NTAuOTk5OTkyMzcwNjA1NX0seyJ4IjoxNjUuNSwieSI6MTQ4Ni40OTk5OTIzNzA2MDU1fSx7IngiOjE2NS41LCJ5IjoxNTIxLjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M644.301,1047.6L640.793,1051.767C637.284,1055.933,630.267,1064.267,626.759,1077.983C623.25,1091.7,623.25,1110.8,623.25,1131.65C623.25,1152.5,623.25,1175.1,623.25,1197.7C623.25,1220.3,623.25,1242.9,623.25,1265.5C623.25,1288.1,623.25,1310.7,623.25,1334.767C623.25,1358.833,623.25,1384.367,623.25,1409.9C623.25,1435.433,623.25,1460.967,666.136,1481.534C709.022,1502.101,794.793,1517.702,837.679,1525.503L880.565,1533.303" id="my-svg-L_S1_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_SEM_0" data-points="W3sieCI6NjQ0LjMwMTQ4MzcwMDg5MDIsInkiOjEwNDcuNTk5OTk4NDc0MTIxfSx7IngiOjYyMy4yNSwieSI6MTA3Mi41OTk5OTg0NzQxMjF9LHsieCI6NjIzLjI1LCJ5IjoxMTI5Ljg5OTk5NzcxMTE4MTZ9LHsieCI6NjIzLjI1LCJ5IjoxMTk3LjY5OTk5Njk0ODI0MjJ9LHsieCI6NjIzLjI1LCJ5IjoxMjY1LjQ5OTk5NjE4NTMwMjd9LHsieCI6NjIzLjI1LCJ5IjoxMzMzLjI5OTk5NTQyMjM2MzN9LHsieCI6NjIzLjI1LCJ5IjoxNDA5Ljg5OTk5Mzg5NjQ4NDR9LHsieCI6NjIzLjI1LCJ5IjoxNDg2LjQ5OTk5MjM3MDYwNTV9LHsieCI6ODg0LjUsInkiOjE1MzQuMDE5MTA2NTI0MDExNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M422.278,1162.2L438.815,1168.117C455.352,1174.033,488.426,1185.867,504.963,1203.083C521.5,1220.3,521.5,1242.9,521.5,1265.5C521.5,1288.1,521.5,1310.7,521.5,1334.767C521.5,1358.833,521.5,1384.367,521.5,1409.9C521.5,1435.433,521.5,1460.967,581.34,1482.284C641.18,1503.601,760.86,1520.702,820.7,1529.252L880.54,1537.802" id="my-svg-L_S2_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S2_SEM_0" data-points="W3sieCI6NDIyLjI3ODAyMjQ4MjI5NTU3LCJ5IjoxMTYyLjE5OTk5Njk0ODI0MjJ9LHsieCI6NTIxLjUsInkiOjExOTcuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo1MjEuNSwieSI6MTI2NS40OTk5OTYxODUzMDI3fSx7IngiOjUyMS41LCJ5IjoxMzMzLjI5OTk5NTQyMjM2MzN9LHsieCI6NTIxLjUsInkiOjE0MDkuODk5OTkzODk2NDg0NH0seyJ4Ijo1MjEuNSwieSI6MTQ4Ni40OTk5OTIzNzA2MDU1fSx7IngiOjg4NC41LCJ5IjoxNTM4LjM2ODA2MzQ0MTMxNzZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M340.885,1297.8L352.404,1303.717C363.923,1309.633,386.962,1321.467,398.481,1340.15C410,1358.833,410,1384.367,410,1409.9C410,1435.433,410,1460.967,488.421,1482.807C566.842,1504.647,723.684,1522.793,802.105,1531.866L880.527,1540.94" id="my-svg-L_S3_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S3_SEM_0" data-points="W3sieCI6MzQwLjg4NDk1NDk3NDQ3NSwieSI6MTI5Ny43OTk5OTU0MjIzNjMzfSx7IngiOjQxMCwieSI6MTMzMy4yOTk5OTU0MjIzNjMzfSx7IngiOjQxMCwieSI6MTQwOS44OTk5OTM4OTY0ODQ0fSx7IngiOjQxMCwieSI6MTQ4Ni40OTk5OTIzNzA2MDU1fSx7IngiOjg4NC41LCJ5IjoxNTQxLjM5OTQ3OTgwNzQ0MDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M238.51,1451L243.55,1456.917C248.59,1462.833,258.67,1474.667,365.671,1490.089C472.672,1505.511,676.595,1524.523,778.556,1534.028L880.517,1543.534" id="my-svg-L_S4_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S4_SEM_0" data-points="W3sieCI6MjM4LjUxMDExNjg5MTA5MTQsInkiOjE0NTAuOTk5OTkyMzcwNjA1NX0seyJ4IjoyNjguNzUsInkiOjE0ODYuNDk5OTkyMzcwNjA1NX0seyJ4Ijo4ODQuNSwieSI6MTU0My45MDUwNzkzODM2MjczfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M165.5,1586.6L165.5,1590.767C165.5,1594.933,165.5,1603.267,165.5,1611.6C165.5,1619.933,165.5,1628.267,165.5,1635.933C165.5,1643.6,165.5,1650.6,165.5,1654.1L165.5,1657.6" id="my-svg-L_S5_DONE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S5_DONE_0" data-points="W3sieCI6MTY1LjUsInkiOjE1ODYuNTk5OTkwODQ0NzI2Nn0seyJ4IjoxNjUuNSwieSI6MTYxMS41OTk5OTA4NDQ3MjY2fSx7IngiOjE2NS41LCJ5IjoxNjM2LjU5OTk5MDg0NDcyNjZ9LHsieCI6MTY1LjUsInkiOjE2NjEuNTk5OTkwODQ0NzI2Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M645.184,1047.6L641.237,1052.445C637.289,1057.29,629.395,1066.98,642.114,1071.825C654.833,1076.67,688.167,1076.67,701.307,1072.342C714.447,1068.014,707.395,1059.357,703.869,1055.029L700.342,1050.701" id="my-svg-L_S1_S1_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S1_S1_0" data-points="W3sieCI6NjQ1LjE4NDIxMDUyNjMxNTcsInkiOjEwNDcuNTk5OTk4NDc0MTIxfSx7IngiOjYyMS41LCJ5IjoxMDc2LjY2OTk5Nzc4NzQ3NTV9LHsieCI6NzIxLjUsInkiOjEwNzYuNjY5OTk3Nzg3NDc1NX0seyJ4Ijo2OTcuODE1Nzg5NDczNjg0MywieSI6MTA0Ny41OTk5OTg0NzQxMjF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_IN_CLS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CLS_IND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(533, 490.6999969482422)"><g class="label" data-id="L_IND_INF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(706.5, 584.8999977111816)"><g class="label" data-id="L_IND_MAP_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_INF_MAP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MAP_ORD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ORD_S1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_S1_S2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_S2_S3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_S3_S4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_S4_S5_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(623.25, 1265.4999961853027)"><g class="label" data-id="L_S1_SEM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> artifacts</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(521.5, 1333.2999954223633)"><g class="label" data-id="L_S2_SEM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> artifacts</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(410, 1409.8999938964844)"><g class="label" data-id="L_S3_SEM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> artifacts</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(553.40883, 1513.03814)"><g class="label" data-id="L_S4_SEM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> artifacts</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_S5_DONE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(671.5, 1091.1699977874755)"><g class="label" data-id="L_S1_S1_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-76" y="0" width="153" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">per-step</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retry/backoff</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default ev" id="my-svg-flowchart-IN-0" data-look="classic" transform="translate(671.5, 31.5)"><rect class="basic label-container" style="fill:#7a4ea0 !important;stroke:#3c2352 !important" x="-107.5" y="-23.5" width="215" height="47"/><g class="label" style="color:#f3e9ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#f3e9ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> claimed</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CLS-1" data-look="classic" transform="translate(671.5, 146.0999984741211)"><rect class="basic label-container" style="" x="-121" y="-41.099998474121094" width="242" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Classify</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hashtags</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> content-type</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thread</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ctx</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IND-3" data-look="classic" transform="translate(671.5, 346.1999969482422)"><polygon points="109,0 218,-109 109,-218 0,-109" class="label-container" transform="translate(-108.5, 109)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tags</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> absent/insufficient?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-INF-5" data-look="classic" transform="translate(533, 584.8999977111816)"><rect class="basic label-container" style="" x="-127.5" y="-58.70000076293945" width="255" height="117.4000015258789"/><g class="label" style="" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Indirect</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> determination</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">torrent→Torrent;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">github→Research;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">media→Download+Resear</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ch</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MAP-7" data-look="classic" transform="translate(671.5, 743.5)"><rect class="basic label-container" style="" x="-118" y="-49.900001525878906" width="236" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Map</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> category</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> set</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skill</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">set</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixSkills</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skill-Graph</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">resolve</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ORD-11" data-look="classic" transform="translate(671.5, 875.7000007629395)"><rect class="basic label-container" style="" x="-111" y="-32.29999923706055" width="222" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Order</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> precedence</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SortOrder</tspan></tspan></text></g></g></g><g class="node default st" id="my-svg-flowchart-S1-12" data-look="classic" transform="translate(671.5, 1015.2999992370605)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-108" y="-32.29999923706055" width="216" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> download</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Boba/MeTube/DL</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Mgr</tspan></tspan></text></g></g></g><g class="node default st" id="my-svg-flowchart-S2-13" data-look="classic" transform="translate(332, 1129.8999977111816)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-92.5" y="-32.29999923706055" width="185" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> convert</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">…-web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> renditions</tspan></tspan></text></g></g></g><g class="node default st" id="my-svg-flowchart-S3-14" data-look="classic" transform="translate(278, 1265.4999961853027)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-112" y="-32.29999923706055" width="224" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> analyze</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Vision+OCR,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> transcript</tspan></tspan></text></g></g></g><g class="node default st" id="my-svg-flowchart-S4-15" data-look="classic" transform="translate(203.5, 1409.8999938964844)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-115.5" y="-41.099998474121094" width="231" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">4</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> research</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">multi-pass</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> docs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skills</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> growth</tspan></tspan></text></g></g></g><g class="node default st" id="my-svg-flowchart-S5-16" data-look="classic" transform="translate(165.5, 1554.299991607666)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-122.5" y="-32.29999923706055" width="245" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">5</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reply</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reply</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-SEM-27" data-look="classic" transform="translate(996, 1554.299991607666)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-111.5" y="-23.5" width="223" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic-search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> index</tspan></tspan></text></g></g></g><g class="node default ev" id="my-svg-flowchart-DONE-29" data-look="classic" transform="translate(165.5, 1685.0999908447266)"><rect class="basic label-container" style="fill:#7a4ea0 !important;stroke:#3c2352 !important" x="-84" y="-23.5" width="168" height="47"/><g class="label" style="color:#f3e9ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#f3e9ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.processed</tspan></tspan></text></g></g></g><g class="label edgeLabel" id="S1---S1---1" transform="translate(719.75, 1129.8999977111816)"><rect width="0.1" height="0.1"/><g class="label" style="" transform="translate(0, 0)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"/></text></g></g></g><g class="label edgeLabel" id="S1---S1---2" transform="translate(733, 1265.4999961853027)"><rect width="0.1" height="0.1"/><g class="label" style="" transform="translate(0, 0)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"/></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/processing-pipeline.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram reads as a funnel that narrows a messy
+inbound post down to a deterministic, ordered list of Skill steps and
+then fans that list out through five strict stages. The value of reading
+it whole is seeing that every classification branch converges on the
+<em>same</em> ordered pipeline, so no matter how a post is categorized
+it is processed by one predictable machine rather than a bespoke path
+per hashtag.</p>
+<p>A claimed <code>post.received</code> first goes to classification,
+which reads the union of hashtags plus content-type and thread context.
+If tags are absent or insufficient, <strong>indirect
+determination</strong> fills them in from link shape — a torrent link
+becomes <code>Torrent</code>, a GitHub link becomes
+<code>Research</code>, a media link becomes download-plus-research-if-IT
+— so a link-only post is never left unclassified. The resulting category
+set is mapped to concrete Skills by resolving the HelixSkills
+Skill-Graph (the knowledge/ordering source, which does <em>not</em>
+itself execute anything, per §2), then ordered by the fixed precedence
+and each Skill’s <code>SortOrder</code> so the run order is fully
+deterministic before a single step fires.</p>
+<p>Execution then proceeds through the five strict stages: download
+(delegated to Boba/MeTube/Download Manager), convert (generate
+<code>…-web</code> renditions while keeping the raw), analyze (Vision +
+OCR + transcript + content classification), research (multi-pass web
+research that also grows the Skill-Graph and knowledge base), and
+finally reply (post the status reply and mark the post processed,
+emitting <code>post.processed</code>).</p>
+<p>Two properties the diagram encodes beyond the linear flow are worth
+calling out. Stages 1–4 each embed their artifacts into the semantic
+index as they complete, and the download stage has a self-loop
+indicating per-step retry with back-off — a transient download failure
+retries just that step, not the whole post. The order is not cosmetic:
+research in stage 4 can analyze the media downloaded in stage 1 and
+transcribed in stage 3, and the reply in stage 5 reports the complete
+result.</p>
+<h2 id="content-type-recipe-matrix">7. Content-type recipe matrix</h2>
+<p>Every documented hashtag category has a written Skill (recipe), all
+built in parallel <code>[OPERATOR: all categories]</code>
+<code>[research_request_final §3.2.2]</code>. Each recipe composes the
+stages above.</p>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Recipe (stages)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video / Videos</td>
+<td>download → convert (<code>…-web</code>) → analyze; maintain
+post↔︎asset links; re-downloadable via REST</td>
+</tr>
+<tr>
+<td>Torrent / Magnet</td>
+<td>locate torrent/magnet (Boba if absent) → delegated download with
+callback</td>
+</tr>
+<tr>
+<td>Serial / Series</td>
+<td>search all seasons (3rd-party) → download all with callbacks</td>
+</tr>
+<tr>
+<td>Movie / Movies</td>
+<td>as Series, movie-oriented</td>
+</tr>
+<tr>
+<td>Research (+Technology)</td>
+<td>multi-pass deep web research → comprehensive docs →
+Skills/Plugins/MCP/ACP/LSP/Embeddings; semantic + CodeGraph ingest</td>
+</tr>
+<tr>
+<td>Documentary</td>
+<td>as Movies; if no <code>#ToDownload</code>, full processing +
+documentation/book</td>
+</tr>
+<tr>
+<td>Concert / Concerts</td>
+<td>as shows; live music/artist media (video/audio)</td>
+</tr>
+<tr>
+<td>Game / Games</td>
+<td>seek per platform (default PS4/PC/Android; PC default OS Windows
+unless <code>#macOS</code>/<code>#Linux</code>)</td>
+</tr>
+<tr>
+<td>Software</td>
+<td>as games; default OS Windows/Linux/macOS</td>
+</tr>
+<tr>
+<td>Channel</td>
+<td>download full channel; raw + web; IT content → research</td>
+</tr>
+<tr>
+<td>Playlist</td>
+<td>as channels; grouped with ordering-number prefixes for watch
+order</td>
+</tr>
+<tr>
+<td>Music</td>
+<td>as concerts; MP3/OPUS/FLAC + majors; locate if no links</td>
+</tr>
+<tr>
+<td>Book / Books</td>
+<td>determine author, download full bibliography; if IT → research +
+Skills</td>
+</tr>
+<tr>
+<td>Comic / Comics</td>
+<td>download → <strong>OCR full transcription</strong> → semantic ingest
+(no research/Skills)</td>
+</tr>
+<tr>
+<td>Netflix</td>
+<td>find first (unless links provided); as movies/series</td>
+</tr>
+<tr>
+<td>Training</td>
+<td>full course download (Udemy/Coursera…); analyze; documentation +
+Skills</td>
+</tr>
+<tr>
+<td>Technology (+Research)</td>
+<td>mandatory deep research + analysis docs; download all media; Skills
+growth; powerful semantic search</td>
+</tr>
+</tbody>
+</table>
+<p><code>#ToDownload</code> semantics: with the tag,
+download-then-other-processing-by-kind; e.g. an IT resource is
+downloaded <strong>and</strong> deep-researched.</p>
+<h2 id="ocr-vision-build-new-ocr-adapter">8. OCR &amp; Vision (BUILD-NEW
+OCR adapter)</h2>
+<p>The analyze stage needs OCR for Comics (full transcription),
+Screenshots, QR codes, and scanned documents. VisionEngine provides
+LLM-vision adapters but <strong>has no OCR engine</strong>
+<code>[GAP: 2.6]</code> (VERIFIED grep-confirmed no
+Tesseract/gosseract/PaddleOCR/GOT-OCR).</p>
+<p><strong>Plan <code>[BUILD-NEW: OCR adapter]</code>
+<code>[research_request_final Q37]</code>:</strong></p>
+<ul>
+<li>Add a <strong>Tesseract adapter</strong> (cgo <code>gosseract</code>
+or <code>tesseract</code> subprocess) + a <strong>PaddleOCR</strong>
+option for hard/multilingual scans, behind a first-class
+<code>OCRProvider</code> seam; per-word bounding boxes; offline +
+deterministic.</li>
+<li><strong>Hybrid pipeline:</strong> Tesseract/PaddleOCR fast first
+pass (raw text + boxes) → LLM-vision second pass over ambiguous regions;
+wire VisionEngine’s <code>TextRegion</code> type to the real
+recognizer.</li>
+<li>Make the GoCV analyzer (behind the <code>-tags vision</code> build
+tag) a real path or clearly gate/ document it (it is a
+<code>StubAnalyzer</code> today).</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// OCRProvider seam behind VisionEngine (BUILD-NEW adapter).</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OCRProvider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Recognize<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> img <span class="op">[]</span><span class="dt">byte</span><span class="op">,</span> lang <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="op">(</span>OCRResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OCRResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Text   <span class="dt">string</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Words  <span class="op">[]</span>Word <span class="co">// per-word bounding boxes</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Hybrid: fast OCR first, LLM-vision fallback for low-confidence regions.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>HybridAnalyzer<span class="op">)</span> Analyze<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> img <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">(</span>Analysis<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    ocr<span class="op">,</span> _ <span class="op">:=</span> a<span class="op">.</span>ocr<span class="op">.</span>Recognize<span class="op">(</span>ctx<span class="op">,</span> img<span class="op">,</span> a<span class="op">.</span>langs<span class="op">)</span>        <span class="co">// Tesseract/PaddleOCR</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ocr<span class="op">.</span>MinConfidence<span class="op">()</span> <span class="op">&lt;</span> a<span class="op">.</span>threshold <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        vis<span class="op">,</span> _ <span class="op">:=</span> a<span class="op">.</span>vision<span class="op">.</span>Describe<span class="op">(</span>ctx<span class="op">,</span> img<span class="op">)</span>           <span class="co">// LLM-vision second pass</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> merge<span class="op">(</span>ocr<span class="op">,</span> vis<span class="op">),</span> <span class="ot">nil</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fromOCR<span class="op">(</span>ocr<span class="op">),</span> <span class="ot">nil</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>QR codes are decoded (target + metadata extracted) and treated as
+<strong>sensitive</strong> (encrypted); screenshots are OCR+Vision
+analyzed and sensitivity-classified — see <a
+href="./security-model.md">security-model.md</a> §7. All extracted text
+is embedded for semantic search.</p>
+<h2 id="status-reply">9. Status reply</h2>
+<p>After all Skills complete, the pipeline posts a <strong>status
+reply</strong> to the original post via ThreadReader.Reply (Robot or
+User account) containing success/failure, metrics (durations, artifact
+counts), and asset references
+<code>[research_request_final §3.2.3, §21.2]</code>. It then marks the
+post processed and emits <code>post.processed</code>.
+Reprocessing/refresh is allowed via an explicit trigger
+(<code>client → REST /v1/posts/{id}/reprocess → System</code>), which
+invalidates the sticky <code>post.state</code> (<a
+href="./event-model.md">event-model.md</a>). The system never processes
+its own status replies (<a
+href="./messenger-ingestion.md">messenger-ingestion.md</a> §5).</p>
+<h2 id="gap-register-coverage">10. Gap-register coverage</h2>
+<ul>
+<li><code>[GAP: 4.1]</code> helix_skills has no execution engine → Skill
+Dispatch Engine (§3), standardize <code>SKILL.md</code>, triage open
+findings.</li>
+<li><code>[GAP: 2.9]</code> token_optimizer WIP / TOON scaffold →
+research stage runs on existing cost levers for MVP; real
+token-optimizer/TOON deferred behind an anti-bluff gate (§5.1). The
+session_orchestrator half of 2.9 is closed in <a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>.</li>
+<li><code>[GAP: 2.6]</code> VisionEngine has no OCR → BUILD-NEW OCR
+adapter + hybrid pipeline (§8).</li>
+<li>Download delegation gaps (<code>[GAP: 6.x]</code>) are consumed here
+but owned by <a
+href="./asset-and-download.md">asset-and-download.md</a>.</li>
+<li>Research-stage embedding + the HashEmbedder trap
+(<code>[GAP: 2.1]</code>) are owned by <a
+href="./semantic-search.md">semantic-search.md</a>.</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: multi-hashtag post runs BOTH video-download and research Skills.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDispatch_MultiCategory<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    post <span class="op">:=</span> fixturePost<span class="op">(</span>hashtags<span class="op">=[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;Research&quot;</span><span class="op">,</span><span class="st">&quot;Video&quot;</span><span class="op">,</span><span class="st">&quot;TODO&quot;</span><span class="op">,</span><span class="st">&quot;ToDownload&quot;</span><span class="op">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                        links<span class="op">=[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;https://youtu.be/x&quot;</span><span class="op">,</span><span class="st">&quot;https://github.com/o/r&quot;</span><span class="op">})</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    steps <span class="op">:=</span> dispatch<span class="op">(</span>t<span class="op">,</span> post<span class="op">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Subset<span class="op">(</span>t<span class="op">,</span> skillNames<span class="op">(</span>steps<span class="op">),</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;video.download&quot;</span><span class="op">,</span><span class="st">&quot;tech.research&quot;</span><span class="op">})</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: precedence must order download before research.</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDispatch_PrecedenceOrder<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    steps <span class="op">:=</span> OrderByPrecedence<span class="op">(</span>mixedSkills<span class="op">)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Less<span class="op">(</span>t<span class="op">,</span> indexOf<span class="op">(</span>steps<span class="op">,</span><span class="st">&quot;stage:download&quot;</span><span class="op">),</span> indexOf<span class="op">(</span>steps<span class="op">,</span><span class="st">&quot;stage:research&quot;</span><span class="op">))</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: comic OCR must produce a transcription (not silently skip).</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestComic_OCRTranscription<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    res <span class="op">:=</span> analyze<span class="op">(</span>t<span class="op">,</span> comicPage<span class="op">())</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotEmpty<span class="op">(</span>t<span class="op">,</span> res<span class="op">.</span>Transcription<span class="op">)</span> <span class="co">// FAILS until OCR adapter wired (GAP 2.6)</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: unclassifiable post is generic-ingested, never dropped.</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestClassify_NeverDrops<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    cats <span class="op">:=</span> Classify<span class="op">(</span>fixturePost<span class="op">(</span>hashtags<span class="op">=</span><span class="ot">nil</span><span class="op">,</span> links<span class="op">=</span><span class="ot">nil</span><span class="op">,</span> text<span class="op">=</span><span class="st">&quot;hello&quot;</span><span class="op">))</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Contains<span class="op">(</span>t<span class="op">,</span> cats<span class="op">,</span> <span class="st">&quot;GenericIngest&quot;</span><span class="op">)</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">12. Open items</h2>
+<ul>
+<li><code>[OPEN: PROC-1]</code> The canonical <code>SKILL.md</code>
+schema (frontmatter fields, versioning) must be finalized before
+migrating the no-frontmatter Skill dirs <code>[GAP: 4.1]</code>; tracked
+as a workable item against helix_skills.</li>
+<li><code>[CLOSED: PROC-2]</code> (was: exact
+<code>SkillRegistry</code>/<code>MCP_Module</code> import paths FLAGGED
+docs-only). <strong>Source-verified via CAT-2</strong> (<a
+href="./component-catalog.md">component-catalog.md</a> §8,
+<code>go.mod</code> read): <code>SkillRegistry</code> =
+<strong><code>dev.helix.agent/skillregistry</code></strong> (flat
+package: <code>executor.go</code>/<code>loader.go</code>/
+<code>manager.go</code>/<code>registry.go</code>/<code>storage.go</code>+<code>storage_postgres.go</code>/<code>validator.go</code>/<code>types.go</code>)
+— <strong>not</strong> the earlier-quoted
+<code>digital.vasic.skill_registry</code>; <code>MCP_Module</code> =
+<strong><code>digital.vasic.mcp</code></strong>
+(<code>pkg/{server,client,protocol,registry,adapter,config}</code>) —
+<strong>not</strong> <code>digital.vasic.mcp_module</code>. §2/§3 now
+carry the corrected paths; no residual verification needed (anti-bluff
+correction).</li>
+<li><code>[OPEN: PROC-3]</code> Per-Skill concurrency caps and
+per-category soft timeouts are <code>[DEFAULT — adjustable]</code>
+(research-heavy 30 min); final values need load-testing in the testing
+pack.</li>
+<li><code>[OPEN: PROC-4]</code> Whether
+<code>token_optimizer</code>/<code>TOON</code> are hardened for Thready
+or declared out-of-scope for the MVP <code>[GAP: 2.9]</code> is a
+tracked P1 decision; the research stage runs on the existing cost levers
+(§5.1) until then. Re-verify both at source before any reliance (gap
+register §13 re-verification backlog).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

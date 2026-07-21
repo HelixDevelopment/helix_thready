@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Root Admin Guide</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Root Admin Guide</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#what-root-admin-means" id="toc-what-root-admin-means">1.
+What “Root Admin” means</a></li>
+<li><a href="#the-three-tier-hierarchy-diagram"
+id="toc-the-three-tier-hierarchy-diagram">2. The three-tier hierarchy
+(diagram)</a></li>
+<li><a href="#bootstrap-securing-the-root-account"
+id="toc-bootstrap-securing-the-root-account">3. Bootstrap &amp; securing
+the root account</a></li>
+<li><a href="#managing-accounts-users"
+id="toc-managing-accounts-users">4. Managing accounts &amp;
+users</a></li>
+<li><a href="#white-label-branding" id="toc-white-label-branding">5.
+White-label branding</a></li>
+<li><a href="#global-retention-data-policy"
+id="toc-global-retention-data-policy">6. Global retention &amp; data
+policy</a></li>
+<li><a href="#security-policy" id="toc-security-policy">7. Security
+policy</a></li>
+<li><a href="#pause-resume-stop-processing"
+id="toc-pause-resume-stop-processing">8. Pause / resume / stop
+processing</a></li>
+<li><a href="#audit-trail-access-logs"
+id="toc-audit-trail-access-logs">9. Audit trail &amp; access
+logs</a></li>
+<li><a href="#backup-disaster-recovery-runbook"
+id="toc-backup-disaster-recovery-runbook">10. Backup &amp; disaster
+recovery runbook</a></li>
+<li><a href="#billing-oversight" id="toc-billing-oversight">11. Billing
+oversight</a></li>
+<li><a href="#tutorials" id="toc-tutorials">12. Tutorials</a></li>
+<li><a href="#open-items" id="toc-open-items">13. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Root Admin Guide
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/user-guides/root-admin-guide.md
+  Status          : Draft — v0.1 (zero-version)
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (user-guides)
+  Related         : ./account-admin-guide.md, ./configuration.md, ./installation.md,
+                    ../deployment/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (user-guides)</td>
+<td>Initial Root Admin operations guide</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (user-guides, Pass 3)</td>
+<td>Depth pass: split the hierarchy diagram explanation into
+multi-paragraph form; expanded the security-policy and DR sections;
+strengthened the User Service open item</td>
+</tr>
+</tbody>
+</table>
+<p>The Root Admin <strong>owns the whole system</strong>. Exactly one
+exists (final request §6.1). This guide covers everything only the Root
+Admin can do: managing all Accounts, setting global defaults,
+white-label branding, MFA policy, pausing/resuming processing, auditing,
+and the backup/DR runbook. Account-scoped tasks are in <a
+href="./account-admin-guide.md">account-admin-guide.md</a>; the
+underlying knobs are in <a
+href="./configuration.md">configuration.md</a>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-what-root-admin-means">What “Root Admin” means</a></li>
+<li><a href="#2-the-three-tier-hierarchy-diagram">The three-tier
+hierarchy (diagram)</a></li>
+<li><a href="#3-bootstrap--securing-the-root-account">Bootstrap &amp;
+securing the root account</a></li>
+<li><a href="#4-managing-accounts--users">Managing accounts &amp;
+users</a></li>
+<li><a href="#5-white-label-branding">White-label branding</a></li>
+<li><a href="#6-global-retention--data-policy">Global retention &amp;
+data policy</a></li>
+<li><a href="#7-security-policy">Security policy (MFA, sessions,
+keys)</a></li>
+<li><a href="#8-pause--resume--stop-processing">Pause / resume / stop
+processing</a></li>
+<li><a href="#9-audit-trail--access-logs">Audit trail &amp; access
+logs</a></li>
+<li><a href="#10-backup--disaster-recovery-runbook">Backup &amp;
+disaster recovery runbook</a></li>
+<li><a href="#11-billing-oversight">Billing oversight</a></li>
+<li><a href="#12-tutorials">Tutorials</a></li>
+<li><a href="#13-open-items">Open items</a></li>
+</ol>
+<h2 id="what-root-admin-means">1. What “Root Admin” means</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th style="text-align: center;">Root Admin</th>
+<th style="text-align: center;">Account Admin</th>
+<th style="text-align: center;">Standard User</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Edit <strong>any</strong> account/user/role/permission</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td>Set <strong>global</strong> defaults (retention, MFA, branding,
+backup)</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td>Create/delete Accounts</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">(own, via self-service)</td>
+<td style="text-align: center;">(own, via self-service)</td>
+</tr>
+<tr>
+<td>Manage members of <strong>an</strong> account</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅ (own account)</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td>Onboard channels, edit skills/recipes</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅ (own account)</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td>Browse threads, search, download, re-process</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td>Pause/resume processing (global)</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">(own account only)</td>
+<td style="text-align: center;">❌</td>
+</tr>
+</tbody>
+</table>
+<p>RBAC is enforced by the <strong>User Service</strong>
+<code>[BUILD-NEW]</code> built on <code>digital.vasic.auth</code> +
+<code>security/pkg/policy</code> + the Catalogizer RBAC pattern
+<code>[GAP: 20]</code>. Until the User Service is decoupled, the policy
+enforcer runs in-process; the permission matrix above is the
+contract.</p>
+<h2 id="the-three-tier-hierarchy-diagram">2. The three-tier hierarchy
+(diagram)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1032.5px; background-color: white;" viewBox="0 0 1032.5 640.6000366210938" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M476.75,56.182L541.583,64.835C606.417,73.488,736.083,90.794,800.917,107.63C865.75,124.467,865.75,140.833,865.75,149.017L865.75,157.2" id="my-svg-L_ROOT_A1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_A1_0" data-points="W3sieCI6NDc2Ljc1LCJ5Ijo1Ni4xODIyODI1MjI5MDc0MX0seyJ4Ijo4NjUuNzUsInkiOjEwOC4wOTk5OTg0NzQxMjExfSx7IngiOjg2NS43NSwieSI6MTYxLjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M291.292,72.6L279.118,78.517C266.945,84.433,242.597,96.267,230.424,110.367C218.25,124.467,218.25,140.833,218.25,149.017L218.25,157.2" id="my-svg-L_ROOT_A2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_A2_0" data-points="W3sieCI6MjkxLjI5MjAzNjIyMDE1NzEsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjE4LjI1LCJ5IjoxMDguMDk5OTk4NDc0MTIxMX0seyJ4IjoyMTguMjUsInkiOjE2MS4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M418.968,72.6L430.181,78.517C441.395,84.433,463.823,96.267,475.036,107.433C486.25,118.6,486.25,129.1,486.25,134.35L486.25,139.6" id="my-svg-L_ROOT_GLOBAL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_GLOBAL_0" data-points="W3sieCI6NDE4Ljk2NzU1MDg2NTMwMzM0LCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjQ4Ni4yNSwieSI6MTA4LjA5OTk5ODQ3NDEyMTF9LHsieCI6NDg2LjI1LCJ5IjoxNDMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M865.75,208.2L865.75,217.05C865.75,225.9,865.75,243.6,849.681,258.144C833.613,272.688,801.475,284.076,785.407,289.77L769.338,295.464" id="my-svg-L_A1_AA1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A1_AA1_0" data-points="W3sieCI6ODY1Ljc1LCJ5IjoyMDguMTk5OTk2OTQ4MjQyMn0seyJ4Ijo4NjUuNzUsInkiOjI2MS4yOTk5OTU0MjIzNjMzfSx7IngiOjc2NS41Njc3OTY2MTAxNjk1LCJ5IjoyOTYuNzk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M218.25,208.2L218.25,217.05C218.25,225.9,218.25,243.6,218.25,257.7C218.25,271.8,218.25,282.3,218.25,287.55L218.25,292.8" id="my-svg-L_A2_AA2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A2_AA2_0" data-points="W3sieCI6MjE4LjI1LCJ5IjoyMDguMTk5OTk2OTQ4MjQyMn0seyJ4IjoyMTguMjUsInkiOjI2MS4yOTk5OTU0MjIzNjMzfSx7IngiOjIxOC4yNSwieSI6Mjk2Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M614.311,343.8L592.926,349.717C571.541,355.633,528.77,367.467,480.487,380.656C432.204,393.846,378.408,408.392,351.509,415.665L324.611,422.938" id="my-svg-L_AA1_U1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AA1_U1_0" data-points="W3sieCI6NjE0LjMxMTQ0MDY3Nzk2NjEsInkiOjM0My43OTk5OTU0MjIzNjMzfSx7IngiOjQ4NiwieSI6Mzc5LjI5OTk5NTQyMjM2MzN9LHsieCI6MzIwLjc1LCJ5Ijo0MjMuOTgxNzQ5NjU1MzYxM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M681.227,343.8L676.689,349.717C672.151,355.633,663.076,367.467,658.538,380.1C654,392.733,654,406.167,654,412.883L654,419.6" id="my-svg-L_AA1_CH1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AA1_CH1_0" data-points="W3sieCI6NjgxLjIyNjY5NDkxNTI1NDMsInkiOjM0My43OTk5OTU0MjIzNjMzfSx7IngiOjY1NCwieSI6Mzc5LjI5OTk5NTQyMjM2MzN9LHsieCI6NjU0LCJ5Ijo0MjMuNTk5OTk0NjU5NDIzOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M783.591,343.8L804.826,349.717C826.061,355.633,868.53,367.467,889.765,378.633C911,389.8,911,400.3,911,405.55L911,410.8" id="my-svg-L_AA1_R1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AA1_R1_0" data-points="W3sieCI6NzgzLjU5MTEwMTY5NDkxNTIsInkiOjM0My43OTk5OTU0MjIzNjMzfSx7IngiOjkxMSwieSI6Mzc5LjI5OTk5NTQyMjM2MzN9LHsieCI6OTExLCJ5Ijo0MTQuNzk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M189.411,470.6L175.009,477.983C160.607,485.367,131.804,500.133,117.402,512.767C103,525.4,103,535.9,103,541.15L103,546.4" id="my-svg-L_U1_VIEW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_U1_VIEW_0" data-points="W3sieCI6MTg5LjQxMTEzNTE3NzQsInkiOjQ3MC41OTk5OTQ2NTk0MjM4fSx7IngiOjEwMywieSI6NTE0Ljg5OTk5Mzg5NjQ4NDR9LHsieCI6MTAzLCJ5Ijo1NTAuMzk5OTkzODk2NDg0NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M281.089,470.6L295.491,477.983C309.893,485.367,338.696,500.133,353.098,514.233C367.5,528.333,367.5,541.767,367.5,548.483L367.5,555.2" id="my-svg-L_U1_A3_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_U1_A3_0" data-points="W3sieCI6MjgxLjA4ODg2NDgyMjYsInkiOjQ3MC41OTk5OTQ2NTk0MjM4fSx7IngiOjM2Ny41LCJ5Ijo1MTQuODk5OTkzODk2NDg0NH0seyJ4IjozNjcuNSwieSI6NTU5LjE5OTk5MzEzMzU0NDl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M476.75,63.926L513.833,71.288C550.917,78.651,625.083,93.375,662.167,113.504C699.25,133.633,699.25,159.167,699.25,184.7C699.25,210.233,699.25,235.767,699.25,253.783C699.25,271.8,699.25,282.3,699.25,287.55L699.25,292.8" id="my-svg-L_ROOT_AA1_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_AA1_0" data-points="W3sieCI6NDc2Ljc1LCJ5Ijo2My45MjU3Njc2Mzg4NDczOX0seyJ4Ijo2OTkuMjUsInkiOjEwOC4wOTk5OTg0NzQxMjExfSx7IngiOjY5OS4yNSwieSI6MTg0LjY5OTk5Njk0ODI0MjJ9LHsieCI6Njk5LjI1LCJ5IjoyNjEuMjk5OTk1NDIyMzYzM30seyJ4Ijo2OTkuMjUsInkiOjI5Ni43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M238.75,70.518L214.083,76.782C189.417,83.045,140.083,95.573,115.417,114.603C90.75,133.633,90.75,159.167,90.75,184.7C90.75,210.233,90.75,235.767,90.75,258.367C90.75,280.967,90.75,300.633,90.75,320.3C90.75,339.967,90.75,359.633,105.882,376.567C121.015,393.5,151.279,407.701,166.412,414.801L181.544,421.901" id="my-svg-L_ROOT_U1_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_U1_0" data-points="W3sieCI6MjM4Ljc1LCJ5Ijo3MC41MTc5NzY0MjUxMTM3NH0seyJ4Ijo5MC43NSwieSI6MTA4LjA5OTk5ODQ3NDEyMTF9LHsieCI6OTAuNzUsInkiOjE4NC42OTk5OTY5NDgyNDIyfSx7IngiOjkwLjc1LCJ5IjoyNjEuMjk5OTk1NDIyMzYzM30seyJ4Ijo5MC43NSwieSI6MzIwLjI5OTk5NTQyMjM2MzN9LHsieCI6OTAuNzUsInkiOjM3OS4yOTk5OTU0MjIzNjMzfSx7IngiOjE4NS4xNjUxOTExNzY4MTg5MiwieSI6NDIzLjU5OTk5NDY1OTQyMzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(865.75, 108.0999984741211)"><g class="label" data-id="L_ROOT_A1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-54.5" y="0" width="109" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">creates</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edits</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(218.25, 108.0999984741211)"><g class="label" data-id="L_ROOT_A2_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-54.5" y="0" width="109" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">creates</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edits</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(486.25, 108.0999984741211)"><g class="label" data-id="L_ROOT_GLOBAL_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-16.5" y="0" width="33" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sets</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_A1_AA1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A2_AA2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(467.63336, 384.26613)"><g class="label" data-id="L_AA1_U1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">invite</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> manage</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(654, 379.2999954223633)"><g class="label" data-id="L_AA1_CH1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-31" y="0" width="62" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">manage</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(911, 379.2999954223633)"><g class="label" data-id="L_AA1_R1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-31" y="0" width="62" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">override</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(103, 514.8999938964844)"><g class="label" data-id="L_U1_VIEW_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-34.5" y="0" width="69" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">consume</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(367.5, 514.8999938964844)"><g class="label" data-id="L_U1_A3_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56" y="0" width="112" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">can</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> create</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> own</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(699.25, 184.6999969482422)"><g class="label" data-id="L_ROOT_AA1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-48.5" y="0" width="97" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">can</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ANY</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(90.75, 261.2999954223633)"><g class="label" data-id="L_ROOT_U1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-48.5" y="0" width="97" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">can</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ANY</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-ROOT-0" data-look="classic" transform="translate(357.75, 40.29999923706055)"><rect class="basic label-container" style="" x="-119" y="-32.29999923706055" width="238" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (exactly</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> one)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">owns</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> whole</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> system</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A1-2" data-look="classic" transform="translate(865.75, 184.6999969482422)"><rect class="basic label-container" style="" x="-83" y="-23.5" width="166" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Acme</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A2-4" data-look="classic" transform="translate(218.25, 184.6999969482422)"><rect class="basic label-container" style="" x="-88.5" y="-23.5" width="177" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Globex</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GLOBAL-6" data-look="classic" transform="translate(486.25, 184.6999969482422)"><rect class="basic label-container" style="" x="-129.5" y="-41.099998474121094" width="259" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Global</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> defaults:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">retention,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MFA</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> policy,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">white-label</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> defaults,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> backup</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AA1-8" data-look="classic" transform="translate(699.25, 320.2999954223633)"><rect class="basic label-container" style="" x="-92.5" y="-23.5" width="185" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin(s)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AA2-10" data-look="classic" transform="translate(218.25, 320.2999954223633)"><rect class="basic label-container" style="" x="-92.5" y="-23.5" width="185" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin(s)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-U1-12" data-look="classic" transform="translate(235.25, 447.0999946594238)"><rect class="basic label-container" style="" x="-85.5" y="-23.5" width="171" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Standard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Users</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CH1-14" data-look="classic" transform="translate(654, 447.0999946594238)"><rect class="basic label-container" style="" x="-93.5" y="-23.5" width="187" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Channels</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skills</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-R1-16" data-look="classic" transform="translate(911, 447.0999946594238)"><rect class="basic label-container" style="" x="-113.5" y="-32.29999923706055" width="227" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Per-account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retention</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">branding</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VIEW-18" data-look="classic" transform="translate(103, 591.4999923706055)"><rect class="basic label-container" style="" x="-95" y="-41.099998474121094" width="190" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Browse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> threads,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">search,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> download,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">re-process</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A3-20" data-look="classic" transform="translate(367.5, 591.4999923706055)"><rect class="basic label-container" style="" x="-119.5" y="-32.29999923706055" width="239" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">New</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Account</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(user</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> becomes</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/rbac-hierarchy.mmd">diagrams/rbac-hierarchy.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> At the top sits the single Root Admin, who owns the
+entire system. There is exactly one, created once at deploy time, and
+its singular-ness is a deliberate security property: system-wide powers
+cannot be diffused across many accounts, so there is one throat to choke
+and one credential set to protect above all others.</p>
+<p>The Root Admin creates and can edit every Account (Acme, Globex, …)
+and sets the <strong>global defaults</strong> that every Account
+inherits: the default data-retention policy, the MFA policy, the
+white-label branding defaults applied to new Accounts, and the backup
+schedule. These defaults cascade downward — an Account starts from them
+and may only tighten, never loosen beyond the Root’s caps.</p>
+<p>Each Account has one or more <strong>Account Admins</strong>, who in
+turn invite and manage <strong>Standard Users</strong>, onboard the
+Account’s channels and skills, and may override the Account’s own
+retention and branding within the limits the Root Admin allows. This is
+the middle tier of delegation: an Account Admin has full authority
+<em>inside</em> their Account and none outside it.</p>
+<p>Standard Users consume the system — browsing threads, searching,
+downloading assets, and triggering re-processing. They are the leaf of
+the authority graph but the primary audience of the product; most
+day-to-day value flows through this tier.</p>
+<p>Crucially, the membership graph is <strong>not a strict
+tree</strong>. A Standard User can create their own Account and become
+its Admin (the dotted self-service edge), and a single person can be an
+Admin in one Account while being a Standard User in another — role is
+per-Account, not global. The two dotted edges from Root Admin down to
+any Account Admin or User express the <strong>override power</strong>:
+the Root Admin can edit <em>any</em> node in the graph, which no other
+tier can do. That override is exactly the capability the
+<code>[BUILD-NEW]</code> User Service <code>[GAP: 20]</code> must
+implement carefully, since it is the one edge that crosses account
+boundaries.</p>
+<h2 id="bootstrap-securing-the-root-account">3. Bootstrap &amp; securing
+the root account</h2>
+<p>The root account is created once at deploy time (see <a
+href="./installation.md#6-root-admin-bootstrap">installation.md §6</a>).
+Immediately after first login:</p>
+<ol type="1">
+<li><strong>Enrol TOTP MFA</strong> — mandatory for the root tier; the
+portal forces this before any other action.</li>
+<li><strong>Set recovery</strong> — register a recovery email/OTP path
+(account recovery via email/OTP, gap #6).</li>
+<li><strong>Rotate the bootstrap password</strong> if it came from a
+shared secret.</li>
+<li><strong>Verify audit logging is on</strong>
+(<code>thready audit tail</code> should show your login).</li>
+</ol>
+<blockquote>
+<p><strong>There is no “forgot root password” self-service.</strong>
+Root recovery requires the owner-only private repo secrets. Losing root
+credentials + MFA seed is a DR event — keep the TOTP seed backup with
+the private-repo secrets.</p>
+</blockquote>
+<h2 id="managing-accounts-users">4. Managing accounts &amp; users</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create an account (Root Admin only)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> account create <span class="at">--name</span> <span class="st">&quot;Acme&quot;</span> <span class="at">--admin-email</span> <span class="st">&quot;admin@acme.example&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   ✔ Account &#39;Acme&#39; created. Invite sent to admin@acme.example.</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Promote / assign roles across ANY account (root-only override)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> user set-role <span class="at">--account</span> Acme <span class="at">--email</span> <span class="st">&quot;jane@acme.example&quot;</span> <span class="at">--role</span> account_admin</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit any user (root override)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> user disable <span class="at">--email</span> <span class="st">&quot;leaver@acme.example&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># List everything</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> account list <span class="at">--with-usage</span></span></code></pre></div>
+<p>Equivalent portal flows are in <a
+href="./web-portal-guide.md#6-administration-screens">web-portal-guide.md
+§6</a>. All of these emit audit events (§9) and hit
+<code>POST/PATCH /v1/accounts</code> and <code>/v1/users</code> (<a
+href="../api/index.md">../api/index.md</a>).</p>
+<h2 id="white-label-branding">5. White-label branding</h2>
+<p>New Accounts default to Thready/Helix Development branding; the Root
+Admin may override per-Account (final request §8.3). The <strong>system
+default</strong> is set via env (<a
+href="./configuration.md#16-white-labeling--branding">configuration.md
+§16</a>); <strong>per-Account overrides</strong> are stored in the DB
+and edited here:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> brand set <span class="at">--account</span> Acme <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--primary-color</span> <span class="st">&quot;#0A7CFF&quot;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--logo</span> ./acme-logo.svg <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slogan</span> <span class="st">&quot;Acme Intelligence&quot;</span></span></code></pre></div>
+<p>Rules (VERIFIED, inconsistency #5 resolved): - Per-Account branding
+applies to that Account’s portal, generated documents’ headers/footers,
+and status replies. - The <strong>“Made with love ♥ by Helix
+Development”</strong> attribution persists in footers even under a
+white-label — it is not removable by an Account. - Light + dark variants
+are mandatory <code>[CONSTITUTION §11.4.162]</code>; upload both logo
+variants.</p>
+<h2 id="global-retention-data-policy">6. Global retention &amp; data
+policy</h2>
+<p>Operator decision (Q12): <strong>keep indefinitely, per-account
+overrides</strong>. The Root Admin sets the global default; each Account
+may <strong>shorten</strong> it (never lengthen beyond the global cap
+unless the Root Admin raises it).</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> retention set-global <span class="at">--default</span> indefinite</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> retention set-global <span class="at">--max-per-account</span> 365d   <span class="co"># cap an account can&#39;t exceed</span></span></code></pre></div>
+<p>GDPR-aware erasure/export hooks exist by design (minimal compliance,
+Q7) — the Root Admin can execute a subject erasure:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> gdpr erase <span class="at">--subject</span> <span class="st">&quot;user@example.com&quot;</span> <span class="at">--dry-run</span>   <span class="co"># preview affected rows/assets</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> gdpr erase <span class="at">--subject</span> <span class="st">&quot;user@example.com&quot;</span> <span class="at">--confirm</span></span></code></pre></div>
+<blockquote>
+<p><code>[OPEN: root-1]</code> Formal GDPR/CCPA certification is
+deferred for the MVP (design remains GDPR-aware). Workable item:
+<strong>ATM — certify erasure/export coverage before any external
+tenancy</strong>.</p>
+</blockquote>
+<h2 id="security-policy">7. Security policy</h2>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 26%" />
+<col style="width: 29%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Default</th>
+<th>Variable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MFA-required tiers</td>
+<td><code>root,account_admin</code></td>
+<td><code>THREADY_MFA_REQUIRED_TIERS</code></td>
+<td>Users optional.</td>
+</tr>
+<tr>
+<td>Access token TTL</td>
+<td>15 m</td>
+<td><code>THREADY_ACCESS_TOKEN_TTL</code></td>
+<td>Aggressive SLO posture.</td>
+</tr>
+<tr>
+<td>Refresh token TTL</td>
+<td>7 d</td>
+<td><code>THREADY_REFRESH_TOKEN_TTL</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Idle timeout (web)</td>
+<td>30 m</td>
+<td><code>THREADY_IDLE_TIMEOUT</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Password min length</td>
+<td>12</td>
+<td><code>THREADY_PASSWORD_MIN_LEN</code></td>
+<td>Argon2id + breach-list.</td>
+</tr>
+<tr>
+<td>JWT signing</td>
+<td>HS256 → <strong>RS256 target</strong></td>
+<td><code>THREADY_JWT_SIGNING_ALG</code></td>
+<td><code>[GAP: 10]</code> move to RS256/EdDSA for multi-service.</td>
+</tr>
+</tbody>
+</table>
+<p><code>[GAP: 10]</code> <strong>Action for the Root Admin:</strong>
+before running multiple services that verify tokens, provision an
+RS256/EdDSA keypair and set <code>THREADY_JWT_SIGNING_ALG=RS256</code>;
+HS256 is single-service only. See <a
+href="./configuration.md#11-authentication--security">configuration.md
+§11</a>.</p>
+<h2 id="pause-resume-stop-processing">8. Pause / resume / stop
+processing</h2>
+<p>The original request requires pausing/stopping/resuming thread
+processing from the dashboard. The Root Admin can act
+<strong>globally</strong>; an Account Admin only within their
+Account.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> processing pause  <span class="at">--scope</span> global            <span class="co"># stop claiming new posts everywhere</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> processing resume <span class="at">--scope</span> global</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> processing pause  <span class="at">--scope</span> account:Acme      <span class="co"># one account</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> processing status</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   global: RUNNING   in-flight: 12   queued: 47   dlq: 0</span></span></code></pre></div>
+<p>Pausing stops the BackgroundTasks queue from <strong>claiming
+new</strong> work; in-flight posts finish (or hit their soft timeout).
+No post is lost — queued posts resume on <code>resume</code> (durable
+JetStream in prod).</p>
+<h2 id="audit-trail-access-logs">9. Audit trail &amp; access logs</h2>
+<p>All admin/user actions are logged append-only and queryable (final
+request §14.4), retained <code>[DEFAULT — adjustable]</code> 1 year
+(<code>THREADY_AUDIT_RETENTION</code>).</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> audit tail <span class="at">--follow</span>                      <span class="co"># live</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> audit query <span class="at">--actor</span> <span class="st">&quot;admin@acme.example&quot;</span> <span class="at">--since</span> 24h <span class="at">--action</span> <span class="st">&quot;user.*&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> audit export <span class="at">--format</span> csv <span class="at">--since</span> 30d <span class="op">&gt;</span> audit-30d.csv</span></code></pre></div>
+<p>Access logs flow through <code>observability</code> (logrus +
+ClickHouse); admin actions are audit-grade (Q40). There is <strong>no
+way to delete the audit trail</strong> from any client — append-only by
+design.</p>
+<h2 id="backup-disaster-recovery-runbook">10. Backup &amp; disaster
+recovery runbook</h2>
+<p>Operator decision (Q41/Q45): <strong>daily full + hourly DB
+incrementals</strong>, assets daily snapshot; <strong>RPO ≈ 1 h, RTO ≈ 4
+h</strong>. Schedules are cron env vars (<a
+href="./configuration.md#14-observability-logging--backup">configuration.md
+§14</a>).</p>
+<p><strong>Backup (automatic, verify weekly):</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> backup status                  <span class="co"># last full, last incremental, last asset snapshot</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> backup run <span class="at">--type</span> full         <span class="co"># ad-hoc full (before a risky change)</span></span></code></pre></div>
+<p><strong>Restore (DR event):</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Stop processing to freeze state</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> processing pause <span class="at">--scope</span> global</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Point-in-time restore the DB from the latest full + incrementals (≤ ~1 h data loss = RPO)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> restore db <span class="at">--to</span> <span class="st">&quot;2026-07-21T09:00:00Z&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Re-hydrate assets from the daily snapshot, or re-download broken links via REST</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> restore assets <span class="at">--from-snapshot</span> latest</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> assets reheal <span class="at">--broken-only</span>    <span class="co"># re-download physically-missing assets</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verify and resume (target RTO ≈ 4 h end-to-end)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> doctor <span class="kw">&amp;&amp;</span> <span class="ex">thready</span> processing resume <span class="at">--scope</span> global</span></code></pre></div>
+<p>Chaos tests validate this runbook
+<code>[CONSTITUTION §11.4.27]</code>. The full ops-side runbook
+(host-level snapshots, MinIO replication) is in <a
+href="../deployment/index.md">../deployment/index.md</a>.</p>
+<h2 id="billing-oversight">11. Billing oversight</h2>
+<p>Billing is <strong>subscription + metered</strong> from day one
+(Q11). The Root Admin sees usage across all Accounts; Account Admins see
+only their own.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> billing summary <span class="at">--all-accounts</span> <span class="at">--period</span> 2026-07</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> billing meter show <span class="at">--account</span> Acme          <span class="co"># posts processed, assets stored, search calls</span></span></code></pre></div>
+<p>Metering events flush every <code>THREADY_METERING_FLUSH</code>.
+Rating/invoicing integration is <code>[OPEN: root-2]</code> — the meter
+is authoritative; the invoicing connector is a deployment-pack item.</p>
+<h2 id="tutorials">12. Tutorials</h2>
+<p><strong>Tutorial A — Onboard a new tenant end-to-end.</strong> 1.
+<code>thready account create --name "Acme" --admin-email admin@acme.example</code>
+2. Brand it:
+<code>thready brand set --account Acme --primary-color "#0A7CFF" --logo ./acme.svg</code>
+3. Cap retention:
+<code>thready retention set-account Acme --default 180d</code> 4. The
+Account Admin accepts the invite, enrols MFA, and onboards channels (<a
+href="./account-admin-guide.md#5-onboarding-channels--groups">account-admin-guide.md
+§5</a>). 5. Verify: <code>thready account list --with-usage</code>.</p>
+<p><strong>Tutorial B — Respond to a suspected key leak.</strong> 1.
+<code>thready audit query --action "auth.token.*" --since 1h</code> to
+scope it. 2. Rotate the affected secret in
+<code>api_keys.sh</code>/private repo, restart services (secrets are not
+hot-reloaded — <a
+href="./troubleshooting.md#9-configuration-changes-not-taking-effect">troubleshooting.md
+§9</a>). 3.
+<code>thready user sessions revoke --all --account Acme</code> to
+invalidate refresh tokens. 4. Document in the risk register.</p>
+<h2 id="open-items">13. Open items</h2>
+<ul>
+<li><code>[OPEN: root-1]</code> GDPR/CCPA certification deferred (Q7).
+Tracked: <strong>ATM — certify erasure/export</strong>.</li>
+<li><code>[OPEN: root-2]</code> Invoicing connector over the metering
+data is a deployment-pack item. Tracked: <strong>ATM — billing
+rating/invoicing integration</strong>.</li>
+<li><code>[OPEN: root-3]</code> User Service is <code>[BUILD-NEW]</code>
+<code>[GAP: 20]</code>; the RBAC matrix here is the contract but runs
+in-process until the service is decoupled. Tracked: <strong>ATM —
+decouple User Service on auth + policy + Catalogizer RBAC</strong>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

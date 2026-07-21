@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Workable-Items Backlog (Full-Granularity Cards)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Workable-Items Backlog
+(Full-Granularity Cards)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#card-schema" id="toc-card-schema">1. Card schema</a></li>
+<li><a href="#critical-path-dependency-dag"
+id="toc-critical-path-dependency-dag">2. Critical-path dependency
+DAG</a></li>
+<li><a href="#phase-1-foundation-atm-001atm-021"
+id="toc-phase-1-foundation-atm-001atm-021">3. Phase 1 — Foundation
+(ATM-001…ATM-021)</a>
+<ul>
+<li><a href="#infrastructure-sub-phase-1.1"
+id="toc-infrastructure-sub-phase-1.1">3.1 Infrastructure (sub-phase
+1.1)</a></li>
+<li><a href="#core-services-sub-phase-1.2"
+id="toc-core-services-sub-phase-1.2">3.2 Core Services (sub-phase
+1.2)</a></li>
+<li><a href="#integration-sub-phase-1.3"
+id="toc-integration-sub-phase-1.3">3.3 Integration (sub-phase
+1.3)</a></li>
+</ul></li>
+<li><a href="#phase-2-processing-engine-atm-022atm-043"
+id="toc-phase-2-processing-engine-atm-022atm-043">4. Phase 2 —
+Processing Engine (ATM-022…ATM-043)</a>
+<ul>
+<li><a href="#content-acquisition-sub-phase-2.1"
+id="toc-content-acquisition-sub-phase-2.1">4.1 Content Acquisition
+(sub-phase 2.1)</a></li>
+<li><a href="#processing-pipeline-sub-phase-2.2"
+id="toc-processing-pipeline-sub-phase-2.2">4.2 Processing Pipeline
+(sub-phase 2.2)</a></li>
+<li><a href="#skills-integration-sub-phase-2.3"
+id="toc-skills-integration-sub-phase-2.3">4.3 Skills Integration
+(sub-phase 2.3)</a></li>
+<li><a href="#semantic-search-sub-phase-2.4"
+id="toc-semantic-search-sub-phase-2.4">4.4 Semantic Search (sub-phase
+2.4)</a></li>
+</ul></li>
+<li><a href="#phase-3-client-applications-atm-044atm-051"
+id="toc-phase-3-client-applications-atm-044atm-051">5. Phase 3 — Client
+Applications (ATM-044…ATM-051)</a></li>
+<li><a href="#phase-4-testing-deployment-atm-052atm-057"
+id="toc-phase-4-testing-deployment-atm-052atm-057">6. Phase 4 — Testing
+&amp; Deployment (ATM-052…ATM-057)</a></li>
+<li><a href="#cross-cutting-atm-058atm-072"
+id="toc-cross-cutting-atm-058atm-072">7. Cross-cutting
+(ATM-058…ATM-072)</a></li>
+<li><a href="#estimation-sequencing-guidance"
+id="toc-estimation-sequencing-guidance">8. Estimation &amp; sequencing
+guidance</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Workable-Items Backlog (Full-Granularity Cards)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/development/workable-items-detail.md
+  Status          : Review — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (development)
+  Related         : ./workable-items.md, ./index.md, ./agent-orchestration.md,
+                    ./build-new-subsystems.md, ./submodule-map.md,
+                    ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (development, pass 3)</td>
+<td>Full-granularity expansion: per-item cards (phase → sub-phase →
+task) with Given/When/Then acceptance, dependencies, blocks, test-type
+coverage and verified-source anchors for ATM-001…ATM-072</td>
+</tr>
+</tbody>
+</table>
+<p>This document is the <strong>implementation-ready</strong> expansion
+of the summary backlog in <a
+href="./workable-items.md">workable-items.md</a>. The summary tables
+give the <em>shape</em> of the backlog (id, title, kind, priority,
+depends-on, gap); <strong>this</strong> document gives each item its
+full card: the decoupled scope, the <strong>task-level
+sub-items</strong> (<code>ATM-NNN.k</code>) a worker/subagent claims,
+the <strong>Given/When/Then acceptance criteria</strong>, the explicit
+<strong>blocks/blocked-by</strong> edges, the mandated <strong>test
+types</strong>, and — where a claim was verified against real module
+source during Pass 3 — a <strong>Verified-source</strong> anchor citing
+the exact file. Nothing here is a bluff: an item that depends on a
+scaffold/stub says so and names the hardening prerequisite.</p>
+<p>The card format is the unit the orchestration model dispatches (see
+<a
+href="./agent-orchestration.md#4-subagent-driven-by-default-11142070">agent-orchestration.md
+§4–§6</a>): a <strong>track worker</strong> claims an
+<code>ATM-NNN</code>, decomposes it into its <code>ATM-NNN.k</code>
+tasks, and dispatches a <strong>subagent per task</strong> on disjoint
+file globs. The <code>ATM-NNN.k</code> ids are the disjoint-scope
+guarantee <code>[§11.4.58 L3]</code> — two subagents never share a
+task’s glob.</p>
+<blockquote>
+<p><strong>Provenance tags</strong> <code>[CONSTITUTION §x]</code> ·
+<code>[IN-HOUSE: module]</code> · <code>[RESEARCH]</code> ·
+<code>[OPERATOR]</code> · <code>[DEFAULT — adjustable]</code> ·
+<code>[BUILD-NEW]</code> · <code>[GAP: id]</code> ·
+<code>[VERIFIED-SOURCE]</code> (read at module source during Pass 3) ·
+<code>[OPEN: …]</code>.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-card-schema">1. Card schema</a></li>
+<li><a href="#2-critical-path-dependency-dag">2. Critical-path
+dependency DAG</a></li>
+<li><a href="#3-phase-1--foundation-atm-001atm-021">3. Phase 1 —
+Foundation (ATM-001…ATM-021)</a></li>
+<li><a href="#4-phase-2--processing-engine-atm-022atm-043">4. Phase 2 —
+Processing Engine (ATM-022…ATM-043)</a></li>
+<li><a href="#5-phase-3--client-applications-atm-044atm-051">5. Phase 3
+— Client Applications (ATM-044…ATM-051)</a></li>
+<li><a href="#6-phase-4--testing--deployment-atm-052atm-057">6. Phase 4
+— Testing &amp; Deployment (ATM-052…ATM-057)</a></li>
+<li><a href="#7-cross-cutting-atm-058atm-072">7. Cross-cutting
+(ATM-058…ATM-072)</a></li>
+<li><a href="#8-estimation--sequencing-guidance">8. Estimation &amp;
+sequencing guidance</a></li>
+</ul>
+<h2 id="card-schema">1. Card schema</h2>
+<p>Each card carries the fields below. Fields also present in the
+summary DB (<code>docs/workable_items.db</code>,
+<code>[§11.4.93/95]</code>) are mirrored 1:1; the <strong>Tasks</strong>
+and <strong>Given/When/Then</strong> fields are the new granularity this
+document adds.</p>
+<ul>
+<li><strong>Kind / Pri / Phase</strong> —
+<code>PRODUCTION-WIRE | EXTEND | BUILD-NEW | HARDEN | AUDIT</code>;
+<code>P0|P1|P2</code>; <code>phase.subphase</code> from final request
+§5.1.2.</li>
+<li><strong>Provides / Depends on / Blocks</strong> — the item’s output
+contract and its explicit graph edges.</li>
+<li><strong>Decoupled scope</strong> — what the item does and,
+crucially, what it must <strong>not</strong> touch
+<code>[§11.4.28]</code>.</li>
+<li><strong>Tasks (<code>ATM-NNN.k</code>)</strong> — the disjoint
+sub-scopes a subagent claims; each names its file-glob home.</li>
+<li><strong>Acceptance (Given/When/Then)</strong> — executable
+acceptance statements; these become the RED tests.</li>
+<li><strong>Test types</strong> — the mandated subset of the 15
+<code>[§11.4.27]</code>; mocks are unit-only.</li>
+<li><strong>Verified-source</strong> — where a fact was read at module
+source in Pass 3 (else the caveat is kept).</li>
+</ul>
+<h2 id="critical-path-dependency-dag">2. Critical-path dependency
+DAG</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2541.5px; background-color: white;" viewBox="0 0 2541.5 662.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .p0 rect{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .p0 polygon{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .p0 ellipse{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .p0 circle{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .p0 path{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .p0 tspan{fill:rgb(58, 0, 0)!important;}#my-svg .p1 rect{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .p1 polygon{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .p1 ellipse{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .p1 circle{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .p1 path{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .p1 tspan{fill:rgb(58, 46, 0)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1436.5,72.6L1436.5,76.767C1436.5,80.933,1436.5,89.267,1436.5,96.933C1436.5,104.6,1436.5,111.6,1436.5,115.1L1436.5,118.6" id="my-svg-L_A001_A002_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A001_A002_0" data-points="W3sieCI6MTQzNi41LCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjE0MzYuNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNDM2LjUsInkiOjEyMi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1309.5,153.763L1196.708,160.57C1083.917,167.376,858.333,180.988,745.542,191.294C632.75,201.6,632.75,208.6,632.75,212.1L632.75,215.6" id="my-svg-L_A002_A003_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A002_A003_0" data-points="W3sieCI6MTMwOS41LCJ5IjoxNTMuNzYzNDUxMDQwMjE3NTJ9LHsieCI6NjMyLjc1LCJ5IjoxOTQuNTk5OTk4NDc0MTIxMX0seyJ4Ijo2MzIuNzUsInkiOjIxOS41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M753.75,251.493L850.125,258.177C946.5,264.862,1139.25,278.231,1235.625,288.415C1332,298.6,1332,305.6,1332,309.1L1332,312.6" id="my-svg-L_A003_A004_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A003_A004_0" data-points="W3sieCI6NzUzLjc1LCJ5IjoyNTEuNDkyNTYxOTM0OTcyfSx7IngiOjEzMzIsInkiOjI5MS41OTk5OTg0NzQxMjExfSx7IngiOjEzMzIsInkiOjMxNi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M511.75,254.926L449.208,261.038C386.667,267.15,261.583,279.375,199.042,288.988C136.5,298.6,136.5,305.6,136.5,309.1L136.5,312.6" id="my-svg-L_A003_A019_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A003_A019_0" data-points="W3sieCI6NTExLjc1LCJ5IjoyNTQuOTI1NjkxMTY5MzM1Mn0seyJ4IjoxMzYuNSwieSI6MjkxLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTM2LjUsInkiOjMxNi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M553.528,266.6L539.482,270.767C525.436,274.933,497.343,283.267,483.296,290.933C469.25,298.6,469.25,305.6,469.25,309.1L469.25,312.6" id="my-svg-L_A003_A013_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A003_A013_0" data-points="W3sieCI6NTUzLjUyODM1MDUxNTQ2MzksInkiOjI2Ni41OTk5OTg0NzQxMjExfSx7IngiOjQ2OS4yNSwieSI6MjkxLjU5OTk5ODQ3NDEyMTF9LHsieCI6NDY5LjI1LCJ5IjozMTYuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M407.351,363.6L396.375,367.767C385.4,371.933,363.45,380.267,342.976,388.346C322.501,396.426,303.502,404.251,294.002,408.164L284.503,412.077" id="my-svg-L_A013_A010_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A013_A010_0" data-points="W3sieCI6NDA3LjM1MDUxNTQ2MzkxNzUzLCJ5IjozNjMuNTk5OTk4NDc0MTIxMX0seyJ4IjozNDEuNSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjgwLjgwNDEyMzcxMTM0MDIsInkiOjQxMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M136.5,363.6L136.5,367.767C136.5,371.933,136.5,380.267,143.413,388.276C150.326,396.286,164.152,403.971,171.065,407.814L177.978,411.657" id="my-svg-L_A019_A010_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A019_A010_0" data-points="W3sieCI6MTM2LjUsInkiOjM2My41OTk5OTg0NzQxMjExfSx7IngiOjEzNi41LCJ5IjozODguNTk5OTk4NDc0MTIxMX0seyJ4IjoxODEuNDc0MjI2ODA0MTIzNywieSI6NDEzLjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1563.5,152.369L1706.083,159.408C1848.667,166.446,2133.833,180.523,2276.417,191.062C2419,201.6,2419,208.6,2419,212.1L2419,215.6" id="my-svg-L_A002_A011_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A002_A011_0" data-points="W3sieCI6MTU2My41LCJ5IjoxNTIuMzY5MjA5NjcwMDQ5ODZ9LHsieCI6MjQxOSwieSI6MTk0LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjQxOSwieSI6MjE5LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M223.75,460.6L223.75,464.767C223.75,468.933,223.75,477.267,215.992,485.302C208.234,493.338,192.717,501.077,184.959,504.946L177.201,508.815" id="my-svg-L_A010_A020_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A010_A020_0" data-points="W3sieCI6MjIzLjc1LCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjMuNzUsInkiOjQ4NS41OTk5OTg0NzQxMjExfSx7IngiOjE3My42MjExMzQwMjA2MTg1NywieSI6NTEwLjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M96.405,363.6L89.296,367.767C82.186,371.933,67.968,380.267,60.859,392.517C53.75,404.767,53.75,420.933,53.75,437.1C53.75,453.267,53.75,469.433,59.445,481.314C65.141,493.194,76.531,500.787,82.226,504.584L87.922,508.381" id="my-svg-L_A019_A020_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A019_A020_0" data-points="W3sieCI6OTYuNDA0NjM5MTc1MjU3NzMsInkiOjM2My41OTk5OTg0NzQxMjExfSx7IngiOjUzLjc1LCJ5IjozODguNTk5OTk4NDc0MTIxMX0seyJ4Ijo1My43NSwieSI6NDM3LjA5OTk5ODQ3NDEyMTF9LHsieCI6NTMuNzUsInkiOjQ4NS41OTk5OTg0NzQxMjExfSx7IngiOjkxLjI1LCJ5Ijo1MTAuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M688.229,266.6L698.066,270.767C707.903,274.933,727.576,283.267,737.413,290.933C747.25,298.6,747.25,305.6,747.25,309.1L747.25,312.6" id="my-svg-L_A003_A016_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A003_A016_0" data-points="W3sieCI6Njg4LjIyOTM4MTQ0MzI5OSwieSI6MjY2LjU5OTk5ODQ3NDEyMTF9LHsieCI6NzQ3LjI1LCJ5IjoyOTEuNTk5OTk4NDc0MTIxMX0seyJ4Ijo3NDcuMjUsInkiOjMxNi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M752.095,363.6L752.954,367.767C753.814,371.933,755.532,380.267,756.391,387.933C757.25,395.6,757.25,402.6,757.25,406.1L757.25,409.6" id="my-svg-L_A016_A017_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A016_A017_0" data-points="W3sieCI6NzUyLjA5NTM2MDgyNDc0MjIsInkiOjM2My41OTk5OTg0NzQxMjExfSx7IngiOjc1Ny4yNSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6NzU3LjI1LCJ5Ijo0MTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M757.25,460.6L757.25,464.767C757.25,468.933,757.25,477.267,757.25,484.933C757.25,492.6,757.25,499.6,757.25,503.1L757.25,506.6" id="my-svg-L_A017_A018_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A017_A018_0" data-points="W3sieCI6NzU3LjI1LCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4Ijo3NTcuMjUsInkiOjQ4NS41OTk5OTg0NzQxMjExfSx7IngiOjc1Ny4yNSwieSI6NTEwLjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M681.838,363.6L670.24,367.767C658.642,371.933,635.446,380.267,613.731,388.359C592.015,396.451,571.781,404.302,561.663,408.228L551.546,412.153" id="my-svg-L_A016_A022_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A016_A022_0" data-points="W3sieCI6NjgxLjgzNzYyODg2NTk3OTQsInkiOjM2My41OTk5OTg0NzQxMjExfSx7IngiOjYxMi4yNSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6NTQ3LjgxNzAxMDMwOTI3ODMsInkiOjQxMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M247.459,363.6L267.132,367.767C286.806,371.933,326.153,380.267,355.667,388.353C385.181,396.44,404.861,404.28,414.701,408.2L424.542,412.12" id="my-svg-L_A019_A022_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A019_A022_0" data-points="W3sieCI6MjQ3LjQ1ODc2Mjg4NjU5NzkyLCJ5IjozNjMuNTk5OTk4NDc0MTIxMX0seyJ4IjozNjUuNSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6NDI4LjI1NzczMTk1ODc2Mjg2LCJ5Ijo0MTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2384.477,266.6L2378.356,270.767C2372.235,274.933,2359.992,283.267,2353.871,290.933C2347.75,298.6,2347.75,305.6,2347.75,309.1L2347.75,312.6" id="my-svg-L_A011_A023_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A011_A023_0" data-points="W3sieCI6MjM4NC40NzY4MDQxMjM3MTEsInkiOjI2Ni41OTk5OTg0NzQxMjExfSx7IngiOjIzNDcuNzUsInkiOjI5MS41OTk5OTg0NzQxMjExfSx7IngiOjIzNDcuNzUsInkiOjMxNi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2453.523,266.6L2459.644,270.767C2465.765,274.933,2478.008,283.267,2484.129,295.517C2490.25,307.767,2490.25,323.933,2490.25,340.1C2490.25,356.267,2490.25,372.433,2484.68,384.308C2479.11,396.183,2467.97,403.766,2462.4,407.558L2456.83,411.349" id="my-svg-L_A011_A025_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A011_A025_0" data-points="W3sieCI6MjQ1My41MjMxOTU4NzYyODksInkiOjI2Ni41OTk5OTg0NzQxMjExfSx7IngiOjI0OTAuMjUsInkiOjI5MS41OTk5OTg0NzQxMjExfSx7IngiOjI0OTAuMjUsInkiOjM0MC4wOTk5OTg0NzQxMjExfSx7IngiOjI0OTAuMjUsInkiOjM4OC41OTk5OTg0NzQxMjExfSx7IngiOjI0NTMuNTIzMTk1ODc2Mjg5LCJ5Ijo0MTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2347.75,363.6L2347.75,367.767C2347.75,371.933,2347.75,380.267,2353.32,388.225C2358.89,396.183,2370.03,403.766,2375.6,407.558L2381.17,411.349" id="my-svg-L_A023_A025_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A023_A025_0" data-points="W3sieCI6MjM0Ny43NSwieSI6MzYzLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjM0Ny43NSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjM4NC40NzY4MDQxMjM3MTEsInkiOjQxMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2072.75,363.6L2072.75,367.767C2072.75,371.933,2072.75,380.267,2111.048,389.798C2149.346,399.329,2225.942,410.058,2264.241,415.423L2302.539,420.787" id="my-svg-L_A036_A025_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A036_A025_0" data-points="W3sieCI6MjA3Mi43NSwieSI6MzYzLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjA3Mi43NSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjMwNi41LCJ5Ijo0MjEuMzQxODc1NzMwNDM4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2306.5,444.397L2200.625,451.264C2094.75,458.131,1883,471.866,1749.574,483.401C1616.148,494.936,1561.046,504.272,1533.495,508.94L1505.944,513.608" id="my-svg-L_A025_A028_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A025_A028_0" data-points="W3sieCI6MjMwNi41LCJ5Ijo0NDQuMzk2ODg5MTQ2MTM3MTR9LHsieCI6MTY3MS4yNSwieSI6NDg1LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTUwMiwieSI6NTE0LjI3NjQxNzY4ODA5NDl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1434.985,460.6L1449.654,464.767C1464.323,468.933,1493.662,477.267,1497.104,485.379C1500.547,493.491,1478.093,501.382,1466.866,505.328L1455.64,509.274" id="my-svg-L_A030_A028_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A030_A028_0" data-points="W3sieCI6MTQzNC45ODQ1MzYwODI0NzQzLCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNTIzLCJ5Ijo0ODUuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNDUxLjg2NTk3OTM4MTQ0MzQsInkiOjUxMC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1138.985,460.6L1153.654,464.767C1168.323,468.933,1197.662,477.267,1225.267,485.404C1252.873,493.542,1278.746,501.484,1291.683,505.455L1304.619,509.426" id="my-svg-L_A029_A028_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A029_A028_0" data-points="W3sieCI6MTEzOC45ODQ1MzYwODI0NzQzLCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMjI3LCJ5Ijo0ODUuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMzA4LjQ0MzI5ODk2OTA3MjIsInkiOjUxMC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1229.75,458.094L1203,462.678C1176.25,467.263,1122.75,476.431,1096,484.516C1069.25,492.6,1069.25,499.6,1069.25,503.1L1069.25,506.6" id="my-svg-L_A030_A031_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A030_A031_0" data-points="W3sieCI6MTIyOS43NSwieSI6NDU4LjA5MzgxNDcyODUzODA2fSx7IngiOjEwNjkuMjUsInkiOjQ4NS41OTk5OTg0NzQxMjExfSx7IngiOjEwNjkuMjUsInkiOjUxMC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1385,557.6L1385,561.767C1385,565.933,1385,574.267,1382.56,582.047C1380.119,589.828,1375.238,597.057,1372.798,600.671L1370.357,604.285" id="my-svg-L_A028_A012_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A028_A012_0" data-points="W3sieCI6MTM4NSwieSI6NTU3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTM4NSwieSI6NTgyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTM2OC4xMTg1NTY3MDEwMzEsInkiOjYwNy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1069.25,557.6L1069.25,561.767C1069.25,565.933,1069.25,574.267,1096.926,583.176C1124.602,592.086,1179.955,601.572,1207.631,606.316L1235.307,611.059" id="my-svg-L_A031_A012_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A031_A012_0" data-points="W3sieCI6MTA2OS4yNSwieSI6NTU3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTA2OS4yNSwieSI6NTgyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTIzOS4yNSwieSI6NjExLjczNDI3NDA5MjQ5NTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1782.75,363.6L1782.75,367.767C1782.75,371.933,1782.75,380.267,1771.865,388.373C1760.98,396.48,1739.209,404.359,1728.324,408.299L1717.439,412.239" id="my-svg-L_A040_A039_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A040_A039_0" data-points="W3sieCI6MTc4Mi43NSwieSI6MzYzLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTc4Mi43NSwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTcxMy42Nzc4MzUwNTE1NDY1LCJ5Ijo0MTMuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1332,363.6L1332,367.767C1332,371.933,1332,380.267,1363.466,389.251C1394.932,398.236,1457.864,407.872,1489.33,412.69L1520.796,417.508" id="my-svg-L_A004_A039_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A004_A039_0" data-points="W3sieCI6MTMzMiwieSI6MzYzLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTMzMiwieSI6Mzg4LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTUyNC43NSwieSI6NDE4LjExMzQxNTk5NTgyNTl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2428.691,460.6L2430.409,464.767C2432.127,468.933,2435.564,477.267,2424.238,485.406C2412.913,493.545,2386.826,501.49,2373.782,505.462L2360.739,509.435" id="my-svg-L_A025_A035_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A025_A035_0" data-points="W3sieCI6MjQyOC42OTA3MjE2NDk0ODQ3LCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4IjoyNDM5LCJ5Ijo0ODUuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMzU2LjkxMjM3MTEzNDAyMDgsInkiOjUxMC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1731.485,460.6L1746.154,464.767C1760.823,468.933,1790.162,477.267,1860.709,487.322C1931.257,497.377,2043.015,509.153,2098.893,515.042L2154.772,520.93" id="my-svg-L_A039_A035_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A039_A035_0" data-points="W3sieCI6MTczMS40ODQ1MzYwODI0NzQzLCJ5Ijo0NjAuNTk5OTk4NDc0MTIxMX0seyJ4IjoxODE5LjUsInkiOjQ4NS41OTk5OTg0NzQxMjExfSx7IngiOjIxNTguNzUsInkiOjUyMS4zNDkzMTk0OTUzMDUzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A001_A002_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A002_A003_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A003_A004_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A003_A019_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A003_A013_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A013_A010_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A019_A010_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A002_A011_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A010_A020_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A019_A020_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A003_A016_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A016_A017_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A017_A018_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A016_A022_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A019_A022_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A011_A023_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A011_A025_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A023_A025_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A036_A025_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A025_A028_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A030_A028_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A029_A028_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A030_A031_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A028_A012_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A031_A012_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A040_A039_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A004_A039_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A025_A035_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A039_A035_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default p0" id="my-svg-flowchart-A001-0" data-look="classic" transform="translate(1436.5, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-116.5" y="-32.29999923706055" width="233" height="64.5999984741211"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-001</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">repo+4-upstream+hooks</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A002-1" data-look="classic" transform="translate(1436.5, 146.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-127" y="-23.5" width="254" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-002</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Podman</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> baseline</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A003-3" data-look="classic" transform="translate(632.75, 243.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-121" y="-23.5" width="242" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-003</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> database</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> wiring</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A004-5" data-look="classic" transform="translate(1332, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-95.5" y="-23.5" width="191" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-004</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pgvector</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A019-7" data-look="classic" transform="translate(136.5, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-127.5" y="-23.5" width="255" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-019</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> relational</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> schema</tspan></tspan></text></g></g></g><g class="node default p1" id="my-svg-flowchart-A013-9" data-look="classic" transform="translate(469.25, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-107" y="-23.5" width="214" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-013</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> auth</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RS256</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A010-11" data-look="classic" transform="translate(223.75, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-110.5" y="-23.5" width="221" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-010</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> User</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A011-15" data-look="classic" transform="translate(2419, 243.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-114.5" y="-23.5" width="229" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-011</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Event</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Bus</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> svc</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A020-17" data-look="classic" transform="translate(126.5, 534.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-118.5" y="-23.5" width="237" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-020</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> REST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> skeleton</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A016-21" data-look="classic" transform="translate(747.25, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-121" y="-23.5" width="242" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-016</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Herald</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MTProto</tspan></tspan></text></g></g></g><g class="node default p1" id="my-svg-flowchart-A017-23" data-look="classic" transform="translate(757.25, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-117" y="-23.5" width="234" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-017</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ThreadReader</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A018-25" data-look="classic" transform="translate(757.25, 534.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-109" y="-23.5" width="218" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-018</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Max</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> adapter</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A022-27" data-look="classic" transform="translate(487.25, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-103" y="-23.5" width="206" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-022</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> acquisition</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A023-31" data-look="classic" transform="translate(2347.75, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-107.5" y="-23.5" width="215" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-023</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> single-claim</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A025-33" data-look="classic" transform="translate(2419, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-112.5" y="-23.5" width="225" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-025</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skill-dispatch</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A036-36" data-look="classic" transform="translate(2072.75, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-117.5" y="-23.5" width="235" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-036</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skills</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> authored</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A028-39" data-look="classic" transform="translate(1385, 534.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-117" y="-23.5" width="234" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-028</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Mgr</tspan></tspan></text></g></g></g><g class="node default p1" id="my-svg-flowchart-A030-40" data-look="classic" transform="translate(1352.25, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-122.5" y="-23.5" width="245" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-030</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> callback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> module</tspan></tspan></text></g></g></g><g class="node default p1" id="my-svg-flowchart-A029-42" data-look="classic" transform="translate(1056.25, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-123.5" y="-23.5" width="247" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-029</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filesystem</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTTP</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A031-45" data-look="classic" transform="translate(1069.25, 534.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-128.5" y="-23.5" width="257" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-031</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MeTube</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> webhook</tspan></tspan></text></g></g></g><g class="node default p1" id="my-svg-flowchart-A012-47" data-look="classic" transform="translate(1352.25, 631.0999984741211)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-113" y="-23.5" width="226" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-012</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A040-50" data-look="classic" transform="translate(1782.75, 340.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-122.5" y="-23.5" width="245" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-040</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> llama</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> embedder</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A039-51" data-look="classic" transform="translate(1648.75, 437.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-124" y="-23.5" width="248" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-039</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A033-54" data-look="classic" transform="translate(1715, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-112" y="-23.5" width="224" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-033</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> OCR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> adapter</tspan></tspan></text></g></g></g><g class="node default p0" id="my-svg-flowchart-A035-56" data-look="classic" transform="translate(2279.75, 534.0999984741211)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-121" y="-23.5" width="242" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ATM-035</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post-processing</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> This is the P0/P1 critical path the multi-track ruler
+follows; red is P0 (blocks the MVP) and amber is P1 (GA-grade). The
+single root is <code>ATM-001</code> (repo + four-upstream bootstrap +
+git hooks): nothing can be committed to spec until the enforcement layer
+exists, so it gates the entire tree. From the container baseline
+(<code>ATM-002</code>) the graph forks into three broad rivers that run
+<strong>concurrently</strong> on separate tracks: the <em>data
+river</em> (<code>ATM-003</code> database → <code>ATM-004</code>
+pgvector and <code>ATM-019</code> relational schema →
+<code>ATM-020</code> REST and <code>ATM-010</code> User Service), the
+<em>messenger river</em> (<code>ATM-016</code> Herald MTProto →
+<code>ATM-017</code> ThreadReader → <code>ATM-018</code> Max, and →
+<code>ATM-022</code> acquisition), and the <em>processing river</em>
+(<code>ATM-011</code> Event Bus → <code>ATM-023</code> single-claim +
+<code>ATM-025</code> Skill-dispatch).</p>
+<p>The three rivers rejoin at the processing spine: the Skill-dispatch
+engine (<code>ATM-025</code>) drives the Download Manager
+(<code>ATM-028</code>), which — with the callback module
+(<code>ATM-030</code>) and the <code>filesystem</code> HTTP-source fix
+(<code>ATM-029</code>) — feeds the Asset Service (<code>ATM-012</code>)
+alongside the MeTube webhook (<code>ATM-031</code>). A parallel semantic
+branch runs <code>ATM-040</code> (enforce the real llama embedder) →
+<code>ATM-039</code> (Semantic search) fed by <code>ATM-004</code>
+(pgvector), and finally post-processing (<code>ATM-035</code>) consumes
+both the dispatch output and the semantic index to write the status
+reply and grow the Skill-Trees. The OCR adapter (<code>ATM-033</code>)
+hangs off the graph with no inbound edge because it is genuinely
+independent — it can proceed the moment a track is free. The ruler’s job
+is to keep every one of these rivers saturated: a freed track is
+immediately re-assigned the next-highest-priority item whose inbound
+edges are all <code>DONE</code> <code>[§11.4.192]</code>.</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/critical-path-dag.mmd">diagrams/critical-path-dag.mmd</a>.</p>
+</blockquote>
+<hr />
+<h2 id="phase-1-foundation-atm-001atm-021">3. Phase 1 — Foundation
+(ATM-001…ATM-021)</h2>
+<h3 id="infrastructure-sub-phase-1.1">3.1 Infrastructure (sub-phase
+1.1)</h3>
+<h4 id="atm-001-repo-4-upstream-bootstrap-git-hooks">ATM-001 — Repo +
+4-upstream bootstrap + git hooks</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P0 · 1.1.
+<strong>Depends on:</strong> — . <strong>Blocks:</strong>
+everything.</li>
+<li><strong>Provides:</strong> a repo whose every commit is
+spec-enforced and fans out to all four upstreams.</li>
+<li><strong>Decoupled scope:</strong> install the org tooling into
+<code>helix_thready</code>; do <strong>not</strong> author product
+code.</li>
+<li><strong>Tasks:</strong>
+<ul>
+<li><code>ATM-001.1</code> — place
+<code>upstreams/{GitHub,GitLab,GitFlic,GitVerse}.sh</code> (VERIFIED
+present) and run <code>install_upstreams.sh</code> so
+<code>github/gitlab/gitflic/gitverse</code> remotes exist. Glob:
+<code>upstreams/**</code>.</li>
+<li><code>ATM-001.2</code> — vendor
+<code>scripts/git_hooks/{pre-commit,pre-push,post-commit,commit-msg}</code>
+and run the <strong>symlink</strong> installer
+<code>scripts/install_git_hooks.sh</code>. Glob:
+<code>scripts/**</code>.</li>
+<li><code>ATM-001.3</code> — vendor <code>scripts/commit_all.sh</code> +
+<code>scripts/push_all.sh</code>; add
+<code>docs/audit/bypass_events.md</code>.</li>
+<li><code>ATM-001.4</code> — wire the private submodule
+<code>docs/private</code> (VERIFIED <code>.gitmodules</code>).</li>
+</ul></li>
+<li><strong>Acceptance (Given/When/Then):</strong>
+<ul>
+<li>Given a fresh clone, When <code>install_upstreams.sh</code> runs,
+Then <code>git remote</code> lists exactly
+<code>github, gitlab, gitflic, gitverse</code> pointing at the SSH URLs
+in Appendix C.</li>
+<li>Given a staged <code>.md</code> lacking <code>.html/.pdf</code>
+siblings in the governed set, When <code>git commit</code>, Then the
+<code>pre-commit</code> hook exits 1 and blocks.</li>
+<li>Given <code>git commit --no-verify</code> with no
+<code>Bypass-rationale:</code> footer, When committing, Then the
+<code>commit-msg</code> hook blocks (marker-freshness detection).</li>
+</ul></li>
+<li><strong>Test types:</strong> unit (hook logic), integration (real
+four-remote push to test repos), challenges.</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong>
+installer is symlink-based/idempotent
+(<code>helix_code/scripts/install_git_hooks.sh</code>); commit-msg uses
+the <code>.git/ATMO_PRECOMMIT_RAN</code> marker
+(<code>helix_code/scripts/git_hooks/commit-msg</code>); see <a
+href="./git-workflow-internals.md">git-workflow-internals.md</a>.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[CONSTITUTION §11.4.75/§2.1]</code>
+<code>[VERIFIED-SOURCE]</code>.</li>
+</ul>
+<h4 id="atm-002-rootless-podman-compose-baseline">ATM-002 — Rootless
+Podman Compose baseline</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P0 · 1.1.
+<strong>Depends on:</strong> ATM-001. <strong>Blocks:</strong>
+ATM-003/005/006/007/011/057.</li>
+<li><strong>Provides:</strong> the sole orchestration substrate
+<code>[§11.4.76]</code> —
+<code>pkg/boot</code>/<code>pkg/compose</code>/<code>pkg/health</code>.</li>
+<li><strong>Decoupled scope:</strong> stand up
+<code>vasic-digital/containers</code>; no product services yet.</li>
+<li><strong>Tasks:</strong> <code>ATM-002.1</code> compose baseline +
+rootless Podman socket; <code>ATM-002.2</code> per-service health probes
+via <code>observability/pkg/health</code>; <code>ATM-002.3</code> three
+env profiles
+(<code>dev.</code>/<code>sta.</code>/<code>thready.</code>).</li>
+<li><strong>Acceptance:</strong> Given the compose baseline, When
+<code>pkg/boot</code> starts, Then all declared containers report
+healthy within the boot budget and Podman runs <strong>rootless</strong>
+(no root daemon). Given a killed container, When health polling runs,
+Then it is reported unhealthy and restarted.</li>
+<li><strong>Test types:</strong> unit, integration (real Podman), chaos
+(container kill), performance (boot time).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[CONSTITUTION §11.4.76/161]</code>
+<code>[IN-HOUSE: containers]</code>.</li>
+</ul>
+<h4 id="atm-003-digital.vasic.database-wiring">ATM-003 —
+<code>digital.vasic.database</code> wiring</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P0 · 1.1.
+<strong>Depends on:</strong> ATM-002. <strong>Blocks:</strong>
+ATM-004/013/019/043.</li>
+<li><strong>Provides:</strong> SQLite dev
+(<code>modernc.org/sqlite</code>, cgo-free) / Postgres prod
+(<code>pgx/v5</code>) + <code>migration.Runner</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-003.1</code> DSN/config injection
+(project-not-aware); <code>ATM-003.2</code>
+<code>migration.Runner</code> up/down harness; <code>ATM-003.3</code>
+connection-pool + health.</li>
+<li><strong>Acceptance:</strong> Given the dev profile, When the app
+boots, Then it opens a cgo-free SQLite DB and applies all pending
+migrations; Given the prod profile, Then it opens Postgres via
+<code>pgx/v5</code>. Given a migration <code>up</code> then
+<code>down</code>, Then the schema round-trips with no residue
+(expand-contract, <code>[Q30]</code>).</li>
+<li><strong>Test types:</strong> unit, integration (both backends),
+migration round-trip.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[IN-HOUSE: database]</code> <code>[Q12/Q30]</code>.</li>
+</ul>
+<h4 id="atm-004-pgvector-provisioning-digital.vasic.vectordb">ATM-004 —
+pgvector provisioning + <code>digital.vasic.vectordb</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P0 · 1.1.
+<strong>Depends on:</strong> ATM-003. <strong>Blocks:</strong>
+ATM-039/042.</li>
+<li><strong>Provides:</strong> cosine <code>&lt;=&gt;</code> vector
+store co-located in Postgres behind the <code>VectorStore</code>
+seam.</li>
+<li><strong>Tasks:</strong> <code>ATM-004.1</code> enable pgvector
+extension in the Postgres image; <code>ATM-004.2</code>
+<code>VectorStore</code> cosine upsert/search; <code>ATM-004.3</code>
+id-hydration join back to relational rows; <code>ATM-004.4</code> the
+embedding-provider guard (<code>RequireSemanticEmbedder</code>, ties to
+ATM-040).</li>
+<li><strong>Acceptance:</strong> Given a set of embedded rows, When a
+cosine <code>&lt;=&gt;</code> top-k query runs, Then the returned ids
+hydrate against relational rows and the search completes &lt; 500 ms
+(Aggressive SLO, <code>[Q14]</code>). Given
+<code>HELIX_EMBEDDING_PROVIDER != llama</code> in a RAG/search context,
+Then the guard fails loudly (never the <code>HashEmbedder</code> stub —
+see ATM-040).</li>
+<li><strong>Test types:</strong> unit, integration, performance (&lt;
+500 ms), benchmarking.</li>
+<li><strong>Gap:</strong> 3.1. <strong>Provenance:</strong>
+<code>[IN-HOUSE: vectordb]</code> <code>[GAP 2.1]</code>.</li>
+</ul>
+<h4 id="atm-005-digital.vasic.observability">ATM-005 —
+<code>digital.vasic.observability</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P0 · 1.1.
+<strong>Depends on:</strong> ATM-002. <strong>Blocks:</strong> all
+runtime items (telemetry).</li>
+<li><strong>Provides:</strong> OTel traces + Prometheus metrics + logrus
+structured logs + ClickHouse + <code>pkg/health</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-005.1</code> OTLP exporter +
+Jaeger/Zipkin; <code>ATM-005.2</code> Prometheus registry + Grafana
+dashboards; <code>ATM-005.3</code> logrus + correlation-id middleware;
+<code>ATM-005.4</code> ClickHouse analytics sink.</li>
+<li><strong>Acceptance:</strong> Given a cross-service call, When it
+executes, Then an OTel span with a correlation id is emitted and
+queue/latency/retry Prometheus metrics update. Given a secret in a log
+field, Then it is redacted (<code>[§11.4.10]</code>).</li>
+<li><strong>Test types:</strong> unit, integration (real collectors),
+security (no-secret-in-log).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[IN-HOUSE: observability]</code> <code>[Q40/Q42/Q43]</code>.</li>
+</ul>
+<h4 id="atm-006-lets-encrypt-tls-per-subdomain">ATM-006 — Let’s Encrypt
+TLS per subdomain</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P1 · 1.1.
+<strong>Depends on:</strong> ATM-002. <strong>Blocks:</strong>
+ATM-057.</li>
+<li><strong>Provides:</strong> ACME certs (HTTP-01/DNS-01) per
+<code>dev.</code>/<code>sta.</code>/<code>thready.</code> with atomic
+deploy-hook + rollback.</li>
+<li><strong>Tasks:</strong> <code>ATM-006.1</code> acme.sh integration;
+<code>ATM-006.2</code> atomic deploy-hook; <code>ATM-006.3</code>
+systemd renew timer; <code>ATM-006.4</code>
+rollback-on-failed-reload.</li>
+<li><strong>Acceptance:</strong> Given a subdomain, When issuance runs,
+Then a valid cert is installed atomically and a failed reload rolls back
+to the prior cert; When renewal is due, Then the timer renews without
+downtime.</li>
+<li><strong>Test types:</strong> unit, integration (staging ACME), chaos
+(failed reload → rollback).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[IN-HOUSE: lets_encrypt]</code> <code>[Q44]</code>.</li>
+</ul>
+<h4 id="atm-007-dynamic-ports-discovery-mdns-port_prefix">ATM-007 —
+Dynamic ports (<code>discovery</code> + <code>mdns</code> +
+<code>port_prefix</code>)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P1 · 1.1.
+<strong>Depends on:</strong> ATM-002.</li>
+<li><strong>Provides:</strong> deterministic dynamic port allocation ≤
+65535 + service registration + failover.</li>
+<li><strong>Tasks:</strong> <code>ATM-007.1</code>
+<code>port_prefix</code> deterministic allocation;
+<code>ATM-007.2</code> <code>discovery</code> registration;
+<code>ATM-007.3</code> <code>mdns</code> advertisement;
+<code>ATM-007.4</code> health-gated deregistration.</li>
+<li><strong>Acceptance:</strong> Given N services, When they boot, Then
+each gets a deterministic port ≤ 65535 with no collision and registers;
+When one dies, Then it deregisters and failover routes elsewhere.</li>
+<li><strong>Test types:</strong> unit, integration, chaos (service death
+→ failover).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[IN-HOUSE: discovery/mdns/port_prefix]</code>
+<code>[§14.3]</code>.</li>
+</ul>
+<h4 id="atm-008-codegraph-index-of-own-org-submodules">ATM-008 —
+CodeGraph index of own-org submodules</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P1 · 1.1.
+<strong>Depends on:</strong> ATM-001.</li>
+<li><strong>Provides:</strong> a local SQLite code-intelligence index
+<code>[§11.4.78–80]</code> + scheduled re-index.</li>
+<li><strong>Tasks:</strong> <code>ATM-008.1</code> index the reused
+submodules; <code>ATM-008.2</code> MCP wiring for agent queries;
+<code>ATM-008.3</code> scheduled re-index hook.</li>
+<li><strong>Acceptance:</strong> Given the reused submodules, When
+indexing runs, Then <code>codegraph explore</code> answers
+symbol/call-path queries; When a submodule changes, Then the scheduled
+re-index refreshes it.</li>
+<li><strong>Test types:</strong> unit, integration.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[CONSTITUTION §11.4.78–80]</code>
+<code>[IN-HOUSE: codegraph]</code>.</li>
+</ul>
+<h4 id="atm-009-docs-chain-contexts-md-htmlpdfdocx-siblings">ATM-009 —
+Docs Chain contexts (md → HTML/PDF/DOCX siblings)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> PRODUCTION-WIRE · P1 · 1.1.
+<strong>Depends on:</strong> ATM-001. <strong>Related:</strong>
+ATM-069.</li>
+<li><strong>Provides:</strong> <code>.docs_chain/contexts/*.yaml</code>
+so every <code>.md</code> gets HTML/PDF/DOCX siblings
+<code>[§11.4.65]</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-009.1</code> author the Thready
+docs-chain context; <code>ATM-009.2</code> wire
+<code>sync_all_markdown_exports.sh</code>; <code>ATM-009.3</code>
+provision pandoc/weasyprint (ties to ATM-069).</li>
+<li><strong>Acceptance:</strong> Given a committed <code>.md</code>,
+When Docs Chain runs, Then HTML/PDF/DOCX siblings exist and the
+content-hash DAG marks them fresh; Given pandoc/weasyprint absent, Then
+it <strong>honest-SKIPs</strong> with a logged reason (never fakes
+success, <code>[§11.4.3/52]</code>).</li>
+<li><strong>Test types:</strong> unit, integration (real
+pandoc/weasyprint), challenges (SKIP honesty).</li>
+<li><strong>Gap:</strong> 10.1. <strong>Provenance:</strong>
+<code>[CONSTITUTION §11.4.65/106]</code> <code>[GAP 10.1]</code>.</li>
+</ul>
+<h3 id="core-services-sub-phase-1.2">3.2 Core Services (sub-phase
+1.2)</h3>
+<h4 id="atm-010-user-service-build-new">ATM-010 — User Service
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 1.2.
+<strong>Depends on:</strong> ATM-003, ATM-013. <strong>Blocks:</strong>
+ATM-012, ATM-020.</li>
+<li><strong>Provides:</strong> three-tier multi-tenant RBAC (root /
+account-admin / user) + cross-account membership.</li>
+<li><strong>Decoupled scope:</strong> own repo on <code>auth</code> +
+<code>security/pkg/policy</code> + Catalogizer RBAC pattern;
+<strong>not</strong> a vendored copy inside <code>helix_thready</code>.
+Design: <a
+href="./build-new-subsystems.md#7-user-service-build-new">build-new-subsystems.md
+§7</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-010.1</code>
+<code>BootstrapRoot</code> (owner-only, once, at deploy);
+<code>ATM-010.2</code> <code>CreateAccount</code> (Root-only);
+<code>ATM-010.3</code> <code>Invite</code> (Root or that account’s
+Admin); <code>ATM-010.4</code> <code>Authorize</code> →
+<code>security/pkg/policy</code>; <code>ATM-010.5</code> TOTP MFA for
+admin tiers; <code>ATM-010.6</code> account/user/membership DDL.</li>
+<li><strong>Acceptance:</strong> Given a fresh deploy, When bootstrap
+runs, Then exactly one Root Admin exists, owner-only. Given a non-Root
+caller, When <code>CreateAccount</code>, Then <code>403</code>. Given a
+user in two accounts, Then both memberships resolve and each permission
+check flows through <code>security/pkg/policy</code>. Given an admin
+login without TOTP, Then <code>401</code>.</li>
+<li><strong>Test types:</strong> unit, integration, e2e,
+<strong>security</strong> (authz matrix + privilege-escalation + MFA
+bypass + token revocation), challenges, HelixQA.</li>
+<li><strong>Gap:</strong> 7.2, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: auth/security]</code>
+<code>[GAP 7.2]</code>.</li>
+</ul>
+<h4 id="atm-011-event-bus-service-build-new">ATM-011 — Event Bus service
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 1.2.
+<strong>Depends on:</strong> ATM-002. <strong>Blocks:</strong>
+ATM-021/023/025/030.</li>
+<li><strong>Provides:</strong> client-facing durable subscription over
+WS/SSE wrapping <code>eventbus</code> (NATS JetStream), sticky events +
+invalidation, at-least-once + durable replay. Design: <a
+href="./build-new-subsystems.md#8-event-bus-service-build-new">build-new-subsystems.md
+§8</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-011.1</code> <code>Publish</code>;
+<code>ATM-011.2</code> <code>Subscribe(filter, sticky)</code> with
+durable JetStream consumer; <code>ATM-011.3</code> sticky last-value
+cache + <code>Invalidate</code>; <code>ATM-011.4</code> SSE surface
+(<code>Last-Event-ID</code> replay cursor); <code>ATM-011.5</code>
+WebSocket frame contract; <code>ATM-011.6</code> the events
+catalog.</li>
+<li><strong>Acceptance:</strong> Given a disconnected client
+reconnecting with a cursor, When it resubscribes, Then missed events
+replay and sticky subjects deliver last-value first. Given an entity
+state change, Then the sticky value is invalidated. Given a broker
+restart, Then durable consumers resume with no lost event
+(at-least-once, idempotent consumers).</li>
+<li><strong>Test types:</strong> unit, integration (JetStream cluster),
+chaos (broker restart → replay), scaling (fan-out), performance.</li>
+<li><strong>Gap:</strong> §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: eventbus]</code>
+<code>[§3.4]</code>.</li>
+</ul>
+<h4 id="atm-012-asset-service-build-new">ATM-012 — Asset Service
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P1 · 1.2.
+<strong>Depends on:</strong> ATM-003, ATM-010. <strong>Blocks:</strong>
+ATM-031/034.</li>
+<li><strong>Provides:</strong> decoupled Catalogizer-based asset
+store/serve (multi-protocol, SQLCipher-at-rest, JWT+RBAC, WS,
+Range/<code>OpenSeekable</code>, MinIO tier, content-hash dedup,
+<code>…-web</code> renditions, <strong>Proxy</strong> links — never raw
+paths). Design: <a
+href="./build-new-subsystems.md#6-asset-service-build-new">build-new-subsystems.md
+§6</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-012.1</code> <code>Put</code>
+(content-hash dedup); <code>ATM-012.2</code> <code>OpenRange</code>
+(Range/HLS); <code>ATM-012.3</code> <code>Link</code> (short-lived
+signed URL, never a path); <code>ATM-012.4</code> <code>Rendition</code>
+(<code>…-web</code>); <code>ATM-012.5</code> sealed AES-256-GCM dirs for
+sensitive assets; <code>ATM-012.6</code> asset/rendition/post_asset
+DDL.</li>
+<li><strong>Acceptance:</strong> Given the same bytes twice, When
+<code>Put</code>, Then one row exists (dedup by content hash). Given a
+client, When it requests bytes, Then it receives a signed URL / Range
+stream, <strong>never</strong> a raw file path, and RBAC is enforced
+server-side. Given a sealed asset, Then only the service can decrypt
+it.</li>
+<li><strong>Test types:</strong> unit, integration (MinIO signed URLs,
+Range), security (RBAC + sealed-dir), performance (streaming), scaling
+(50 TB+ dedup).</li>
+<li><strong>Gap:</strong> 6.1, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: Catalogizer]</code>
+<code>[GAP 6.1]</code>.</li>
+</ul>
+<h4 id="atm-013-digital.vasic.auth-rs256eddsa-jwks">ATM-013 —
+<code>digital.vasic.auth</code> RS256/EdDSA + JWKS</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 1.2. <strong>Depends
+on:</strong> ATM-003. <strong>Blocks:</strong> ATM-010, ATM-020.</li>
+<li><strong>Provides:</strong> asymmetric JWT signing (default is
+<strong>HMAC-SHA256</strong> <code>[GAP 7.2]</code>) + JWKS
+rotation.</li>
+<li><strong>Tasks:</strong> <code>ATM-013.1</code> RS256/EdDSA signer;
+<code>ATM-013.2</code> JWKS endpoint + rotation; <code>ATM-013.3</code>
+scoped API keys; <code>ATM-013.4</code> OAuth2 external-linking.</li>
+<li><strong>Acceptance:</strong> Given a token signed RS256, When any
+service verifies it, Then verification uses the published JWKS (no
+shared HMAC secret). Given a rotated key, Then old tokens verify until
+expiry and new tokens use the new key.</li>
+<li><strong>Test types:</strong> unit, integration, security (key
+rotation, alg-confusion).</li>
+<li><strong>Gap:</strong> 7.2. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: auth]</code>
+<code>[GAP 7.2]</code>.</li>
+</ul>
+<h4
+id="atm-014-digital.vasic.security-searchable-yet-sealed-credentials">ATM-014
+— <code>digital.vasic.security</code> searchable-yet-sealed
+credentials</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P2 · 1.2. <strong>Depends
+on:</strong> ATM-003.</li>
+<li><strong>Provides:</strong> sealed key store + a
+<strong>searchable-yet-sealed</strong> credential representation (embed
+over a redacted/tokenized form so secrets are findable without leaking
+the raw value).</li>
+<li><strong>Tasks:</strong> <code>ATM-014.1</code> sealed key store;
+<code>ATM-014.2</code> redacted/tokenized embedding representation;
+<code>ATM-014.3</code> <code>pkg/pii</code> redaction wiring.</li>
+<li><strong>Acceptance:</strong> Given a stored credential, When a
+semantic search runs, Then the credential is found by meaning
+<strong>without</strong> the raw secret ever appearing in the index or
+logs (<code>[§3.6/§11.4.10]</code>).</li>
+<li><strong>Test types:</strong> unit, integration, security (leak
+audit).</li>
+<li><strong>Gap:</strong> 7.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: security]</code>
+<code>[GAP 7.1]</code>.</li>
+</ul>
+<h4 id="atm-015-security-kmp-native-secure-storage">ATM-015 —
+<code>Security-KMP</code> native secure storage</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P0 (mobile) · 1.2.
+<strong>Depends on:</strong> — . <strong>Blocks:</strong> ATM-046.</li>
+<li><strong>Provides:</strong> real Android Keystore / iOS Keychain /
+Wasm secure storage — currently an <strong>in-memory stub</strong>
+<code>[GAP 7.3]</code> (only <code>DesktopSecureStorage</code> JVM is
+real AES-256-GCM).</li>
+<li><strong>Tasks:</strong> <code>ATM-015.1</code> Android Keystore;
+<code>ATM-015.2</code> iOS Keychain; <code>ATM-015.3</code> Wasm/browser
+store; <code>ATM-015.4</code> on-device round-trip contract test.</li>
+<li><strong>Acceptance:</strong> Given a secret stored on a real device,
+When the app restarts, Then it is retrieved from the platform-native
+secure enclave, <strong>never</strong> plaintext memory. <strong>Mobile
+release is blocked</strong> until this passes on-device.</li>
+<li><strong>Test types:</strong> unit, integration (on-device), security
+(plaintext-at-rest negative), paired-mutation.</li>
+<li><strong>Gap:</strong> 7.3. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: Security-KMP]</code>
+<code>[GAP 7.3]</code> (README self-discloses stub).</li>
+</ul>
+<h3 id="integration-sub-phase-1.3">3.3 Integration (sub-phase 1.3)</h3>
+<h4
+id="atm-016-herald-first-class-telegram-thread-reader-promote-mtproto">ATM-016
+— Herald first-class Telegram thread-reader (promote MTProto)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 1.3. <strong>Depends
+on:</strong> ATM-003. <strong>Blocks:</strong> ATM-017, ATM-022.</li>
+<li><strong>Provides:</strong> promote the <code>qaherald</code>
+<code>gotd/td</code> MTProto user client to a first-class
+<code>channels.Channel</code> (forum topics via
+<code>channels.getForumTopics</code>, replies via
+<code>messages.getReplies</code>, full attachment/forward extraction),
+keeping the <code>channels.Channel</code> seam.</li>
+<li><strong>Tasks:</strong> <code>ATM-016.1</code> lift the MTProto
+client out of <code>qaherald/internal/mtproto</code> into a first-class
+channel package; <code>ATM-016.2</code> implement
+<code>channels.Channel</code>
+(<code>SendReplyGeneric</code>/<code>BotSelfIdentity</code>/
+<code>DownloadAttachment</code> + embedded
+<code>commons.Channel</code>); <code>ATM-016.3</code> forum-topic +
+reply-thread reads; <code>ATM-016.4</code> <code>access_hash</code>
+resolution.</li>
+<li><strong>Acceptance:</strong> Given a configured Telegram channel,
+When acquisition runs, Then full channel/group <strong>history</strong>
+is backfilled (Bot-API cannot do this); Given a forum topic, Then its
+topics and reply threads are read; the adapter satisfies
+<code>var _ channels.Channel</code>.</li>
+<li><strong>Test types:</strong> unit, integration (live Telegram
+fixture — Appendix A <code>t.me/+622y04wzy_YzOTA0</code>), e2e.</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong> the
+seam is <code>commons_messaging/channels/channel.go</code>:
+<code>type Channel interface { commons.Channel; SendReplyGeneric(ctx, recipient, body, replyToID, attachments) (string, error); BotSelfIdentity(ctx) (SelfIdentity, error); DownloadAttachment(ctx, externalID, mime) (string, string, error) }</code>;
+MTProto currently lives only in
+<code>qaherald</code>/<code>docs/guides/MTPROTO.md</code>.</li>
+<li><strong>Gap:</strong> 5.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: herald]</code>
+<code>[VERIFIED-SOURCE]</code> <code>[GAP 5.1]</code>.</li>
+</ul>
+<h4 id="atm-017-threadreader-abstraction-build-new">ATM-017 —
+ThreadReader abstraction <code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P1 · 1.3.
+<strong>Depends on:</strong> ATM-016. <strong>Blocks:</strong>
+ATM-018.</li>
+<li><strong>Provides:</strong> reusable root + organic-reply assembly
+(exclude system replies, resolve <code>access_hash</code>), shared
+across messengers. Design: <a
+href="./build-new-subsystems.md#9-threadreader-abstraction-build-new">build-new-subsystems.md
+§9</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-017.1</code>
+<code>Assemble(ThreadRef) (Thread, error)</code>; <code>ATM-017.2</code>
+system-reply exclusion; <code>ATM-017.3</code> hashtag + attachment
+extraction into <code>Thread</code>.</li>
+<li><strong>Acceptance:</strong> Given a link-only root post with tags
+added in a reply, When <code>Assemble</code> runs, Then the returned
+<code>Thread</code> contains the root + all organic replies with the
+reply-borne tags, and the system’s own processing replies are excluded
+(VERIFIED §3.2.1 — critical).</li>
+<li><strong>Test types:</strong> unit, integration (live Telegram/Max
+fixtures), e2e.</li>
+<li><strong>Gap:</strong> 5.1, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[GAP 5.1]</code>.</li>
+</ul>
+<h4 id="atm-018-max-adapter-build-new">ATM-018 — Max adapter
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 1.3.
+<strong>Depends on:</strong> ATM-017. <strong>Open:</strong>
+<code>[OPEN: max-oneme-go-port]</code>.</li>
+<li><strong>Provides:</strong> a Herald Max channel with two transports
+— Bot API (Go SDK, dev.max.ru) <strong>and</strong> a Go port of the
+OneMe user-WebSocket protocol for full history. Design: <a
+href="./build-new-subsystems.md#3-max-messenger-adapter-build-new">build-new-subsystems.md
+§3</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-018.1</code> Bot-API transport
+implementing <code>channels.Channel</code> (ships first);
+<code>ATM-018.2</code> <strong>[spike]</strong> OneMe user-WS protocol
+capture (<code>ATM-067</code>-style); <code>ATM-018.3</code> Go OneMe
+client (spike-gated); <code>ATM-018.4</code> ThreadReader
+integration.</li>
+<li><strong>Acceptance:</strong> Given an operator Max invite link
+(Appendix A), When the Bot-API transport connects, Then bot-scoped posts
+are read and satisfy <code>channels.Channel</code>. Given the OneMe
+port, Then full channel/thread history reads — <strong>but</strong> this
+remains <code>[OPEN]</code> until the spike proves the protocol; it is
+<strong>never</strong> claimed working before then.</li>
+<li><strong>Test types:</strong> unit, integration (live invite links),
+e2e, security (session/token via fixed Security-KMP).</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong>
+Herald has <strong>no</strong> <code>channels/max</code> or
+<code>channels/mtproto</code> package — only
+<code>docs/guides/messengers/MAX.md</code> (placeholder) + reserved env
+vars; confirms the empty stub. Reference impls
+<code>vkmax</code>/<code>max-mcp</code>/<code>MaxAPI</code> are Python
+<code>[RESEARCH]</code>.</li>
+<li><strong>Gap:</strong> 5.1, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[RESEARCH]</code>
+<code>[VERIFIED-SOURCE]</code> <code>[GAP 5.1]</code>.</li>
+</ul>
+<h4 id="atm-019-relational-schema-migrations">ATM-019 — Relational
+schema + migrations</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 1.3. <strong>Depends
+on:</strong> ATM-003. <strong>Blocks:</strong> ATM-010/020/022.</li>
+<li><strong>Provides:</strong> the full ERD (posts, threads, replies,
+hashtags, categories, accounts, users, roles, permissions, memberships,
+assets, asset_links, processing_state, events, subscriptions,
+billing/metering, audit).</li>
+<li><strong>Tasks:</strong> <code>ATM-019.1</code>
+post/thread/reply/hashtag/category tables; <code>ATM-019.2</code>
+account/user/role/ permission/membership; <code>ATM-019.3</code>
+asset/asset_link/processing_state; <code>ATM-019.4</code>
+event/subscription/ billing/audit; <code>ATM-019.5</code> up/down
+migrations (expand-contract).</li>
+<li><strong>Acceptance:</strong> Given the schema, When migrations
+apply, Then all tables + indexes exist with FK integrity; When rolled
+back, Then no residue. Given a post, Then its processing_state row is
+unique.</li>
+<li><strong>Test types:</strong> unit, integration, migration
+round-trip.</li>
+<li><strong>Gap:</strong> 3.2. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: database]</code>
+<code>[§19.12]</code>. See <a
+href="../database/index.md">../database/index.md</a>.</li>
+</ul>
+<h4 id="atm-020-rest-api-skeleton-v1-http3-h2">ATM-020 — REST API
+skeleton (<code>/v1</code>, HTTP/3 + H2)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 1.3. <strong>Depends
+on:</strong> ATM-010, ATM-019. <strong>Blocks:</strong>
+ATM-021/044/048.</li>
+<li><strong>Provides:</strong> <code>/v1</code> REST surface on
+<code>vasic-digital/http3</code> (H2 fallback) + <code>auth</code> +
+<code>ratelimiter</code> + <code>security/pkg/headers</code> +
+<code>middleware</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-020.1</code> router +
+<code>/v1</code> versioning; <code>ATM-020.2</code> HTTP/3 transport +
+H2 fallback; <code>ATM-020.3</code> auth + rate-limit + security-headers
+middleware; <code>ATM-020.4</code> OpenAPI 3.1 surface + Swagger.</li>
+<li><strong>Acceptance:</strong> Given a request, When it hits
+<code>/v1</code>, Then it is authn/authz-checked, rate-limited and
+security-headed; API p95 &lt; 150 ms (Aggressive SLO). Given an
+HTTP/3-incapable client, Then it falls back to H2.</li>
+<li><strong>Test types:</strong> unit, integration, performance (p95
+&lt; 150 ms), security (headers, rate-limit).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code>
+<code>[IN-HOUSE: http3/middleware/ratelimiter]</code>
+<code>[Q29/Q14]</code>.</li>
+</ul>
+<h4 id="atm-021-real-time-surface-websocket-hub-sse">ATM-021 — Real-time
+surface (WebSocket hub + SSE)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 1.3. <strong>Depends
+on:</strong> ATM-011, ATM-020.</li>
+<li><strong>Provides:</strong> <code>digital.vasic.streaming</code> WS
+hub + SSE bridged to the Event Bus service.</li>
+<li><strong>Tasks:</strong> <code>ATM-021.1</code> WS hub bridge;
+<code>ATM-021.2</code> SSE bridge; <code>ATM-021.3</code> backpressure +
+reconnect.</li>
+<li><strong>Acceptance:</strong> Given a subscribed client, When an
+event fires, Then it is delivered over WS/SSE; Given a reconnect, Then
+the Event Bus replay (ATM-011) reconciles it.</li>
+<li><strong>Test types:</strong> unit, integration, scaling (fan-out),
+chaos (disconnect/reconnect).</li>
+<li><strong>Gap:</strong> 9. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: streaming]</code>.</li>
+</ul>
+<hr />
+<h2 id="phase-2-processing-engine-atm-022atm-043">4. Phase 2 —
+Processing Engine (ATM-022…ATM-043)</h2>
+<h3 id="content-acquisition-sub-phase-2.1">4.1 Content Acquisition
+(sub-phase 2.1)</h3>
+<h4
+id="atm-022-acquisition-poller-push-triggers-complete-post-assembly">ATM-022
+— Acquisition poller + push triggers (complete-post assembly)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.1. <strong>Depends
+on:</strong> ATM-016, ATM-019. <strong>Blocks:</strong> ATM-023
+(feeds).</li>
+<li><strong>Provides:</strong> configurable-cadence poll + push
+triggers; assemble the <strong>complete post</strong> = root + organic
+reply chain; store raw + emit acquisition events.</li>
+<li><strong>Tasks:</strong> <code>ATM-022.1</code> poll scheduler
+(configurable cadence); <code>ATM-022.2</code> push-trigger listener;
+<code>ATM-022.3</code> complete-post assembly via ThreadReader;
+<code>ATM-022.4</code> raw persist + <code>post.received</code>
+emit.</li>
+<li><strong>Acceptance:</strong> Given a new post, When either the poll
+or a push trigger fires, Then the complete post (root + organic replies,
+system replies excluded) is stored and a <code>post.received</code>
+event is emitted exactly once per post.</li>
+<li><strong>Test types:</strong> unit, integration (live fixtures),
+e2e.</li>
+<li><strong>Gap:</strong> 5.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: herald]</code>
+<code>[§3.1]</code>.</li>
+</ul>
+<h4 id="atm-023-idempotent-single-claim-per-post">ATM-023 — Idempotent
+single-claim per post</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.1. <strong>Depends
+on:</strong> ATM-011, ATM-019. <strong>Blocks:</strong> ATM-025.</li>
+<li><strong>Provides:</strong> exactly-once processing per post on
+<code>digital.vasic.background</code> (Postgres row/advisory lock) even
+under a <code>post.received</code> event storm — the runtime analogue of
+§11.4.176.</li>
+<li><strong>Tasks:</strong> <code>ATM-023.1</code>
+<code>pg_try_advisory_xact_lock</code>-based non-blocking claim;
+<code>ATM-023.2</code> processing_state transition;
+<code>ATM-023.3</code> storm/duplicate-delivery test harness.</li>
+<li><strong>Acceptance:</strong> Given the same
+<code>post.received</code> delivered N times concurrently, When workers
+race, Then exactly one processes the post and the rest skip without
+blocking (non-blocking claim, <code>TryClaim</code> returns
+<code>false</code>).</li>
+<li><strong>Test types:</strong> unit, integration, chaos (event storm),
+stress (N concurrent), race (<code>-race</code>).</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong> the
+exactly-once concept is now realized as a shipped module —
+<code>vasic-digital/session_orchestrator/claim/claim.go</code>
+(<code>Registry.TryClaim</code> / <code>Release</code>,
+<code>ErrNotClaimed</code>/<code>ErrClaimMismatch</code>) — usable
+directly or via the Postgres advisory-lock substrate; see ATM-062.</li>
+<li><strong>Gap:</strong> 2.9. <strong>Provenance:</strong>
+<code>[EXTEND]</code>
+<code>[IN-HOUSE: background/session_orchestrator]</code>
+<code>[VERIFIED-SOURCE]</code>.</li>
+</ul>
+<h4 id="atm-024-indirect-hashtag-determination">ATM-024 — Indirect
+hashtag determination</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P1 · 2.1.
+<strong>Depends on:</strong> ATM-025.</li>
+<li><strong>Provides:</strong> derive tags when absent/insufficient
+(torrent → <code>Torrent</code>+<code>ToDownload</code>; git host →
+research; YouTube/media → download+research) + AI fallback; never
+silently drop.</li>
+<li><strong>Tasks:</strong> <code>ATM-024.1</code> link-class
+heuristics; <code>ATM-024.2</code> AI fallback classifier;
+<code>ATM-024.3</code> unclassified → generic-ingest + manual-review
+queue.</li>
+<li><strong>Acceptance:</strong> Given a link-only post, When
+classified, Then the correct indirect tags are derived; Given a
+fully-ambiguous post, Then it is generic-ingested
+(stored+embedded+indexed) and queued for review — <strong>never</strong>
+dropped (<code>[Q32]</code>).</li>
+<li><strong>Test types:</strong> unit, integration, challenges (edge
+inputs).</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[§3.5]</code>.</li>
+</ul>
+<h3 id="processing-pipeline-sub-phase-2.2">4.2 Processing Pipeline
+(sub-phase 2.2)</h3>
+<h4 id="atm-025-skill-dispatch-engine-build-new">ATM-025 —
+Skill-dispatch engine <code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 2.2.
+<strong>Depends on:</strong> ATM-011, ATM-023, ATM-036.
+<strong>Blocks:</strong> ATM-024/026/027/028/035.</li>
+<li><strong>Provides:</strong> hashtag/content-type → Skill(s)
+resolution + ordered execution (download→convert→analyze→research→reply)
+over BackgroundTasks with idempotent single-claim.</li>
+<li><strong>Decoupled scope:</strong> read-only consumer of the
+helix_skills Skill-Graph DAG; does <strong>not</strong> modify the
+knowledge model.</li>
+<li><strong>Tasks:</strong> <code>ATM-025.1</code> hashtag/content-type
+→ Skill(s) resolver (reads the DAG); <code>ATM-025.2</code> step
+ordering by <code>SortOrder</code> + precedence; <code>ATM-025.3</code>
+dispatch over BackgroundTasks with single-claim; <code>ATM-025.4</code>
+per-step event emission.</li>
+<li><strong>Acceptance:</strong> Given a post tagged
+<code>#Video #Research</code>, When dispatched, Then both the
+video-download Skill and the deep-research Skill run, download-first;
+Given a duplicate <code>post.received</code>, Then no double-dispatch;
+Given unknown/insufficient tags, Then fall through to ATM-024, never
+dropped.</li>
+<li><strong>Test types:</strong> unit, integration, e2e, chaos, stress,
+performance, challenges, HelixQA.</li>
+<li><strong>Gap:</strong> 4.1. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: helix_skills]</code>
+<code>[OPERATOR: all-categories-parallel]</code>
+<code>[GAP 4.1]</code>.</li>
+</ul>
+<h4 id="atm-026-multi-hashtag-additive-resolution-precedence">ATM-026 —
+Multi-hashtag additive resolution + precedence</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.2. <strong>Depends
+on:</strong> ATM-025.</li>
+<li><strong>Provides:</strong> additive multi-Skill resolution +
+precedence table (download &gt; convert &gt; analyze &gt; research &gt;
+reply) + <code>SortOrder</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-026.1</code> additive matcher;
+<code>ATM-026.2</code> precedence table; <code>ATM-026.3</code>
+deterministic ordering.</li>
+<li><strong>Acceptance:</strong> Given a post with multiple categories,
+When resolved, Then <strong>every</strong> matching Skill runs, ordered
+deterministically so download-type Skills precede analysis-type Skills
+(research can consume downloaded media).</li>
+<li><strong>Test types:</strong> unit, integration.</li>
+<li><strong>Gap:</strong> 2.9. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[§3.3]</code>.</li>
+</ul>
+<h4 id="atm-027-retryback-off-circuit-breaker-soft-timeout">ATM-027 —
+Retry/back-off + circuit-breaker + soft timeout</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.2. <strong>Depends
+on:</strong> ATM-025.</li>
+<li><strong>Provides:</strong> exp back-off + jitter (max 5, base 2 s,
+factor 2.0, cap 5 min) + circuit-breaker + per-post soft timeout
+(<code>[DEFAULT — adjustable]</code> 30 min research-heavy).</li>
+<li><strong>Tasks:</strong> <code>ATM-027.1</code> retry policy
+(Strategy); <code>ATM-027.2</code> circuit-breaker guard;
+<code>ATM-027.3</code> per-post soft-timeout budget;
+<code>ATM-027.4</code> per-step vs whole-post retriability.</li>
+<li><strong>Acceptance:</strong> Given a flapping external system, When
+it fails, Then the step retries with exp back-off up to 5 and the
+breaker opens on sustained failure; Given a research-heavy post
+exceeding its soft budget, Then it yields the slot (long downloads are
+delegated with callbacks).</li>
+<li><strong>Test types:</strong> unit, integration, chaos (flapping
+dependency), performance.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[§3.3]</code>.</li>
+</ul>
+<h4 id="atm-028-download-manager-build-new">ATM-028 — Download Manager
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 2.2.
+<strong>Depends on:</strong> ATM-029, ATM-030. <strong>Blocks:</strong>
+ATM-012.</li>
+<li><strong>Provides:</strong> multi-protocol download engine
+(HTTP/1.1/2/3+QUIC+Brotli via <code>http3</code>; FTP/SMB/NFS/ WebDav by
+reusing <code>filesystem</code>) with queue, resumable+segmented,
+progress, retry, standardized callback. Design: <a
+href="./build-new-subsystems.md#5-download-manager-build-new">build-new-subsystems.md
+§5</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-028.1</code> HTTP/3 source
+adapter; <code>ATM-028.2</code> filesystem source adapter (FTP/SMB/NFS/
+WebDav); <code>ATM-028.3</code> segmented-transfer engine + resume from
+persisted offset; <code>ATM-028.4</code> bounded worker-pool queue;
+<code>ATM-028.5</code> callback emitter (shared schema, ATM-030).</li>
+<li><strong>Acceptance:</strong> Given a large HTTP/3 URL, When
+enqueued, Then it downloads in N segments with progress; Given a
+mid-transfer kill, Then it resumes from the last committed offset; Given
+completion, Then a <code>JobUpdate{succeeded, asset_ref}</code> callback
+fires idempotently.</li>
+<li><strong>Test types:</strong> unit, integration (each protocol vs a
+real server), stress (100 concurrent), chaos (mid-transfer kill →
+resume), performance (throughput).</li>
+<li><strong>Gap:</strong> 6.2, 6.3, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: filesystem/http3]</code>
+<code>[GAP 6.3]</code>.</li>
+</ul>
+<h4 id="atm-029-filesystem-http-source-nfs-platform-listing-fix">ATM-029
+— <code>filesystem</code> HTTP source + NFS platform-listing fix</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 2.2. <strong>Depends
+on:</strong> — . <strong>Blocks:</strong> ATM-028.</li>
+<li><strong>Provides:</strong> add an HTTP(S) source protocol to
+<code>digital.vasic.filesystem</code>; fix NFS non-Linux listing; expose
+<code>OpenSeekable</code> uniformly for Range.</li>
+<li><strong>Tasks:</strong> <code>ATM-029.1</code> HTTP(S) source;
+<code>ATM-029.2</code> NFS <code>SupportedProtocols</code> platform
+gate; <code>ATM-029.3</code> uniform <code>OpenSeekable</code>.</li>
+<li><strong>Acceptance:</strong> Given an HTTP(S) URL, When opened, Then
+<code>OpenSeekable</code> returns a Range-capable reader; Given a
+non-Linux host, Then NFS is <strong>not</strong> advertised in
+<code>SupportedProtocols</code> (it errors today yet is still
+listed).</li>
+<li><strong>Test types:</strong> unit, integration
+(HTTP/FTP/SMB/NFS/WebDav), cross-platform.</li>
+<li><strong>Gap:</strong> 6.2. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: filesystem]</code>
+<code>[GAP 6.2]</code>.</li>
+</ul>
+<h4 id="atm-030-standardized-callbacktask-module-build-new">ATM-030 —
+Standardized callback/task module <code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P1 · 2.2.
+<strong>Depends on:</strong> ATM-011. <strong>Blocks:</strong>
+ATM-028/031/032.</li>
+<li><strong>Provides:</strong> one canonical async-job contract (job id,
+state, progress, result/asset ref, error) applied to Boba, MeTube,
+Download Manager. Design: <a
+href="./build-new-subsystems.md#2-standardized-callbacktask-module-build-new">build-new-subsystems.md
+§2</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-030.1</code>
+<code>JobUpdate</code>/<code>JobState</code>/<code>JobError</code>
+schema; <code>ATM-030.2</code> <code>TaskProducer</code> +
+<code>UpdateSink</code>; <code>ATM-030.3</code> HMAC-signed idempotent
+webhook POST + exp back-off; <code>ATM-030.4</code> Event Bus publish
+sink.</li>
+<li><strong>Acceptance:</strong> Given a completed task, When delivery
+runs, Then an idempotent HMAC-signed POST (or Event Bus publish) carries
+the <code>JobUpdate</code>; Given a dropped webhook, Then it redelivers
+under back-off and consumers treat duplicates idempotently
+(at-least-once).</li>
+<li><strong>Test types:</strong> unit, integration (real Boba/MeTube),
+chaos (webhook drop/redeliver), stress, security (HMAC + SSRF).</li>
+<li><strong>Gap:</strong> 6.6, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[GAP 6.6]</code>.</li>
+</ul>
+<h4 id="atm-031-metube-outbound-completion-webhook">ATM-031 — MeTube
+outbound completion webhook</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.2. <strong>Depends
+on:</strong> ATM-012, ATM-030.</li>
+<li><strong>Provides:</strong> add an <strong>outbound completion
+webhook</strong> to MeTube (poll-only today <code>[GAP 6.5]</code>) +
+Asset Service integration + <code>…-web</code> conversion profiles.</li>
+<li><strong>Tasks:</strong> <code>ATM-031.1</code> outbound webhook on
+the postprocessor sidecar; <code>ATM-031.2</code> Asset Service handoff;
+<code>ATM-031.3</code> <code>…-web</code> conversion-profile
+config.</li>
+<li><strong>Acceptance:</strong> Given a completed MeTube download, When
+post-processing finishes, Then it <strong>pushes</strong> a
+shared-schema completion webhook (no polling) and the asset lands in the
+Asset Service with a <code>…-web</code> rendition.</li>
+<li><strong>Test types:</strong> unit, integration (real MeTube), chaos
+(webhook retry).</li>
+<li><strong>Gap:</strong> 6.5. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: MeTube]</code>
+<code>[GAP 6.5]</code>.</li>
+</ul>
+<h4 id="atm-032-boba-callback-standardization">ATM-032 — Boba callback
+standardization</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 2.2. <strong>Depends
+on:</strong> ATM-030.</li>
+<li><strong>Provides:</strong> standardize Boba’s existing SSE +
+<code>POST /api/v1/hooks</code> to the shared callback schema; Asset
+Service integration.</li>
+<li><strong>Tasks:</strong> <code>ATM-032.1</code> map SSE
+<code>result_found</code> → <code>JobUpdate</code>;
+<code>ATM-032.2</code> map <code>POST /api/v1/hooks</code> to the shared
+schema; <code>ATM-032.3</code> Asset Service handoff.</li>
+<li><strong>Acceptance:</strong> Given a Boba torrent result, When
+found, Then the callback conforms to the shared schema (job
+id/state/progress/asset ref/error) and the asset lands in the Asset
+Service.</li>
+<li><strong>Test types:</strong> unit, integration (real Boba).</li>
+<li><strong>Gap:</strong> 6.4. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: Boba]</code>
+<code>[GAP 6.4]</code>.</li>
+</ul>
+<h4 id="atm-033-ocr-adapter-build-new">ATM-033 — OCR adapter
+<code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 2.2.
+<strong>Depends on:</strong> — (independent).</li>
+<li><strong>Provides:</strong> a first-class <code>OCRProvider</code>
+seam behind VisionEngine (Tesseract via cgo <code>gosseract</code>/
+subprocess + PaddleOCR option), per-word boxes, offline+deterministic,
+then a hybrid Tesseract→ LLM-vision pipeline. Design: <a
+href="./build-new-subsystems.md#4-ocr-adapter-build-new">build-new-subsystems.md
+§4</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-033.1</code>
+<code>OCRProvider</code> interface + factory; <code>ATM-033.2</code>
+Tesseract adapter (cgo <code>-tags ocr</code> + subprocess fallback);
+<code>ATM-033.3</code> PaddleOCR adapter; <code>ATM-033.4</code> hybrid
+escalation of low-confidence words to LLM-vision; <code>ATM-033.5</code>
+wire <code>TextRegion</code> to the real recognizer.</li>
+<li><strong>Acceptance:</strong> Given a <code>#Comic</code> page, When
+OCR runs, Then a full transcription with per-word boxes is produced
+offline+deterministically and semantically ingested (no
+research/Skills); Given an ambiguous region, Then only that region
+escalates to LLM-vision.</li>
+<li><strong>Test types:</strong> unit, integration (real images),
+benchmarking (throughput), UX (accuracy), challenges.</li>
+<li><strong>Gap:</strong> 2.6, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: VisionEngine]</code>
+<code>[GAP 2.6]</code>.</li>
+</ul>
+<h4 id="atm-034-media-transcode-profiles">ATM-034 — Media transcode
+profiles</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 2.2. <strong>Depends
+on:</strong> ATM-012, ATM-031.</li>
+<li><strong>Provides:</strong> raw preserved + <code>…-web</code>
+H.264/AAC fMP4 (+H.265/AV1); 1080/720/480 HLS+DASH; audio MP3 320k/Opus
+128k/FLAC.</li>
+<li><strong>Tasks:</strong> <code>ATM-034.1</code> <code>…-web</code>
+H.264/AAC fMP4; <code>ATM-034.2</code> H.265/AV1 renditions;
+<code>ATM-034.3</code> adaptive HLS+DASH ladders; <code>ATM-034.4</code>
+audio profiles.</li>
+<li><strong>Acceptance:</strong> Given a raw video asset, When
+transcoded, Then the raw is preserved and a <code>…-web</code> rendition
++ adaptive HLS/DASH ladder exist; Given a broken physical link, Then it
+is re-downloadable via REST (re-invoke Download Manager).</li>
+<li><strong>Test types:</strong> unit, integration, performance
+(transcode throughput), UX (playback).</li>
+<li><strong>Gap:</strong> 6.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[Q36]</code>.</li>
+</ul>
+<h4
+id="atm-035-post-processing-status-reply-events-embedindex-skill-tree-growth">ATM-035
+— Post-processing (status reply, events, embed+index, Skill-Tree
+growth)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.2. <strong>Depends
+on:</strong> ATM-025, ATM-039.</li>
+<li><strong>Provides:</strong> status reply to the original post
+(Robot/User acct), fire events, embed+index generated materials, grow
+Skill-Trees; <strong>never process own replies</strong>.</li>
+<li><strong>Tasks:</strong> <code>ATM-035.1</code> status-reply composer
++ poster; <code>ATM-035.2</code> result events; <code>ATM-035.3</code>
+embed
+<ul>
+<li>semantic index of generated materials; <code>ATM-035.4</code>
+Skill-Tree growth; <code>ATM-035.5</code> self-reply guard.</li>
+</ul></li>
+<li><strong>Acceptance:</strong> Given a processed post, When
+post-processing runs, Then a status reply (metrics + asset refs) is
+posted from the Robot/User account, events fire, generated materials are
+embedded + indexed, and Skill-Trees grow; Given the system’s own reply,
+Then it is <strong>never</strong> processed.</li>
+<li><strong>Test types:</strong> unit, integration, e2e,
+challenges.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[§3.2.3]</code>.</li>
+</ul>
+<h3 id="skills-integration-sub-phase-2.3">4.3 Skills Integration
+(sub-phase 2.3)</h3>
+<h4
+id="atm-036-author-a-skill-recipe-for-every-documented-content-type">ATM-036
+— Author a Skill (recipe) for every documented content type</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 2.3. <strong>Depends
+on:</strong> — . <strong>Blocks:</strong> ATM-025 (needs recipes).</li>
+<li><strong>Provides:</strong> a Skill per content type — all 18
+categories in parallel <code>[OPERATOR]</code> (Video, Torrent, Series,
+Movie, Research, Documentary, Concert, Game, Software, Channel,
+Playlist, Music, Book, Comic, Netflix, Training, Technology,
+Screenshot/QR-sensitive).</li>
+<li><strong>Tasks:</strong> one task per category cluster,
+e.g. <code>ATM-036.1</code> download-family (Video/Torrent/Series/
+Movie/Netflix/Music/Concert); <code>ATM-036.2</code> research-family
+(Research/Technology/Documentary/Training/ Book-IT);
+<code>ATM-036.3</code> media-analysis (Comic/Screenshot/QR);
+<code>ATM-036.4</code> collection (Channel/Playlist/
+Game/Software).</li>
+<li><strong>Acceptance:</strong> Given each documented content type,
+When a matching post arrives, Then its Skill recipe resolves and orders
+the correct steps (e.g. Playlist groups with ordering-number prefixes
+for watch order; Comic → OCR transcription + semantic ingest, no
+research).</li>
+<li><strong>Test types:</strong> unit, integration, e2e, challenges
+(per-category scenario banks).</li>
+<li><strong>Gap:</strong> 4.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: helix_skills]</code>
+<code>[OPERATOR]</code> <code>[§3.2.2]</code>.</li>
+</ul>
+<h4 id="atm-037-standardize-the-skill-file-format">ATM-037 — Standardize
+the Skill file format</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P1 · 2.3. <strong>Depends
+on:</strong> ATM-036.</li>
+<li><strong>Provides:</strong> one canonical <code>SKILL.md</code>
+YAML-frontmatter schema; migrate no-frontmatter dirs; fix the
+<code>catalog-engine</code> “Test Catalog” mislabel; deterministic
+<code>INDEX.md</code> regen.</li>
+<li><strong>Tasks:</strong> <code>ATM-037.1</code> canonical
+<code>SKILL.md</code> schema
+(<code>name</code>/<code>description</code>/<code>version</code>);
+<code>ATM-037.2</code> migrate lowercase no-frontmatter
+<code>skill.md</code> dirs; <code>ATM-037.3</code> fix the catalog
+mislabel; <code>ATM-037.4</code> deterministic <code>INDEX.md</code>
+regeneration.</li>
+<li><strong>Acceptance:</strong> Given the skills tree, When validated,
+Then every skill uses the canonical <code>SKILL.md</code> frontmatter
+and <code>INDEX.md</code> regenerates identically across runs.</li>
+<li><strong>Test types:</strong> unit, integration, challenges (format
+lint).</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong> the
+inconsistency is real —
+<code>constitution/skills/ workable-item-lifecycle/SKILL.md</code>
+carries YAML frontmatter
+(<code>name</code>/<code>description</code>/<code>version: 1.0.0</code>)
+while <code>constitution/skills/media-validator/skill.md</code> has
+<strong>no</strong> frontmatter (starts
+<code># Media Validator Skill</code>).
+<code>docs/catalog/catalog.json</code> is titled “Helix Skills —
+<strong>Test Catalog</strong>” and its entries are grammar/mutation
+<em>tests</em>, not skills (the mislabel).</li>
+<li><strong>Gap:</strong> 4.1. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: helix_skills]</code>
+<code>[VERIFIED-SOURCE]</code> <code>[GAP 4.1]</code>.</li>
+</ul>
+<h4 id="atm-038-triage-the-skill-graph-mvp-open-findings">ATM-038 —
+Triage the Skill-Graph MVP open findings</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> AUDIT · P1 · 2.3. <strong>Depends
+on:</strong> ATM-037.</li>
+<li><strong>Provides:</strong> burn down the Skill-Graph MVP’s 95 open
+findings (of 136) relevant to Thready.</li>
+<li><strong>Tasks:</strong> <code>ATM-038.1</code> triage the 95 open
+findings for Thready relevance; <code>ATM-038.2</code> fix the
+Thready-relevant subset; <code>ATM-038.3</code> reconcile the unreliable
+generated <code>INDEX.md</code>/README counts.</li>
+<li><strong>Acceptance:</strong> Given the findings register, When
+triaged, Then every Thready-relevant finding is fixed or explicitly
+deferred with rationale; counts regenerate deterministically.</li>
+<li><strong>Test types:</strong> unit, integration, AUDIT.</li>
+<li><strong>Gap:</strong> 4.1. <strong>Provenance:</strong>
+<code>[AUDIT]</code> <code>[IN-HOUSE: helix_skills]</code>
+<code>[GAP 4.1]</code>.</li>
+</ul>
+<h3 id="semantic-search-sub-phase-2.4">4.4 Semantic Search (sub-phase
+2.4)</h3>
+<h4 id="atm-039-semantic-search-service-build-new">ATM-039 —
+Semantic-search service <code>[BUILD-NEW]</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P0 · 2.4.
+<strong>Depends on:</strong> ATM-004, ATM-040. <strong>Blocks:</strong>
+ATM-035.</li>
+<li><strong>Provides:</strong> Lumen-style in-house search — chunk
+(AST/tree-sitter for code, Markdown/structured for docs) →
+<code>embeddings</code> → <code>vectordb</code> →
+<code>MCP_Module</code>, over HelixLLM <code>/v1/embeddings</code>;
+indexes posts + generated materials; hydrates ids from the relational
+store. Design: <a
+href="./build-new-subsystems.md#10-semantic-search-service-build-new">build-new-subsystems.md
+§10</a>.</li>
+<li><strong>Tasks:</strong> <code>ATM-039.1</code> chunkers (AST +
+Markdown); <code>ATM-039.2</code> <code>Index</code> (embed+upsert);
+<code>ATM-039.3</code> <code>Query</code> (cosine top-k, &lt; 500 ms);
+<code>ATM-039.4</code> <code>MCP_Module</code> tool exposure;
+<code>ATM-039.5</code> the anti-bluff paired-mutation gate proving real
+relevance.</li>
+<li><strong>Acceptance:</strong> Given indexed posts + generated
+materials, When a query runs, Then cosine top-k hits hydrate against
+relational rows in &lt; 500 ms; Given
+<code>HELIX_EMBEDDING_PROVIDER != llama</code>, Then the service
+<strong>refuses</strong> (503) rather than returning hash noise.</li>
+<li><strong>Test types:</strong> unit, integration (real embeddings +
+pgvector), performance (&lt; 500 ms), benchmarking, challenges
+(relevance), paired-mutation.</li>
+<li><strong>Gap:</strong> 2.7, §11. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code>
+<code>[IN-HOUSE: embeddings/vectordb/rag]</code>
+<code>[GAP 2.1/2.7]</code>.</li>
+</ul>
+<h4
+id="atm-040-helixllm-enforce-llama-embedder-fail-loudly-on-hashembedder">ATM-040
+— HelixLLM: enforce <code>llama</code> embedder, fail loudly on
+<code>HashEmbedder</code></h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P0 · 2.4. <strong>Depends
+on:</strong> — . <strong>Blocks:</strong> ATM-039, ATM-004.4,
+ATM-041.</li>
+<li><strong>Provides:</strong> enforce
+<code>HELIX_EMBEDDING_PROVIDER=llama</code>; <strong>fail
+loudly</strong> (not warn) if the non-semantic <code>HashEmbedder</code>
+is selected in a RAG/search context; load a real code-tuned embedding
+GGUF.</li>
+<li><strong>Tasks:</strong> <code>ATM-040.1</code> provider guard
+rejecting <code>hash</code>/<code>local</code>/unrecognised in semantic
+contexts; <code>ATM-040.2</code> load a real embedding GGUF;
+<code>ATM-040.3</code> startup fail-loud (not the current WARN).</li>
+<li><strong>Acceptance:</strong> Given
+<code>NewEmbedder("hash"|"local"|&lt;unknown&gt;, …)</code> in a
+semantic context, When invoked, Then it errors and refuses to serve;
+Given <code>NewEmbedder("llama", …)</code>, Then it serves real vectors.
+A paired-mutation gate proves the guard actually fires.</li>
+<li><strong>Test types:</strong> unit, integration, paired-mutation
+(anti-bluff), security.</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong>
+<code>HelixLLM/internal/knowledge/embedding_providers.go</code>:
+<code>func NewEmbedder(provider, apiKey, model string, dimension int) (Embedder, error)</code>
+— <code>"llama"</code> → <code>LlamaEmbedder</code>;
+<code>"hash"/"local"</code> <strong>and any unrecognised name</strong> →
+<code>NewHashEmbedder(dimension)</code> (the exact silent-fallback
+trap). Companion <code>cmd/helixllm/embedder_warning_test.go</code>
+shows today’s behaviour is a warning, not a hard fail.</li>
+<li><strong>Gap:</strong> 2.1. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: HelixLLM]</code>
+<code>[VERIFIED-SOURCE]</code> <code>[GAP 2.1]</code>.</li>
+</ul>
+<h4
+id="atm-041-embeddings-native-llama.cpphelixllm-provider-dimension-discovery">ATM-041
+— <code>embeddings</code>: native llama.cpp/HelixLLM provider +
+dimension discovery</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 2.4. <strong>Depends
+on:</strong> ATM-040.</li>
+<li><strong>Provides:</strong> a first-class llama.cpp/HelixLLM
+embeddings provider (not a repurposed OpenAI client) with health checks
++ dimension discovery; parameterize embedding dimension (remove the 768
+hardcode).</li>
+<li><strong>Tasks:</strong> <code>ATM-041.1</code> native provider;
+<code>ATM-041.2</code> <code>/v1/embeddings</code> OpenAI-shape contract
+test (sort by <code>index</code>); <code>ATM-041.3</code> config-driven
+dimension validated against the model.</li>
+<li><strong>Acceptance:</strong> Given a real llama embedding model,
+When the provider queries it, Then dimensions are discovered and
+validated (no 768 hardcode) and <code>/v1/embeddings</code> returns
+<code>{data:[{embedding,index}]}</code>.</li>
+<li><strong>Test types:</strong> unit, integration (real embeddings),
+contract.</li>
+<li><strong>Gap:</strong> 2.1, 2.7. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: embeddings]</code>
+<code>[GAP 2.7]</code>.</li>
+</ul>
+<h4
+id="atm-042-vectordb-harden-the-qdrant-backend-to-pgvector-parity">ATM-042
+— <code>vectordb</code>: harden the Qdrant backend to pgvector
+parity</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P1 · 2.4. <strong>Depends
+on:</strong> ATM-004.</li>
+<li><strong>Provides:</strong> Qdrant backend to full pgvector parity
+behind <code>VectorStore</code> + ANN index tuning + benchmark for &lt;
+500 ms SLO.</li>
+<li><strong>Tasks:</strong> <code>ATM-042.1</code> Qdrant end-to-end
+integration; <code>ATM-042.2</code> ANN index tuning;
+<code>ATM-042.3</code> &lt; 500 ms benchmark; <code>ATM-042.4</code>
+config-swap parity test vs pgvector.</li>
+<li><strong>Acceptance:</strong> Given the same corpus, When queried on
+Qdrant vs pgvector, Then results are equivalent and Qdrant meets the
+&lt; 500 ms SLO; Thready can swap backend by config.</li>
+<li><strong>Test types:</strong> unit, integration (real Qdrant),
+performance, benchmarking.</li>
+<li><strong>Gap:</strong> 3.1. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: vectordb]</code>
+<code>[GAP 3.1]</code>.</li>
+</ul>
+<h4
+id="atm-043-database-time-partitioning-retentionarchive-helpers">ATM-043
+— <code>database</code>: time-partitioning + retention/archive
+helpers</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 2.4. <strong>Depends
+on:</strong> ATM-003.</li>
+<li><strong>Provides:</strong> time-partitioning + retention/archive
+helpers for 10k+/day posts; validate <code>storage</code> MinIO
+signed-URL parity; pool + pgvector co-location tuning.</li>
+<li><strong>Tasks:</strong> <code>ATM-043.1</code> time-partitioned
+posts; <code>ATM-043.2</code> retention/archive helpers (per-account
+overrides); <code>ATM-043.3</code> MinIO signed-URL parity vs
+CloudFront; <code>ATM-043.4</code> pool + co-location tuning.</li>
+<li><strong>Acceptance:</strong> Given 10k+/day posts, When partitioning
++ retention run, Then old partitions archive per the per-account
+retention policy and queries stay within SLO; MinIO signed URLs match
+the CloudFront contract.</li>
+<li><strong>Test types:</strong> unit, integration (MinIO), performance,
+scaling.</li>
+<li><strong>Gap:</strong> 3.2. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: database/storage]</code>
+<code>[GAP 3.2]</code>.</li>
+</ul>
+<hr />
+<h2 id="phase-3-client-applications-atm-044atm-051">5. Phase 3 — Client
+Applications (ATM-044…ATM-051)</h2>
+<h4 id="atm-044-angular-19-product-portal">ATM-044 — Angular 19 product
+portal</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 3.1. <strong>Depends
+on:</strong> ATM-020, ATM-060. <strong>Provides:</strong> the Web portal
+on the shared OpenDesign <code>design_system</code> (Web + CLI first
+<code>[OPERATOR]</code>), i18n via HelixTranslate.</li>
+<li><strong>Tasks:</strong> <code>ATM-044.1</code> scaffold on
+<code>design_system</code> + Material 19; <code>ATM-044.2</code>
+auth/session flows; <code>ATM-044.3</code> post/thread/asset views;
+<code>ATM-044.4</code> search UI (<code>/v1/search</code>);
+<code>ATM-044.5</code> ngx-translate.</li>
+<li><strong>Acceptance:</strong> Given an authenticated user, When they
+open the portal, Then posts/threads/assets/ search render on the design
+system; page load &lt; 1.5 s (Aggressive SLO).</li>
+<li><strong>Test types:</strong> unit (Jasmine+Karma), e2e (Cypress +
+cypress-axe), performance, UX.</li>
+<li><strong>Gap:</strong> 8.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: design_system]</code>
+<code>[Q13/Q17]</code>.</li>
+</ul>
+<h4 id="atm-045-tauri-2-desktop">ATM-045 — Tauri 2 desktop</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 3.2. <strong>Depends
+on:</strong> ATM-044. <strong>Provides:</strong> Tauri 2 desktop (Rust
+core + Angular UI) — org standard.</li>
+<li><strong>Tasks:</strong> <code>ATM-045.1</code> Tauri shell wrapping
+the Angular UI; <code>ATM-045.2</code> native integration;
+<code>ATM-045.3</code> packaging.</li>
+<li><strong>Acceptance:</strong> Given the desktop build, When launched,
+Then it wraps the portal natively and shares the Angular UI;
+<code>cargo clippy -D warnings</code> clean.</li>
+<li><strong>Test types:</strong> unit, integration, e2e.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE]</code> <code>[Q18]</code>.</li>
+</ul>
+<h4 id="atm-046-native-mobile-clients-kmp-shared-logic">ATM-046 — Native
+mobile clients + KMP shared logic</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> BUILD-NEW · P2 · 3.3.
+<strong>Depends on:</strong> ATM-047, ATM-015.
+<strong>Provides:</strong> native clients (Compose/Android, SwiftUI/iOS,
+ArkTS/HarmonyOS, Qt/Aurora + <code>helix_shims</code>) + KMP shared
+logic.</li>
+<li><strong>Tasks:</strong> <code>ATM-046.1</code> Compose/Android;
+<code>ATM-046.2</code> SwiftUI/iOS; <code>ATM-046.3</code>
+ArkTS/HarmonyOS; <code>ATM-046.4</code> Qt/Aurora + shims;
+<code>ATM-046.5</code> KMP shared-logic wiring.</li>
+<li><strong>Acceptance:</strong> Given the fixed Security-KMP (ATM-015),
+When a mobile client stores tokens, Then they use native
+Keychain/KeyStore; the ArkTS + Qt clients reach HarmonyOS + Aurora
+(native is the only path). <strong>Mobile release is blocked until
+ATM-015 passes on-device.</strong></li>
+<li><strong>Test types:</strong> unit, integration, e2e, security
+(on-device storage).</li>
+<li><strong>Gap:</strong> 8.3, 8.4, 8.5. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: *-KMP/helix_shims]</code>
+<code>[Q19]</code> <code>[GAP 8.5]</code>.</li>
+</ul>
+<h4
+id="atm-047-kmp-module-fleet-ci-maven-publish-database-kmp-sqldelight">ATM-047
+— KMP module fleet: CI + Maven publish + Database-KMP SQLDelight</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P1 · 3.x. <strong>Depends
+on:</strong> — . <strong>Blocks:</strong> ATM-046.</li>
+<li><strong>Provides:</strong> CI + Maven publish + shared convention
+plugin for the 10 <code>*-KMP</code> modules; implement
+<code>Database-KMP</code> with SQLDelight (interfaces-only today
+<code>[GAP 8.4]</code>).</li>
+<li><strong>Tasks:</strong> <code>ATM-047.1</code> shared convention
+plugin; <code>ATM-047.2</code> CI + Maven publish;
+<code>ATM-047.3</code> <code>Database-KMP</code> SQLDelight
+implementation.</li>
+<li><strong>Acceptance:</strong> Given a KMP module, When CI runs, Then
+it builds/tests and publishes to Maven; <code>Database-KMP</code> has a
+working SQLDelight implementation (not just interfaces).</li>
+<li><strong>Test types:</strong> unit (Kotest), integration,
+instrumented (Compose).</li>
+<li><strong>Gap:</strong> 8.4. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: *-KMP]</code>
+<code>[GAP 8.4]</code>.</li>
+</ul>
+<h4 id="atm-048-gocobra-cli-headless-shares-sdk-with-tui">ATM-048 —
+Go/Cobra CLI (headless, shares SDK with TUI)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 3.4. <strong>Depends
+on:</strong> ATM-060. <strong>Provides:</strong> the headless Cobra CLI
+sharing the SDK — first alongside Web <code>[OPERATOR]</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-048.1</code> Cobra command tree;
+<code>ATM-048.2</code> SDK wiring; <code>ATM-048.3</code> MCP tool for
+search.</li>
+<li><strong>Acceptance:</strong> Given the CLI, When a command runs,
+Then it uses the generated SDK and can trigger <code>/v1/search</code>
+(+ MCP tool for CLI agents).</li>
+<li><strong>Test types:</strong> unit, integration, e2e.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE]</code>
+<code>[Q13/§21.3]</code>.</li>
+</ul>
+<h4 id="atm-049-bubble-tea-cobra-lipgloss-tui">ATM-049 — Bubble Tea +
+Cobra + Lipgloss TUI</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 3.4. <strong>Depends
+on:</strong> ATM-048. <strong>Provides:</strong> the TUI (as
+<code>helix_track_cli</code>).</li>
+<li><strong>Tasks:</strong> <code>ATM-049.1</code> Bubble Tea model;
+<code>ATM-049.2</code> Lipgloss styling on the design tokens;
+<code>ATM-049.3</code> shared SDK/commands with the CLI.</li>
+<li><strong>Acceptance:</strong> Given the TUI, When launched, Then it
+renders the same SDK-backed operations as the CLI with a Bubble Tea
+UI.</li>
+<li><strong>Test types:</strong> unit, integration, UX.</li>
+<li><strong>Gap:</strong> 8.6. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: helix_track_cli]</code>
+<code>[Q20]</code>.</li>
+</ul>
+<h4
+id="atm-050-thready-brand-theme-mature-design_system-publish-npm">ATM-050
+— Thready brand theme + mature design_system + publish npm</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 3.5. <strong>Depends
+on:</strong> — . <strong>Provides:</strong> Thready brand theme from
+<code>Logo.png</code> on the helix-green base; mature
+<code>design_system</code>; publish
+<code>@vasic-digital/design-system</code>.</li>
+<li><strong>Tasks:</strong> <code>ATM-050.1</code> brand theme tokens;
+<code>ATM-050.2</code> light+dark variants; <code>ATM-050.3</code> npm
+publish.</li>
+<li><strong>Acceptance:</strong> Given the design system, When themed,
+Then Thready branding (helix-green base) renders in light+dark and the
+package publishes to npm.</li>
+<li><strong>Test types:</strong> unit, integration,
+visual-regression.</li>
+<li><strong>Gap:</strong> 8.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[IN-HOUSE: design_system]</code>
+<code>[GAP 8.1]</code>.</li>
+</ul>
+<h4 id="atm-051-helix_design-per-platform-token-packages">ATM-051 —
+helix_design per-platform token packages</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> HARDEN · P1 · 3.5. <strong>Depends
+on:</strong> ATM-050. <strong>Provides:</strong> per-platform token
+packages (Flutter, Qt/Aurora, CSS) from the OpenDesign source (currently
+a scaffold <code>[GAP 8.2]</code>).</li>
+<li><strong>Tasks:</strong> <code>ATM-051.1</code> Flutter tokens;
+<code>ATM-051.2</code> Qt/Aurora tokens; <code>ATM-051.3</code> CSS
+tokens.</li>
+<li><strong>Acceptance:</strong> Given the OpenDesign source, When token
+packages build, Then Flutter/Qt/CSS consumers render consistent tokens
+in lockstep with <code>design_system</code>.</li>
+<li><strong>Test types:</strong> unit, integration,
+visual-regression.</li>
+<li><strong>Gap:</strong> 8.2. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: helix_design]</code>
+<code>[GAP 8.2]</code>.</li>
+</ul>
+<hr />
+<h2 id="phase-4-testing-deployment-atm-052atm-057">6. Phase 4 — Testing
+&amp; Deployment (ATM-052…ATM-057)</h2>
+<h4
+id="atm-052-unit-mutation-testing-paired-mutation-anti-bluff-gates">ATM-052
+— Unit + mutation testing + paired-mutation anti-bluff gates</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 4.1. <strong>Depends
+on:</strong> per-item. <strong>Provides:</strong> unit +
+<code>go-mutesting</code>
+<ul>
+<li>paired-mutation gates proving real behavior, not stubs.</li>
+</ul></li>
+<li><strong>Tasks:</strong> <code>ATM-052.1</code> per-package unit +
+<code>-race</code>; <code>ATM-052.2</code> <code>go-mutesting</code>
+runs; <code>ATM-052.3</code> paired-mutation gates for every scaffold
+dependency.</li>
+<li><strong>Acceptance:</strong> Given a scaffold dependency, When the
+paired-mutation gate runs, Then mutating the impl makes the test FAIL
+and restoring makes it PASS (the test detects real behavior).</li>
+<li><strong>Test types:</strong> unit, mutation, paired-mutation.</li>
+<li><strong>Gap:</strong> 12. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[CONST-035]</code>
+<code>[GAP 12]</code>.</li>
+</ul>
+<h4
+id="atm-053-integration-cross-module-contracts-critical-paths">ATM-053 —
+Integration (cross-module contracts + critical paths)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 4.2. <strong>Depends
+on:</strong> Phase 1–2. <strong>Provides:</strong> all cross-module
+contracts + critical paths first; no-fakes-beyond-unit.</li>
+<li><strong>Tasks:</strong> <code>ATM-053.1</code> critical-path
+contracts; <code>ATM-053.2</code> expand to full combinations;
+<code>ATM-053.3</code> real-dependency harness (no mocks beyond
+unit).</li>
+<li><strong>Acceptance:</strong> Given two modules with a contract, When
+integration runs, Then they interoperate against the real system (mocks
+unit-only, <code>[§11.4.27]</code>).</li>
+<li><strong>Test types:</strong> integration, contract.</li>
+<li><strong>Gap:</strong> §11.4.27. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[Q24]</code>.</li>
+</ul>
+<h4 id="atm-054-systeme2e-helixqa-banks-challenges-banks">ATM-054 —
+System/e2e + HelixQA banks + Challenges banks</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 4.3. <strong>Depends
+on:</strong> ATM-053. <strong>Provides:</strong> system/e2e + HelixQA
+YAML banks (runtime evidence) + Challenges scenario banks + VR family +
+DocProcessor coverage.</li>
+<li><strong>Tasks:</strong> <code>ATM-054.1</code> HelixQA YAML banks
+per service+client; <code>ATM-054.2</code> Challenges scenario banks;
+<code>ATM-054.3</code> visual-regression (Panoptic/VR) scenarios;
+<code>ATM-054.4</code> DocProcessor feature-map coverage.</li>
+<li><strong>Acceptance:</strong> Given each feature × platform, When the
+banks run, Then runtime evidence proves the behavior (anti-bluff) and
+docs↔︎tests coverage is tracked.</li>
+<li><strong>Test types:</strong> e2e, system, HelixQA, challenges,
+visual-regression.</li>
+<li><strong>Gap:</strong> 9.1, 9.3, 9.4. <strong>Provenance:</strong>
+<code>[EXTEND]</code>
+<code>[IN-HOUSE: HelixQA/challenges/Panoptic/DocProcessor]</code>.</li>
+</ul>
+<h4 id="atm-055-security-sonarqube-snyk-fuzzing-cve-ddosauthz">ATM-055 —
+Security (SonarQube + Snyk + fuzzing + CVE + DDoS/authz)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 4.4. <strong>Depends
+on:</strong> ATM-053. <strong>Provides:</strong> SonarQube (CLI +
+rootless-Podman server) + Snyk + fuzzing + CVE + DDoS/authz.</li>
+<li><strong>Tasks:</strong> <code>ATM-055.1</code> SonarQube CLI +
+server; <code>ATM-055.2</code> Snyk; <code>ATM-055.3</code> fuzzing;
+<code>ATM-055.4</code> CVE scanning; <code>ATM-055.5</code>
+DDoS/authz/pen tests (via HelixQA security).</li>
+<li><strong>Acceptance:</strong> Given the codebase, When security scans
+run, Then SonarQube/Snyk gates pass, fuzzers find no crashers, and the
+authz matrix resists privilege escalation.</li>
+<li><strong>Test types:</strong> security, fuzzing, penetration.</li>
+<li><strong>Gap:</strong> 7.1. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[CONSTITUTION §11.4.184]</code>
+<code>[Q23]</code>.</li>
+</ul>
+<h4
+id="atm-056-performancebenchmarkingstressscalingchaos-rporto">ATM-056 —
+Performance/benchmarking/stress/scaling/chaos + RPO/RTO</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P1 · 4.5. <strong>Depends
+on:</strong> ATM-053. <strong>Provides:</strong> validate SLOs (API p95
+&lt; 150 ms, search &lt; 500 ms) + RPO/RTO.</li>
+<li><strong>Tasks:</strong> <code>ATM-056.1</code> API p95 benchmark;
+<code>ATM-056.2</code> search &lt; 500 ms benchmark;
+<code>ATM-056.3</code> stress/ scaling; <code>ATM-056.4</code> chaos +
+RPO ≈ 1 h / RTO ≈ 4 h validation.</li>
+<li><strong>Acceptance:</strong> Given the deployed system, When
+load/chaos tests run, Then the Aggressive SLOs hold and a simulated
+disaster restores within RPO ≈ 1 h / RTO ≈ 4 h.</li>
+<li><strong>Test types:</strong> performance, benchmarking, stress,
+scaling, chaos.</li>
+<li><strong>Gap:</strong> 3.1, 3.2. <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[Q14/Q45]</code>.</li>
+</ul>
+<h4 id="atm-057-production-deployment-3-isolated-env-stacks">ATM-057 —
+Production deployment (3 isolated env stacks)</h4>
+<ul>
+<li><strong>Kind/Pri/Phase:</strong> EXTEND · P0 · 4.6. <strong>Depends
+on:</strong> ATM-002, ATM-006. <strong>Provides:</strong> 3 isolated env
+stacks (<code>dev.</code>/<code>sta.</code>/<code>thready.</code>),
+rootless Podman Compose, Let’s Encrypt, backup/DR runbook.</li>
+<li><strong>Tasks:</strong> <code>ATM-057.1</code> three isolated
+compose stacks behind subdomains; <code>ATM-057.2</code> per-subdomain
+certs; <code>ATM-057.3</code> backup (daily full + hourly DB
+incrementals); <code>ATM-057.4</code> restore runbook (PITR).</li>
+<li><strong>Acceptance:</strong> Given the Hetzner host, When deployed,
+Then <code>dev.</code>/<code>sta.</code>/<code>thready.</code> run as
+fully isolated container stacks with their own certs, and the documented
+restore runbook meets RPO/RTO.</li>
+<li><strong>Test types:</strong> integration, e2e, chaos (DR drill),
+performance.</li>
+<li><strong>Gap:</strong> — . <strong>Provenance:</strong>
+<code>[EXTEND]</code> <code>[OPERATOR]</code> <code>[Q8/Q41/Q45]</code>.
+See <a href="../deployment/index.md">../deployment/index.md</a>.</li>
+</ul>
+<hr />
+<h2 id="cross-cutting-atm-058atm-072">7. Cross-cutting
+(ATM-058…ATM-072)</h2>
+<p>These span all phases. Full cards for the items whose scope changed
+in Pass 3; the rest carry the summary from <a
+href="./workable-items.md#7-cross-cutting-items">workable-items.md
+§7</a>.</p>
+<h4 id="atm-058-anti-bluff-sweep">ATM-058 — Anti-bluff sweep</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1. <strong>Provides:</strong> a
+paired-mutation gate for every
+<code>SCAFFOLD</code>/<code>DESIGN-ONLY</code> dep before reliance.
+<strong>Acceptance:</strong> Given any scaffold dep (HelixLLM embedder,
+Security-KMP, TOON/token_optimizer), When the gate runs, Then a
+real-behavior mutation is proven detected before the dep is relied on.
+<strong>Test types:</strong> paired-mutation, integration.
+<strong>Gap:</strong> 12.</li>
+</ul>
+<h4 id="atm-059-decoupling-audit-11.4.28">ATM-059 — Decoupling audit
+<code>[§11.4.28]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1. <strong>Provides:</strong>
+each reused submodule verified project-not-aware/config- injected; no
+nested own-org chains. <strong>Acceptance:</strong> Given each reused
+module, When audited, Then it is config-injected with no hardcoded
+Thready specifics and no forbidden nested own-org submodule chain.
+<strong>Test types:</strong> AUDIT, integration. <strong>Gap:</strong>
+12.</li>
+</ul>
+<h4
+id="atm-060-sdk-codegen-openapi-3.1-protobuf-via-helix_proto">ATM-060 —
+SDK codegen (OpenAPI 3.1 + Protobuf via helix_proto)</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> BUILD-NEW · P1. <strong>Depends
+on:</strong> ATM-020 (REST surface). <strong>Blocks:</strong>
+ATM-044/048.</li>
+<li><strong>Provides:</strong> OpenAPI 3.1 + Protobuf via the
+<code>helix_proto</code> pattern (<code>buf</code> → Go/Rust;
+<code>openapi-generator</code> → TS/Dart) + a thin idiomatic layer per
+language. <strong>Tasks:</strong> <code>ATM-060.1</code> OpenAPI 3.1
+surface; <code>ATM-060.2</code> Protobuf DTO/event contracts;
+<code>ATM-060.3</code> <code>buf</code> Go/Rust codegen;
+<code>ATM-060.4</code> <code>openapi-generator</code> TS/Dart;
+<code>ATM-060.5</code> thin idiomatic layer + registry publish.</li>
+<li><strong>Acceptance:</strong> Given the OpenAPI+Protobuf contracts,
+When codegen runs, Then versioned SDKs generate for Go/Rust/TS/Dart with
+a thin hand-written idiomatic layer, tested + registry-published.</li>
+<li><strong>Test types:</strong> unit, integration, contract.
+<strong>Gap:</strong> 13. <strong>Provenance:</strong>
+<code>[BUILD-NEW]</code> <code>[IN-HOUSE: helix_proto]</code>
+<code>[§13.1]</code>.</li>
+</ul>
+<h4 id="atm-061-toon-token_optimizer-implement-or-scope-out">ATM-061 —
+TOON + token_optimizer: implement or scope-out</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> HARDEN · P1. <strong>Provides:</strong>
+implement <code>TOON</code> (SCAFFOLD,
+<code>ErrTOONEncodingNotImplemented</code>)
+<ul>
+<li><code>token_optimizer</code> (partial, only <code>pkg/config</code>)
+<strong>or</strong> explicitly mark out-of-scope for MVP. Until then
+token optimization relies on the <strong>toolkit’s</strong> working
+<code>toon.mjs</code>/<code>toon_encode.py</code>, not these modules.
+<strong>Acceptance:</strong> Given the token-optimization mandate
+<code>[§11.4.198]</code>, When the decision is recorded, Then either
+both modules are implemented+tested or MVP explicitly uses the toolkit
+utilities and marks the modules out-of-scope — <strong>never</strong>
+presenting TOON-the-module as working. <strong>Test types:</strong>
+unit, integration, paired-mutation. <strong>Gap:</strong> 2.9.</li>
+</ul></li>
+</ul>
+<h4
+id="atm-062-session_orchestrator-wire-the-now-implemented-claim-registry">ATM-062
+— session_orchestrator: wire the (now-implemented) claim registry</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> <del>BUILD-NEW</del>
+<strong>HARDEN/WIRE</strong> (rescoped Pass 3) · P1.
+<strong>Provides:</strong> the atomic track-claim registry §11.4.176(A).
+<strong>Pass-3 update:</strong> the gap register flagged this
+<strong>DESIGN-ONLY</strong>, but at source
+<code>vasic-digital/session_orchestrator</code> now ships <strong>real
+Go code</strong> — so the item is <strong>rescoped from
+build-from-scratch to wire+verify+integrate</strong>.</li>
+<li><strong>Tasks:</strong> <code>ATM-062.1</code> verify the
+<code>claim</code> package against §11.4.176(A) semantics;
+<code>ATM-062.2</code> wire it as the dev-fleet claim registry
+(replacing the interim advisory-lock realization);
+<code>ATM-062.3</code> reuse the same registry for the runtime
+single-claim (ATM-023); <code>ATM-062.4</code> contract +
+paired-mutation tests.</li>
+<li><strong>Acceptance:</strong> Given two tracks claiming the same key,
+When both call <code>TryClaim</code>, Then exactly one wins and the
+other gets the unchanged live claim (exactly-once); <code>Release</code>
+with a mismatched id returns <code>ErrClaimMismatch</code>.</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong>
+<code>vasic-digital/session_orchestrator/claim/claim.go</code> —
+<code>type Registry struct { claims map[string]Claim … }</code>,
+<code>func New(cfg Config) *Registry</code>, <code>TryClaim(...)</code>
+returning an <code>Outcome</code> (never-erroring), <code>Release</code>
+returning <code>ErrNotClaimed</code> / <code>ErrClaimMismatch</code>;
+sibling packages <code>alias/</code>, <code>scheduler/</code>,
+<code>supervisor/</code>, <code>claim/select.go</code>. Package doc:
+“the exactly-once claim + deadlock-free device-lock” (WS-D DESIGN
+§1.3–§1.4). This <strong>supersedes</strong> the DESIGN-ONLY claim in
+the gap register <code>[GAP 2.9]</code>.</li>
+<li><strong>Test types:</strong> unit, integration, paired-mutation,
+race. <strong>Gap:</strong> 2.9. <strong>Provenance:</strong>
+<code>[HARDEN]</code> <code>[IN-HOUSE: session_orchestrator]</code>
+<code>[VERIFIED-SOURCE]</code>.</li>
+</ul>
+<h4
+id="atm-063-helixagent-identitymodule-split-close-admitted-stubs">ATM-063
+— HelixAgent identity/module split + close admitted stubs</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> HARDEN · P2. <strong>Provides:</strong>
+resolve the HelixAgent↔︎HelixCode identity/module split; enumerate +
+close admitted stub/bluff areas; pin only the packages Thready needs
+(ensemble/debate). <strong>Acceptance:</strong> Given HelixAgent, When
+Thready pins it, Then only the needed ensemble/debate packages are
+depended on and their real coverage is verified (not the 65.6% claim
+taken on faith). <strong>Test types:</strong> AUDIT, integration.
+<strong>Gap:</strong> 2.2.</li>
+</ul>
+<h4 id="atm-064-llmprovider-per-adapter-contract-tests">ATM-064 —
+LLMProvider per-adapter contract tests</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1. <strong>Provides:</strong>
+per-adapter contract tests for every adapter Thready relies on; confirm
+whether the embeddings interface lives here or in
+<code>Embeddings</code>. <strong>Acceptance:</strong> Given each
+relied-on adapter, When contract tests run, Then
+retry/circuit-breaker/health behave as specified and the
+embeddings-interface location is confirmed. <strong>Test types:</strong>
+contract, integration. <strong>Gap:</strong> 2.3, 13.</li>
+</ul>
+<h4
+id="atm-065-llmsverifier-port-reconciliation-stable-scoring-api">ATM-065
+— LLMsVerifier port reconciliation + stable scoring API</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> HARDEN · P2. <strong>Provides:</strong>
+reconcile the <code>:7061</code> vs <code>:8080</code> port; expose a
+stable scoring API for HelixLLM’s fallback chain; prune the
+<code>FINAL_*</code>/<code>COMPLETE_*</code>/<code>ULTIMATE_*</code> doc
+sprawl. <strong>Acceptance:</strong> Given HelixLLM’s fallback chain,
+When it scores models, Then a single-source-of-truth port + stable
+scoring API are used. <strong>Test types:</strong> integration,
+contract. <strong>Gap:</strong> 2.5.</li>
+</ul>
+<h4 id="atm-066-constitution-anchor-verification-open">ATM-066 —
+Constitution anchor verification <code>[OPEN]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1.
+<strong><code>[OPEN: constitution-anchor-verify]</code></strong> — the
+local Constitution copy tops out at §11.4.192; the exact normative text
+of <strong>§11.4.196/198/209</strong> was taken from the final request’s
+descriptions, not read at source. <strong>Resolution:</strong> re-verify
+against the canonical <code>HelixDevelopment/helix_constitution</code>
+and update citations. <strong>Pass-3 check:</strong> the constitution
+repo exists (<code>HelixDevelopment/helix_constitution</code>, public)
+but the specific §-anchors were <strong>not</strong> re-read this pass —
+kept <code>[OPEN]</code>. <strong>Test types:</strong> AUDIT.
+<strong>Gap:</strong> 13.</li>
+</ul>
+<h4 id="atm-067-llmorchestrator-agentpool-contract-open-closed">ATM-067
+— LLMOrchestrator AgentPool contract <code>[OPEN → CLOSED]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> <del>AUDIT <code>[OPEN]</code></del>
+<strong>CLOSED (Pass 3)</strong> · P1. <strong>Provides:</strong> the
+<code>AgentPool</code> capability-matching contract for the dev fleet.
+<strong>Resolution:</strong> read at source —
+<strong>CLOSED</strong>.</li>
+<li><strong>Verified-source <code>[VERIFIED-SOURCE]</code>:</strong>
+<code>vasic-digital/LLMOrchestrator/pkg/agent/pool.go</code> —
+<code>type AgentPool interface { Acquire(ctx context.Context, requirements AgentRequirements) (Agent, error); Release(agent Agent) }</code>;
+<code>func NewPool() AgentPool</code>; siblings
+<code>multi_pool.go</code>, <code>simple_pool.go</code>. Capability
+matching (<code>pkg/agent/agent.go</code>):
+<code>Agent.Capabilities() AgentCapabilities</code> where
+<code>AgentCapabilities{ Vision, Streaming, ToolUse bool; MaxTokens, MaxImages int; Providers []string }</code>
+is matched against
+<code>AgentRequirements{ NeedsVision, NeedsStreaming bool; MinTokens int; PreferredAgent string }</code>.
+<code>pool.Acquire</code> blocks until an agent whose
+<code>Capabilities()</code> satisfy the <code>requirements</code> is
+free. Concrete agents: <code>claudecode_agent.go</code>,
+<code>gemini_agent.go</code>, <code>junie_agent.go</code>,
+<code>opencode_agent.go</code>, <code>qwencode_agent.go</code>. This
+<strong>closes</strong> <code>[OPEN: agentpool-contract]</code>.</li>
+<li><strong>Remaining:</strong> adding HarmonyOS/Aurora build-agent
+capabilities (if those become agent tasks) is a follow-on, not a
+blocker. <strong>Test types:</strong> contract, integration.
+<strong>Gap:</strong> 2.4.</li>
+</ul>
+<h4
+id="atm-068-flagged-agent-support-modules-verify-open-partial">ATM-068 —
+FLAGGED agent-support modules verify <code>[OPEN — partial]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1.
+<strong><code>[OPEN: flagged-modules-verify]</code></strong> —
+<code>Normalize</code>/<code>conversation</code>/
+<code>SkillRegistry</code>/<code>ToolSchema</code>/<code>MCP_Module</code>/<code>Agentic</code>/<code>Planning</code>/<code>AgentWrapper</code>
+import paths unconfirmed. <strong>Pass-3 partial close:</strong>
+<code>vasic-digital/Agentic</code> <strong>exists</strong> at source
+(“Graph-based agentic workflow orchestration”, public). The remaining
+modules (<code>Normalize</code>, <code>conversation</code>,
+<code>SkillRegistry</code>, <code>ToolSchema</code>,
+<code>MCP_Module</code>, <code>Planning</code>,
+<code>AgentWrapper</code>) were <strong>not</strong> individually
+source-verified this pass — kept <code>[OPEN]</code> with the exact
+residual list. <strong>Resolution:</strong> source-verify + pin exact
+import paths before any item depends on them. <strong>Test
+types:</strong> AUDIT. <strong>Gap:</strong> 2.9, 13.</li>
+</ul>
+<h4 id="atm-069-docs-chain-tooling-provisioning-open">ATM-069 — Docs
+Chain tooling provisioning <code>[OPEN]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> HARDEN · P1.
+<strong><code>[OPEN: docs-chain-tooling]</code></strong> — Docs Chain
+honest-SKIPs md→HTML/PDF when
+<code>pandoc</code>/<code>weasyprint</code> are absent (as on the
+current host). <strong>Resolution:</strong> provision pandoc/weasyprint
+on dev/CI hosts so <code>ATM-009</code> siblings generate. <strong>Test
+types:</strong> integration, challenges (SKIP honesty).
+<strong>Gap:</strong> 10.1.</li>
+</ul>
+<h4 id="atm-070-memoryhelixmemory-decision-recorded">ATM-070 —
+memory/HelixMemory decision (recorded)</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P2. <strong>Decision:</strong>
+Thready standardizes on
+<code>vectordb</code>+<code>embeddings</code>+<code>rag</code> (via the
+Semantic-search service ATM-039) and does <strong>not</strong> rely on
+<code>memory</code>’s word-overlap (Jaccard) search; if
+<code>memory</code> is later adopted, back it with
+<code>vectordb</code>. <code>HelixMemory</code>
+(Mem0/Cognee/Letta/Graphiti) is <strong>deferred</strong> unless full
+cognitive memory is required. <strong>Gap:</strong> 2.8.</li>
+</ul>
+<h4 id="atm-071-helixstream-defer-recorded">ATM-071 — HelixStream defer
+(recorded)</h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P2. <strong>Decision:</strong>
+<strong>defer</strong> (<code>HelixDevelopment/HelixStream</code>,
+SCAFFOLD, ~5 commits) — not on the Thready MVP critical path; if
+streaming-app testing is later required, harden the scaffold + add CI
+before reliance. <strong>Gap:</strong> 9.2.</li>
+</ul>
+<h4 id="atm-072-sibling-area-index-cross-links-closed">ATM-072 —
+sibling-area-index cross-links <code>[CLOSED]</code></h4>
+<ul>
+<li><strong>Kind/Pri:</strong> AUDIT · P1 · <strong>CLOSED (integration
+pass).</strong> The <code>../architecture/index.md</code> and
+<code>../database/index.md</code> canonical entry points now exist; the
+upstream cross-links from <a
+href="./index.md#3-upstream--downstream-dependencies">index.md §3</a>
+resolve. See <a
+href="../INTEGRATION_REPORT.md">../INTEGRATION_REPORT.md</a>.</li>
+</ul>
+<hr />
+<h2 id="estimation-sequencing-guidance">8. Estimation &amp; sequencing
+guidance</h2>
+<p>The backlog is <strong>not</strong> sprint-timeboxed (no fixed
+cadence — an autonomous loop from the first prompt,
+<code>[Q6/§11.4.126]</code>). Instead the ruler sequences by the
+critical-path DAG (§2) and these rules:</p>
+<ul>
+<li><strong>P0 first, dependency-topological.</strong> A track claims
+the highest-priority item all of whose inbound edges are
+<code>DONE</code>. The four foundational P0s with no product dependency
+— <code>ATM-001</code> (must be first), <code>ATM-036</code> (author
+Skills), <code>ATM-040</code> (llama embedder), <code>ATM-033</code>
+(OCR) — can start immediately and in parallel on separate tracks.</li>
+<li><strong>Build-new before its consumers.</strong>
+<code>ATM-030</code> (callback) precedes
+<code>ATM-028</code>/<code>ATM-031</code>/<code>ATM-032</code>;
+<code>ATM-011</code> (Event Bus) precedes <code>ATM-025</code>;
+<code>ATM-040</code> precedes <code>ATM-039</code>; <code>ATM-016</code>
+precedes <code>ATM-017</code> precedes <code>ATM-018</code>. These are
+hard edges the ruler never inverts.</li>
+<li><strong>Spike-gated items never block the MVP claim.</strong>
+<code>ATM-018</code>’s OneMe user-WS scope is <code>[OPEN]</code>; its
+Bot-API scope ships first so the item makes progress while the spike
+runs.</li>
+<li><strong>Anti-bluff gates are release-blocking, not
+schedule-blocking.</strong> <code>ATM-052</code>/<code>ATM-058</code>
+run continuously; an item cannot reach <code>DONE</code> on a scaffold
+dependency without its paired-mutation gate green.</li>
+</ul>
+<p>A coarse effort banding <code>[DEFAULT — adjustable]</code> for
+planning only (not a commitment): the six build-new services
+(<code>ATM-010/011/012/028/033/039</code>) are each multi-task,
+multi-test-type items (the “large” band); the wire/extend items
+(<code>ATM-003/004/005/019/020</code>) are “medium”; the audit/decision
+items (<code>ATM-070/071</code>) are “small”. Real sizing emerges from
+the RED-test-first decomposition, not up-front.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — SDK Codegen (buf + openapi-generator)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — SDK Codegen (buf +
+openapi-generator)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#what-this-is" id="toc-what-this-is">1. What this
+is</a></li>
+<li><a href="#the-two-plane-pattern" id="toc-the-two-plane-pattern">2.
+The two-plane pattern</a></li>
+<li><a href="#prerequisites" id="toc-prerequisites">3.
+Prerequisites</a></li>
+<li><a href="#quick-start" id="toc-quick-start">4. Quick start</a></li>
+<li><a href="#targets" id="toc-targets">5. Targets</a></li>
+<li><a href="#per-language-matrix" id="toc-per-language-matrix">6.
+Per-language matrix</a></li>
+<li><a href="#anti-drift-round-trip-gates"
+id="toc-anti-drift-round-trip-gates">7. Anti-drift &amp; round-trip
+gates</a></li>
+<li><a href="#what-is-real-vs.-scaffold-anti-bluff"
+id="toc-what-is-real-vs.-scaffold-anti-bluff">8. What is real
+vs. scaffold (anti-bluff)</a></li>
+<li><a href="#open-items" id="toc-open-items">9. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — SDK Codegen (buf + openapi-generator)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/materials/codegen/README.md
+  Status          : Active — v1.0
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (API & SDKs — materials)
+  Related         : ./Makefile, ./buf.gen.yaml, ./buf.yaml, ../../sdk-strategy.md,
+                    ../../openapi.yaml, ../../versioning.md, ../validation.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs — materials)</td>
+<td>Initial Makefile + buf config scaffolds implementing the helix_proto
+pattern from sdk-strategy.md</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-what-this-is">What this is</a></li>
+<li><a href="#2-the-two-plane-pattern">The two-plane pattern</a></li>
+<li><a href="#3-prerequisites">Prerequisites</a></li>
+<li><a href="#4-quick-start">Quick start</a></li>
+<li><a href="#5-targets">Targets</a></li>
+<li><a href="#6-per-language-matrix">Per-language matrix</a></li>
+<li><a href="#7-anti-drift--round-trip-gates">Anti-drift &amp;
+round-trip gates</a></li>
+<li><a href="#8-what-is-real-vs-scaffold-anti-bluff">What is real
+vs. scaffold (anti-bluff)</a></li>
+<li><a href="#9-open-items">Open items</a></li>
+</ol>
+<h2 id="what-this-is">1. What this is</h2>
+<p>A <strong>runnable codegen harness</strong> that turns the two
+schema-first contracts into the 11 target SDKs, implementing the
+<code>vasic-digital/helix_proto</code> pattern specified in <a
+href="../../sdk-strategy.md"><code>sdk-strategy.md</code></a>
+<code>[VERIFIED: helix_proto buf.gen.yaml/Makefile]</code>
+<code>[GAP: #11 SDK generation]</code>. Files here:</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./Makefile"><code>Makefile</code></a></td>
+<td>All codegen + gate targets (<code>buf</code> proto plane,
+<code>openapi-generator</code> REST plane, lint, drift,
+round-trip).</td>
+</tr>
+<tr>
+<td><a href="./buf.gen.yaml"><code>buf.gen.yaml</code></a></td>
+<td>buf v2 plugin wiring: <code>protocolbuffers/go</code>,
+<code>connectrpc/go</code>, <code>protoc-gen-prost</code>,
+<code>protoc-gen-tonic</code>, (<code>dart</code> commented).</td>
+</tr>
+<tr>
+<td><a href="./buf.yaml"><code>buf.yaml</code></a></td>
+<td>buf module config: <code>modules:[proto]</code>, lint
+<code>STANDARD</code>, breaking <code>FILE</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The Makefile is deliberately parameterised: by default
+<code>OPENAPI</code> points at this docs area’s canonical <a
+href="../../openapi.yaml"><code>../../openapi.yaml</code></a> so you can
+generate REST clients <strong>today</strong> without the
+<code>helix_thready_proto</code> repo. In that repo the same Makefile
+drives <code>openapi/thready.v1.yaml</code> +
+<code>proto/helix/thready/v1/*.proto</code>.</p>
+<h2 id="the-two-plane-pattern">2. The two-plane pattern</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1355px; background-color: white;" viewBox="0 0 1355 569.0999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-SSOT" data-look="classic"><rect style="" x="8" y="8" width="304" height="545"/><g class="cluster-label" transform="translate(40, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Schema-first</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> single</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> of</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> truth</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M210.614,112.7L227.512,101.917C244.41,91.133,278.205,69.567,316.269,58.783C354.333,48,396.667,48,438.333,48C480,48,521,48,541.5,48L562,48" id="my-svg-L_PROTO_GO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROTO_GO_0" data-points="W3sieCI6MjEwLjYxNDQzMTc5NDE1NjczLCJ5IjoxMTIuNzAwMDAwNzYyOTM5NDV9LHsieCI6MzEyLCJ5Ijo0OH0seyJ4Ijo0MzksInkiOjQ4fSx7IngiOjU2NiwieSI6NDh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M287,145L291.167,145C295.333,145,303.667,145,329,145C354.333,145,396.667,145,438.833,145C481,145,523,145,544,145L565,145" id="my-svg-L_PROTO_RUST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROTO_RUST_0" data-points="W3sieCI6Mjg3LCJ5IjoxNDV9LHsieCI6MzEyLCJ5IjoxNDV9LHsieCI6NDM5LCJ5IjoxNDV9LHsieCI6NTY5LCJ5IjoxNDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M210.614,177.3L227.512,188.083C244.41,198.867,278.205,220.433,316.269,231.217C354.333,242,396.667,242,439.25,242C481.833,242,524.667,242,546.083,242L567.5,242" id="my-svg-L_PROTO_DARTP_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROTO_DARTP_0" data-points="W3sieCI6MjEwLjYxNDQzMTc5NDE1NjczLCJ5IjoxNzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MzEyLCJ5IjoyNDJ9LHsieCI6NDM5LCJ5IjoyNDJ9LHsieCI6NTcxLjUsInkiOjI0Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M210.614,403.7L227.512,392.917C244.41,382.133,278.205,360.567,316.269,349.783C354.333,339,396.667,339,448.167,339C499.667,339,560.333,339,590.667,339L621,339" id="my-svg-L_OAPI_TS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OAPI_TS_0" data-points="W3sieCI6MjEwLjYxNDQzMTc5NDE1NjczLCJ5Ijo0MDMuNzAwMDAwNzYyOTM5NDV9LHsieCI6MzEyLCJ5IjozMzl9LHsieCI6NDM5LCJ5IjozMzl9LHsieCI6NjI1LCJ5IjozMzl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M275,436L281.167,436C287.333,436,299.667,436,327,436C354.333,436,396.667,436,446.833,436C497,436,555,436,584,436L613,436" id="my-svg-L_OAPI_DART_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OAPI_DART_0" data-points="W3sieCI6Mjc1LCJ5Ijo0MzZ9LHsieCI6MzEyLCJ5Ijo0MzZ9LHsieCI6NDM5LCJ5Ijo0MzZ9LHsieCI6NjE3LCJ5Ijo0MzZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M210.614,468.3L227.512,479.083C244.41,489.867,278.205,511.433,316.269,522.217C354.333,533,396.667,533,449.083,533C501.5,533,564,533,595.25,533L626.5,533" id="my-svg-L_OAPI_REST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OAPI_REST_0" data-points="W3sieCI6MjEwLjYxNDQzMTc5NDE1NjczLCJ5Ijo0NjguMjk5OTk5MjM3MDYwNTV9LHsieCI6MzEyLCJ5Ijo1MzN9LHsieCI6NDM5LCJ5Ijo1MzN9LHsieCI6NjMwLjUsInkiOjUzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M787,48L791.167,48C795.333,48,803.667,48,828.582,87.393C853.496,126.787,894.993,205.574,915.741,244.967L936.489,284.361" id="my-svg-L_GO_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GO_THIN_0" data-points="W3sieCI6Nzg3LCJ5Ijo0OH0seyJ4Ijo4MTIsInkiOjQ4fSx7IngiOjkzOC4zNTMwMjU3MTQ2OTc4LCJ5IjoyODcuOTAwMDAxNTI1ODc4OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M784,145L788.667,145C793.333,145,802.667,145,826.072,168.297C849.478,191.594,886.956,238.189,905.695,261.486L924.434,284.783" id="my-svg-L_RUST_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RUST_THIN_0" data-points="W3sieCI6Nzg0LCJ5IjoxNDV9LHsieCI6ODEyLCJ5IjoxNDV9LHsieCI6OTI2Ljk0MTMwNTU3NTE2MzUsInkiOjI4Ny45MDAwMDE1MjU4Nzg5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M728,339L742,339C756,339,784,339,801.502,338.763C819.003,338.527,826.006,338.054,829.508,337.817L833.009,337.58" id="my-svg-L_TS_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TS_THIN_0" data-points="W3sieCI6NzI4LCJ5IjozMzl9LHsieCI6ODEyLCJ5IjozMzl9LHsieCI6ODM3LCJ5IjozMzcuMzEwODEwODEwODEwODR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M736,436L748.667,436C761.333,436,786.667,436,813.985,425.407C841.303,414.815,870.607,393.629,885.258,383.036L899.91,372.444" id="my-svg-L_DART_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DART_THIN_0" data-points="W3sieCI6NzM2LCJ5Ijo0MzZ9LHsieCI6ODEyLCJ5Ijo0MzZ9LHsieCI6OTAzLjE1MTQwMzk3OTcyMDQsInkiOjM3MC4wOTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M722.5,533L737.417,533C752.333,533,782.167,533,816.389,506.39C850.611,479.779,889.222,426.558,908.528,399.948L927.833,373.338" id="my-svg-L_REST_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REST_THIN_0" data-points="W3sieCI6NzIyLjUsInkiOjUzM30seyJ4Ijo4MTIsInkiOjUzM30seyJ4Ijo5MzAuMTgyMzU0MDQ4MTg2NywieSI6MzcwLjA5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1083,329L1087.167,329C1091.333,329,1099.667,329,1107.333,329C1115,329,1122,329,1125.5,329L1129,329" id="my-svg-L_THIN_PUB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_THIN_PUB_0" data-points="W3sieCI6MTA4MywieSI6MzI5fSx7IngiOjExMDgsInkiOjMyOX0seyJ4IjoxMTMzLCJ5IjozMjl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(439, 48)"><g class="label" data-id="L_PROTO_GO_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-72" y="0" width="144" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">buf</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generate:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">protocolbuffers/go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">connectrpc/go</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(439, 145)"><g class="label" data-id="L_PROTO_RUST_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-66.5" y="0" width="133" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">protoc-gen-prost</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">protoc-gen-tonic</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(439, 242)"><g class="label" data-id="L_PROTO_DARTP_0" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-56" y="0" width="113" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">protoc-gen-dart</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(commented)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(439, 339)"><g class="label" data-id="L_OAPI_TS_0" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-67.5" y="0" width="136" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">openapi-generator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">typescript-fetch</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(439, 436)"><g class="label" data-id="L_OAPI_DART_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-96.5" y="0" width="193" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">openapi-generator</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dart-dio</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(439, 533)"><g class="label" data-id="L_OAPI_REST_0" transform="translate(-0.5, -28.099998474121094)"><g><rect class="background" style="" x="-101.5" y="0" width="204" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">openapi-generator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">python/kotlin/swift/cpp/cshar</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">p/ruby/php</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_GO_THIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RUST_THIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TS_THIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DART_THIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REST_THIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_THIN_PUB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-OAPI-0" data-look="classic" transform="translate(160, 436)"><rect class="basic label-container" style="" x="-115" y="-32.29999923706055" width="230" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">openapi.yaml</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (OpenAPI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">3.1)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> REST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> plane</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROTO-1" data-look="classic" transform="translate(160, 145)"><rect class="basic label-container" style="" x="-127" y="-32.29999923706055" width="254" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">proto/helix/thready/v1/*.prot</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">o</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> event/DTO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> plane</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GO-3" data-look="classic" transform="translate(676.5, 48)"><rect class="basic label-container" style="" x="-110.5" y="-23.5" width="221" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (Go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Connect)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RUST-5" data-look="classic" transform="translate(676.5, 145)"><rect class="basic label-container" style="" x="-107.5" y="-23.5" width="215" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/rust</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (Rust</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tonic)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DARTP-7" data-look="classic" transform="translate(676.5, 242)"><rect class="basic label-container" style="" x="-105" y="-23.5" width="210" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/dart</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (proto</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> msgs)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TS-9" data-look="classic" transform="translate(676.5, 339)"><rect class="basic label-container" style="" x="-51.5" y="-23.5" width="103" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/ts</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DART-11" data-look="classic" transform="translate(676.5, 436)"><rect class="basic label-container" style="" x="-59.5" y="-23.5" width="119" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/dart</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REST-13" data-look="classic" transform="translate(676.5, 533)"><rect class="basic label-container" style="" x="-46" y="-23.5" width="92" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gen/</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THIN-19" data-look="classic" transform="translate(960, 329)"><rect class="basic label-container" style="" x="-123" y="-41.099998474121094" width="246" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hand-written</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> idiomatic</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">layer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (auth,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retry,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> paging,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">events)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PUB-21" data-look="classic" transform="translate(1240, 329)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">versioned</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> publish</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registry</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65).</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> There are two contracts and two generators. The
+<strong>Protobuf</strong> files
+(<code>proto/helix/thready/v1/*.proto</code>) are the source of truth
+for the event/DTO wire plane and any streaming RPC;
+<code>buf generate</code> compiles them — via the remote
+<code>protocolbuffers/go</code> and <code>connectrpc/go</code> plugins —
+into Go message types plus Connect service stubs (<code>gen/go</code>),
+and via the local <code>protoc-gen-prost</code> +
+<code>protoc-gen-tonic</code> plugins into a Rust crate with tonic
+services (<code>gen/rust</code>); a <code>protoc-gen-dart</code> stanza
+(kept commented until a Dart proto toolchain is provisioned) would emit
+Dart proto messages. The <strong>OpenAPI 3.1</strong> document is the
+source of truth for the synchronous REST surface;
+<code>openapi-generator</code> compiles it into the TypeScript client
+(<code>typescript-fetch</code>), the Dart client
+(<code>dart-dio</code>), and the remaining REST clients (Python,
+Kotlin/JVM, Swift, C++, C#, Ruby, PHP). Every generated core is then
+wrapped by a small, hand-written idiomatic layer — auth, retry/back-off,
+pagination iterators, event-stream helpers — and each wrapped SDK is
+versioned and published to its language registry. Because both contracts
+are the single source of truth, regeneration is deterministic and
+hand-edits to <code>gen/</code> are caught by
+<code>check-no-handwritten</code>.</p>
+<h2 id="prerequisites">3. Prerequisites</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 27%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Needed for</th>
+<th>This env <code>[VERIFIED]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>buf</code> ≥ 1.7</td>
+<td>proto plane (<code>lint</code>, <code>breaking</code>,
+<code>generate</code>)</td>
+<td><strong>present — 1.71.0</strong></td>
+</tr>
+<tr>
+<td><code>@redocly/cli</code></td>
+<td><code>openapi-lint</code></td>
+<td><strong>present — 2.40.0</strong> (via <code>npx</code>)</td>
+</tr>
+<tr>
+<td><code>openapi-generator</code> v7.x</td>
+<td>REST clients</td>
+<td><strong>not local</strong>; Makefile falls back to Docker
+<code>openapitools/openapi-generator-cli:v7.9.0</code> (or set
+<code>OPENAPI_GEN</code>)</td>
+</tr>
+<tr>
+<td><code>protoc-gen-prost</code>, <code>protoc-gen-tonic</code></td>
+<td>Rust proto plugins</td>
+<td>install with
+<code>cargo install protoc-gen-prost protoc-gen-tonic</code></td>
+</tr>
+<tr>
+<td><code>cargo</code>, <code>node</code>/<code>tsc</code>,
+<code>docker</code></td>
+<td><code>rust-build</code>, <code>ts-check</code>, generation</td>
+<td>as required per target</td>
+</tr>
+</tbody>
+</table>
+<p>Run <code>make tools</code> to print what is detected.</p>
+<h2 id="quick-start">4. Quick start</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> docs/public/research/mvp/api/materials/codegen</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> tools                 <span class="co"># show detected toolchain</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> openapi-lint          <span class="co"># redocly lint ../../openapi.yaml (see ../validation.md)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> openapi-generate-ts   <span class="co"># -&gt; gen/ts (TypeScript client)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> openapi-generate-all  <span class="co"># -&gt; gen/&lt;lang&gt; for all 9 REST languages</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> generate              <span class="co"># buf -&gt; gen/{go,rust,dart}  (needs proto/, else skips cleanly)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> all                   <span class="co"># full local pre-tag gate</span></span></code></pre></div>
+<p>Override inputs without editing the file:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> OPENAPI=/repo/helix_thready_proto/openapi/thready.v1.yaml <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>     PROTO_DIR=/repo/helix_thready_proto/proto openapi-generate-all</span></code></pre></div>
+<h2 id="targets">5. Targets</h2>
+<p>Run <code>make help</code> for the generated list. Groups:</p>
+<ul>
+<li><strong>Proto plane:</strong> <code>lint</code>,
+<code>breaking</code>, <code>generate</code>,
+<code>rust-build</code>.</li>
+<li><strong>REST plane:</strong> <code>openapi-lint</code>,
+<code>openapi-generate-{ts,dart,python,kotlin,swift,cpp,csharp,ruby,php}</code>,
+<code>openapi-generate-all</code>.</li>
+<li><strong>Gates:</strong> <code>ts-check</code>
+(<code>tsc --noEmit</code>), <code>check-no-handwritten</code>
+(regenerate + git-diff <code>gen/</code>), <code>roundtrip-test</code>
+(drive gen/ts against a stub incl. a 401 negative-control).</li>
+<li><strong>Aggregate:</strong> <code>all</code> (the full local pre-tag
+gate — no server CI, <code>[CONSTITUTION §11.4.156]</code>),
+<code>clean</code>.</li>
+</ul>
+<h2 id="per-language-matrix">6. Per-language matrix</h2>
+<p>Mirrors <a href="../../sdk-strategy.md"><code>sdk-strategy.md</code>
+§4</a> (final request §13.1):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Language</th>
+<th>Core generator</th>
+<th>Make target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Go</td>
+<td><code>buf</code> (protocolbuffers/go + connectrpc/go)</td>
+<td><code>generate</code></td>
+</tr>
+<tr>
+<td>Rust</td>
+<td><code>buf</code> (prost + tonic)</td>
+<td><code>generate</code>, <code>rust-build</code></td>
+</tr>
+<tr>
+<td>TypeScript/JS</td>
+<td><code>openapi-generator typescript-fetch</code></td>
+<td><code>openapi-generate-ts</code></td>
+</tr>
+<tr>
+<td>Dart/Flutter</td>
+<td><code>openapi-generator dart-dio</code> (+ proto-dart)</td>
+<td><code>openapi-generate-dart</code></td>
+</tr>
+<tr>
+<td>Python</td>
+<td><code>openapi-generator python</code> (asyncio)</td>
+<td><code>openapi-generate-python</code></td>
+</tr>
+<tr>
+<td>Kotlin/JVM (Java/Groovy/Scala)</td>
+<td><code>openapi-generator kotlin</code></td>
+<td><code>openapi-generate-kotlin</code></td>
+</tr>
+<tr>
+<td>Swift</td>
+<td><code>openapi-generator swift5</code></td>
+<td><code>openapi-generate-swift</code></td>
+</tr>
+<tr>
+<td>C++</td>
+<td><code>openapi-generator cpp-restsdk</code> (+ protobuf C++)</td>
+<td><code>openapi-generate-cpp</code></td>
+</tr>
+<tr>
+<td>C# (Mono)</td>
+<td><code>openapi-generator csharp</code></td>
+<td><code>openapi-generate-csharp</code></td>
+</tr>
+<tr>
+<td>Ruby</td>
+<td><code>openapi-generator ruby</code></td>
+<td><code>openapi-generate-ruby</code></td>
+</tr>
+<tr>
+<td>PHP</td>
+<td><code>openapi-generator php</code></td>
+<td><code>openapi-generate-php</code></td>
+</tr>
+<tr>
+<td><strong>Zig</strong></td>
+<td><strong>hand-written over C ABI / REST</strong></td>
+<td>— <code>[OPEN: api-3]</code> no first-class generator</td>
+</tr>
+</tbody>
+</table>
+<h2 id="anti-drift-round-trip-gates">7. Anti-drift &amp; round-trip
+gates</h2>
+<p>Reused from helix_proto <code>[VERIFIED]</code>, run by local
+git-hooks:</p>
+<ol type="1">
+<li><code>buf lint</code> + <code>buf breaking</code> (proto hygiene +
+the breaking-change gate, <code>versioning.md</code> §5) and
+<code>openapi-lint</code> (OpenAPI hygiene — see <a
+href="../validation.md"><code>../validation.md</code></a>).</li>
+<li><code>generate</code> →
+<strong><code>check-no-handwritten</code></strong>: regenerate and
+assert the <code>gen/</code> cores were not hand-edited (ergonomics live
+only in the thin layer, never in generated files).</li>
+<li><code>rust-build</code> (<code>cargo</code>), <code>ts-check</code>
+(<code>tsc --noEmit</code>), and <code>roundtrip-test</code> (drive the
+generated TS client against a real stub server incl. a negative-control
+401). RED-first skeletons for the round-trip + drift guard are in <a
+href="../../contract-tests.md"><code>../../contract-tests.md</code></a>
+§full-automation.</li>
+</ol>
+<h2 id="what-is-real-vs.-scaffold-anti-bluff">8. What is real
+vs. scaffold (anti-bluff)</h2>
+<p>Per <a href="../../../CONVENTIONS.md">CONVENTIONS §7</a> — do
+<strong>not</strong> claim a scaffold works:</p>
+<ul>
+<li><strong>REAL, runnable now <code>[VERIFIED]</code>:</strong>
+<code>make tools</code>, <code>make openapi-lint</code> (redocly 2.40.0
+runs against the sibling <code>openapi.yaml</code>). The
+<code>openapi-generate-*</code> targets are correct
+<code>openapi-generator</code> invocations and run as soon as the
+CLI/Docker image is available.</li>
+<li><strong>SCAFFOLD, not yet wired <code>[OPEN: api-1]</code>:</strong>
+the <strong>proto plane</strong> (<code>generate</code>,
+<code>rust-build</code>, <code>breaking</code>).
+<code>proto/helix/thready/v1/*.proto</code> does <strong>not</strong>
+exist here — those files are produced in the
+<code>helix_thready_proto</code> repo. The proto targets <strong>detect
+the absence and skip with a clear message</strong> (they do not
+fabricate output). <code>buf.gen.yaml</code>/<code>buf.yaml</code> are
+the verified helix_proto pattern, ready for when <code>proto/</code>
+lands.</li>
+<li><strong>NOT executed in this environment:</strong> no SDK was
+actually generated here (no network/Docker pull was attempted); the
+Makefile is validated only for <strong>parse + dry-run</strong>
+correctness (<code>make -n</code>, <code>make help</code>,
+<code>make tools</code>). Treat first real generation as the acceptance
+test.</li>
+</ul>
+<h2 id="open-items">9. Open items</h2>
+<ul>
+<li><code>[OPEN: api-1]</code> The <code>.proto</code> contract is
+produced with the code in <code>helix_thready_proto</code>; the proto
+targets here are ready-but-inert until it exists.</li>
+<li><code>[OPEN: api-3]</code> Zig has no first-class generator —
+hand-written over C ABI / REST.</li>
+<li><code>[OPEN: sdk-2]</code> One JVM artifact (Kotlin-first)
+vs. per-language artifacts — confirm with client teams;
+<code>openapi-generate-kotlin</code> currently emits the single Kotlin
+artifact.</li>
+<li><code>[OPEN: cg-1]</code> <code>check-no-handwritten</code> diffs
+<code>gen/</code> via <code>git</code>; in the real SDK repo, ensure
+<code>gen/</code> is committed so the drift diff is meaningful.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

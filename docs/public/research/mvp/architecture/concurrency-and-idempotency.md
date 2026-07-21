@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/architecture/concurrency-and-idempotency.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 5 (2026-07-22)
   Author          : Helix Thready documentation swarm (System Architecture)
   Related         : ./event-model.md, ./processing-pipeline.md, ./system-overview.md,
                     ./data-flow.md
@@ -17,6 +17,7 @@
 | 2 | 2026-07-22 | swarm (Pass 3 depth) | Close CONC-1 (real `models.BackgroundTask` — no `DedupeKey`; real 9-value `TaskStatus`) & CONC-2 (`discovery/pkg/resilience.Manager`+`ConnectionState`); add retry/back-off state machine (§5.1); deepen single-claim explanation |
 | 3 | 2026-07-22 | swarm (Pass 3 consistency) | Fix residual `retrying`-as-status in the §4 single-claim diagram + `single-claim.mmd` sibling + §9 partial-index (retry returns to `pending`; `retrying` is the `task.retrying` event, not a status — aligns with §2/§5.1) |
 | 4 | 2026-07-22 | swarm (Pass 3 consistency, cont.) | Fix residual `reprocessing`-as-status in §5 (reprocess re-enters as a fresh `pending → running` cycle; `reprocessing` is the sticky `post.state` *display* value, not a `TaskStatus` — aligns with §2/§5.1, data-flow §7, post-lifecycle §6) |
+| 5 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -168,7 +169,7 @@ flowchart TB
   RUN --> OK{success?}
   OK -->|yes| DONE[status=completed\npublish post.processed]
   OK -->|no| RETRY{attempt < max?}
-  RETRY -->|yes| BACKOFF[Requeue delay=exp backoff+jitter\n→ status=pending (task.retrying event, not a status)]
+  RETRY -->|yes| BACKOFF["Requeue delay=exp backoff+jitter\n→ status=pending (task.retrying event, not a status)"]
   BACKOFF --> ROW
   RETRY -->|no| DLQ[MoveToDeadLetter\nstatus=dead_letter\npublish post.failed]
   classDef ev fill:#7a4ea0,stroke:#3c2352,color:#f3e9ff;

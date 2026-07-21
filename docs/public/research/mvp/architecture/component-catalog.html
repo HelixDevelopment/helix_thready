@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Component Catalog</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Component Catalog</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#how-to-read-this-catalog"
+id="toc-how-to-read-this-catalog">1. How to read this catalog</a></li>
+<li><a href="#thready-services-the-deployable-units"
+id="toc-thready-services-the-deployable-units">2. Thready services (the
+deployable units)</a></li>
+<li><a
+href="#per-component-deep-dive-responsibilities-interfaces-failure-modes"
+id="toc-per-component-deep-dive-responsibilities-interfaces-failure-modes">2.1
+Per-component deep dive (responsibilities · interfaces · failure
+modes)</a>
+<ul>
+<li><a href="#ingestion-service-extended-herald"
+id="toc-ingestion-service-extended-herald">2.1.1 Ingestion Service
+(extended Herald)</a></li>
+<li><a href="#processing-service-skill-dispatch-engine"
+id="toc-processing-service-skill-dispatch-engine">2.1.2 Processing
+Service (Skill Dispatch Engine)</a></li>
+<li><a href="#semantic-search-service"
+id="toc-semantic-search-service">2.1.3 Semantic-search Service</a></li>
+<li><a href="#asset-service-build-new"
+id="toc-asset-service-build-new">2.1.4 Asset Service
+<code>[BUILD-NEW]</code></a></li>
+<li><a href="#download-manager-build-new"
+id="toc-download-manager-build-new">2.1.5 Download Manager
+<code>[BUILD-NEW]</code></a></li>
+<li><a href="#user-service-build-new"
+id="toc-user-service-build-new">2.1.6 User Service
+<code>[BUILD-NEW]</code></a></li>
+<li><a href="#event-bus-service-build-new-thin"
+id="toc-event-bus-service-build-new-thin">2.1.7 Event Bus Service
+<code>[BUILD-NEW, thin]</code></a></li>
+<li><a href="#api-gateway" id="toc-api-gateway">2.1.8 API
+Gateway</a></li>
+<li><a href="#accounts-messenger-service"
+id="toc-accounts-messenger-service">2.1.9 Accounts (messenger)
+Service</a></li>
+</ul></li>
+<li><a href="#reused-in-house-submodules-the-engines"
+id="toc-reused-in-house-submodules-the-engines">3. Reused in-house
+submodules (the engines)</a></li>
+<li><a href="#new-submodules-to-build-build-new"
+id="toc-new-submodules-to-build-build-new">4. New submodules to build
+<code>[BUILD-NEW]</code></a></li>
+<li><a href="#service-submodule-dependency-matrix"
+id="toc-service-submodule-dependency-matrix">5. Service → submodule
+dependency matrix</a></li>
+<li><a href="#component-dependency-diagram"
+id="toc-component-dependency-diagram">6. Component dependency
+diagram</a></li>
+<li><a href="#maturity-gap-register" id="toc-maturity-gap-register">7.
+Maturity &amp; gap register</a></li>
+<li><a href="#open-items" id="toc-open-items">8. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Component Catalog (services, modules, in-house mapping)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/component-catalog.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./system-overview.md, ./data-flow.md, ./messenger-ingestion.md,
+                    ./processing-pipeline.md, ./semantic-search.md, ./asset-and-download.md,
+                    ./security-model.md, ./service-discovery.md, ./event-model.md,
+                    ./concurrency-and-idempotency.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial catalog — services, submodule mapping, maturity, gaps</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Add §2.1 per-component deep dive (responsibilities · interfaces ·
+failure modes); fold verified
+<code>rag</code>/<code>cache</code>/<code>messaging</code>/<code>skill_registry</code>/<code>mcp_module</code>
+layouts (CAT-1/CAT-2 closed); deepen matrix &amp; dependency-diagram
+explanations</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth, cont.)</td>
+<td>Source-verify &amp; <strong>correct</strong> import paths at source
+(<code>go.mod</code> read this pass): <code>SkillRegistry</code> module
+is <code>dev.helix.agent/skillregistry</code> (flat package — was
+mislabeled <code>digital.vasic.skill_registry</code>); MCP module is
+<code>digital.vasic.mcp</code> (was mislabeled
+<code>digital.vasic.mcp_module</code>); confirm
+<code>rag</code>/<code>cache</code>/<code>messaging</code>
+<code>pkg/</code> layouts at source and mark §3 rows VERIFIED; split §6
+component-deps explanation into true multi-paragraph form; formally
+close CAT-1/CAT-2 in §8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-how-to-read-this-catalog">How to read this
+catalog</a></li>
+<li><a href="#2-thready-services-the-deployable-units">Thready services
+(the deployable units)</a> 2.1. <a
+href="#21-per-component-deep-dive-responsibilities--interfaces--failure-modes">Per-component
+deep dive (responsibilities · interfaces · failure modes)</a></li>
+<li><a href="#3-reused-in-house-submodules-the-engines">Reused in-house
+submodules (the engines)</a></li>
+<li><a href="#4-new-submodules-to-build-build-new">New submodules to
+build <code>[BUILD-NEW]</code></a></li>
+<li><a href="#5-service--submodule-dependency-matrix">Service →
+submodule dependency matrix</a></li>
+<li><a href="#6-component-dependency-diagram">Component dependency
+diagram</a></li>
+<li><a href="#7-maturity--gap-register">Maturity &amp; gap
+register</a></li>
+<li><a href="#8-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="how-to-read-this-catalog">1. How to read this catalog</h2>
+<p>Two kinds of components exist. <strong>Services</strong> are
+Thready’s own deployable containers (they own an API surface and/or an
+event-loop). <strong>Submodules</strong> are decoupled,
+project-not-aware Go (or Python/Shell) libraries reused across Helix
+projects <code>[CONSTITUTION §11.4.28]</code>; Thready <em>composes</em>
+them, never forks them. Every service names the exact submodule(s) it
+embeds. Maturity is quoted verbatim from the gap register
+(<code>PRODUCTION</code> / <code>FOUNDATION</code> /
+<code>SCAFFOLD</code> / <code>DESIGN-ONLY</code> /
+<code>BUILD-NEW</code>) and confidence (<code>VERIFIED</code> /
+<code>FLAGGED</code>); a maturity claim is never upgraded here. Import
+paths use the confirmed <code>digital.vasic.*</code> module
+convention.</p>
+<h2 id="thready-services-the-deployable-units">2. Thready services (the
+deployable units)</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 26%" />
+<col style="width: 35%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Responsibility</th>
+<th>Embeds (submodules)</th>
+<th>Detailed doc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ingestion Service</strong> (extended Herald)</td>
+<td>Connect to messengers, read threads, assemble root+organic reply,
+persist, emit <code>post.received</code></td>
+<td><code>herald</code>, <code>gotd/td</code>, Max adapter
+<code>[BUILD-NEW]</code>, ThreadReader <code>[BUILD-NEW]</code>,
+<code>database</code>, <code>eventbus</code></td>
+<td><a href="./messenger-ingestion.md">messenger-ingestion.md</a></td>
+</tr>
+<tr>
+<td><strong>Processing Service</strong> (Skill Dispatch Engine)</td>
+<td>Classify by hashtag/type, order &amp; run Skills, post status
+reply</td>
+<td><code>helix_skills</code>, <code>background</code>,
+<code>eventbus</code>, <code>HelixLLM</code>, <code>llmprovider</code>,
+<code>HelixAgent</code>, <code>visionengine</code>+OCR</td>
+<td><a href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td><strong>Semantic-search Service</strong></td>
+<td>Embed + index posts and generated materials; serve
+<code>/v1/search</code></td>
+<td><code>embeddings</code>, <code>vectordb</code> (pgvector),
+<code>rag</code>, <code>HelixLLM</code> <code>/v1/embeddings</code>,
+<code>MCP_Module</code></td>
+<td><a href="./semantic-search.md">semantic-search.md</a></td>
+</tr>
+<tr>
+<td><strong>Asset Service</strong> <code>[BUILD-NEW]</code></td>
+<td>Store/secure/serve physical &amp; virtual assets; <code>…-web</code>
+renditions; Range/HLS/DASH</td>
+<td><code>Catalogizer</code>, <code>storage</code>,
+<code>filesystem</code>, <code>security</code>, <code>auth</code></td>
+<td><a href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td><strong>Download Manager</strong> <code>[BUILD-NEW]</code></td>
+<td>Multi-protocol byte fetch (HTTP/2/3, FTP/SMB/NFS/WebDAV);
+queue/resume/segment/progress/callback</td>
+<td><code>filesystem</code>, <code>http3</code>,
+<code>background</code></td>
+<td><a href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td><strong>User Service</strong> <code>[BUILD-NEW]</code></td>
+<td>Multi-tenant users/roles/permissions (three-tier), accounts,
+memberships, billing/metering</td>
+<td><code>auth</code>, <code>security/pkg/policy</code>, Catalogizer
+RBAC pattern, <code>database</code></td>
+<td><a href="./security-model.md">security-model.md</a></td>
+</tr>
+<tr>
+<td><strong>Event Bus Service</strong>
+<code>[BUILD-NEW, thin]</code></td>
+<td>Client-facing subscription surface over JetStream; sticky/one-time;
+durable replay</td>
+<td><code>eventbus</code> (<code>pkg/nats</code>),
+<code>streaming</code> (WS hub)</td>
+<td><a href="./event-model.md">event-model.md</a></td>
+</tr>
+<tr>
+<td><strong>API Gateway</strong></td>
+<td>HTTP/3 edge; <code>/v1</code> REST + WebSocket/SSE;
+auth/ratelimit/headers/CORS</td>
+<td><code>http3</code>, <code>middleware</code>, <code>auth</code>,
+<code>ratelimiter</code>, <code>security/pkg/headers</code></td>
+<td><a href="./system-overview.md">system-overview.md</a></td>
+</tr>
+<tr>
+<td><strong>Accounts (messenger) Service</strong></td>
+<td>Interactive &amp; non-interactive sign-in to messengers; session
+storage</td>
+<td><code>auth</code>, <code>security/pkg/securestorage</code>,
+<code>herald</code></td>
+<td><a href="./messenger-ingestion.md">messenger-ingestion.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2
+id="per-component-deep-dive-responsibilities-interfaces-failure-modes">2.1
+Per-component deep dive (responsibilities · interfaces · failure
+modes)</h2>
+<p>The table above is the index; this section is the contract. For each
+deployable service it states the <strong>responsibility
+boundary</strong> (what it owns and, as importantly, what it does
+<em>not</em>), the <strong>key interface</strong> it exposes and the
+verified engine interface it consumes, and the <strong>failure modes +
+degradation</strong> behaviour that keeps the aggressive SLO honest
+under partial failure. Interfaces marked VERIFIED were read at source
+this pass; the sibling doc carries the full design.</p>
+<h3 id="ingestion-service-extended-herald">2.1.1 Ingestion Service
+(extended Herald)</h3>
+<ul>
+<li><strong>Responsibility.</strong> Own the messenger boundary: connect
+with operator accounts, stream + poll chosen channels, assemble the
+<strong>root + organic reply</strong> composite via the ThreadReader,
+run the verified self-filter so it never re-ingests its own status
+replies, persist the Complete Post to PostgreSQL, and emit
+<code>post.received</code>. It does <strong>not</strong> classify or
+process (that is Processing) and does <strong>not</strong> store bytes
+(that is the Asset Service) — it emits references and the event.</li>
+<li><strong>Interfaces.</strong> Consumes the VERIFIED herald
+<code>commons_messaging/channels.Channel</code>
+(<code>Subscribe</code>/<code>SendReplyGeneric</code>/<code>BotSelfIdentity</code>/<code>DownloadAttachment</code>)
+and self-filter (<code>IsSelfEcho</code>/<code>StampSender</code>);
+publishes via <code>eventbus/pkg/nats.Publish</code>. Exposes the
+internal ThreadReader seam
+(<code>ListChannels</code>/<code>Poll</code>/<code>ReadThread</code>/<code>Reply</code>,
+<code>[BUILD-NEW]</code>). See <a
+href="./messenger-ingestion.md">messenger-ingestion.md</a>.</li>
+<li><strong>Failure modes.</strong> Telegram <code>FLOOD_WAIT</code> /
+rate-limit → circuit breaker backs off and honors the wait, channel
+marked <code>channel.health</code> degraded (sticky). Session
+expiry/auth loss → Accounts Service re-auth; ingestion for that account
+pauses, does not crash the process. MTProto history backfill is
+<code>[GAP: 5.1.1]</code> (QA-harness today); Max is
+<code>[GAP: 5.1.2]</code> (empty stub) — ingestion for Max is
+<strong>explicitly incomplete</strong>, never bluffed. Duplicate
+discovery (poll + push) is safe: dedup is downstream on
+<code>post_id</code>.</li>
+</ul>
+<h3 id="processing-service-skill-dispatch-engine">2.1.2 Processing
+Service (Skill Dispatch Engine)</h3>
+<ul>
+<li><strong>Responsibility.</strong> Own the post lifecycle after claim:
+classify (hashtags + indirect determination), resolve the Skill set from
+the HelixSkills DAG, order by the fixed precedence
+(<code>download &gt; convert &gt; analyze &gt; research &gt; reply</code>),
+run each step idempotently through the BackgroundTasks queue, embed
+artifacts, and post the status reply. It owns <em>orchestration</em>,
+not <em>knowledge</em> (helix_skills) or <em>byte fetch</em> (Download
+layer).</li>
+<li><strong>Interfaces.</strong> Consumes
+<code>background.TaskQueue</code>/<code>TaskRepository</code> (VERIFIED
+— the <code>FOR UPDATE SKIP LOCKED</code> claim),
+<code>helix_skills</code> Skill-Graph, the LLM stack
+(HelixLLM/LLMProvider/ HelixAgent), VisionEngine+OCR, and the
+Semantic-search service. <code>SkillRegistry</code> =
+<code>dev.helix.agent/skillregistry</code> (VERIFIED at source Pass 3
+via <code>go.mod</code>: a <strong>flat package</strong> at the repo
+root — <code>executor.go</code>, <code>loader.go</code>,
+<code>manager.go</code>, <code>registry.go</code>,
+<code>storage.go</code> +
+<code>storage_memory.go</code>/<code>storage_postgres.go</code>,
+<code>validator.go</code>, <code>types.go</code>; <strong>not</strong>
+the earlier-quoted <code>digital.vasic.skill_registry</code> — import
+path corrected); tool exposure = <code>digital.vasic.mcp</code>
+(VERIFIED at source Pass 3 via <code>go.mod</code>:
+<code>pkg/{server,client,protocol,registry,adapter,config}</code>; the
+module path is <code>digital.vasic.mcp</code>, <strong>not</strong>
+<code>digital.vasic.mcp_module</code>). See <a
+href="./processing-pipeline.md">processing-pipeline.md</a>.</li>
+<li><strong>Failure modes.</strong> Per-step failure → per-step
+retry/back-off (checkpointed via
+<code>TaskExecutor.Pause/Resume</code>), not whole-post rerun. Worker
+death → <code>StuckDetector</code> reclaim. LLM local outage →
+<code>LLMProvider</code> cloud fallback (breaker). Whole-post exhaustion
+→ <code>dead_letter</code> + <code>post.failed</code>. Unclassifiable
+post → <code>GenericIngest</code>, never dropped. Long research step
+must not hold a download slot — download is delegated to a separate pool
+(§2.1.5).</li>
+</ul>
+<h3 id="semantic-search-service">2.1.3 Semantic-search Service</h3>
+<ul>
+<li><strong>Responsibility.</strong> Own meaning-based retrieval over
+posts <strong>and</strong> all generated materials: chunk, embed (same
+model both sides), index into pgvector, serve <code>/v1/search</code>,
+and assemble RAG answers with citations. It owns the vector index; the
+relational store remains the SoR it hydrates from.</li>
+<li><strong>Interfaces.</strong> Consumes VERIFIED
+<code>vectordb/pkg/client.VectorStore</code>
+(<code>Upsert</code>/<code>Search</code>/<code>Delete</code>/<code>Get</code>)
+and <code>embeddings/pkg/provider.EmbeddingProvider</code>
+(<code>Embed</code>/<code>EmbedBatch</code>/<code>Dimensions</code>/<code>Name</code>),
+plus <code>rag</code>
+(<code>pkg/{chunker,retriever,reranker,hybrid, pipeline}</code> —
+VERIFIED layout). See <a
+href="./semantic-search.md">semantic-search.md</a>.</li>
+<li><strong>Failure modes.</strong> <strong>HashEmbedder trap
+<code>[GAP: 2.1]</code></strong> → startup guard fails loud rather than
+index garbage. Dimension mismatch → refuse. pgvector connection error →
+serve from cache / degrade to relational filter. Non-pgvector backends
+<code>[GAP: 3.1]</code> present-but-unhardened → config stays on
+pgvector for MVP. Cross-account leakage prevented by the
+<code>SearchQuery.Filter</code> account scope.</li>
+</ul>
+<h3 id="asset-service-build-new">2.1.4 Asset Service
+<code>[BUILD-NEW]</code></h3>
+<ul>
+<li><strong>Responsibility.</strong> Store, secure and serve physical
+<strong>and</strong> virtual assets: object tier (MinIO/S3),
+<code>…-web</code> renditions, HLS/DASH, Range serving, content-hash
+dedup, checksums, post↔︎asset links, per-account retention, and the
+sealed-directory decrypt path for sensitive scans. It owns
+storage/serving; it does <strong>not</strong> fetch bytes (Download
+layer) — they arrive via the standardized callback.</li>
+<li><strong>Interfaces.</strong> Built on <code>Catalogizer</code> +
+<code>storage</code> + <code>filesystem</code>
+(<code>OpenSeekable</code> for Range) + <code>security</code> +
+<code>auth</code>; serves <code>GET /v1/assets/{id}</code>,
+<code>…/manifest.m3u8</code>, <code>POST …/redownload</code> (OpenAPI in
+<a href="./asset-and-download.md">asset-and-download.md</a>); emits
+<code>asset.stored</code>.</li>
+<li><strong>Failure modes.</strong> Broken physical link →
+<code>redownload</code> re-enqueues a delegated job. Transcode failure →
+raw preserved, <code>…-web</code> retried; serving falls back to raw.
+Sensitive decrypt requires an RBAC pass — a denied caller learns only
+that an asset exists. <code>[GAP: 6.1]</code> (Catalogizer not
+decoupled; <code>Streaming</code>=WS hub) means media
+byte-streaming/transcode is <strong>new</strong>, not existing.</li>
+</ul>
+<h3 id="download-manager-build-new">2.1.5 Download Manager
+<code>[BUILD-NEW]</code></h3>
+<ul>
+<li><strong>Responsibility.</strong> Generic multi-protocol byte fetch
+(HTTP/1.1/2/3+QUIC+Brotli, FTP/SMB/NFS/ WebDAV) with queue, resumable +
+segmented transfer, progress, retry/back-off, and a standardized
+completion callback. It fetches; it does not store/serve.</li>
+<li><strong>Interfaces.</strong>
+<code>Enqueue</code>/<code>Status</code>/<code>Cancel</code>
+(<code>DownloadJob</code>); <strong>reuses
+<code>filesystem</code></strong> for non-HTTP protocols and
+<strong>adds</strong> the HTTP source via <code>http3</code>; runs its
+<strong>own worker pool</strong> (does not consume the processing pool).
+Emits the shared callback → Asset Service.</li>
+<li><strong>Failure modes.</strong> <code>[GAP: 6.2]</code> filesystem
+has no HTTP source + NFS mislisted on non-Linux → the new HTTP source
+and NFS platform-guard are part of the build. Source unavailable →
+retriable callback → requeue with back-off; exhausted →
+<code>post.failed</code>. Long transfers isolated by the dedicated pool
+so they cannot starve processing.</li>
+</ul>
+<h3 id="user-service-build-new">2.1.6 User Service
+<code>[BUILD-NEW]</code></h3>
+<ul>
+<li><strong>Responsibility.</strong> Own tenancy: users, three-tier
+roles/permissions, accounts, memberships (many-to-many),
+branding/policy, and billing/metering. It is the home of the RBAC policy
+set.</li>
+<li><strong>Interfaces.</strong> <code>auth</code> (JWT/API-key/OAuth2)
++ VERIFIED <code>security/pkg/policy.Enforcer</code>
+(<code>EvaluateAll</code> most-restrictive) + Catalogizer RBAC pattern +
+<code>database</code>. See <a
+href="./security-model.md">security-model.md</a>.</li>
+<li><strong>Failure modes.</strong> JWT default HMAC-SHA256 is
+single-secret <code>[GAP: 7.2]</code> → RS256/EdDSA+JWKS planned before
+multi-service verification is trusted. Policy store empty →
+<code>EvaluateAll</code> defaults to Allow (so Thready always loads a
+deny-by-default cross-account policy at boot). Mobile secret storage
+stub <code>[GAP: 7.3]</code> → mobile clients get short-lived tokens
+only until native stores land.</li>
+</ul>
+<h3 id="event-bus-service-build-new-thin">2.1.7 Event Bus Service
+<code>[BUILD-NEW, thin]</code></h3>
+<ul>
+<li><strong>Responsibility.</strong> Client-facing subscription surface
+over JetStream: sticky-snapshot-first delivery, durable per-client
+replay, WebSocket/SSE fan-out, RBAC-scoped subject filtering. Thin by
+design — the durability lives in JetStream.</li>
+<li><strong>Interfaces.</strong> Wraps <code>eventbus/pkg/nats</code>
+(VERIFIED) <strong>but drives the raw <code>JetStreamContext</code>
+directly</strong> for durable consumers, because
+<code>pkg/nats.Subscribe</code> is ephemeral (<code>DeliverNew</code>) —
+see the anti-bluff boundary in <a
+href="./event-model.md">event-model.md</a> §1. Serves
+<code>WS /v1/events</code>, <code>SSE /v1/events/stream</code>.</li>
+<li><strong>Failure modes.</strong> Client disconnect → durable consumer
+resumes from ack floor on reconnect. Outage beyond retention window →
+client reconciles via REST snapshots (<code>updated_since</code>).
+Sticky producer crash mid-invalidate → 24 h TTL backstop clears the
+stale value.</li>
+</ul>
+<h3 id="api-gateway">2.1.8 API Gateway</h3>
+<ul>
+<li><strong>Responsibility.</strong> Terminate client traffic (HTTP/3
+QUIC + HTTP/2 fallback), apply auth, rate-limit, security headers and
+CORS, and expose the versioned <code>/v1</code> REST + realtime
+surfaces. It routes; business logic lives behind it.</li>
+<li><strong>Interfaces.</strong> <code>http3</code> +
+<code>middleware</code> + <code>auth</code> + <code>ratelimiter</code> +
+<code>security/pkg/headers</code>. Fronts every service; never touches
+the DB directly except through service calls.</li>
+<li><strong>Failure modes.</strong> Downstream service unhealthy →
+removed from the pool by the readiness gate (§ service-discovery).
+Rate-limit breach → 429 with token-bucket headers. TLS cert renewal
+handled by <code>lets_encrypt</code> atomic deploy-hook + rollback.</li>
+</ul>
+<h3 id="accounts-messenger-service">2.1.9 Accounts (messenger)
+Service</h3>
+<ul>
+<li><strong>Responsibility.</strong> Interactive and non-interactive
+sign-in to each messenger and encrypted session/token storage, keyed per
+account+messenger. Reusable/decoupled so any project adopts it.</li>
+<li><strong>Interfaces.</strong> <code>auth</code> + VERIFIED
+<code>security/pkg/securestorage.Storage</code> (AES-256-GCM
+<code>FileStorage</code>; <code>IsSecure()</code> gates startup) +
+herald. See <a
+href="./messenger-ingestion.md">messenger-ingestion.md</a> §7.</li>
+<li><strong>Failure modes.</strong> Insecure store
+(<code>IsSecure()==false</code>) → <strong>refuse to start</strong>,
+never plaintext-fallback. 2FA/login-code flow is interactive; missing
+non-interactive creds → SKIP (never log, never crash). Session
+revocation propagates via the token store.</li>
+</ul>
+<h2 id="reused-in-house-submodules-the-engines">3. Reused in-house
+submodules (the engines)</h2>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 8%" />
+<col style="width: 23%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Submodule (import path)</th>
+<th>Repo</th>
+<th>Role in Thready</th>
+<th>Maturity (gap register)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>digital.vasic.database</code></td>
+<td><code>vasic-digital/database</code></td>
+<td>Relational SoR — SQLite dev / Postgres prod;
+<code>pkg/migration.Runner</code></td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.vectordb</code></td>
+<td><code>vasic-digital/VectorDB</code></td>
+<td>Semantic store — <strong>pgvector</strong> backend, cosine
+<code>&lt;=&gt;</code></td>
+<td>PRODUCTION (pgvector) / VERIFIED — others FLAGGED
+<code>[GAP: 3.1]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.embeddings</code></td>
+<td><code>vasic-digital/Embeddings</code></td>
+<td>Embedding generation (OpenAI-compat → HelixLLM)</td>
+<td>PRODUCTION / VERIFIED — no native llama.cpp backend
+<code>[GAP: 2.7]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.rag</code></td>
+<td><code>vasic-digital/RAG</code></td>
+<td>Retrieval-augmented generation glue;
+<code>pkg/{chunker,retriever,reranker,hybrid,pipeline}</code></td>
+<td>PRODUCTION / VERIFIED (layout re-read Pass 3)</td>
+</tr>
+<tr>
+<td><code>digital.vasic.eventbus</code></td>
+<td><code>vasic-digital/EventBus</code></td>
+<td>In-proc bus (<code>pkg/bus</code>) + <strong>NATS JetStream</strong>
+(<code>pkg/nats</code>)</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.background</code></td>
+<td><code>vasic-digital/BackgroundTasks</code></td>
+<td>Postgres task queue, DLQ, retry/backoff, stuck-detect,
+Prometheus</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.cache</code></td>
+<td><code>vasic-digital/cache</code></td>
+<td>L1/L2 cache (in-mem + Redis + Postgres);
+<code>pkg/{memory,redis,postgres,distributed,policy,service}</code></td>
+<td>PRODUCTION / VERIFIED (layout re-read Pass 3)</td>
+</tr>
+<tr>
+<td><code>digital.vasic.storage</code></td>
+<td><code>vasic-digital/Storage</code></td>
+<td>MinIO/S3 object tier + local FS + signed URLs</td>
+<td>PRODUCTION / VERIFIED — MinIO signed-URL parity
+<code>[GAP: 3.2]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.filesystem</code></td>
+<td><code>vasic-digital/Filesystem</code></td>
+<td>SMB/FTP/NFS/WebDAV/local; <code>OpenSeekable</code> for Range</td>
+<td>PRODUCTION / VERIFIED — <strong>no HTTP(S) source</strong>
+<code>[GAP: 6.2]</code></td>
+</tr>
+<tr>
+<td><code>vasic-digital/Catalogizer</code></td>
+<td><code>vasic-digital/Catalogizer</code></td>
+<td>Asset store/serve base (RBAC, WS, SQLCipher-at-rest)</td>
+<td>PRODUCTION / VERIFIED — not decoupled; <code>Streaming</code> = WS
+hub <code>[GAP: 6.1]</code></td>
+</tr>
+<tr>
+<td><code>herald</code></td>
+<td><code>vasic-digital/herald</code></td>
+<td>Messenger fan-in/out; <code>pkg/messenger.Messenger</code></td>
+<td>FOUNDATION / VERIFIED — MTProto in QA harness, Max stub
+<code>[GAP: 5.1]</code></td>
+</tr>
+<tr>
+<td><code>HelixDevelopment/HelixLLM</code></td>
+<td><code>HelixDevelopment/HelixLLM</code></td>
+<td>Local llama.cpp serving; <code>/v1/embeddings</code>,
+<code>/v1/chat/*</code></td>
+<td>PRODUCTION / VERIFIED — default embedder is
+<code>HashEmbedder</code> stub <code>[GAP: 2.1]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.llmprovider</code></td>
+<td><code>vasic-digital/LLMProvider</code></td>
+<td>40+ provider adapters; retry/circuit-breaker/health</td>
+<td>PRODUCTION / FLAGGED (adapters not each audited)</td>
+</tr>
+<tr>
+<td><code>dev.helix.agent</code> (HelixAgent)</td>
+<td><code>HelixDevelopment/HelixAgent</code></td>
+<td>Ensemble/debate reasoning</td>
+<td>FOUNDATION / FLAGGED — identity blur, residual stubs
+<code>[GAP: 2.2]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.llmsverifier</code></td>
+<td><code>vasic-digital/LLMsVerifier</code></td>
+<td>Model scoring for fallback chain</td>
+<td>PRODUCTION core / VERIFIED — port <code>:7061</code> vs
+<code>:8080</code> <code>[GAP: 2.5]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.visionengine</code></td>
+<td><code>vasic-digital/visionengine</code></td>
+<td>LLM-vision adapters</td>
+<td>FOUNDATION / VERIFIED — <strong>no OCR engine</strong>
+<code>[GAP: 2.6]</code></td>
+</tr>
+<tr>
+<td><code>HelixDevelopment/helix_skills</code></td>
+<td><code>HelixDevelopment/helix_skills</code></td>
+<td>Skill-Graph DAG (atomic→composite→umbrella)</td>
+<td>FOUNDATION/MVP / VERIFIED — <strong>no execution engine</strong>
+<code>[GAP: 4.1]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.auth</code></td>
+<td><code>vasic-digital/auth</code></td>
+<td>JWT + API-keys + OAuth2</td>
+<td>PRODUCTION / VERIFIED — JWT default HMAC-SHA256
+<code>[GAP: 7.2]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.security</code></td>
+<td><code>vasic-digital/security</code></td>
+<td>AES-256-GCM + Argon2id; <code>pkg/securestorage</code>,
+<code>pkg/pii</code>, <code>pkg/policy</code></td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.observability</code></td>
+<td><code>vasic-digital/observability</code></td>
+<td>OTel + Prometheus + logrus + ClickHouse;
+<code>pkg/health</code></td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.discovery</code></td>
+<td><code>vasic-digital/discovery</code></td>
+<td>Service discovery/scan; <code>pkg/report</code>,
+<code>pkg/scanner</code></td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.mdns</code></td>
+<td><code>vasic-digital/mdns</code></td>
+<td>mDNS advertisement/browse</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>port_prefix</code></td>
+<td><code>vasic-digital/port_prefix</code></td>
+<td>Deterministic host-port bands
+(<code>Exposed(prefix,port,taken)</code>)</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>vasic-digital/http3</code></td>
+<td><code>vasic-digital/http3</code></td>
+<td>quic-go/http3 transport wrapper</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.ratelimiter</code></td>
+<td><code>vasic-digital/ratelimiter</code></td>
+<td>Token-bucket / sliding-window limiting</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.middleware</code></td>
+<td><code>vasic-digital/middleware</code></td>
+<td>CORS / request-id / recovery</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.streaming</code></td>
+<td><code>vasic-digital/Streaming</code></td>
+<td>WebSocket hub (<strong>not</strong> media byte streaming)</td>
+<td>PRODUCTION / VERIFIED <code>[GAP: 6.1 note]</code></td>
+</tr>
+<tr>
+<td><code>digital.vasic.messaging</code></td>
+<td><code>vasic-digital/Messaging</code></td>
+<td>Kafka/RabbitMQ for firehose streams;
+<code>pkg/{broker,producer,consumer,kafka,rabbitmq}</code></td>
+<td>PRODUCTION / VERIFIED (layout re-read Pass 3)</td>
+</tr>
+<tr>
+<td><code>milos85vasic/Boba-Base</code></td>
+<td><code>milos85vasic/Boba-Base</code></td>
+<td>Torrent search/download; SSE + <code>POST /api/v1/hooks</code></td>
+<td>FOUNDATION / VERIFIED — bespoke callback
+<code>[GAP: 6.4]</code></td>
+</tr>
+<tr>
+<td><code>milos85vasic/YT-DLP</code> (MeTube)</td>
+<td><code>milos85vasic/YT-DLP</code></td>
+<td>Video/streaming download</td>
+<td>FOUNDATION / VERIFIED — <strong>poll-only, no webhook</strong>
+<code>[GAP: 6.5]</code></td>
+</tr>
+<tr>
+<td><code>vasic-digital/lets_encrypt</code></td>
+<td><code>vasic-digital/lets_encrypt</code></td>
+<td>ACME certs (HTTP-01/DNS-01)</td>
+<td>PRODUCTION / VERIFIED</td>
+</tr>
+<tr>
+<td><code>vasic-digital/containers</code></td>
+<td><code>vasic-digital/containers</code></td>
+<td>Rootless Podman orchestration</td>
+<td>PRODUCTION <code>[CONSTITUTION §11.4.76]</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="new-submodules-to-build-build-new">4. New submodules to build
+<code>[BUILD-NEW]</code></h2>
+<p>Each new submodule is decoupled (own repo under
+<code>vasic-digital</code>/<code>HelixDevelopment</code>, own
+<code>upstreams/</code> recipes, project-not-aware). Priority is from
+the gap register §11.</p>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 25%" />
+<col style="width: 23%" />
+<col style="width: 23%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Submodule</th>
+<th>Built on</th>
+<th>Priority</th>
+<th>Why new</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Asset Service</td>
+<td>Catalogizer + storage</td>
+<td>P1</td>
+<td>Decouple Catalogizer into a reusable asset store/serve</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Download Manager</td>
+<td>filesystem + http3</td>
+<td><strong>P0</strong></td>
+<td>No generic multi-protocol downloader exists
+<code>[GAP: 6.3]</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Max messenger adapter</td>
+<td>herald <code>Messenger</code> seam</td>
+<td><strong>P0</strong></td>
+<td>Herald <code>max.go</code> is an empty stub
+<code>[GAP: 5.1.2]</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>OCR adapter</td>
+<td>visionengine seam</td>
+<td><strong>P0</strong></td>
+<td>VisionEngine has no OCR engine <code>[GAP: 2.6]</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>User Service</td>
+<td>auth + security/pkg/policy</td>
+<td><strong>P0</strong></td>
+<td>Three-tier multi-tenant RBAC service</td>
+</tr>
+<tr>
+<td>6</td>
+<td>MeTube completion webhook</td>
+<td>MeTube sidecar</td>
+<td><strong>P0</strong></td>
+<td>Poll-only today <code>[GAP: 6.5]</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Standardized callback/task module</td>
+<td>Boba/MeTube/DLM</td>
+<td>P1</td>
+<td>Uniform 3rd-party async contract <code>[GAP: 6.6]</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Event Bus service (thin)</td>
+<td>eventbus (JetStream)</td>
+<td>P1</td>
+<td>Client-facing subscription surface</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ThreadReader abstraction</td>
+<td>herald channels</td>
+<td>P1</td>
+<td>Root+organic-reply assembly across messengers
+<code>[GAP: 5.1.3]</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Semantic-search service</td>
+<td>embeddings+vectordb+rag</td>
+<td><strong>P0</strong></td>
+<td>Lumen-style in-house search service</td>
+</tr>
+</tbody>
+</table>
+<h2 id="service-submodule-dependency-matrix">5. Service → submodule
+dependency matrix</h2>
+<table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service ↓ / Engine →</th>
+<th style="text-align: center;">database</th>
+<th style="text-align: center;">vectordb</th>
+<th style="text-align: center;">eventbus</th>
+<th style="text-align: center;">background</th>
+<th style="text-align: center;">storage</th>
+<th style="text-align: center;">filesystem</th>
+<th style="text-align: center;">auth</th>
+<th style="text-align: center;">security</th>
+<th style="text-align: center;">herald</th>
+<th style="text-align: center;">HelixLLM</th>
+<th style="text-align: center;">helix_skills</th>
+<th style="text-align: center;">Catalogizer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ingestion</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Processing</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Semantic-search</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Asset Service</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Download Manager</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>User Service</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>API Gateway</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Explanation.</strong> The matrix shows which engine each
+service embeds. Note three structural facts it encodes: (1)
+<code>security</code> is used by <em>every</em> data-touching service
+(encryption is not optional); (2) only the Processing and
+Semantic-search services depend on the LLM stack, which isolates the
+aggressive-SLO API path from slow model calls; (3) <code>eventbus</code>
+is nearly universal because the system is event-driven end-to-end — even
+the Asset Service emits <code>asset.stored</code>.</p>
+<h2 id="component-dependency-diagram">6. Component dependency
+diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 885px; background-color: white;" viewBox="0 0 885 1116.4219970703125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .s rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .s polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .s ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .s circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .s path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .s tspan{fill:rgb(234, 255, 240)!important;}#my-svg .e rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .e polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .e ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .e circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .e path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .e tspan{fill:rgb(230, 246, 255)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Engines" data-look="classic"><rect style="" x="603" y="8" width="274" height="1100.422001838684"/><g class="cluster-label" transform="translate(710.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Engines</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Services" data-look="classic"><rect style="" x="8" y="17.25" width="545" height="1091.172001838684"/><g class="cluster-label" transform="translate(249.5, 17.25)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Services</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M500.5,80.196L509.25,77.913C518,75.63,535.5,71.065,548.417,68.783C561.333,66.5,569.667,66.5,578,66.5C586.333,66.5,594.667,66.5,612.25,66.5C629.833,66.5,656.667,66.5,670.083,66.5L683.5,66.5" id="my-svg-L_ING_HERALD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ING_HERALD_0" data-points="W3sieCI6NTAwLjUsInkiOjgwLjE5NTY1MjE3MzkxMzA1fSx7IngiOjU1MywieSI6NjYuNX0seyJ4Ijo1NzgsInkiOjY2LjV9LHsieCI6NjAzLCJ5Ijo2Ni41fSx7IngiOjY4Ny41LCJ5Ijo2Ni41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M500.5,93.647L509.25,93.247C518,92.848,535.5,92.049,548.417,91.649C561.333,91.25,569.667,91.25,578,91.25C586.333,91.25,594.667,91.25,620.434,192.475C646.201,293.699,689.402,496.148,711.003,597.373L732.603,698.597" id="my-svg-L_ING_DB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ING_DB_0" data-points="W3sieCI6NTAwLjUsInkiOjkzLjY0NjczOTEzMDQzNDc4fSx7IngiOjU1MywieSI6OTEuMjV9LHsieCI6NTc4LCJ5Ijo5MS4yNX0seyJ4Ijo2MDMsInkiOjkxLjI1fSx7IngiOjczMy40Mzc4Mzc3OTQ2NDYzLCJ5Ijo3MDIuNTA5MzA4MDUwNzE1OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M500.5,104.516L509.25,105.639C518,106.761,535.5,109.005,548.417,110.128C561.333,111.25,569.667,111.25,578,111.25C586.333,111.25,594.667,111.25,618.082,127.51C641.497,143.771,679.993,176.292,699.241,192.552L718.49,208.812" id="my-svg-L_ING_EB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ING_EB_0" data-points="W3sieCI6NTAwLjUsInkiOjEwNC41MTYzMDQzNDc4MjYxfSx7IngiOjU1MywieSI6MTExLjI1fSx7IngiOjU3OCwieSI6MTExLjI1fSx7IngiOjYwMywieSI6MTExLjI1fSx7IngiOjcyMS41NDUyNDEyNTM2MDg1LCJ5IjoyMTEuMzkzNzgyNjE1NjYxNjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M500.5,115.386L509.25,118.03C518,120.674,535.5,125.962,548.417,128.606C561.333,131.25,569.667,131.25,578,131.25C586.333,131.25,594.667,131.25,620.979,278.598C647.291,425.946,691.582,720.643,713.728,867.991L735.874,1015.339" id="my-svg-L_ING_SEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ING_SEC_0" data-points="W3sieCI6NTAwLjUsInkiOjExNS4zODU4Njk1NjUyMTczOX0seyJ4Ijo1NTMsInkiOjEzMS4yNX0seyJ4Ijo1NzgsInkiOjEzMS4yNX0seyJ4Ijo2MDMsInkiOjEzMS4yNX0seyJ4Ijo3MzYuNDY4MDgyNzU4NDAyNywieSI6MTAxOS4yOTQ1NzQ3Mzc1NDg4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M146.74,426.552L170.783,383.876C194.827,341.201,242.913,255.851,291.457,213.175C340,170.5,389,170.5,432.667,170.5C476.333,170.5,514.667,170.5,538,170.5C561.333,170.5,569.667,170.5,578,170.5C586.333,170.5,594.667,170.5,614.656,177.06C634.645,183.621,666.29,196.741,682.113,203.301L697.935,209.862" id="my-svg-L_PROC_EB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_EB_0" data-points="W3sieCI6MTQ2LjczOTk0OTI5NDEwMDUsInkiOjQyNi41NTE2NzQ4NDI4MzQ1fSx7IngiOjI5MSwieSI6MTcwLjV9LHsieCI6NDM4LCJ5IjoxNzAuNX0seyJ4Ijo1NTMsInkiOjE3MC41fSx7IngiOjU3OCwieSI6MTcwLjV9LHsieCI6NjAzLCJ5IjoxNzAuNX0seyJ4Ijo3MDEuNjMwNDY2OTAwMjQyMywieSI6MjExLjM5Mzc4MjYxNTY2MTYyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M203.5,429.108L218.083,424.745C232.667,420.382,261.833,411.656,300.917,407.292C340,402.929,389,402.929,432.667,402.929C476.333,402.929,514.667,402.929,538,402.929C561.333,402.929,569.667,402.929,578,402.929C586.333,402.929,594.667,402.929,618.861,434.918C643.055,466.907,683.11,530.884,703.137,562.873L723.165,594.862" id="my-svg-L_PROC_BG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_BG_0" data-points="W3sieCI6MjAzLjUsInkiOjQyOS4xMDgzMDkxMTAwMDU3fSx7IngiOjI5MSwieSI6NDAyLjkyOTEwMTk0Mzk2OTd9LHsieCI6NDM4LCJ5Ijo0MDIuOTI5MTAxOTQzOTY5N30seyJ4Ijo1NTMsInkiOjQwMi45MjkxMDE5NDM5Njk3fSx7IngiOjU3OCwieSI6NDAyLjkyOTEwMTk0Mzk2OTd9LHsieCI6NjAzLCJ5Ijo0MDIuOTI5MTAxOTQzOTY5N30seyJ4Ijo3MjUuMjg3MTg3ODI1NTM3MiwieSI6NTk4LjI1MTk4NjUwMzYwMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M203.5,437.997L218.083,435.486C232.667,432.974,261.833,427.952,300.917,425.44C340,422.929,389,422.929,432.667,422.929C476.333,422.929,514.667,422.929,538,422.929C561.333,422.929,569.667,422.929,578,422.929C586.333,422.929,594.667,422.929,615.971,409.665C637.276,396.4,671.552,369.871,688.69,356.607L705.828,343.342" id="my-svg-L_PROC_SK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_SK_0" data-points="W3sieCI6MjAzLjUsInkiOjQzNy45OTcxOTc5OTg4OTQ2fSx7IngiOjI5MSwieSI6NDIyLjkyOTEwMTk0Mzk2OTd9LHsieCI6NDM4LCJ5Ijo0MjIuOTI5MTAxOTQzOTY5N30seyJ4Ijo1NTMsInkiOjQyMi45MjkxMDE5NDM5Njk3fSx7IngiOjU3OCwieSI6NDIyLjkyOTEwMTk0Mzk2OTd9LHsieCI6NjAzLCJ5Ijo0MjIuOTI5MTAxOTQzOTY5N30seyJ4Ijo3MDguOTkxNDY0MTU3MTQ4OSwieSI6MzQwLjg5Mzc4MjYxNTY2MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M203.5,464.108L218.083,467.037C232.667,469.965,261.833,475.822,300.917,478.751C340,481.679,389,481.679,432.667,481.679C476.333,481.679,514.667,481.679,538,481.679C561.333,481.679,569.667,481.679,578,481.679C586.333,481.679,594.667,481.679,613.094,474.675C631.52,467.672,660.041,453.664,674.301,446.661L688.561,439.657" id="my-svg-L_PROC_LLM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_LLM_0" data-points="W3sieCI6MjAzLjUsInkiOjQ2NC4xMDgzMDkxMTAwMDU3fSx7IngiOjI5MSwieSI6NDgxLjY3OTEwMTk0Mzk2OTd9LHsieCI6NDM4LCJ5Ijo0ODEuNjc5MTAxOTQzOTY5N30seyJ4Ijo1NTMsInkiOjQ4MS42NzkxMDE5NDM5Njk3fSx7IngiOjU3OCwieSI6NDgxLjY3OTEwMTk0Mzk2OTd9LHsieCI6NjAzLCJ5Ijo0ODEuNjc5MTAxOTQzOTY5N30seyJ4Ijo2OTIuMTUxNTIzODA3MjgxNywieSI6NDM3Ljg5Mzc4MjYxNTY2MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M176.369,473.552L195.474,484.025C214.579,494.498,252.79,515.445,296.395,525.918C340,536.391,389,536.391,432.667,536.391C476.333,536.391,514.667,536.391,538,536.391C561.333,536.391,569.667,536.391,578,536.391C586.333,536.391,594.667,536.391,617.72,563.755C640.773,591.119,678.545,645.846,697.431,673.21L716.318,700.573" id="my-svg-L_PROC_DB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_DB_0" data-points="W3sieCI6MTc2LjM2ODUzNDI3MzQ4NjksInkiOjQ3My41NTE2NzQ4NDI4MzQ1fSx7IngiOjI5MSwieSI6NTM2LjM5MTIyNTgxNDgxOTN9LHsieCI6NDM4LCJ5Ijo1MzYuMzkxMjI1ODE0ODE5M30seyJ4Ijo1NTMsInkiOjUzNi4zOTEyMjU4MTQ4MTkzfSx7IngiOjU3OCwieSI6NTM2LjM5MTIyNTgxNDgxOTN9LHsieCI6NjAzLCJ5Ijo1MzYuMzkxMjI1ODE0ODE5M30seyJ4Ijo3MTguNTg5ODc2NDcxNDgwNiwieSI6NzAzLjg2NTMwMTU5OTAwMDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M158.922,473.552L180.935,493.9C202.948,514.248,246.974,554.945,277.82,575.293C308.667,595.641,326.333,595.641,335.167,595.641L344,595.641" id="my-svg-L_PROC_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_SEM_0" data-points="W3sieCI6MTU4LjkyMjQ5NzUzMDE0MzYsInkiOjQ3My41NTE2NzQ4NDI4MzQ1fSx7IngiOjI5MSwieSI6NTk1LjY0MTIyNTgxNDgxOTN9LHsieCI6MzQ4LCJ5Ijo1OTUuNjQxMjI1ODE0ODE5M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M528,579.989L532.167,579.264C536.333,578.54,544.667,577.091,553,576.366C561.333,575.641,569.667,575.641,578,575.641C586.333,575.641,594.667,575.641,614.719,568.966C634.771,562.291,666.542,548.941,682.427,542.265L698.312,535.59" id="my-svg-L_SEM_VDB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEM_VDB_0" data-points="W3sieCI6NTI4LCJ5Ijo1NzkuOTg5MDUxOTAxNzc1OH0seyJ4Ijo1NTMsInkiOjU3NS42NDEyMjU4MTQ4MTkzfSx7IngiOjU3OCwieSI6NTc1LjY0MTIyNTgxNDgxOTN9LHsieCI6NjAzLCJ5Ijo1NzUuNjQxMjI1ODE0ODE5M30seyJ4Ijo3MDIsInkiOjUzNC4wNDA3NDU2Mzc3MTI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M528,604.907L532.167,605.336C536.333,605.765,544.667,606.623,553,607.052C561.333,607.481,569.667,607.481,578,607.481C586.333,607.481,594.667,607.481,618.502,579.76C642.337,552.039,681.674,496.598,701.343,468.877L721.012,441.156" id="my-svg-L_SEM_LLM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEM_LLM_0" data-points="W3sieCI6NTI4LCJ5Ijo2MDQuOTA2OTYxMzU4MTExOX0seyJ4Ijo1NTMsInkiOjYwNy40ODA3NzY3ODY4MDQyfSx7IngiOjU3OCwieSI6NjA3LjQ4MDc3Njc4NjgwNDJ9LHsieCI6NjAzLCJ5Ijo2MDcuNDgwNzc2Nzg2ODA0Mn0seyJ4Ijo3MjMuMzI2MTY4NTI5MjY3MiwieSI6NDM3Ljg5Mzc4MjYxNTY2MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M522.879,619.141L527.899,620.531C532.919,621.921,542.96,624.701,552.146,626.091C561.333,627.481,569.667,627.481,578,627.481C586.333,627.481,594.667,627.481,620.621,564.097C646.576,500.713,690.152,373.945,711.94,310.561L733.728,247.177" id="my-svg-L_SEM_EB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEM_EB_0" data-points="W3sieCI6NTIyLjg3ODcwOTU3NjU4NTcsInkiOjYxOS4xNDEyMjU4MTQ4MTkzfSx7IngiOjU1MywieSI6NjI3LjQ4MDc3Njc4NjgwNDJ9LHsieCI6NTc4LCJ5Ijo2MjcuNDgwNzc2Nzg2ODA0Mn0seyJ4Ijo2MDMsInkiOjYyNy40ODA3NzY3ODY4MDQyfSx7IngiOjczNS4wMjgwMzAwMzYxODM2LCJ5IjoyNDMuMzkzNzgyNjE1NjYxNjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M509.349,771.714L516.624,769.318C523.899,766.922,538.45,762.129,549.891,759.733C561.333,757.337,569.667,757.337,578,757.337C586.333,757.337,594.667,757.337,618.427,784.291C642.188,811.244,681.376,865.152,700.97,892.105L720.565,919.059" id="my-svg-L_ASSET_CAT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_CAT_0" data-points="W3sieCI6NTA5LjM0ODU2MzE2MzU5OTksInkiOjc3MS43MTQ0MjEyNzIyNzc4fSx7IngiOjU1MywieSI6NzU3LjMzNjk5NDE3MTE0MjZ9LHsieCI6NTc4LCJ5Ijo3NTcuMzM2OTk0MTcxMTQyNn0seyJ4Ijo2MDMsInkiOjc1Ny4zMzY5OTQxNzExNDI2fSx7IngiOjcyMi45MTY1ODAwMDUzMDQ5LCJ5Ijo5MjIuMjk0NTc0NzM3NTQ4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M517,782.933L523,782.001C529,781.068,541,779.202,551.167,778.27C561.333,777.337,569.667,777.337,578,777.337C586.333,777.337,594.667,777.337,615.399,785.287C636.131,793.236,669.263,809.136,685.828,817.086L702.394,825.035" id="my-svg-L_ASSET_ST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_ST_0" data-points="W3sieCI6NTE3LCJ5Ijo3ODIuOTMzNDA2MTMzMjM3MX0seyJ4Ijo1NTMsInkiOjc3Ny4zMzY5OTQxNzExNDI2fSx7IngiOjU3OCwieSI6Nzc3LjMzNjk5NDE3MTE0MjZ9LHsieCI6NjAzLCJ5Ijo3NzcuMzM2OTk0MTcxMTQyNn0seyJ4Ijo3MDYsInkiOjgyNi43NjU4MjY0MTMyMzExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M517,796.673L523,796.783C529,796.894,541,797.116,551.167,797.226C561.333,797.337,569.667,797.337,578,797.337C586.333,797.337,594.667,797.337,619.156,833.748C643.645,870.159,684.289,942.98,704.612,979.391L724.934,1015.802" id="my-svg-L_ASSET_SEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_SEC_0" data-points="W3sieCI6NTE3LCJ5Ijo3OTYuNjcyNTM2NTY4MDE5N30seyJ4Ijo1NTMsInkiOjc5Ny4zMzY5OTQxNzExNDI2fSx7IngiOjU3OCwieSI6Nzk3LjMzNjk5NDE3MTE0MjZ9LHsieCI6NjAzLCJ5Ijo3OTcuMzM2OTk0MTcxMTQyNn0seyJ4Ijo3MjYuODgzNjgwNzA1MzU1MSwieSI6MTAxOS4yOTQ1NzQ3Mzc1NDg4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M517,810.412L523,811.566C529,812.72,541,815.029,551.167,816.183C561.333,817.337,569.667,817.337,578,817.337C586.333,817.337,594.667,817.337,614.375,806.201C634.083,795.064,665.166,772.792,680.707,761.656L696.249,750.519" id="my-svg-L_ASSET_DB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_DB_0" data-points="W3sieCI6NTE3LCJ5Ijo4MTAuNDExNjY3MDAyODAyM30seyJ4Ijo1NTMsInkiOjgxNy4zMzY5OTQxNzExNDI2fSx7IngiOjU3OCwieSI6ODE3LjMzNjk5NDE3MTE0MjZ9LHsieCI6NjAzLCJ5Ijo4MTcuMzM2OTk0MTcxMTQyNn0seyJ4Ijo2OTkuNSwieSI6NzQ4LjE4OTM3OTE2Mjc2MTd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M171.082,741.714L191.069,729.217C211.055,716.72,251.027,691.725,295.514,679.228C340,666.731,389,666.731,432.667,666.731C476.333,666.731,514.667,666.731,538,666.731C561.333,666.731,569.667,666.731,578,666.731C586.333,666.731,594.667,666.731,617.479,691.099C640.292,715.468,677.584,764.205,696.229,788.574L714.875,812.942" id="my-svg-L_DLM_ST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DLM_ST_0" data-points="W3sieCI6MTcxLjA4MjM4MjUyOTk4MzgyLCJ5Ijo3NDEuNzE0NDIxMjcyMjc3OH0seyJ4IjoyOTEsInkiOjY2Ni43MzA3NzY3ODY4MDQyfSx7IngiOjQzOCwieSI6NjY2LjczMDc3Njc4NjgwNDJ9LHsieCI6NTUzLCJ5Ijo2NjYuNzMwNzc2Nzg2ODA0Mn0seyJ4Ijo1NzgsInkiOjY2Ni43MzA3NzY3ODY4MDQyfSx7IngiOjYwMywieSI6NjY2LjczMDc3Njc4NjgwNDJ9LHsieCI6NzE3LjMwNjA4MDkzMzU2ODUsInkiOjgxNi4xMTkwMDUxODU2Mzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M185.37,741.714L202.975,733.738C220.58,725.762,255.79,709.81,297.895,701.834C340,693.858,389,693.858,432.667,693.858C476.333,693.858,514.667,693.858,538,693.858C561.333,693.858,569.667,693.858,578,693.858C586.333,693.858,594.667,693.858,613.635,686.068C632.604,678.277,662.207,662.696,677.009,654.906L691.811,647.115" id="my-svg-L_DLM_BG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DLM_BG_0" data-points="W3sieCI6MTg1LjM3MDA0MjEwMjQ4OTE1LCJ5Ijo3NDEuNzE0NDIxMjcyMjc3OH0seyJ4IjoyOTEsInkiOjY5My44NTgyMDM4ODc5Mzk1fSx7IngiOjQzOCwieSI6NjkzLjg1ODIwMzg4NzkzOTV9LHsieCI6NTUzLCJ5Ijo2OTMuODU4MjAzODg3OTM5NX0seyJ4Ijo1NzgsInkiOjY5My44NTgyMDM4ODc5Mzk1fSx7IngiOjYwMywieSI6NjkzLjg1ODIwMzg4NzkzOTV9LHsieCI6Njk1LjM1MDU5MDg4MTIzNCwieSI6NjQ1LjI1MTk4NjUwMzYwMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M508.195,977.922L515.662,975.422C523.13,972.922,538.065,967.922,549.699,965.422C561.333,962.922,569.667,962.922,578,962.922C586.333,962.922,594.667,962.922,618.272,930.143C641.877,897.363,680.753,831.805,700.192,799.025L719.63,766.246" id="my-svg-L_USER_DB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_USER_DB_0" data-points="W3sieCI6NTA4LjE5NDgwNTE5NDgwNTIsInkiOjk3Ny45MjIwMDE4Mzg2ODQxfSx7IngiOjU1MywieSI6OTYyLjkyMjAwMTgzODY4NDF9LHsieCI6NTc4LCJ5Ijo5NjIuOTIyMDAxODM4Njg0MX0seyJ4Ijo2MDMsInkiOjk2Mi45MjIwMDE4Mzg2ODQxfSx7IngiOjcyMS42NzA0NDQ1MDI2Mjc0LCJ5Ijo3NjIuODA1MzMxNjE4MTY2N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M514,1014.144L520.5,1015.232C527,1016.32,540,1018.496,550.667,1019.584C561.333,1020.672,569.667,1020.672,578,1020.672C586.333,1020.672,594.667,1020.672,611.425,1022.705C628.184,1024.739,653.367,1028.805,665.959,1030.839L678.551,1032.872" id="my-svg-L_USER_SEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_USER_SEC_0" data-points="W3sieCI6NTE0LCJ5IjoxMDE0LjE0Mzc0MDk2OTExODl9LHsieCI6NTUzLCJ5IjoxMDIwLjY3MjAwMTgzODY4NDF9LHsieCI6NTc4LCJ5IjoxMDIwLjY3MjAwMTgzODY4NDF9LHsieCI6NjAzLCJ5IjoxMDIwLjY3MjAwMTgzODY4NDF9LHsieCI6NjgyLjUsInkiOjEwMzMuNTA5NTUzMjY1Mzk3NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M209.814,1026.422L223.345,1022.255C236.876,1018.089,263.938,1009.755,288.636,1005.589C313.333,1001.422,335.667,1001.422,346.833,1001.422L358,1001.422" id="my-svg-L_GW_USER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GW_USER_0" data-points="W3sieCI6MjA5LjgxNDQzMjk4OTY5MDcyLCJ5IjoxMDI2LjQyMjAwMTgzODY4NH0seyJ4IjoyOTEsInkiOjEwMDEuNDIyMDAxODM4Njg0MX0seyJ4IjozNjIsInkiOjEwMDEuNDIyMDAxODM4Njg0MX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M210,1054.779L223.5,1055.636C237,1056.493,264,1058.208,302,1059.065C340,1059.922,389,1059.922,432.667,1059.922C476.333,1059.922,514.667,1059.922,538,1059.922C561.333,1059.922,569.667,1059.922,578,1059.922C586.333,1059.922,594.667,1059.922,611.422,1058.348C628.177,1056.774,653.354,1053.627,665.942,1052.053L678.531,1050.479" id="my-svg-L_GW_SEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GW_SEC_0" data-points="W3sieCI6MjEwLCJ5IjoxMDU0Ljc3OTE0NDY5NTgyN30seyJ4IjoyOTEsInkiOjEwNTkuOTIyMDAxODM4Njg0fSx7IngiOjQzOCwieSI6MTA1OS45MjIwMDE4Mzg2ODR9LHsieCI6NTUzLCJ5IjoxMDU5LjkyMjAwMTgzODY4NH0seyJ4Ijo1NzgsInkiOjEwNTkuOTIyMDAxODM4Njg0fSx7IngiOjYwMywieSI6MTA1OS45MjIwMDE4Mzg2ODR9LHsieCI6NjgyLjUsInkiOjEwNDkuOTgzMDkzNDExMzgzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M234,784.357L243.5,786.167C253,787.976,272,791.595,292.167,793.405C312.333,795.214,333.667,795.214,344.333,795.214L355,795.214" id="my-svg-L_DLM_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DLM_ASSET_0" data-points="W3sieCI6MjM0LCJ5Ijo3ODQuMzU3Mjc4NDE1MTM0OX0seyJ4IjoyOTEsInkiOjc5NS4yMTQ0MjEyNzIyNzc4fSx7IngiOjM1OSwieSI6Nzk1LjIxNDQyMTI3MjI3Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_ING_HERALD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ING_DB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ING_EB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ING_SEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_EB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_BG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_SK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_LLM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_DB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEM_VDB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEM_LLM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEM_EB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_CAT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_ST_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_SEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_DB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DLM_ST_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DLM_BG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_USER_DB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_USER_SEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_GW_USER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_GW_SEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(291, 795.2144212722778)"><g class="label" data-id="L_DLM_ASSET_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-31.5" y="0" width="64" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">callback</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default s" id="my-svg-flowchart-ING-0" data-look="classic" transform="translate(438, 96.5)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-62.5" y="-23.5" width="125" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Ingestion</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-PROC-1" data-look="classic" transform="translate(133.5, 450.0516748428345)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-70" y="-23.5" width="140" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Processing</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-SEM-2" data-look="classic" transform="translate(438, 595.6412258148193)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-90" y="-23.5" width="180" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic-search</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-ASSET-3" data-look="classic" transform="translate(438, 795.2144212722778)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-79" y="-23.5" width="158" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-DLM-4" data-look="classic" transform="translate(133.5, 765.2144212722778)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-100.5" y="-23.5" width="201" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Manager</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-USER-5" data-look="classic" transform="translate(438, 1001.4220018386841)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-76" y="-23.5" width="152" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">User</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default s" id="my-svg-flowchart-GW-6" data-look="classic" transform="translate(133.5, 1049.922001838684)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-76.5" y="-23.5" width="153" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">API</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Gateway</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-DB-7" data-look="classic" transform="translate(740, 733.1245594024658)"><path d="M0,9.83009708737864 a40.5,9.83009708737864 0,0,0 81,0 a40.5,9.83009708737864 0,0,0 -81,0 l0,41.83009708737864 a40.5,9.83009708737864 0,0,0 81,0 l0,-41.83009708737864" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-40.5, -30.74514563106796)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">database</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-VDB-8" data-look="classic" transform="translate(740, 518.0728845596313)"><path d="M0,9.452736318407961 a38,9.452736318407961 0,0,0 76,0 a38,9.452736318407961 0,0,0 -76,0 l0,41.45273631840796 a38,9.452736318407961 0,0,0 76,0 l0,-41.45273631840796" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-38, -30.17910447761194)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">vectordb</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-EB-9" data-look="classic" transform="translate(740, 226.89378261566162)"><polygon points="8,0 88,0 96,-16 88,-32 8,-32 0,-16" class="label-container" transform="translate(-48,16)" style="fill:#124a63 !important;stroke:#062634 !important"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">eventbus</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-BG-10" data-look="classic" transform="translate(740, 621.7519865036011)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-72" y="-23.5" width="144" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">background</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-ST-11" data-look="classic" transform="translate(740, 843.0821399688721)"><path d="M0,8.808290155440414 a34,8.808290155440414 0,0,0 68,0 a34,8.808290155440414 0,0,0 -68,0 l0,40.80829015544042 a34,8.808290155440414 0,0,0 68,0 l0,-40.80829015544042" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-34, -29.212435233160623)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">storage</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-SEC-12" data-look="classic" transform="translate(740, 1042.7945747375488)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-57.5" y="-23.5" width="115" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">security</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-HERALD-13" data-look="classic" transform="translate(740, 66.5)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-52.5" y="-23.5" width="105" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">herald</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-LLM-14" data-look="classic" transform="translate(740, 414.3937826156616)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-112" y="-23.5" width="224" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixLLM/LLMProvider</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-SK-15" data-look="classic" transform="translate(740, 316.8937826156616)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-69.5" y="-24" width="139" height="48"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">helix_skills</tspan></tspan></text></g></g></g><g class="node default e" id="my-svg-flowchart-CAT-16" data-look="classic" transform="translate(740, 945.7945747375488)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-71.5" y="-23.5" width="143" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Catalogizer</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/component-deps.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram is drawn as two columns — Thready
+services on the left, reused engines on the right — for a single
+structural reason the reader should hold onto: <em>every</em> edge
+points from a service to an engine and never the other way. That
+one-directional shape is what keeps the engines project-not-aware and
+reusable across Helix projects <code>[CONSTITUTION §11.4.28]</code>; the
+moment an engine depended on a Thready service it would stop being a
+general-purpose submodule. Edges mean “depends on / embeds”.</p>
+<p>Reading the services in turn shows how narrow each dependency fan-out
+is. The Ingestion service depends on herald (messenger I/O), database
+(persistence), eventbus (emits <code>post.received</code>) and security
+(session encryption) — and notably <em>not</em> on the LLM stack,
+because ingestion never reasons, it only reads, assembles and persists.
+The Processing service is the busiest — it depends on eventbus and
+background (claim/queue), helix_skills (recipe knowledge), the LLM stack
+(research/analysis), database (state), and calls the Semantic-search
+service to index results. Semantic-search depends on vectordb
+(pgvector), the LLM stack (embeddings), and eventbus (emits
+<code>index.updated</code>).</p>
+<p>The data-and-asset services form the last cluster, and it is where
+the one-way rule is easiest to misread, so the diagram is explicit about
+it. The Asset Service depends on Catalogizer + storage + security +
+database. The Download Manager depends on storage + background and,
+crucially, calls <em>back</em> into the Asset Service on completion (the
+dashed callback edge) — download and storage are separate concerns
+joined by the callback contract. The User Service and API Gateway sit on
+auth + security. No engine depends on a service (dependencies point one
+way, services → engines), which is what keeps the engines reusable in
+other Helix projects.</p>
+<h2 id="maturity-gap-register">7. Maturity &amp; gap register</h2>
+<p>Every component that the gap register flags as less-than-production
+is listed with its plan. None of these is claimed to “work” today; each
+has a <code>[GAP: …]</code> and an owning design doc.</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 17%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Status</th>
+<th>Gap headline</th>
+<th>Plan (where)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixLLM embedder</td>
+<td>PRODUCTION w/ trap</td>
+<td>Default <code>HashEmbedder</code> is non-semantic</td>
+<td>Enforce <code>HELIX_EMBEDDING_PROVIDER=llama</code>, fail loudly
+<code>[GAP: 2.1]</code> → <a
+href="./semantic-search.md">semantic-search.md</a></td>
+</tr>
+<tr>
+<td>VisionEngine</td>
+<td>FOUNDATION</td>
+<td>No OCR engine</td>
+<td>Add Tesseract/PaddleOCR adapter <code>[GAP: 2.6]</code> → <a
+href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td>herald</td>
+<td>FOUNDATION</td>
+<td>MTProto in QA harness; Max empty</td>
+<td>Promote MTProto reader; build Max adapter <code>[GAP: 5.1]</code> →
+<a href="./messenger-ingestion.md">messenger-ingestion.md</a></td>
+</tr>
+<tr>
+<td>helix_skills</td>
+<td>FOUNDATION</td>
+<td>Knowledge units, no run engine</td>
+<td>Build Skill Dispatch Engine <code>[GAP: 4.1]</code> → <a
+href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td>filesystem + Download Mgr</td>
+<td>PRODUCTION / BUILD-NEW</td>
+<td>No HTTP source; no download semantics</td>
+<td>New Download Manager <code>[GAP: 6.2/6.3]</code> → <a
+href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td>MeTube</td>
+<td>FOUNDATION</td>
+<td>Poll-only, no webhook</td>
+<td>Add outbound webhook <code>[GAP: 6.5]</code> → <a
+href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td>Catalogizer</td>
+<td>PRODUCTION</td>
+<td>Not decoupled; Streaming=WS hub</td>
+<td>Decouple Asset Service <code>[GAP: 6.1]</code> → <a
+href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td>auth</td>
+<td>PRODUCTION</td>
+<td>JWT default HMAC-SHA256</td>
+<td>Add RS256/EdDSA + JWKS <code>[GAP: 7.2]</code> → <a
+href="./security-model.md">security-model.md</a></td>
+</tr>
+<tr>
+<td>Security-KMP</td>
+<td>SCAFFOLD (mobile)</td>
+<td>In-memory secret stub</td>
+<td>Native Keystore/Keychain <code>[GAP: 7.3]</code> → <a
+href="./security-model.md">security-model.md</a></td>
+</tr>
+<tr>
+<td>vectordb (non-pgvector)</td>
+<td>PRODUCTION (pgvector)</td>
+<td>Qdrant/Pinecone/Milvus unverified</td>
+<td>Harden Qdrant to parity <code>[GAP: 3.1]</code> → <a
+href="./semantic-search.md">semantic-search.md</a></td>
+</tr>
+<tr>
+<td>session_orchestrator</td>
+<td>DESIGN-ONLY</td>
+<td>Claim registry unimplemented</td>
+<td>Thready single-claim reuses concept <code>[GAP: 2.9]</code> → <a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a></td>
+</tr>
+<tr>
+<td>database partitioning</td>
+<td>PRODUCTION</td>
+<td>No partition/shard helpers</td>
+<td>Time-partition posts <code>[GAP: 3.2]</code> → <a
+href="./data-flow.md">data-flow.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-items">8. Open items</h2>
+<ul>
+<li><code>[CLOSED: CAT-1]</code> (was:
+<code>rag</code>/<code>messaging</code>/<code>cache</code> package
+layouts not re-read at source). <strong>Source-verified this
+pass</strong> (<code>gh api …/contents/pkg</code>):
+<code>digital.vasic.rag</code> =
+<code>pkg/{chunker,retriever,reranker,hybrid,pipeline}</code>;
+<code>digital.vasic.messaging</code> (repo
+<code>vasic-digital/Messaging</code>) =
+<code>pkg/{broker,producer,consumer,kafka,rabbitmq}</code>
+(+<code>i18n</code>); <code>digital.vasic.cache</code> =
+<code>pkg/{cache,memory,redis,postgres,distributed,policy,service}</code>
+— i.e. the L1(in-mem)/L2(Redis)/Postgres tiers the matrix claimed. §3
+rows now marked VERIFIED. No residual verification needed for the
+layouts (adapter-level end-to-end hardening remains the gap register’s
+general anti-bluff sweep, not a CAT open item).</li>
+<li><code>[CLOSED: CAT-2]</code> (was:
+<code>MCP_Module</code>/<code>SkillRegistry</code> import paths FLAGGED
+docs-only). <strong>Source-verified this pass</strong>
+(<code>go.mod</code> read): the tool-exposure module is
+<code>digital.vasic.mcp</code> (repo
+<code>vasic-digital/MCP_Module</code>,
+<code>pkg/{server,client,protocol,registry,adapter,config}</code>) —
+<strong>not</strong> <code>digital.vasic.mcp_module</code>; the
+skill-registry module is <code>dev.helix.agent/skillregistry</code>
+(repo <code>vasic-digital/SkillRegistry</code>, a <strong>flat
+package</strong>:
+<code>executor.go</code>/<code>loader.go</code>/<code>manager.go</code>/
+<code>registry.go</code>/<code>storage.go</code>+<code>storage_postgres.go</code>/<code>validator.go</code>/<code>types.go</code>)
+— <strong>not</strong> <code>digital.vasic.skill_registry</code>. §2.1.2
+now carries the corrected paths. This is an anti-bluff correction: the
+previously-quoted <code>digital.vasic.*</code> paths were wrong and are
+fixed at source.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — The 15 Mandated Test Types</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — The 15 Mandated Test Types</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#the-coverage-cube" id="toc-the-coverage-cube">0. The
+coverage cube</a></li>
+<li><a href="#unit-tests" id="toc-unit-tests">1. Unit tests</a></li>
+<li><a href="#integration-tests" id="toc-integration-tests">2.
+Integration tests</a></li>
+<li><a href="#e2e-tests" id="toc-e2e-tests">3. E2E tests</a></li>
+<li><a href="#full-automation-tests" id="toc-full-automation-tests">4.
+Full-automation tests</a></li>
+<li><a href="#security-tests" id="toc-security-tests">5. Security
+tests</a></li>
+<li><a href="#ddos-tests" id="toc-ddos-tests">6. DDoS tests</a></li>
+<li><a href="#scaling-tests" id="toc-scaling-tests">7. Scaling
+tests</a></li>
+<li><a href="#chaos-tests" id="toc-chaos-tests">8. Chaos tests</a></li>
+<li><a href="#stress-tests" id="toc-stress-tests">9. Stress
+tests</a></li>
+<li><a href="#performance-tests" id="toc-performance-tests">10.
+Performance tests</a></li>
+<li><a href="#benchmarking-tests" id="toc-benchmarking-tests">11.
+Benchmarking tests</a></li>
+<li><a href="#ui-tests" id="toc-ui-tests">12. UI tests</a></li>
+<li><a href="#ux-tests" id="toc-ux-tests">13. UX tests</a></li>
+<li><a href="#challenges" id="toc-challenges">14. Challenges</a></li>
+<li><a href="#helixqa" id="toc-helixqa">15. HelixQA</a></li>
+<li><a href="#anti-bluff-obligations-per-type"
+id="toc-anti-bluff-obligations-per-type">16. Anti-bluff obligations per
+type</a></li>
+<li><a href="#applicability-matrix" id="toc-applicability-matrix">17.
+Applicability matrix</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">18. Gap-register items
+addressed</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — The 15 Mandated Test Types
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/test-types.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./test-strategy.md, ./tdd-skeletons.md, ./performance-and-chaos.md,
+                    ./helixqa-banks.md, ./challenges-scenarios.md, ./static-analysis.md,
+                    ./acceptance-gates.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (testing)</td>
+<td>Initial draft — all 15 types with scope/tools/gates + applicability
+matrix</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 3 — each type’s “Gate” line now carries a stable gate ID
+resolved in acceptance-gates.md</td>
+</tr>
+</tbody>
+</table>
+<p><code>[CONSTITUTION §11.4.27]</code> mandates all fifteen test types
+for <strong>every feature × platform</strong> cell, to <strong>100 %
+test-type coverage</strong>. Mocks/stubs/TODO are allowed <strong>only
+in unit tests</strong>; every other type exercises the <strong>real
+system</strong>. This document defines each type’s
+<strong>scope</strong>, <strong>tools</strong>, <strong>gate</strong>
+(the pass condition that blocks a release when unmet) and
+<strong>Thready mapping</strong>.</p>
+<blockquote>
+<p><strong>Gate IDs.</strong> Each “Gate” line below is made
+machine-checkable — a stable gate ID, precondition, script-decidable
+pass condition, required runtime evidence, tier and blocking severity —
+in the <a href="./acceptance-gates.md">acceptance-gates.md</a> register:
+unit → <code>G-UNIT</code>, integration → <code>G-INT</code>/
+<code>G-CONTRACT</code>/<code>G-DECOUPLE</code>, e2e →
+<code>G-E2E</code>, full-automation → <code>G-FULLAUTO</code>, security
+→ <code>G-SECRET</code>/<code>G-SONAR</code>/<code>G-SNYK</code>, DDoS →
+<code>G-DDOS</code>, scaling → <code>G-SCALE</code>, chaos →
+<code>G-CHAOS</code>/<code>G-DR</code>, stress → <code>G-STRESS</code>,
+performance → <code>G-PERF</code>, benchmarking → <code>G-BENCH</code>,
+UI → <code>G-UI</code>, UX → <code>G-UX</code>, Challenges →
+<code>G-CHALLENGE</code>, HelixQA → <code>G-HELIXQA</code>.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-the-coverage-cube">0. The coverage cube</a></li>
+<li><a href="#1-unit-tests">1. Unit</a> · <a
+href="#2-integration-tests">2. Integration</a> · <a
+href="#3-e2e-tests">3. E2E</a> · <a href="#4-full-automation-tests">4.
+Full-automation</a> · <a href="#5-security-tests">5. Security</a> · <a
+href="#6-ddos-tests">6. DDoS</a> · <a href="#7-scaling-tests">7.
+Scaling</a> · <a href="#8-chaos-tests">8. Chaos</a> · <a
+href="#9-stress-tests">9. Stress</a> · <a
+href="#10-performance-tests">10. Performance</a> · <a
+href="#11-benchmarking-tests">11. Benchmarking</a> · <a
+href="#12-ui-tests">12. UI</a> · <a href="#13-ux-tests">13. UX</a> · <a
+href="#14-challenges">14. Challenges</a> · <a href="#15-helixqa">15.
+HelixQA</a></li>
+<li><a href="#16-anti-bluff-obligations-per-type">16. Anti-bluff
+obligations per type</a></li>
+<li><a href="#17-applicability-matrix">17. Applicability matrix</a></li>
+<li><a href="#18-gap-register-items-addressed">18. Gap-register items
+addressed</a></li>
+</ul>
+<h2 id="the-coverage-cube">0. The coverage cube</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1993px; background-color: white;" viewBox="0 0 1993 487.4000244140625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1620.5,168.7L1634.583,168.617C1648.667,168.533,1676.833,168.367,1702.317,175.333C1727.8,182.299,1750.6,196.398,1762.001,203.447L1773.401,210.496" id="my-svg-L_CELL_GREEN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CELL_GREEN_0" data-points="W3sieCI6MTYyMC41LCJ5IjoxNjguNjk5OTkzMTMzNTQ0OTJ9LHsieCI6MTcwNSwieSI6MTY4LjE5OTk5MzEzMzU0NDkyfSx7IngiOjE3NzYuODAyNzU0MDM3NTAxLCJ5IjoyMTIuNTk5OTkwODQ0NzI2NTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1315,77.8L1319.167,77.8C1323.333,77.8,1331.667,77.8,1360.269,89.904C1388.872,102.008,1437.743,126.216,1462.179,138.32L1486.615,150.425" id="my-svg-L_Features_CELL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Features_CELL_0" data-points="W3sieCI6MTMxNSwieSI6NzcuNzk5OTk1NDIyMzYzMjh9LHsieCI6MTM0MCwieSI6NzcuNzk5OTk1NDIyMzYzMjh9LHsieCI6MTQ5MC4xOTkxMTQyMjY0Mjg1LCJ5IjoxNTIuMTk5OTkzMTMzNTQ0OTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1212,258.6L1233.333,258.6C1254.667,258.6,1297.333,258.6,1343.102,246.496C1388.872,234.392,1437.743,210.184,1462.179,198.08L1486.615,185.975" id="my-svg-L_Platforms_CELL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Platforms_CELL_0" data-points="W3sieCI6MTIxMiwieSI6MjU4LjU5OTk5MDg0NDcyNjU2fSx7IngiOjEzNDAsInkiOjI1OC41OTk5OTA4NDQ3MjY1Nn0seyJ4IjoxNDkwLjE5OTExNDIyNjQyODUsInkiOjE4NC4xOTk5OTMxMzM1NDQ5Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1680,356.8L1684.167,356.8C1688.333,356.8,1696.667,356.8,1712.233,349.751C1727.8,342.701,1750.6,328.602,1762.001,321.553L1773.401,314.504" id="my-svg-L_Types_GREEN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Types_GREEN_0" data-points="W3sieCI6MTY4MCwieSI6MzU2Ljc5OTk5MTYwNzY2Nn0seyJ4IjoxNzA1LCJ5IjozNTYuNzk5OTkxNjA3NjY2fSx7IngiOjE3NzYuODAyNzU0MDM3NTAxLCJ5IjozMTIuMzk5OTkzODk2NDg0NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_CELL_GREEN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Features_CELL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Platforms_CELL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Types_GREEN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="root" transform="translate(1357, 226.19999313354492)"><g class="clusters"><g class="cluster" id="my-svg-Types" data-look="classic"><rect style="" x="8" y="8" width="315" height="245.1999969482422"/><g class="cluster-label" transform="translate(63.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Test-type</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> axis</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (15</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mandated)</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-T-12" data-look="classic" transform="translate(165.5, 130.5999984741211)"><rect class="basic label-container" style="" x="-122.5" y="-85.0999984741211" width="245" height="170.1999969482422"/><g class="label" style="" transform="translate(0, -70.0999984741211)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">unit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> integration</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> e2e</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">full-auto</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">security</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DDoS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scaling</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">chaos</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stress</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> performance</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="5.4em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">benchmarking</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="6.500000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UX</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Challenges</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="7.600000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixQA</tspan></tspan></text></g></g></g></g></g><g class="root" transform="translate(103, 189.59999084472656)"><g class="clusters"><g class="cluster" id="my-svg-Platforms" data-look="classic"><rect style="" x="8" y="8" width="1101" height="122"/><g class="cluster-label" transform="translate(468.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Platform</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> axis</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (app</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> matrix)</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-P1-6" data-look="classic" transform="translate(115, 69)"><rect class="basic label-container" style="" x="-72" y="-23.5" width="144" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> services</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P2-7" data-look="classic" transform="translate(313.5, 69)"><rect class="basic label-container" style="" x="-76.5" y="-23.5" width="153" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Angular</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P3-8" data-look="classic" transform="translate(482.5, 69)"><rect class="basic label-container" style="" x="-42.5" y="-23.5" width="85" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">CLI</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P4-9" data-look="classic" transform="translate(618, 69)"><rect class="basic label-container" style="" x="-43" y="-23.5" width="86" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TUI</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P5-10" data-look="classic" transform="translate(790, 69)"><rect class="basic label-container" style="" x="-79" y="-23.5" width="158" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Desktop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Tauri</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P6-11" data-look="classic" transform="translate(996.5, 69)"><rect class="basic label-container" style="" x="-77.5" y="-23.5" width="155" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Mobile</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> native</tspan></tspan></text></g></g></g></g></g><g class="root" transform="translate(0, 0)"><g class="clusters"><g class="cluster" id="my-svg-Features" data-look="classic"><rect style="" x="8" y="8" width="1307" height="139.5999984741211"/><g class="cluster-label" transform="translate(498, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Feature</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> axis</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DocProcessor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> feature-map)</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-F1-0" data-look="classic" transform="translate(124, 77.79999923706055)"><rect class="basic label-container" style="" x="-81" y="-32.29999923706055" width="162" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Ingest</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thread</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reader</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F2-1" data-look="classic" transform="translate(332.5, 77.79999923706055)"><rect class="basic label-container" style="" x="-77.5" y="-32.29999923706055" width="155" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Process</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skill</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dispatch</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F3-2" data-look="classic" transform="translate(537.5, 77.79999923706055)"><rect class="basic label-container" style="" x="-77.5" y="-32.29999923706055" width="155" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Download</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F4-3" data-look="classic" transform="translate(754.5, 77.79999923706055)"><rect class="basic label-container" style="" x="-89.5" y="-23.5" width="179" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F5-4" data-look="classic" transform="translate(969.5, 77.79999923706055)"><rect class="basic label-container" style="" x="-75.5" y="-23.5" width="151" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Auth</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RBAC</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F6-5" data-look="classic" transform="translate(1187.5, 77.79999923706055)"><rect class="basic label-container" style="" x="-92.5" y="-23.5" width="185" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Events</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> WS-SSE</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-CELL-14" data-look="classic" transform="translate(1522.5, 168.19999313354492)"><polygon points="8,0 187,0 195,-16 187,-32 8,-32 0,-16" class="label-container" transform="translate(-97.5,16)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">cell</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> feature</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> x</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> platform</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GREEN-18" data-look="classic" transform="translate(1857.5, 262.49999237060547)"><rect class="basic label-container" style="" x="-127.5" y="-49.900001525878906" width="255" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GREEN</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> iff</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> every</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> applicable</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">type</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">exists</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> runs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> has</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">evidence</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/test-type-coverage-cube.mmd"><code>diagrams/test-type-coverage-cube.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Coverage is a three-axis cube. The <strong>feature
+axis</strong> lists Thready’s capabilities (ingest/thread-reader,
+process/Skill- dispatch, download/asset-service, semantic search,
+auth/RBAC, events over WebSocket/SSE), sourced from the DocProcessor
+feature-map. The <strong>platform axis</strong> lists the application
+matrix (Go services, Angular web, CLI, TUI, Tauri desktop, native
+mobile). The <strong>test-type axis</strong> is the ordered list of all
+15 mandated types.</p>
+<p>A <strong>cell</strong> is the intersection of one feature and one
+platform. A cell is GREEN only when every test type <em>applicable to
+that cell</em> exists, runs green, and — for every type except unit —
+produces runtime evidence. The applicability of each type to each cell
+is fixed by the matrix in §17; the cube, not a line-percentage, is the
+release gate, and each cell’s per-type pass/fail is adjudicated by the
+gate IDs in <a href="./acceptance-gates.md">acceptance-gates.md</a>.</p>
+<hr />
+<h2 id="unit-tests">1. Unit tests</h2>
+<ul>
+<li><strong>Scope.</strong> A single function/method/branch in
+isolation; the only type where fakes are allowed. Table-driven,
+deterministic, sub-millisecond.</li>
+<li><strong>Tools.</strong> Go
+<code>testing</code>+<code>testify</code>, <code>go test -race</code>,
+<code>go-sqlmock</code>/<code>miniredis</code>; Jasmine/Karma; Kotest;
+XCTest; <code>cargo test</code>; <code>flutter_test</code>.</li>
+<li><strong>Gate.</strong> Green + <code>-race</code> clean on every
+commit (pre-commit hook); <code>go-mutesting</code> survivors triaged.
+Line coverage tracked (secondary).</li>
+<li><strong>Thready mapping.</strong> Every exported symbol of every
+service and shared package — e.g. hashtag parser, precedence-table
+resolver, back-off calculator, RBAC permission check, chunker.</li>
+</ul>
+<h2 id="integration-tests">2. Integration tests</h2>
+<ul>
+<li><strong>Scope.</strong> Cross-module contracts and critical paths,
+against <strong>real</strong> dependencies. Includes the
+<strong>decoupling audit</strong> <code>[GAP: §12 decoupling]</code>:
+assert each reused submodule is project-not-aware and config-injected
+(constructed from config with no Thready-specific globals).</li>
+<li><strong>Tools.</strong> Real Podman-run Postgres+pgvector, NATS
+JetStream, MinIO, HelixLLM <code>/v1/embeddings</code>;
+<code>httptest</code> only at the HTTP boundary of the module under
+test.</li>
+<li><strong>Gate.</strong> All cross-module contracts + critical paths
+GREEN before expanding to full combinations; <strong>no fakes beyond
+unit</strong> <code>[RESEARCH: final §18 Q24]</code>. Contract tests
+confirm the OpenAPI 3.1 request/response shapes and the WS/SSE event
+contract from the API area — concrete RED skeletons (the
+<code>/v1/embeddings</code> OpenAI envelope <code>[GAP: §2.1]</code>,
+per-adapter LLMProvider contracts <code>[GAP: §2.3]</code>, and the
+processing-event envelope) are in <a
+href="./tdd-skeletons.md#13-api-and-event-contract-tests">tdd-skeletons.md
+§13</a>.</li>
+<li><strong>Thready mapping.</strong> Herald→Postgres→EventBus;
+EventBus→BackgroundTasks→Skill dispatch; Skill→LLMProvider→pgvector;
+Download Manager→callback→Asset Service; Auth→User Service RBAC.</li>
+</ul>
+<h2 id="e2e-tests">3. E2E tests</h2>
+<ul>
+<li><strong>Scope.</strong> A whole user journey through the running
+system, no internal shortcuts.</li>
+<li><strong>Tools.</strong> Cypress/Playwright (Web),
+<code>challenges/pkg/userflow</code> adapters
+(<code>APIFlowChallenge</code>, <code>BrowserFlowChallenge</code>,
+<code>GRPCFlowChallenge</code>, <code>WebSocketFlowChallenge</code>,
+<code>DesktopFlowChallenge</code> via Tauri WebDriver,
+<code>MobileFlowChallenge</code> via ADB/Appium/Maestro).</li>
+<li><strong>Gate.</strong> The canonical journey — <em>add a Telegram
+thread → auto-classify → run Skill → produce status reply + asset +
+embedding → find it via <code>/v1/search</code></em> — passes end-to-end
+against <code>dev.</code> with evidence.</li>
+<li><strong>Thready mapping.</strong> Web portal login→add channel→watch
+processing events→open asset→search; CLI equivalent; TUI
+equivalent.</li>
+</ul>
+<h2 id="full-automation-tests">4. Full-automation tests</h2>
+<ul>
+<li><strong>Scope.</strong> Unattended execution of the entire suite
+(all types) with evidence collection and auto-ticketing; the CONST-048
+full-automation coverage.</li>
+<li><strong>Tools.</strong> <strong>HelixQA autonomous session</strong>
+(4 phases: Setup → Doc-Driven Verification → Curiosity-Driven
+Exploration → Report) — see <a
+href="./helixqa-banks.md">helixqa-banks.md</a>.</li>
+<li><strong>Gate.</strong> A single command runs Web+CLI (then all
+platforms) to the configured coverage target with video/log evidence;
+failures become Markdown tickets for the AI fix pipeline.</li>
+<li><strong>Thready mapping.</strong>
+<code>helixqa autonomous --project . --platforms web,desktop --coverage-target 0.9</code>.</li>
+</ul>
+<h2 id="security-tests">5. Security tests</h2>
+<ul>
+<li><strong>Scope.</strong> authn/authz, secret-leak, fuzzing,
+dependency-CVE, SSRF, injection, and attack simulation
+<code>[RESEARCH: request §Testing]</code>.</li>
+<li><strong>Tools.</strong> <strong>Snyk</strong> (deps + code) +
+<strong>SonarQube</strong> (SAST) — see <a
+href="./static-analysis.md">static-analysis.md</a>;
+<code>go-fuzz</code>/native <code>testing.F</code> fuzzing;
+<code>security/pkg/pii</code>, <code>security/pkg/policy</code>,
+<code>security/pkg/headers</code>, SSRF guard from
+<code>security</code>.</li>
+<li><strong>Gate.</strong> Zero high/critical Snyk or SonarQube security
+findings; no secret leaks in code or logs; RBAC negative tests (a
+<code>user</code> cannot perform
+<code>account-admin</code>/<code>root</code> actions) all green;
+JWT/refresh/session-expiry enforced (access 15 m / refresh 7 d / idle 30
+m, <code>§18 Q9</code>).</li>
+<li><strong>Thready mapping.</strong> JWT/API-key/OAuth2 flows; MFA
+(TOTP) for admin tiers; the encrypted-yet- searchable credential path
+(embed over redacted form, raw never leaks, <code>§3.6</code>);
+QR-code/screenshot sensitivity classification.</li>
+</ul>
+<h2 id="ddos-tests">6. DDoS tests</h2>
+<ul>
+<li><strong>Scope.</strong> Volumetric and application-layer flood
+against the HTTP/3 API and the WS/SSE hub; validate the rate-limiter,
+back-pressure and circuit-breakers hold.</li>
+<li><strong>Tools.</strong> <code>vegeta</code>/<code>k6</code> flood
+generators; assertions on <code>digital.vasic.ratelimiter</code>;
+connection-storm against WebSocket. Full plan in <a
+href="./performance-and-chaos.md#6-ddos--abuse-simulation">performance-and-chaos.md
+§6</a>.</li>
+<li><strong>Gate.</strong> Under flood, legitimate p95 stays within SLO
+or degrades gracefully (429 with <code>Retry-After</code>), no OOM, no
+crash; the rate-limiter sheds excess deterministically.</li>
+<li><strong>Thready mapping.</strong> <code>/v1/*</code> endpoints,
+<code>/v1/search</code>, WS event subscription, login endpoint
+(credential-stuffing simulation).</li>
+</ul>
+<h2 id="scaling-tests">7. Scaling tests</h2>
+<ul>
+<li><strong>Scope.</strong> Horizontal scale-out under Large-scale load
+(100+ channels, 10k+ posts/day, 100+ users, 50 TB+)
+<code>[OPERATOR]</code>.</li>
+<li><strong>Tools.</strong> Postgres <strong>partitioning</strong>
+(time-partitioned posts) + <strong>read replicas</strong>; pgvector ANN
+index tuning; NATS JetStream clustering; MinIO/S3 tiering;
+<code>cache</code> L1/L2.</li>
+<li><strong>Gate.</strong> Throughput scales ~linearly as
+workers/replicas are added; the &lt; 500 ms semantic- search SLO holds
+at 50 TB-scale index sizes; no lock contention on the idempotent
+single-claim under a post-event storm.</li>
+<li><strong>Thready mapping.</strong> BackgroundTasks worker-pool scale
+(default 32, <code>§18 Q4</code>); pgvector search latency vs index
+size; JetStream consumer replay under partition.</li>
+</ul>
+<h2 id="chaos-tests">8. Chaos tests</h2>
+<ul>
+<li><strong>Scope.</strong> Fault injection — kill a
+worker/DB/replica/NATS node mid-processing; partition the network;
+validate <strong>DR</strong> (RPO ≈ 1 h / RTO ≈ 4 h,
+<code>§18 Q45</code>).</li>
+<li><strong>Tools.</strong> <code>podman kill</code>/<code>pause</code>,
+<code>tc netem</code> (latency/loss/partition), disk-full injection; DB
+PITR restore from hourly incrementals; asset re-hydrate/re-download
+drill.</li>
+<li><strong>Gate.</strong> No duplicate processing after a mid-flight
+kill (idempotent claim proven); durable JetStream consumers replay
+missed events on reconnect; a full DR restore completes within RTO and
+loses ≤ RPO of data.</li>
+<li><strong>Thready mapping.</strong> Kill a BackgroundTasks worker
+holding a post claim → another worker resumes exactly once; kill
+Postgres → restore → reconcile; DR runbook validated in-test.</li>
+</ul>
+<h2 id="stress-tests">9. Stress tests</h2>
+<ul>
+<li><strong>Scope.</strong> Push beyond rated capacity to find the knee
+and confirm graceful degradation.</li>
+<li><strong>Tools.</strong> <code>k6</code> ramp-to-break; monitor with
+Prometheus/<code>pprof</code>.</li>
+<li><strong>Gate.</strong> The system degrades gracefully (queues grow,
+back-pressure engages, progress events keep flowing) rather than
+crashing; recovery is automatic when load drops.</li>
+<li><strong>Thready mapping.</strong> Post-ingest burst 100× nominal;
+search QPS ramp; download-queue saturation with delegated 3rd-party
+callbacks.</li>
+</ul>
+<h2 id="performance-tests">10. Performance tests</h2>
+<ul>
+<li><strong>Scope.</strong> Assert the <strong>Aggressive SLOs</strong>
+<code>[OPERATOR §0.1/§18 Q14]</code>: <strong>API p95 &lt; 150
+ms</strong>, <strong>semantic search &lt; 500 ms</strong>, <strong>page
+&lt; 1.5 s</strong>; processing async with progress events.</li>
+<li><strong>Tools.</strong> <code>k6</code> thresholds (fail the run
+when a percentile breaches); <code>pprof</code> CPU/heap; ClickHouse
+latency histograms via <code>observability</code>.</li>
+<li><strong>Gate.</strong> Every SLO met on <code>sta.</code>
+(production-like) before a production tag; a regression that breaches a
+threshold blocks. Detailed budgets in <a
+href="./performance-and-chaos.md#3-performance-slo-tests">performance-and-chaos.md
+§3</a>.</li>
+<li><strong>Thready mapping.</strong> <code>/v1/*</code> p95;
+<code>/v1/search</code> p95; Angular first-contentful-paint / LCP.</li>
+</ul>
+<h2 id="benchmarking-tests">11. Benchmarking tests</h2>
+<ul>
+<li><strong>Scope.</strong> Regression-tracked micro/macro benchmarks
+for hot paths.</li>
+<li><strong>Tools.</strong> <code>go test -bench</code> +
+<code>benchstat</code> (compare against a stored baseline); Angular
+bundle- size/perf budgets; Lighthouse for the web page budget.</li>
+<li><strong>Gate.</strong> No statistically significant regression vs
+baseline (benchstat) without an approved waiver; baselines versioned
+alongside the code.</li>
+<li><strong>Thready mapping.</strong> Embedding+upsert throughput;
+pgvector <code>&lt;=&gt;</code> query; hashtag parse; chunker; JSON
+(de)serialization on the API boundary.</li>
+</ul>
+<h2 id="ui-tests">12. UI tests</h2>
+<ul>
+<li><strong>Scope.</strong> Rendering correctness and <strong>visual
+regression</strong> across themes/viewports
+<code>[CONSTITUTION §11.4.162]</code>.</li>
+<li><strong>Tools.</strong> <strong>Panoptic</strong> (CDP screencast +
+LLM-vision), <strong>VisualRegression</strong> (LLM-vision diff),
+<strong>ScreenDiff</strong> (pixel diff); Angular component tests. The
+visual-regression family has <strong>no CI</strong> today
+<code>[GAP: §9.3]</code> → wired into the local git-hook gate (see <a
+href="./test-strategy.md#8-ci-equivalent-gating-no-server-side-ci">test-strategy.md
+§8</a>).</li>
+<li><strong>Gate.</strong> No unreviewed visual diff on the
+design-system components and key screens, light + dark; a11y contrast
+passes.</li>
+<li><strong>Thready mapping.</strong> Portal dashboard, thread view,
+asset viewer, search results, admin RBAC screens; the Thready brand
+theme on the helix-green base.</li>
+</ul>
+<h2 id="ux-tests">13. UX tests</h2>
+<ul>
+<li><strong>Scope.</strong> Flow correctness, accessibility, and
+interaction latency — the felt experience.</li>
+<li><strong>Tools.</strong> <code>cypress-axe</code> (WCAG a11y);
+HelixQA <code>issuedetector</code> (LLM-powered UX/accessibility/
+functional bug detection); interaction-latency assertions.</li>
+<li><strong>Gate.</strong> Zero critical a11y violations; documented
+flows complete without dead-ends; the autonomous session’s UX category
+surfaces no unresolved critical issue.</li>
+<li><strong>Thready mapping.</strong> Onboarding (Root bootstrap →
+create Account → invite user), add-channel wizard, processing-progress
+feedback, search-and-open-asset.</li>
+</ul>
+<h2 id="challenges">14. Challenges</h2>
+<ul>
+<li><strong>Scope.</strong> Per-feature <strong>real-use-case</strong>
+scenario banks — the constitution test-bank engine.</li>
+<li><strong>Tools.</strong>
+<strong><code>digital.vasic.challenges</code></strong>
+(<code>registry</code> + <code>runner</code> + <code>assertion</code>
+engine with 16 built-in evaluators; <code>userflow</code> adapters;
+JSON/YAML banks; Markdown/JSON/HTML reports; live-monitor). Full
+treatment in <a
+href="./challenges-scenarios.md">challenges-scenarios.md</a>.</li>
+<li><strong>Gate.</strong> Every Thready feature has a Challenge bank
+that runs GREEN; the <strong>describe-Challenge meta-runner</strong>
+proves the banks themselves are present/executable (clean = exit 0,
+planted mutation = exit 99) <code>[GAP: §9.3]</code>.</li>
+<li><strong>Thready mapping.</strong> Ingest, classify, dispatch,
+download-callback, asset-serve, search, auth/RBAC, events — one bank
+each.</li>
+</ul>
+<h2 id="helixqa">15. HelixQA</h2>
+<ul>
+<li><strong>Scope.</strong> AI-driven multi-platform QA with real-time
+crash detection, step validation and <strong>mandatory runtime
+evidence</strong>.</li>
+<li><strong>Tools.</strong>
+<strong><code>HelixDevelopment/helix_qa</code></strong> — YAML test
+banks; <code>detector</code> (ADB/browser/JVM crash+ANR);
+<code>evidence</code> (screenshots/logcat/video/stacktrace);
+<code>ticket</code> (Markdown for AI fix); autonomous session. Full
+treatment in <a href="./helixqa-banks.md">helixqa-banks.md</a>.</li>
+<li><strong>Gate.</strong> Every PASS carries positive runtime evidence;
+a green line without evidence is a critical defect
+<code>[CONSTITUTION §11.4]</code>. <code>[GAP: §9.1]</code> Thready YAML
+banks authored for every service + client.</li>
+<li><strong>Thready mapping.</strong> Web + Desktop first
+(Android/iOS/HarmonyOS/Aurora as native clients land,
+<code>[OPEN: mobile-device-farm]</code>).</li>
+</ul>
+<h2 id="anti-bluff-obligations-per-type">16. Anti-bluff obligations per
+type</h2>
+<p>Beyond unit, each type must prove <em>real</em> behavior. The
+specific traps the gates guard (from the gap register) and the behavior
+each must assert:</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 60%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Trap <code>[GAP]</code></th>
+<th>Type(s) that must prove real behavior</th>
+<th>Assertion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HashEmbedder stub (§2.1)</td>
+<td>integration, performance, Challenges</td>
+<td>embeddings are semantic (near-duplicate texts rank close;
+<code>HELIX_EMBEDDING_PROVIDER=llama</code>), not deterministic
+pseudo-vectors</td>
+</tr>
+<tr>
+<td>VisionEngine no OCR (§2.6)</td>
+<td>integration, e2e, Challenges</td>
+<td>OCR returns real recognized text + bounding boxes for a fixture
+image, not an empty <code>TextRegion</code></td>
+</tr>
+<tr>
+<td>Security-KMP in-memory stub (§7.3)</td>
+<td>integration (device), security</td>
+<td>secret round-trips through native Keychain/KeyStore, survives
+process restart; not plaintext memory</td>
+</tr>
+<tr>
+<td>Herald MTProto trap + Max stub (§5.1)</td>
+<td>integration, e2e</td>
+<td>real channel/thread backfill via
+<code>messages.getReplies</code>/<code>getForumTopics</code>; Max reads
+real history</td>
+</tr>
+<tr>
+<td>MeTube poll-only (§6.5)</td>
+<td>integration</td>
+<td>an outbound completion webhook is received (push), not just a poll
+endpoint</td>
+</tr>
+<tr>
+<td>Download Manager BUILD-NEW (§6.3)</td>
+<td>integration, chaos</td>
+<td>resumable/segmented transfer + standardized callback actually fire;
+resume after kill</td>
+</tr>
+<tr>
+<td>helix_skills no execution engine (§4.1)</td>
+<td>integration, e2e</td>
+<td>the Thready dispatch engine actually runs ordered Skills, not just
+resolves DAG order</td>
+</tr>
+<tr>
+<td>VectorDB Qdrant unverified (§3.1)</td>
+<td>integration, scaling</td>
+<td>Qdrant backend reaches parity with pgvector behind the same
+interface</td>
+</tr>
+</tbody>
+</table>
+<p>Skeletons for these gates: <a
+href="./tdd-skeletons.md#12-anti-bluff-paired-mutation-gates">tdd-skeletons.md
+§12</a>.</p>
+<h2 id="applicability-matrix">17. Applicability matrix</h2>
+<p>Which types apply to which feature × platform class. <code>●</code> =
+mandatory, <code>○</code> = where surface exists, <code>—</code> = n/a.
+“Svc” = Go services/API; “Web/CLI/TUI/Desk/Mob” = clients.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th style="text-align: center;">Svc</th>
+<th style="text-align: center;">Web</th>
+<th style="text-align: center;">CLI</th>
+<th style="text-align: center;">TUI</th>
+<th style="text-align: center;">Desk</th>
+<th style="text-align: center;">Mob</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>E2E</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Full-automation</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Security</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>DDoS</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Scaling</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+</tr>
+<tr>
+<td>Stress</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Benchmarking</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+</tr>
+<tr>
+<td>UI</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>UX</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>Challenges</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td>HelixQA</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">○</td>
+<td style="text-align: center;">●</td>
+<td style="text-align: center;">●</td>
+</tr>
+</tbody>
+</table>
+<p>DDoS/scaling/stress are server-side properties (client cells inherit
+them via the shared API); UI/UX are client-side; the rest are universal.
+Web + CLI cells are filled first
+<code>[OPERATOR: Web+CLI first]</code>.</p>
+<h2 id="gap-register-items-addressed">18. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §9.1]</code> HelixQA Thready banks + evidence — types 4,
+15.</li>
+<li><code>[GAP: §9.3]</code> visual-regression family CI + Thready
+Challenge banks — types 12, 14.</li>
+<li><code>[GAP: §12 decoupling audit]</code> — type 2.</li>
+<li><code>[GAP: §2.1 contract test / §2.3 per-adapter]</code> OpenAPI
+3.1 + provider contract tests — type 2 (<a
+href="./tdd-skeletons.md#13-api-and-event-contract-tests">tdd-skeletons.md
+§13</a>).</li>
+<li><code>[GAP: §2.1/§2.6/§7.3/§5.1/§6.5/§6.3/§4.1/§3.1]</code>
+scaffold-trap anti-bluff — §16.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

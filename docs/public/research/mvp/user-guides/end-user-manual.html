@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — End-User Manual</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — End-User Manual</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#what-helix-thready-does-for-you"
+id="toc-what-helix-thready-does-for-you">1. What Helix Thready does for
+you</a></li>
+<li><a href="#the-life-of-a-post-diagram"
+id="toc-the-life-of-a-post-diagram">2. The life of a post
+(diagram)</a></li>
+<li><a href="#complete-posts-root-reply-chain"
+id="toc-complete-posts-root-reply-chain">3. Complete posts: root + reply
+chain</a></li>
+<li><a href="#reading-processed-threads"
+id="toc-reading-processed-threads">4. Reading processed threads</a></li>
+<li><a href="#hashtag-categories" id="toc-hashtag-categories">5. Hashtag
+categories</a></li>
+<li><a href="#semantic-search" id="toc-semantic-search">6. Semantic
+search</a></li>
+<li><a href="#media-assets-and-downloads"
+id="toc-media-assets-and-downloads">7. Media, assets and
+downloads</a></li>
+<li><a href="#status-replies-re-processing"
+id="toc-status-replies-re-processing">8. Status replies &amp;
+re-processing</a></li>
+<li><a href="#sensitive-content" id="toc-sensitive-content">9. Sensitive
+content</a></li>
+<li><a href="#tutorials" id="toc-tutorials">10. Tutorials</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — End-User Manual
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/user-guides/end-user-manual.md
+  Status          : Draft — v0.1 (zero-version)
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (user-guides)
+  Related         : ./account-admin-guide.md, ./web-portal-guide.md, ./cli-reference.md,
+                    ./troubleshooting.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (user-guides)</td>
+<td>Initial Standard User manual</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (user-guides, Pass 3)</td>
+<td>Depth pass: split the life-of-a-post diagram explanation into
+multi-paragraph form; added a hashtag-category quick-reference note and
+download-status clarity</td>
+</tr>
+</tbody>
+</table>
+<p>This manual is for <strong>Standard Users</strong> — the consumers of
+Helix Thready. It explains what the system does with your channels’
+posts, how the hashtag categories behave, how to run <strong>semantic
+search</strong>, how downloaded <strong>assets</strong> work, and how to
+trigger <strong>re-processing</strong>. Administration is in the <a
+href="./account-admin-guide.md">Account Admin</a> and <a
+href="./root-admin-guide.md">Root Admin</a> guides.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-what-helix-thready-does-for-you">What Helix Thready does
+for you</a></li>
+<li><a href="#2-the-life-of-a-post-diagram">The life of a post
+(diagram)</a></li>
+<li><a href="#3-complete-posts-root--reply-chain">Complete posts: root +
+reply chain</a></li>
+<li><a href="#4-reading-processed-threads">Reading processed
+threads</a></li>
+<li><a href="#5-hashtag-categories">Hashtag categories</a></li>
+<li><a href="#6-semantic-search">Semantic search</a></li>
+<li><a href="#7-media-assets-and-downloads">Media, assets and
+downloads</a></li>
+<li><a href="#8-status-replies--re-processing">Status replies &amp;
+re-processing</a></li>
+<li><a href="#9-sensitive-content">Sensitive content</a></li>
+<li><a href="#10-tutorials">Tutorials</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<h2 id="what-helix-thready-does-for-you">1. What Helix Thready does for
+you</h2>
+<p>You add messaging channels/groups (or an Admin does); Thready reads
+every human post, figures out what it is from its
+<strong>hashtags</strong> and content, runs the right <strong>AI recipe
+(Skill)</strong> on it — downloading media, doing deep research,
+transcribing comics, etc. — and makes everything <strong>searchable by
+meaning</strong> across both the original posts and the generated
+materials. It replies to the original post with a status summary and
+keeps all downloaded media as managed <strong>assets</strong>.</p>
+<h2 id="the-life-of-a-post-diagram">2. The life of a post (diagram)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 3015.97px; background-color: white;" viewBox="0 0 3015.974609375 301" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M240,137.3L244.167,137.3C248.333,137.3,256.667,137.3,264.417,137.37C272.167,137.441,279.334,137.581,282.917,137.651L286.501,137.722" id="my-svg-L_POST_RECV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_POST_RECV_0" data-points="W3sieCI6MjQwLCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjY1LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjkwLjUsInkiOjEzNy43OTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M460.5,137.8L464.583,137.717C468.667,137.633,476.833,137.467,484.417,137.383C492,137.3,499,137.3,502.5,137.3L506,137.3" id="my-svg-L_RECV_CLAIM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RECV_CLAIM_0" data-points="W3sieCI6NDYwLjUsInkiOjEzNy43OTk5OTkyMzcwNjA1NX0seyJ4Ijo0ODUsInkiOjEzNy4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo1MTAsInkiOjEzNy4yOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M746,137.3L750.167,137.3C754.333,137.3,762.667,137.3,770.333,137.3C778,137.3,785,137.3,788.5,137.3L792,137.3" id="my-svg-L_CLAIM_PRE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CLAIM_PRE_0" data-points="W3sieCI6NzQ2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6NzcxLCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6Nzk2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1051,137.3L1055.167,137.3C1059.333,137.3,1067.667,137.3,1075.333,137.3C1083,137.3,1090,137.3,1093.5,137.3L1097,137.3" id="my-svg-L_PRE_CLASS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PRE_CLASS_0" data-points="W3sieCI6MTA1MSwieSI6MTM3LjI5OTk5OTIzNzA2MDU1fSx7IngiOjEwNzYsInkiOjEzNy4yOTk5OTkyMzcwNjA1NX0seyJ4IjoxMTAwLjk5OTk5OTk5OTk5OTgsInkiOjEzNy4yOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1308.005,119.705L1326.354,116.296C1344.703,112.886,1381.402,106.068,1414.501,102.659C1447.6,99.25,1477.1,99.25,1491.85,99.25L1506.6,99.25" id="my-svg-L_CLASS_INDIRECT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CLASS_INDIRECT_0" data-points="W3sieCI6MTMwOC4wMDQ3MjA5ODg1NTIsInkiOjExOS43MDQ3MTQxMjIwOTcxMn0seyJ4IjoxNDE4LjEwMDAwNjEwMzUxNTYsInkiOjk5LjI1fSx7IngiOjE1MTAuNjAwMDA2MTAzNTE1NiwieSI6OTkuMjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1723.6,99.25L1727.767,99.25C1731.933,99.25,1740.267,99.25,1747.957,100.222C1755.648,101.193,1762.696,103.137,1766.22,104.108L1769.744,105.08" id="my-svg-L_INDIRECT_DISPATCH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_INDIRECT_DISPATCH_0" data-points="W3sieCI6MTcyMy42MDAwMDYxMDM1MTU2LCJ5Ijo5OS4yNX0seyJ4IjoxNzQ4LjYwMDAwNjEwMzUxNTYsInkiOjk5LjI1fSx7IngiOjE3NzMuNjAwMDA2MTAzNTE1NiwieSI6MTA2LjE0MzExNTgwMzgxNTMyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1308.005,154.895L1326.354,158.304C1344.703,161.714,1381.402,168.532,1432.917,171.941C1484.433,175.35,1550.767,175.35,1605.85,175.35C1660.933,175.35,1704.767,175.35,1730.207,174.378C1755.648,173.407,1762.696,171.463,1766.22,170.492L1769.744,169.52" id="my-svg-L_CLASS_DISPATCH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CLASS_DISPATCH_0" data-points="W3sieCI6MTMwOC4wMDQ3MjA5ODg1NTIyLCJ5IjoxNTQuODk1Mjg0MzUyMDI0fSx7IngiOjE0MTguMTAwMDA2MTAzNTE1NiwieSI6MTc1LjM0OTk5ODQ3NDEyMTF9LHsieCI6MTYxNy4xMDAwMDYxMDM1MTU2LCJ5IjoxNzUuMzQ5OTk4NDc0MTIxMX0seyJ4IjoxNzQ4LjYwMDAwNjEwMzUxNTYsInkiOjE3NS4zNDk5OTg0NzQxMjExfSx7IngiOjE3NzMuNjAwMDA2MTAzNTE1NiwieSI6MTY4LjQ1Njg4MjY3MDMwNTh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1999.6,137.3L2003.767,137.3C2007.933,137.3,2016.267,137.3,2030.1,137.3C2043.933,137.3,2063.267,137.3,2072.933,137.3L2082.6,137.3" id="my-svg-L_DISPATCH_DL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISPATCH_DL_0" data-points="W3sieCI6MTk5OS42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjAyNC42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjA4Ni42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1951.687,87.4L1963.839,78.083C1975.991,68.767,2000.296,50.133,2037.864,40.817C2075.433,31.5,2126.267,31.5,2177.1,31.5C2227.933,31.5,2278.767,31.5,2310.933,31.5C2343.1,31.5,2356.6,31.5,2363.35,31.5L2370.1,31.5" id="my-svg-L_DISPATCH_RES_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISPATCH_RES_0" data-points="W3sieCI6MTk1MS42ODY5NjUwODQ4ODMyLCJ5Ijo4Ny4zOTk5OTc3MTExODE2NH0seyJ4IjoyMDI0LjYwMDAwNjEwMzUxNTYsInkiOjMxLjV9LHsieCI6MjE3Ny4xMDAwMDYxMDM1MTU2LCJ5IjozMS41fSx7IngiOjIzMjkuNjAwMDA2MTAzNTE1NiwieSI6MzEuNX0seyJ4IjoyMzc0LjEwMDAwNjEwMzUxNTYsInkiOjMxLjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2267.6,137.3L2277.933,137.3C2288.267,137.3,2308.933,137.3,2327.017,137.3C2345.1,137.3,2360.6,137.3,2368.35,137.3L2376.1,137.3" id="my-svg-L_DL_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DL_ASSET_0" data-points="W3sieCI6MjI2Ny42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjMyOS42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjM4MC4xMDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2590.1,31.5L2597.517,31.5C2604.933,31.5,2619.767,31.5,2631.854,35.191C2643.942,38.883,2653.284,46.266,2657.955,49.957L2662.625,53.649" id="my-svg-L_RES_VEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RES_VEC_0" data-points="W3sieCI6MjU5MC4xMDAwMDYxMDM1MTU2LCJ5IjozMS41fSx7IngiOjI2MzQuNjAwMDA2MTAzNTE1NiwieSI6MzEuNX0seyJ4IjoyNjY1Ljc2MzcyMjM4MzA2MDcsInkiOjU2LjEyODk2MDk4NzExMzk5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2584.1,137.3L2592.517,137.3C2600.933,137.3,2617.767,137.3,2630.854,133.609C2643.942,129.917,2653.284,122.534,2657.955,118.843L2662.625,115.151" id="my-svg-L_ASSET_VEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_VEC_0" data-points="W3sieCI6MjU4NC4xMDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjYzNC42MDAwMDYxMDM1MTU2LCJ5IjoxMzcuMjk5OTk5MjM3MDYwNTV9LHsieCI6MjY2NS43NjM3MjIzODMwNjA3LCJ5IjoxMTIuNjcxMDM4MjQ5OTQ2NTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1942.404,187.2L1956.103,199.45C1969.803,211.7,1997.201,236.2,2014.401,248.45C2031.6,260.7,2038.6,260.7,2042.1,260.7L2045.6,260.7" id="my-svg-L_DISPATCH_REPLY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISPATCH_REPLY_0" data-points="W3sieCI6MTk0Mi40MDM4OTg2MzQyNzk2LCJ5IjoxODcuMjAwMDAwNzYyOTM5NDV9LHsieCI6MjAyNC42MDAwMDYxMDM1MTU2LCJ5IjoyNjAuNjk5OTk2OTQ4MjQyMn0seyJ4IjoyMDQ5LjYwMDAwNjEwMzUxNTYsInkiOjI2MC42OTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2304.6,260.7L2308.767,260.7C2312.933,260.7,2321.267,260.7,2328.933,260.7C2336.6,260.7,2343.6,260.7,2347.1,260.7L2350.6,260.7" id="my-svg-L_REPLY_DONE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REPLY_DONE_0" data-points="W3sieCI6MjMwNC42MDAwMDYxMDM1MTU2LCJ5IjoyNjAuNjk5OTk2OTQ4MjQyMn0seyJ4IjoyMzI5LjYwMDAwNjEwMzUxNTYsInkiOjI2MC42OTk5OTY5NDgyNDIyfSx7IngiOjIzNTQuNjAwMDA2MTAzNTE1NiwieSI6MjYwLjY5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2811.6,84.4L2815.767,84.4C2819.933,84.4,2828.267,84.4,2836.017,84.47C2843.767,84.541,2850.934,84.681,2854.517,84.751L2858.101,84.822" id="my-svg-L_VEC_SEARCH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VEC_SEARCH_0" data-points="W3sieCI6MjgxMS42MDAwMDYxMDM1MTU2LCJ5Ijo4NC4zOTk5OTk2MTg1MzAyN30seyJ4IjoyODM2LjYwMDAwNjEwMzUxNTYsInkiOjg0LjM5OTk5OTYxODUzMDI3fSx7IngiOjI4NjIuMTAwMDA2MTAzNTE5MywieSI6ODQuODk5OTk5NjE4NTMwMjd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_POST_RECV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RECV_CLAIM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CLAIM_PRE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PRE_CLASS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1418.1000061035156, 99.25)"><g class="label" data-id="L_CLASS_INDIRECT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-67.5" y="0" width="135" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">missing/weak</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tags</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_INDIRECT_DISPATCH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CLASS_DISPATCH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DISPATCH_DL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DISPATCH_RES_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DL_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RES_VEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_VEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DISPATCH_REPLY_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REPLY_DONE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VEC_SEARCH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-POST-0" data-look="classic" transform="translate(124, 137.29999923706055)"><rect class="basic label-container" style="" x="-116" y="-41.099998474121094" width="232" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Human</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> posts</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> channel</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> organic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> replies</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">with</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #hashtags</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RECV-1" data-look="classic" transform="translate(375, 137.29999923706055)"><polygon points="8,0 162,0 170,-16 162,-32 8,-32 0,-16" class="label-container" transform="translate(-85,16)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> event</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CLAIM-3" data-look="classic" transform="translate(628, 137.29999923706055)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Single-claim</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BackgroundTasks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> queue</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PRE-5" data-look="classic" transform="translate(923.5, 137.29999923706055)"><rect class="basic label-container" style="" x="-127.5" y="-41.099998474121094" width="255" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Pre-process:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">extract</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hashtags,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> links,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">attachments,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> context</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CLASS-7" data-look="classic" transform="translate(1213.3000030517578, 137.29999923706055)"><polygon points="112.29999923706055,0 224.5999984741211,-112.29999923706055 112.29999923706055,-224.5999984741211 0,-112.29999923706055" class="label-container" transform="translate(-111.79999923706055, 112.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Classify</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hashtag</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> content</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> type</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-INDIRECT-9" data-look="classic" transform="translate(1617.1000061035156, 99.25)"><rect class="basic label-container" style="" x="-106.5" y="-41.099998474121094" width="213" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Indirect</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> determination</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(GitHub→research,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">torrent→download...)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DISPATCH-11" data-look="classic" transform="translate(1886.6000061035156, 137.29999923706055)"><rect class="basic label-container" style="" x="-113" y="-49.900001525878906" width="226" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Dispatch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skill(s)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> convert</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">analyze</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> research</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reply</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DL-15" data-look="classic" transform="translate(2177.1000061035156, 137.29999923706055)"><rect class="basic label-container" style="" x="-90.5" y="-41.099998474121094" width="181" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> media</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Boba</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MeTube</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DL-Manager</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RES-17" data-look="classic" transform="translate(2482.1000061035156, 31.5)"><rect class="basic label-container" style="" x="-108" y="-23.5" width="216" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Deep</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> research</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> docs</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ASSET-19" data-look="classic" transform="translate(2482.1000061035156, 137.29999923706055)"><rect class="basic label-container" style="" x="-102" y="-32.29999923706055" width="204" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">raw</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rendition</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VEC-21" data-look="classic" transform="translate(2735.6000061035156, 84.39999961853027)"><path d="M0,13.71841155234657 a76,13.71841155234657 0,0,0 152,0 a76,13.71841155234657 0,0,0 -152,0 l0,45.718411552346566 a76,13.71841155234657 0,0,0 152,0 l0,-45.718411552346566" class="basic label-container outer-path" style="" transform="translate(-76, -36.57761732851985)"/><g class="label" style="" transform="translate(-0.5, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pgvector</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REPLY-25" data-look="classic" transform="translate(2177.1000061035156, 260.6999969482422)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Status</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reply</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> original</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(success/metrics/asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> refs)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DONE-27" data-look="classic" transform="translate(2482.1000061035156, 260.6999969482422)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Mark</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> processed</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(re-processable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> request)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEARCH-29" data-look="classic" transform="translate(2934.7872619628906, 84.39999961853027)"><g class="basic label-container outer-path"><path d="M-48.40000057220459 -24.799999237060547 C-13.09975414683791 -24.799999237060547, 22.20049227852877 -24.799999237060547, 48.40000057220459 -24.799999237060547 C48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547 C48.87492659598177 -24.78476928386544, 49.349852619758956 -24.76953933067033, 49.98894197884457 -24.74904497883643 C50.56392851092153 -24.693576719609446, 51.13891504299849 -24.63810846038246, 51.571354084417806 -24.596391586140776 C52.062403294211286 -24.51700255804486, 52.55345250400476 -24.43761352994895, 53.14073441815616 -24.342666344508217 C53.53347505450643 -24.25302585713343, 53.92621569085671 -24.163385369758647, 54.690634059637276 -23.988911865380516 C55.244019389209946 -23.824670004342217, 55.797404718782616 -23.66042814330392, 56.21468413878189 -23.536581801792508 C56.799493868116116 -23.321366415475637, 57.384303597450334 -23.10615102915877, 57.70662200690707 -22.987534874999977 C58.107552075839955 -22.810055026651316, 58.50848214477284 -22.632575178302655, 59.16031697129301 -22.3440272365953 C59.4467947194317 -22.194571978889098, 59.73327246757039 -22.0451167211829, 60.56979548751446 -21.608703197496645 C61.009152041833204 -21.342362672322917, 61.448508596151946 -21.07602214714919, 61.929265706016096 -20.784584361907168 C62.21583668327922 -20.584684853626076, 62.50240766054235 -20.384785345344984, 63.23314127206463 -19.875057210895253 C63.522965192347804 -19.643930347007846, 63.81278911263098 -19.41280348312044, 64.47606428127872 -18.883859186617375 C64.9168175075231 -18.483578768233546, 65.3575707337675 -18.083298349849716, 65.65292729640738 -17.815063334366585 C66.0061450818702 -17.450336971156723, 66.35936286733302 -17.08561060794686, 66.75889433488513 -16.673061565555788 C67.1249946947705 -16.243019251133813, 67.49109505465587 -15.812976936711836, 67.78942074092164 -15.462546610411625 C68.11189262504348 -15.03046366348136, 68.43436450916532 -14.598380716551095, 68.74027186046732 -14.188492734539441 C68.94537074633398 -13.873405769085911, 69.15046963220065 -13.558318803632382, 69.60754044231501 -12.85613529859888 C69.88668474288392 -12.360486326513263, 70.16582904345282 -11.864837354427642, 70.3876626938334 -11.470949245084004 C70.57939937989993 -11.072803913958987, 70.77113606596646 -10.67465858283397, 71.07743292535527 -10.03862660061019 C71.2237213823907 -9.677291283437766, 71.37000983942613 -9.315955966265342, 71.67401672304406 -8.565053086155816 C71.81229060358062 -8.14859418893069, 71.95056448411718 -7.732135291705565, 72.17496259610824 -7.05628393137229 C72.29992031968783 -6.579765974343342, 72.42487804326743 -6.103248017314395, 72.57821205050286 -5.5185189923466 C72.65320441894073 -5.133449030060779, 72.72819678737861 -4.748379067774959, 72.88210804772302 -3.9580772750627573 C72.94177634960214 -3.4953017085272617, 73.00144465148125 -3.0325261419917666, 73.0854018139307 -2.3813709692507574 C73.11052445495048 -1.9900655567369312, 73.13564709597026 -1.5987601442231052, 73.18725797143418 -0.794879099323635 C73.18725797143418 -0.379232154570766, 73.18725797143418 0.03641479018210303, 73.18725797143418 0.794879099323629 C73.15773294518978 1.2547552152524584, 73.12820791894536 1.714631331181288, 73.0854018139307 2.3813709692507405 C73.00416886952755 3.0113976447823885, 72.92293592512439 3.6414243203140364, 72.88210804772302 3.95807727506274 C72.78855551898603 4.43844973779324, 72.69500299024905 4.918822200523739, 72.57821205050286 5.5185189923465945 C72.43145825409331 6.078154821553838, 72.28470445768379 6.637790650761081, 72.17496259610824 7.056283931372274 C72.0552112711012 7.4169558425109585, 71.93545994609414 7.777627753649643, 71.67401672304406 8.565053086155798 C71.47465928874774 9.057469803181514, 71.27530185445141 9.549886520207231, 71.07743292535528 10.038626600610183 C70.9286546898707 10.34756778993819, 70.77987645438613 10.656508979266196, 70.3876626938334 11.470949245083998 C70.09196716616951 11.995986596870258, 69.79627163850563 12.521023948656516, 69.60754044231503 12.856135298598875 C69.42967579673717 13.129383157551302, 69.25181115115932 13.40263101650373, 68.74027186046733 14.188492734539427 C68.47171607424677 14.54833302213955, 68.2031602880262 14.908173309739675, 67.78942074092166 15.46254661041162 C67.47444188285228 15.832538699904667, 67.1594630247829 16.202530789397713, 66.75889433488513 16.673061565555773 C66.42150683171305 17.021441862610107, 66.08411932854098 17.369822159664437, 65.6529272964074 17.815063334366577 C65.1965785936863 18.229507151852857, 64.7402298909652 18.643950969339137, 64.47606428127874 18.883859186617357 C64.00680607823485 19.25808011605964, 63.537547875190945 19.632301045501926, 63.23314127206463 19.87505721089525 C62.81143565268301 20.16922079563383, 62.38973003330139 20.463384380372407, 61.92926570601611 20.78458436190716 C61.63937775240193 20.96031614295879, 61.34948979878774 21.136047924010416, 60.56979548751447 21.60870319749664 C60.19442890988458 21.804531700612387, 59.819062332254695 22.00036020372813, 59.160316971293014 22.344027236595295 C58.72453572552842 22.536934667103925, 58.288754479763824 22.72984209761255, 57.706622006907075 22.987534874999973 C57.36966703230281 23.111537420431983, 57.03271205769853 23.235539965863996, 56.214684138781905 23.536581801792504 C55.79275231739138 23.661808951615885, 55.37082049600087 23.787036101439266, 54.690634059637304 23.988911865380512 C54.295790529991514 24.079032324427338, 53.900947000345724 24.16915278347416, 53.14073441815617 24.342666344508213 C52.72668322670746 24.409606930126696, 52.312632035258744 24.476547515745178, 51.57135408441782 24.596391586140772 C50.93845063059396 24.65744702115339, 50.305547176770105 24.718502456166014, 49.98894197884457 24.74904497883643 C49.41627613691343 24.767409257760722, 48.84361029498229 24.78577353668501, 48.4000005722046 24.799999237060547 C48.4000005722046 24.799999237060547, 48.40000057220459 24.799999237060547, 48.40000057220459 24.799999237060547 C24.311136924177504 24.799999237060547, 0.2222732761504176 24.799999237060547, -48.40000057220458 24.799999237060547 C-49.02011921819812 24.780113239071255, -49.64023786419166 24.760227241081964, -49.98894197884456 24.74904497883643 C-50.43660206111954 24.70585974908938, -50.88426214339452 24.662674519342332, -51.57135408441781 24.596391586140772 C-51.996241293403706 24.52769911724145, -52.42112850238959 24.45900664834213, -53.140734418156164 24.342666344508213 C-53.62377674458934 24.232415085645602, -54.10681907102253 24.12216382678299, -54.690634059637276 23.988911865380516 C-55.07550470987309 23.874684276617796, -55.4603753601089 23.76045668785508, -56.21468413878188 23.536581801792515 C-56.689876694800894 23.361706548545683, -57.16506925081991 23.18683129529885, -57.70662200690707 22.987534874999977 C-58.06343023686797 22.829586455936365, -58.42023846682888 22.67163803687275, -59.16031697129301 22.344027236595302 C-59.4990503054354 22.16731027314227, -59.83778363957779 21.990593309689242, -60.569795487514455 21.60870319749665 C-61.01446238221879 21.339143512774154, -61.45912927692312 21.069583828051655, -61.92926570601608 20.78458436190718 C-62.354043942765806 20.488277452304075, -62.77882217951552 20.191970542700968, -63.23314127206462 19.875057210895257 C-63.717633685678216 19.48868740392301, -64.20212609929182 19.102317596950762, -64.47606428127872 18.883859186617375 C-64.83670050862794 18.556338906850513, -65.19733673597715 18.228818627083648, -65.65292729640737 17.815063334366595 C-66.06677866387572 17.387727819626352, -66.48063003134408 16.96039230488611, -66.75889433488513 16.673061565555784 C-67.06361910594258 16.315114510141033, -67.36834387700002 15.957167454726282, -67.78942074092164 15.462546610411627 C-68.09743149639885 15.04984025842924, -68.40544225187607 14.637133906446852, -68.74027186046732 14.188492734539444 C-69.05370912124815 13.706968932290701, -69.36714638202898 13.225445130041958, -69.60754044231501 12.856135298598893 C-69.87031249532441 12.389556909924991, -70.13308454833383 11.922978521251087, -70.38766269383339 11.470949245084007 C-70.59292355599288 11.044720672930959, -70.79818441815236 10.618492100777909, -71.07743292535527 10.038626600610193 C-71.22022890017055 9.685917782044077, -71.36302487498584 9.333208963477963, -71.67401672304406 8.565053086155817 C-71.7788779975113 8.249227634835652, -71.88373927197856 7.933402183515486, -72.17496259610824 7.056283931372283 C-72.32956901108511 6.466702664221385, -72.48417542606197 5.877121397070487, -72.57821205050284 5.518518992346603 C-72.65059086444461 5.146869080023405, -72.72296967838636 4.7752191677002065, -72.88210804772302 3.95807727506276 C-72.92963330876852 3.5894807353182414, -72.977158569814 3.2208841955737224, -73.0854018139307 2.381370969250771 C-73.11891519970136 1.8593729343545822, -73.15242858547204 1.3373748994583932, -73.18725797143418 0.7948790993236381 C-73.18725797143418 0.1812640454526534, -73.18725797143418 -0.4323510084183313, -73.18725797143418 -0.7948790993236261 C-73.16057606597145 -1.210471314152013, -73.13389416050873 -1.6260635289803997, -73.0854018139307 -2.3813709692507374 C-73.00975187002396 -2.9680969954203453, -72.93410192611722 -3.5548230215899537, -72.88210804772302 -3.9580772750627484 C-72.79536676414922 -4.403475433437447, -72.70862548057542 -4.848873591812145, -72.57821205050286 -5.518518992346592 C-72.4954632395884 -5.834076071924925, -72.41271442867395 -6.1496331515032585, -72.17496259610826 -7.056283931372271 C-71.98217189678668 -7.636938800702382, -71.7893811974651 -8.217593670032493, -71.67401672304408 -8.565053086155787 C-71.47551394147995 -9.055358794409372, -71.27701115991583 -9.545664502662959, -71.07743292535528 -10.038626600610181 C-70.85898809186456 -10.492231971324344, -70.64054325837384 -10.945837342038507, -70.3876626938334 -11.470949245083997 C-70.22413329757691 -11.761312247284383, -70.06060390132042 -12.05167524948477, -69.60754044231501 -12.856135298598884 C-69.26582799606783 -13.381097378674355, -68.92411554982064 -13.906059458749825, -68.74027186046732 -14.188492734539436 C-68.41466887701395 -14.624771069324929, -68.08906589356059 -15.061049404110424, -67.78942074092166 -15.46254661041162 C-67.3888235153837 -15.933110906156363, -66.98822628984576 -16.40367520190111, -66.75889433488513 -16.673061565555773 C-66.49356867054686 -16.94703209762719, -66.2282430062086 -17.22100262969861, -65.6529272964074 -17.81506333436657 C-65.28321918727694 -18.150822457138325, -64.91351107814648 -18.48658157991008, -64.47606428127875 -18.883859186617354 C-64.14262150330426 -19.14977092876704, -63.80917872532975 -19.41568267091673, -63.233141272064636 -19.87505721089525 C-62.91509935154786 -20.09690948683491, -62.59705743103108 -20.31876176277457, -61.92926570601611 -20.784584361907157 C-61.55544612299858 -21.0111959899401, -61.181626539981046 -21.237807617973036, -60.56979548751447 -21.608703197496638 C-60.04532785347 -21.882317626240084, -59.52086021942553 -22.15593205498353, -59.160316971293014 -22.344027236595295 C-58.57946286573832 -22.601154118699515, -57.99860876018363 -22.858281000803732, -57.706622006907075 -22.98753487499997 C-57.27425847711081 -23.146648650689652, -56.84189494731454 -23.30576242637934, -56.21468413878191 -23.536581801792504 C-55.87242976911491 -23.638161102179826, -55.5301753994479 -23.739740402567143, -54.69063405963731 -23.98891186538051 C-54.1009517444215 -24.123503005791793, -53.51126942920569 -24.258094146203078, -53.14073441815617 -24.34266634450821 C-52.78071098559836 -24.400872141060738, -52.42068755304055 -24.45907793761327, -51.57135408441783 -24.596391586140772 C-51.08797600711317 -24.64302248791116, -50.60459792980851 -24.68965338968155, -49.98894197884457 -24.74904497883643 C-49.657190951303185 -24.75968358857548, -49.32543992376179 -24.77032219831453, -48.4000005722046 -24.799999237060547 C-48.4000005722046 -24.799999237060547, -48.40000057220459 -24.799999237060547, -48.40000057220459 -24.799999237060547" stroke="none" stroke-width="0" fill="#eee" style=""/><path d="M-48.40000057220459 -24.799999237060547 C-25.451596720817705 -24.799999237060547, -2.503192869430819 -24.799999237060547, 48.40000057220459 -24.799999237060547 M-48.40000057220459 -24.799999237060547 C-16.28739631687654 -24.799999237060547, 15.825207938451513 -24.799999237060547, 48.40000057220459 -24.799999237060547 M48.40000057220459 -24.799999237060547 C48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547 M48.40000057220459 -24.799999237060547 C48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547, 48.40000057220459 -24.799999237060547 M48.40000057220459 -24.799999237060547 C48.7754539721806 -24.787959177299026, 49.15090737215661 -24.775919117537505, 49.98894197884457 -24.74904497883643 M48.40000057220459 -24.799999237060547 C49.02479490803333 -24.77996329879892, 49.64958924386206 -24.75992736053729, 49.98894197884457 -24.74904497883643 M49.98894197884457 -24.74904497883643 C50.565175750852966 -24.693456399873284, 51.141409522861366 -24.637867820910138, 51.571354084417806 -24.596391586140776 M49.98894197884457 -24.74904497883643 C50.504335836450345 -24.699325553245004, 51.01972969405611 -24.649606127653577, 51.571354084417806 -24.596391586140776 M51.571354084417806 -24.596391586140776 C52.11647244601163 -24.508261076894318, 52.66159080760545 -24.42013056764786, 53.14073441815616 -24.342666344508217 M51.571354084417806 -24.596391586140776 C51.946141973608476 -24.535798786739917, 52.320929862799154 -24.47520598733906, 53.14073441815616 -24.342666344508217 M53.14073441815616 -24.342666344508217 C53.49521200784632 -24.26175914784389, 53.849689597536475 -24.18085195117956, 54.690634059637276 -23.988911865380516 M53.14073441815616 -24.342666344508217 C53.71447052860492 -24.2117148212763, 54.28820663905369 -24.08076329804438, 54.690634059637276 -23.988911865380516 M54.690634059637276 -23.988911865380516 C55.10061893191327 -23.86723050734351, 55.51060380418926 -23.745549149306505, 56.21468413878189 -23.536581801792508 M54.690634059637276 -23.988911865380516 C55.04855732722816 -23.88268211833711, 55.40648059481904 -23.776452371293708, 56.21468413878189 -23.536581801792508 M56.21468413878189 -23.536581801792508 C56.73598300054152 -23.344739001831112, 57.257281862301156 -23.152896201869716, 57.70662200690707 -22.987534874999977 M56.21468413878189 -23.536581801792508 C56.80984101963272 -23.317558568069508, 57.40499790048355 -23.098535334346504, 57.70662200690707 -22.987534874999977 M57.70662200690707 -22.987534874999977 C58.14131289025327 -22.79511011558952, 58.57600377359947 -22.602685356179066, 59.16031697129301 -22.3440272365953 M57.70662200690707 -22.987534874999977 C58.14489901084975 -22.793522646379948, 58.58317601479243 -22.599510417759916, 59.16031697129301 -22.3440272365953 M59.16031697129301 -22.3440272365953 C59.54959950131665 -22.140938790029328, 59.938882031340285 -21.937850343463356, 60.56979548751446 -21.608703197496645 M59.16031697129301 -22.3440272365953 C59.653813549930064 -22.08657038761999, 60.14731012856713 -21.82911353864468, 60.56979548751446 -21.608703197496645 M60.56979548751446 -21.608703197496645 C61.03821209500857 -21.324746297312185, 61.506628702502674 -21.040789397127725, 61.929265706016096 -20.784584361907168 M60.56979548751446 -21.608703197496645 C61.063694094520315 -21.309298959459316, 61.55759270152616 -21.009894721421983, 61.929265706016096 -20.784584361907168 M61.929265706016096 -20.784584361907168 C62.402896888444076 -20.454199752208847, 62.87652807087205 -20.123815142510526, 63.23314127206463 -19.875057210895253 M61.929265706016096 -20.784584361907168 C62.40847516048221 -20.450308591114545, 62.88768461494833 -20.116032820321923, 63.23314127206463 -19.875057210895253 M63.23314127206463 -19.875057210895253 C63.556129537205535 -19.617482664524086, 63.87911780234644 -19.35990811815292, 64.47606428127872 -18.883859186617375 M63.23314127206463 -19.875057210895253 C63.50779437427635 -19.656028670707407, 63.78244747648807 -19.437000130519557, 64.47606428127872 -18.883859186617375 M64.47606428127872 -18.883859186617375 C64.8054939094208 -18.584679914569065, 65.13492353756288 -18.285500642520756, 65.65292729640738 -17.815063334366585 M64.47606428127872 -18.883859186617375 C64.73256238377279 -18.650914396500166, 64.98906048626685 -18.417969606382957, 65.65292729640738 -17.815063334366585 M65.65292729640738 -17.815063334366585 C65.99818011618254 -17.45856145216508, 66.3434329359577 -17.102059569963572, 66.75889433488513 -16.673061565555788 M65.65292729640738 -17.815063334366585 C66.05881569301928 -17.3959502408077, 66.46470408963118 -16.976837147248812, 66.75889433488513 -16.673061565555788 M66.75889433488513 -16.673061565555788 C67.14100582707498 -16.224211664069728, 67.52311731926484 -15.775361762583671, 67.78942074092164 -15.462546610411625 M66.75889433488513 -16.673061565555788 C67.07973057074851 -16.29618906681167, 67.40056680661188 -15.91931656806755, 67.78942074092164 -15.462546610411625 M67.78942074092164 -15.462546610411625 C68.15562561217546 -14.971865444881608, 68.52183048342927 -14.481184279351591, 68.74027186046732 -14.188492734539441 M67.78942074092164 -15.462546610411625 C68.05960552437269 -15.100523614927363, 68.32979030782373 -14.738500619443101, 68.74027186046732 -14.188492734539441 M68.74027186046732 -14.188492734539441 C69.06165440288204 -13.694762846094175, 69.38303694529678 -13.20103295764891, 69.60754044231501 -12.85613529859888 M68.74027186046732 -14.188492734539441 C69.023457405451 -13.753443691478237, 69.30664295043468 -13.318394648417033, 69.60754044231501 -12.85613529859888 M69.60754044231501 -12.85613529859888 C69.8860156196264 -12.36167442261305, 70.1644907969378 -11.86721354662722, 70.3876626938334 -11.470949245084004 M69.60754044231501 -12.85613529859888 C69.89352904950694 -12.34833356704288, 70.17951765669888 -11.84053183548688, 70.3876626938334 -11.470949245084004 M70.3876626938334 -11.470949245084004 C70.64542868275039 -10.935692653789252, 70.90319467166738 -10.400436062494498, 71.07743292535527 -10.03862660061019 M70.3876626938334 -11.470949245084004 C70.57829998290917 -11.075086835333618, 70.76893727198495 -10.679224425583232, 71.07743292535527 -10.03862660061019 M71.07743292535527 -10.03862660061019 C71.24289224411504 -9.629938884335237, 71.40835156287483 -9.221251168060283, 71.67401672304406 -8.565053086155816 M71.07743292535527 -10.03862660061019 C71.2042052194421 -9.725496583240139, 71.33097751352894 -9.412366565870089, 71.67401672304406 -8.565053086155816 M71.67401672304406 -8.565053086155816 C71.86961615698083 -7.975938755675841, 72.0652155909176 -7.386824425195867, 72.17496259610824 -7.05628393137229 M71.67401672304406 -8.565053086155816 C71.8302608194324 -8.094470761950213, 71.98650491582073 -7.623888437744608, 72.17496259610824 -7.05628393137229 M72.17496259610824 -7.05628393137229 C72.29875115479736 -6.584224506790012, 72.42253971348647 -6.112165082207733, 72.57821205050286 -5.5185189923466 M72.17496259610824 -7.05628393137229 C72.31075714870592 -6.538440448586003, 72.44655170130358 -6.020596965799714, 72.57821205050286 -5.5185189923466 M72.57821205050286 -5.5185189923466 C72.64921821021576 -5.153917369377958, 72.72022436992867 -4.789315746409316, 72.88210804772302 -3.9580772750627573 M72.57821205050286 -5.5185189923466 C72.69966293617436 -4.894894363077154, 72.82111382184587 -4.271269733807708, 72.88210804772302 -3.9580772750627573 M72.88210804772302 -3.9580772750627573 C72.94525959572972 -3.4682863394064634, 73.00841114373642 -2.9784954037501694, 73.0854018139307 -2.3813709692507574 M72.88210804772302 -3.9580772750627573 C72.94204494289981 -3.4932185519502776, 73.00198183807659 -3.0283598288377975, 73.0854018139307 -2.3813709692507574 M73.0854018139307 -2.3813709692507574 C73.10772995151488 -2.0335922034288334, 73.13005808909907 -1.685813437606909, 73.18725797143418 -0.794879099323635 M73.0854018139307 -2.3813709692507574 C73.11024543006727 -1.994411594517854, 73.13508904620382 -1.6074522197849506, 73.18725797143418 -0.794879099323635 M73.18725797143418 -0.794879099323635 C73.18725797143418 -0.2023964405478188, 73.18725797143418 0.3900862182279974, 73.18725797143418 0.794879099323629 M73.18725797143418 -0.794879099323635 C73.18725797143418 -0.301776617973613, 73.18725797143418 0.191325863376409, 73.18725797143418 0.794879099323629 M73.18725797143418 0.794879099323629 C73.15305764373522 1.3275768092425686, 73.11885731603626 1.860274519161508, 73.0854018139307 2.3813709692507405 M73.18725797143418 0.794879099323629 C73.16462155719975 1.1474595228095685, 73.14198514296531 1.5000399462955083, 73.0854018139307 2.3813709692507405 M73.0854018139307 2.3813709692507405 C73.01892067495363 2.896985554971161, 72.95243953597655 3.4126001406915814, 72.88210804772302 3.95807727506274 M73.0854018139307 2.3813709692507405 C73.0256633842235 2.8446904333725533, 72.96592495451631 3.3080098974943666, 72.88210804772302 3.95807727506274 M72.88210804772302 3.95807727506274 C72.78180572217113 4.473108517867741, 72.68150339661922 4.988139760672744, 72.57821205050286 5.5185189923465945 M72.88210804772302 3.95807727506274 C72.81662644551487 4.2943114628601196, 72.7511448433067 4.6305456506575, 72.57821205050286 5.5185189923465945 M72.57821205050286 5.5185189923465945 C72.42801729504824 6.091276689713837, 72.27782253959361 6.664034387081079, 72.17496259610824 7.056283931372274 M72.57821205050286 5.5185189923465945 C72.48173095033466 5.886443242461225, 72.38524985016647 6.254367492575856, 72.17496259610824 7.056283931372274 M72.17496259610824 7.056283931372274 C72.07429059412468 7.35949196144153, 71.97361859214111 7.662699991510787, 71.67401672304406 8.565053086155798 M72.17496259610824 7.056283931372274 C72.01209644768187 7.546810821235755, 71.84923029925548 8.037337711099235, 71.67401672304406 8.565053086155798 M71.67401672304406 8.565053086155798 C71.48193169321989 9.039506823532927, 71.28984666339572 9.513960560910053, 71.07743292535528 10.038626600610183 M71.67401672304406 8.565053086155798 C71.43882507048781 9.145981015091003, 71.20363341793157 9.726908944026208, 71.07743292535528 10.038626600610183 M71.07743292535528 10.038626600610183 C70.86381002461131 10.482219124802892, 70.65018712386733 10.9258116489956, 70.3876626938334 11.470949245083998 M71.07743292535528 10.038626600610183 C70.91299533376426 10.380084777949762, 70.74855774217323 10.721542955289342, 70.3876626938334 11.470949245083998 M70.3876626938334 11.470949245083998 C70.1572914154704 11.879996777439015, 69.92692013710739 12.289044309794031, 69.60754044231503 12.856135298598875 M70.3876626938334 11.470949245083998 C70.15925737469314 11.876506017764065, 69.93085205555289 12.282062790444133, 69.60754044231503 12.856135298598875 M69.60754044231503 12.856135298598875 C69.27700842503454 13.363921237415962, 68.94647640775403 13.87170717623305, 68.74027186046733 14.188492734539427 M69.60754044231503 12.856135298598875 C69.32473413460109 13.290601731374293, 69.04192782688715 13.725068164149711, 68.74027186046733 14.188492734539427 M68.74027186046733 14.188492734539427 C68.49572778183575 14.516159521481866, 68.25118370320418 14.843826308424305, 67.78942074092166 15.46254661041162 M68.74027186046733 14.188492734539427 C68.46626374304631 14.555638649230573, 68.19225562562528 14.922784563921722, 67.78942074092166 15.46254661041162 M67.78942074092166 15.46254661041162 C67.55714154459343 15.735394971479439, 67.32486234826521 16.00824333254726, 66.75889433488513 16.673061565555773 M67.78942074092166 15.46254661041162 C67.41774675279491 15.89913602571434, 67.04607276466815 16.33572544101706, 66.75889433488513 16.673061565555773 M66.75889433488513 16.673061565555773 C66.37692158483993 17.06747979052345, 65.99494883479473 17.461898015491126, 65.6529272964074 17.815063334366577 M66.75889433488513 16.673061565555773 C66.42011913217694 17.0228747763134, 66.08134392946874 17.372687987071025, 65.6529272964074 17.815063334366577 M65.6529272964074 17.815063334366577 C65.25296490770918 18.17829859335739, 64.85300251901097 18.541533852348206, 64.47606428127874 18.883859186617357 M65.6529272964074 17.815063334366577 C65.22868054281778 18.200353011022678, 64.80443378922816 18.585642687678774, 64.47606428127874 18.883859186617357 M64.47606428127874 18.883859186617357 C64.21386707084943 19.092954484573927, 63.95166986042013 19.302049782530496, 63.23314127206463 19.87505721089525 M64.47606428127874 18.883859186617357 C64.01434016545824 19.25207188198947, 63.55261604963772 19.62028457736158, 63.23314127206463 19.87505721089525 M63.23314127206463 19.87505721089525 C62.7175324677292 20.234723592454248, 62.20192366339377 20.594389974013243, 61.92926570601611 20.78458436190716 M63.23314127206463 19.87505721089525 C62.847811265097725 20.143846743088208, 62.462481258130815 20.412636275281166, 61.92926570601611 20.78458436190716 M61.92926570601611 20.78458436190716 C61.43819354359771 21.082275192625545, 60.947121381179315 21.379966023343933, 60.56979548751447 21.60870319749664 M61.92926570601611 20.78458436190716 C61.52489541473088 21.02971600882787, 61.12052512344565 21.274847655748577, 60.56979548751447 21.60870319749664 M60.56979548751447 21.60870319749664 C60.10446964528831 21.8514633913306, 59.639143803062154 22.09422358516456, 59.160316971293014 22.344027236595295 M60.56979548751447 21.60870319749664 C60.12183133512278 21.84240580886465, 59.673867182731094 22.07610842023266, 59.160316971293014 22.344027236595295 M59.160316971293014 22.344027236595295 C58.77303615912605 22.515464963864495, 58.385755346959094 22.686902691133696, 57.706622006907075 22.987534874999973 M59.160316971293014 22.344027236595295 C58.71261179676533 22.542213036656563, 58.264906622237646 22.74039883671783, 57.706622006907075 22.987534874999973 M57.706622006907075 22.987534874999973 C57.396005110317596 23.10184476425602, 57.085388213728116 23.216154653512064, 56.214684138781905 23.536581801792504 M57.706622006907075 22.987534874999973 C57.24359508927218 23.15793306086352, 56.7805681716373 23.328331246727064, 56.214684138781905 23.536581801792504 M56.214684138781905 23.536581801792504 C55.68232312418839 23.69458375650387, 55.149962109594874 23.852585711215237, 54.690634059637304 23.988911865380512 M56.214684138781905 23.536581801792504 C55.72546615576207 23.681779131195196, 55.236248172742236 23.82697646059789, 54.690634059637304 23.988911865380512 M54.690634059637304 23.988911865380512 C54.32375735683132 24.07264907870175, 53.95688065402533 24.156386292022994, 53.14073441815617 24.342666344508213 M54.690634059637304 23.988911865380512 C54.172590339770686 24.107151963888867, 53.65454661990407 24.22539206239722, 53.14073441815617 24.342666344508213 M53.14073441815617 24.342666344508213 C52.68745473158757 24.415949088996154, 52.23417504501897 24.489231833484098, 51.57135408441782 24.596391586140772 M53.14073441815617 24.342666344508213 C52.74275550769321 24.40700848837932, 52.34477659723026 24.471350632250424, 51.57135408441782 24.596391586140772 M51.57135408441782 24.596391586140772 C51.17489251897405 24.63463775654434, 50.778430953530275 24.672883926947907, 49.98894197884457 24.74904497883643 M51.57135408441782 24.596391586140772 C51.0735594786207 24.644413233076417, 50.575764872823584 24.692434880012062, 49.98894197884457 24.74904497883643 M49.98894197884457 24.74904497883643 C49.582194635597595 24.762088574448686, 49.17544729235062 24.775132170060942, 48.4000005722046 24.799999237060547 M49.98894197884457 24.74904497883643 C49.45491379150603 24.766170223381568, 48.92088560416749 24.783295467926706, 48.4000005722046 24.799999237060547 M48.4000005722046 24.799999237060547 C48.4000005722046 24.799999237060547, 48.4000005722046 24.799999237060547, 48.40000057220459 24.799999237060547 M48.4000005722046 24.799999237060547 C48.4000005722046 24.799999237060547, 48.40000057220459 24.799999237060547, 48.40000057220459 24.799999237060547 M48.40000057220459 24.799999237060547 C28.39191963131164 24.799999237060547, 8.383838690418692 24.799999237060547, -48.40000057220458 24.799999237060547 M48.40000057220459 24.799999237060547 C10.840459870491536 24.799999237060547, -26.71908083122152 24.799999237060547, -48.40000057220458 24.799999237060547 M-48.40000057220458 24.799999237060547 C-48.777094763886744 24.787906560302616, -49.1541889555689 24.77581388354469, -49.98894197884456 24.74904497883643 M-48.40000057220458 24.799999237060547 C-48.873544415606354 24.784813607699828, -49.347088259008125 24.76962797833911, -49.98894197884456 24.74904497883643 M-49.98894197884456 24.74904497883643 C-50.476806550684636 24.70198127033401, -50.96467112252471 24.65491756183159, -51.57135408441781 24.596391586140772 M-49.98894197884456 24.74904497883643 C-50.5151832178869 24.6982791194037, -51.04142445692925 24.64751325997097, -51.57135408441781 24.596391586140772 M-51.57135408441781 24.596391586140772 C-52.14310868030595 24.503954737100692, -52.71486327619409 24.41151788806061, -53.140734418156164 24.342666344508213 M-51.57135408441781 24.596391586140772 C-52.18427366096543 24.49729950226686, -52.79719323751305 24.398207418392946, -53.140734418156164 24.342666344508213 M-53.140734418156164 24.342666344508213 C-53.6355459959356 24.229728830827362, -54.13035757371504 24.11679131714651, -54.690634059637276 23.988911865380516 M-53.140734418156164 24.342666344508213 C-53.62308740111468 24.232572423795308, -54.105440384073205 24.1224785030824, -54.690634059637276 23.988911865380516 M-54.690634059637276 23.988911865380516 C-55.29514083358472 23.809497427993723, -55.89964760753216 23.630082990606933, -56.21468413878188 23.536581801792515 M-54.690634059637276 23.988911865380516 C-55.13370869231816 23.857409640147036, -55.57678332499904 23.72590741491356, -56.21468413878188 23.536581801792515 M-56.21468413878188 23.536581801792515 C-56.59742627745204 23.39572915673235, -56.9801684161222 23.254876511672187, -57.70662200690707 22.987534874999977 M-56.21468413878188 23.536581801792515 C-56.74906659162012 23.3399241193708, -57.283449044458365 23.143266436949084, -57.70662200690707 22.987534874999977 M-57.70662200690707 22.987534874999977 C-58.055709759736956 22.83300408214245, -58.404797512566844 22.67847328928492, -59.16031697129301 22.344027236595302 M-57.70662200690707 22.987534874999977 C-58.21717781328216 22.761526964617612, -58.727733619657265 22.535519054235245, -59.16031697129301 22.344027236595302 M-59.16031697129301 22.344027236595302 C-59.581512352174556 22.124289876177915, -60.002707733056106 21.904552515760525, -60.569795487514455 21.60870319749665 M-59.16031697129301 22.344027236595302 C-59.63977862614963 22.09389239836645, -60.119240281006256 21.843757560137593, -60.569795487514455 21.60870319749665 M-60.569795487514455 21.60870319749665 C-61.053206279293406 21.31565673468311, -61.53661707107235 21.02261027186957, -61.92926570601608 20.78458436190718 M-60.569795487514455 21.60870319749665 C-60.854372510650265 21.436190933711504, -61.138949533786075 21.263678669926357, -61.92926570601608 20.78458436190718 M-61.92926570601608 20.78458436190718 C-62.291321030651254 20.532030240564083, -62.65337635528642 20.279476119220984, -63.23314127206462 19.875057210895257 M-61.92926570601608 20.78458436190718 C-62.21550847462486 20.58491379777543, -62.50175124323365 20.38524323364369, -63.23314127206462 19.875057210895257 M-63.23314127206462 19.875057210895257 C-63.66581623222914 19.5300104441283, -64.09849119239365 19.18496367736135, -64.47606428127872 18.883859186617375 M-63.23314127206462 19.875057210895257 C-63.54309125068466 19.62788035106111, -63.853041229304694 19.38070349122696, -64.47606428127872 18.883859186617375 M-64.47606428127872 18.883859186617375 C-64.76347640846296 18.622839097216815, -65.0508885356472 18.361819007816255, -65.65292729640737 17.815063334366595 M-64.47606428127872 18.883859186617375 C-64.84190329621016 18.551613872826547, -65.2077423111416 18.219368559035722, -65.65292729640737 17.815063334366595 M-65.65292729640737 17.815063334366595 C-65.97636770707506 17.481084555400646, -66.29980811774274 17.147105776434692, -66.75889433488513 16.673061565555784 M-65.65292729640737 17.815063334366595 C-65.90449681937213 17.555297147663534, -66.15606634233689 17.295530960960477, -66.75889433488513 16.673061565555784 M-66.75889433488513 16.673061565555784 C-67.13163963953664 16.235213720903428, -67.50438494418816 15.79736587625107, -67.78942074092164 15.462546610411627 M-66.75889433488513 16.673061565555784 C-67.14108494164357 16.224118731595723, -67.52327554840201 15.77517589763566, -67.78942074092164 15.462546610411627 M-67.78942074092164 15.462546610411627 C-68.00670037172269 15.171411699719812, -68.22398000252372 14.880276789027999, -68.74027186046732 14.188492734539444 M-67.78942074092164 15.462546610411627 C-68.02106124441518 15.152169438614283, -68.25270174790872 14.84179226681694, -68.74027186046732 14.188492734539444 M-68.74027186046732 14.188492734539444 C-69.01559912614941 13.765516118728927, -69.29092639183152 13.342539502918408, -69.60754044231501 12.856135298598893 M-68.74027186046732 14.188492734539444 C-69.08595915430908 13.657424221162675, -69.43164644815084 13.126355707785903, -69.60754044231501 12.856135298598893 M-69.60754044231501 12.856135298598893 C-69.88418911236585 12.364917571208085, -70.16083778241668 11.873699843817278, -70.38766269383339 11.470949245084007 M-69.60754044231501 12.856135298598893 C-69.86650094187867 12.396324709029564, -70.12546144144231 11.936514119460233, -70.38766269383339 11.470949245084007 M-70.38766269383339 11.470949245084007 C-70.65563776309975 10.914493280004486, -70.92361283236609 10.358037314924964, -71.07743292535527 10.038626600610193 M-70.38766269383339 11.470949245084007 C-70.64118146702545 10.94451208811793, -70.89470024021752 10.418074931151853, -71.07743292535527 10.038626600610193 M-71.07743292535527 10.038626600610193 C-71.30223131526976 9.48337023134018, -71.52702970518428 8.928113862070166, -71.67401672304406 8.565053086155817 M-71.07743292535527 10.038626600610193 C-71.21434793833987 9.70044387146654, -71.35126295132447 9.362261142322886, -71.67401672304406 8.565053086155817 M-71.67401672304406 8.565053086155817 C-71.77791913462647 8.252115577070738, -71.88182154620887 7.939178067985658, -72.17496259610824 7.056283931372283 M-71.67401672304406 8.565053086155817 C-71.81691738425278 8.134659062723559, -71.95981804546149 7.704265039291301, -72.17496259610824 7.056283931372283 M-72.17496259610824 7.056283931372283 C-72.27621646850238 6.670159032227513, -72.37747034089654 6.284034133082744, -72.57821205050284 5.518518992346603 M-72.17496259610824 7.056283931372283 C-72.28615855667006 6.6322455411159424, -72.39735451723186 6.208207150859601, -72.57821205050284 5.518518992346603 M-72.57821205050284 5.518518992346603 C-72.6855975726864 4.967117031872155, -72.79298309486997 4.415715071397707, -72.88210804772302 3.95807727506276 M-72.57821205050284 5.518518992346603 C-72.66430209574665 5.076464805157169, -72.75039214099046 4.634410617967735, -72.88210804772302 3.95807727506276 M-72.88210804772302 3.95807727506276 C-72.9420593016636 3.4931071882137728, -73.00201055560417 3.028137101364785, -73.0854018139307 2.381370969250771 M-72.88210804772302 3.95807727506276 C-72.93875362401201 3.5187453712996493, -72.99539920030098 3.0794134675365386, -73.0854018139307 2.381370969250771 M-73.0854018139307 2.381370969250771 C-73.11052200934259 1.9901036490538688, -73.13564220475448 1.5988363288569665, -73.18725797143418 0.7948790993236381 M-73.0854018139307 2.381370969250771 C-73.1146310151717 1.9261025665356217, -73.1438602164127 1.4708341638204723, -73.18725797143418 0.7948790993236381 M-73.18725797143418 0.7948790993236381 C-73.18725797143418 0.3718751783063522, -73.18725797143418 -0.051128742710933706, -73.18725797143418 -0.7948790993236261 M-73.18725797143418 0.7948790993236381 C-73.18725797143418 0.37254570864668396, -73.18725797143418 -0.049787682030270175, -73.18725797143418 -0.7948790993236261 M-73.18725797143418 -0.7948790993236261 C-73.1551720558929 -1.2946431331638986, -73.12308614035162 -1.794407167004171, -73.0854018139307 -2.3813709692507374 M-73.18725797143418 -0.7948790993236261 C-73.14668240924762 -1.4268762323836546, -73.10610684706104 -2.0588733654436826, -73.0854018139307 -2.3813709692507374 M-73.0854018139307 -2.3813709692507374 C-73.03650855216164 -2.7605774524650677, -72.98761529039255 -3.139783935679398, -72.88210804772302 -3.9580772750627484 M-73.0854018139307 -2.3813709692507374 C-73.03050395565973 -2.807147917192119, -72.97560609738876 -3.2329248651335014, -72.88210804772302 -3.9580772750627484 M-72.88210804772302 -3.9580772750627484 C-72.80422900651077 -4.3579696919465025, -72.72634996529851 -4.757862108830257, -72.57821205050286 -5.518518992346592 M-72.88210804772302 -3.9580772750627484 C-72.76434884186547 -4.5627459087243505, -72.6465896360079 -5.167414542385953, -72.57821205050286 -5.518518992346592 M-72.57821205050286 -5.518518992346592 C-72.49719831370088 -5.827459482348164, -72.4161845768989 -6.1363999723497376, -72.17496259610826 -7.056283931372271 M-72.57821205050286 -5.518518992346592 C-72.46820411285704 -5.938026936331875, -72.35819617521122 -6.357534880317158, -72.17496259610826 -7.056283931372271 M-72.17496259610826 -7.056283931372271 C-72.01174328581014 -7.547874488524733, -71.84852397551201 -8.039465045677193, -71.67401672304408 -8.565053086155787 M-72.17496259610826 -7.056283931372271 C-72.04076911965252 -7.460453301630038, -71.90657564319679 -7.864622671887803, -71.67401672304408 -8.565053086155787 M-71.67401672304408 -8.565053086155787 C-71.5322927941479 -8.915113930575082, -71.39056886525174 -9.265174774994376, -71.07743292535528 -10.038626600610181 M-71.67401672304408 -8.565053086155787 C-71.44265243220615 -9.13652735764973, -71.21128814136823 -9.70800162914367, -71.07743292535528 -10.038626600610181 M-71.07743292535528 -10.038626600610181 C-70.87234864250739 -10.464488502044516, -70.6672643596595 -10.890350403478848, -70.3876626938334 -11.470949245083997 M-71.07743292535528 -10.038626600610181 C-70.88065045932319 -10.447249601796093, -70.68386799329109 -10.855872602982004, -70.3876626938334 -11.470949245083997 M-70.3876626938334 -11.470949245083997 C-70.1322987838538 -11.924373725652671, -69.87693487387418 -12.377798206221346, -69.60754044231501 -12.856135298598884 M-70.3876626938334 -11.470949245083997 C-70.18278497121142 -11.834730387718377, -69.97790724858943 -12.198511530352757, -69.60754044231501 -12.856135298598884 M-69.60754044231501 -12.856135298598884 C-69.31478627291946 -13.305884318292138, -69.02203210352391 -13.755633337985392, -68.74027186046732 -14.188492734539436 M-69.60754044231501 -12.856135298598884 C-69.4275397365507 -13.13266471961018, -69.24753903078638 -13.409194140621477, -68.74027186046732 -14.188492734539436 M-68.74027186046732 -14.188492734539436 C-68.41394655294467 -14.625738917772702, -68.08762124542201 -15.06298510100597, -67.78942074092166 -15.46254661041162 M-68.74027186046732 -14.188492734539436 C-68.36806836866516 -14.687211505118656, -67.99586487686302 -15.185930275697874, -67.78942074092166 -15.46254661041162 M-67.78942074092166 -15.46254661041162 C-67.4844619452285 -15.820768564479845, -67.17950314953535 -16.17899051854807, -66.75889433488513 -16.673061565555773 M-67.78942074092166 -15.46254661041162 C-67.46052398972849 -15.848887449118417, -67.13162723853532 -16.235228287825215, -66.75889433488513 -16.673061565555773 M-66.75889433488513 -16.673061565555773 C-66.34567991140626 -17.099739383332796, -65.9324654879274 -17.52641720110982, -65.6529272964074 -17.81506333436657 M-66.75889433488513 -16.673061565555773 C-66.52447560660032 -16.915118148645362, -66.29005687831551 -17.15717473173495, -65.6529272964074 -17.81506333436657 M-65.6529272964074 -17.81506333436657 C-65.26307861037331 -18.169113596191732, -64.87322992433923 -18.523163858016893, -64.47606428127875 -18.883859186617354 M-65.6529272964074 -17.81506333436657 C-65.2741058223482 -18.15909897404018, -64.89528434828901 -18.503134613713794, -64.47606428127875 -18.883859186617354 M-64.47606428127875 -18.883859186617354 C-64.22113996653744 -19.087154543802633, -63.96621565179613 -19.290449900987916, -63.233141272064636 -19.87505721089525 M-64.47606428127875 -18.883859186617354 C-64.1273343738895 -19.161962007667707, -63.77860446650025 -19.44006482871806, -63.233141272064636 -19.87505721089525 M-63.233141272064636 -19.87505721089525 C-62.74684411576172 -20.21427705566756, -62.2605469594588 -20.553496900439868, -61.92926570601611 -20.784584361907157 M-63.233141272064636 -19.87505721089525 C-62.94146671100526 -20.078516758302023, -62.64979214994589 -20.281976305708795, -61.92926570601611 -20.784584361907157 M-61.92926570601611 -20.784584361907157 C-61.6015302335205 -20.983259531321412, -61.273794761024895 -21.181934700735667, -60.56979548751447 -21.608703197496638 M-61.92926570601611 -20.784584361907157 C-61.484139798829084 -21.05442230269412, -61.03901389164205 -21.324260243481085, -60.56979548751447 -21.608703197496638 M-60.56979548751447 -21.608703197496638 C-60.15047915699792 -21.827460258542192, -59.73116282648137 -22.046217319587747, -59.160316971293014 -22.344027236595295 M-60.56979548751447 -21.608703197496638 C-60.149753955181126 -21.8278385958655, -59.72971242284779 -22.04697399423436, -59.160316971293014 -22.344027236595295 M-59.160316971293014 -22.344027236595295 C-58.80450589048094 -22.5015342473101, -58.44869480966886 -22.659041258024907, -57.706622006907075 -22.98753487499997 M-59.160316971293014 -22.344027236595295 C-58.59284489025111 -22.59523029341136, -58.025372809209195 -22.84643335022742, -57.706622006907075 -22.98753487499997 M-57.706622006907075 -22.98753487499997 C-57.140439878512346 -23.19589513197945, -56.57425775011762 -23.404255388958937, -56.21468413878191 -23.536581801792504 M-57.706622006907075 -22.98753487499997 C-57.2387029816553 -23.159733401688676, -56.77078395640353 -23.331931928377386, -56.21468413878191 -23.536581801792504 M-56.21468413878191 -23.536581801792504 C-55.80405717292113 -23.65845372983506, -55.39343020706034 -23.78032565787761, -54.69063405963731 -23.98891186538051 M-56.21468413878191 -23.536581801792504 C-55.87863568805334 -23.636319218014428, -55.542587237324774 -23.736056634236355, -54.69063405963731 -23.98891186538051 M-54.69063405963731 -23.98891186538051 C-54.315290995896284 -24.074581470337005, -53.939947932155256 -24.1602510752935, -53.14073441815617 -24.34266634450821 M-54.69063405963731 -23.98891186538051 C-54.09246213356962 -24.125440704068847, -53.494290207501926 -24.261969542757182, -53.14073441815617 -24.34266634450821 M-53.14073441815617 -24.34266634450821 C-52.63802516935671 -24.423940477285658, -52.13531592055724 -24.50521461006311, -51.57135408441783 -24.596391586140772 M-53.14073441815617 -24.34266634450821 C-52.658507985155836 -24.420628974473864, -52.17628155215551 -24.498591604439518, -51.57135408441783 -24.596391586140772 M-51.57135408441783 -24.596391586140772 C-51.23870441694626 -24.628481899491995, -50.906054749474706 -24.66057221284322, -49.98894197884457 -24.74904497883643 M-51.57135408441783 -24.596391586140772 C-51.17987166533576 -24.634157424283124, -50.78838924625369 -24.67192326242548, -49.98894197884457 -24.74904497883643 M-49.98894197884457 -24.74904497883643 C-49.406127996622736 -24.767734688867687, -48.82331401440091 -24.78642439889894, -48.4000005722046 -24.799999237060547 M-49.98894197884457 -24.74904497883643 C-49.46847894913694 -24.765735215179323, -48.948015919429295 -24.782425451522215, -48.4000005722046 -24.799999237060547 M-48.4000005722046 -24.799999237060547 C-48.4000005722046 -24.799999237060547, -48.40000057220459 -24.799999237060547, -48.40000057220459 -24.799999237060547 M-48.4000005722046 -24.799999237060547 C-48.4000005722046 -24.799999237060547, -48.40000057220459 -24.799999237060547, -48.40000057220459 -24.799999237060547" stroke="#999" stroke-width="1.3" fill="none" stroke-dasharray="0 0" style=""/></g><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> any</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> client</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/post-journey.mmd">diagrams/post-journey.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A post’s life begins when a human posts in a channel.
+Thready always works with the <strong>complete post</strong> — the root
+message plus its full chain of organic replies, never the system’s own
+status replies. This “complete post” framing is the first thing to
+understand, because it is why a hashtag added in a <em>reply</em> still
+steers processing: the reply is part of the same logical post.</p>
+<p>The arrival raises a <code>post.received</code> event, and the
+BackgroundTasks queue <strong>claims the post exactly once</strong> so
+an event storm cannot process it twice. Pre-processing then extracts
+every hashtag, link, attachment, and the full thread context —
+everything downstream steps will need.</p>
+<p>The post is then <strong>classified</strong> by hashtag and content
+type. If the tags are missing or too weak, an
+<strong>indirect-determination</strong> step infers intent from the
+content itself: a GitHub link implies research, a torrent link implies
+download, a YouTube link implies video. If it still cannot be
+classified, the post is not dropped — it is generically ingested
+(stored, embedded, indexed) and queued for manual review.</p>
+<p>Classification produces a <strong>dispatch</strong> of one or more
+Skills, ordered
+<code>download → convert → analyze → research → reply</code>. Categories
+are <strong>additive</strong>, which is the single most important
+behaviour here: a post tagged <code>#Research #Video</code> both
+downloads the video <em>and</em> runs deep research, rather than one
+winning over the other. The ordering only sequences the steps; it does
+not make them exclusive.</p>
+<p>The work then fans out. Downloads go to Boba (torrents), MeTube
+(video), or the generic Download Manager, landing in the <strong>Asset
+Service</strong> as a raw file plus a web-optimized <code>-web</code>
+rendition. Research produces documents. Both the assets/metadata and the
+generated text are <strong>embedded into pgvector</strong> — this
+embedding step is precisely what makes everything <strong>searchable by
+meaning</strong> afterwards, and it is the step that silently produces
+garbage if the hash embedder is in use <code>[GAP: 1]</code>.</p>
+<p>Finally the system posts a <strong>status reply</strong> to the
+original message (success/failure, metrics, asset references), marks the
+post processed (still re-processable on request), and the semantic index
+becomes queryable from any client. The diagram’s backbone is that single
+idea: an additive, ordered dispatch feeding one semantic index, with a
+status reply closing the loop back to where the human is looking.</p>
+<h2 id="complete-posts-root-reply-chain">3. Complete posts: root + reply
+chain</h2>
+<p><strong>Critical behaviour (VERIFIED, final request §3.2.1).</strong>
+Hashtags are frequently added as a <em>reply</em> to a link-only or
+text-only root post. Thready therefore assembles the <strong>root post +
+the full chain of organic replies</strong> into one logical “complete
+post” before classifying it. This means:</p>
+<ul>
+<li>A root post with just a YouTube link, plus a reply
+<code>#Video #Research</code>, is processed as a video-download
+<strong>and</strong> research post.</li>
+<li>Replies <strong>you or the system posts about processing results are
+excluded</strong> — only organic human content is processed.</li>
+</ul>
+<h2 id="reading-processed-threads">4. Reading processed threads</h2>
+<p>From any client you can browse a channel’s threads and see, per post:
+its detected categories, the status reply, linked assets, generated
+research, and processing state.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> thread list <span class="at">--channel</span> <span class="op">&lt;</span>chan<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> thread show <span class="op">&lt;</span>post-id<span class="op">&gt;</span>          <span class="co"># full complete-post view + assets + research links</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> post status <span class="op">&lt;</span>post-id<span class="op">&gt;</span>          <span class="co"># processed | queued | failed | retrying</span></span></code></pre></div>
+<p>Portal equivalents: <a
+href="./web-portal-guide.md#4-threads--posts">web-portal-guide.md
+§4</a>.</p>
+<h2 id="hashtag-categories">5. Hashtag categories</h2>
+<p>Each category has a written Skill (recipe). A post may belong to
+<strong>several at once</strong> — all matching recipes run, ordered by
+precedence. Summary of behaviour (final request §3.2.2):</p>
+<table>
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Hashtag(s)</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>#Video</code> <code>#Videos</code> (±
+<code>#ToDownload</code>)</td>
+<td>Download every video; keep raw + generate <code>-web</code>
+rendition; maintain post↔︎asset links; re-downloadable via API.</td>
+</tr>
+<tr>
+<td><code>#Torrent</code> <code>#Magnet</code></td>
+<td>Use the torrent/magnet, or find it via Boba if absent; download with
+callback.</td>
+</tr>
+<tr>
+<td><code>#Serial</code> <code>#Series</code></td>
+<td>Find all seasons via 3rd-party search; download all with
+callbacks.</td>
+</tr>
+<tr>
+<td><code>#Movie</code> <code>#Movies</code></td>
+<td>As Series, movie-oriented.</td>
+</tr>
+<tr>
+<td><code>#Research</code> (± <code>#Technology</code>)</td>
+<td>Multi-pass deep web research → comprehensive docs →
+Skills/embeddings; semantic + CodeGraph ingest.</td>
+</tr>
+<tr>
+<td><code>#Documentary</code></td>
+<td>As Movies; without <code>#ToDownload</code>, full processing + a
+documentation/book.</td>
+</tr>
+<tr>
+<td><code>#Concert</code> <code>#Concerts</code></td>
+<td>Live music/artist media (video/audio).</td>
+</tr>
+<tr>
+<td><code>#Game</code> <code>#Games</code></td>
+<td>Seek per platform (default PC-Windows/PS4/Android; all others
+supported); PC default OS Windows unless
+<code>#macOS</code>/<code>#Linux</code>.</td>
+</tr>
+<tr>
+<td><code>#Software</code></td>
+<td>As games; default OS Windows/Linux/macOS.</td>
+</tr>
+<tr>
+<td><code>#Channel</code></td>
+<td>Download full channel; raw + web; IT content → research.</td>
+</tr>
+<tr>
+<td><code>#Playlist</code></td>
+<td>As channels; grouped with ordering-number prefixes for correct watch
+order.</td>
+</tr>
+<tr>
+<td><code>#Music</code></td>
+<td>MP3/OPUS/FLAC + majors; locate if no links.</td>
+</tr>
+<tr>
+<td><code>#Book</code> <code>#Books</code></td>
+<td>Determine author, download full bibliography; if IT → research +
+Skills.</td>
+</tr>
+<tr>
+<td><code>#Comic</code> <code>#Comics</code></td>
+<td>Download; <strong>OCR full transcription</strong>; semantic ingest
+(no research/Skills).</td>
+</tr>
+<tr>
+<td><code>#Netflix</code></td>
+<td>Find first (unless links provided); as movies/series.</td>
+</tr>
+<tr>
+<td><code>#Training</code></td>
+<td>Full course download (Udemy/Coursera etc.); analyze; docs +
+Skills.</td>
+</tr>
+<tr>
+<td><code>#Technology</code> (± <code>#Research</code>)</td>
+<td>Mandatory deep research + analysis; download all media; grow Skills;
+powerful semantic search.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Indirect determination</strong> (§3.5): if tags are
+missing/weak — torrent links →
+<code>Torrent</code>+<code>ToDownload</code>; GitHub/coding links → deep
+research + docs + Skill growth; YouTube/streaming/media → download +
+research if IT-related. If still unclassified, the post is
+<strong>generically ingested</strong> (stored + embedded + indexed) and
+queued for manual review — <strong>never silently dropped</strong>
+(Q32).</p>
+<h2 id="semantic-search">6. Semantic search</h2>
+<p>Thready re-implements the “Lumen-style” search-by-meaning in-house
+(final request §15) over <strong>both</strong> original posts and
+generated materials, backed by pgvector + a real llama.cpp embedding
+model.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Simple query</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> search <span class="st">&quot;kubernetes operator retry backoff&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtered</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> search <span class="st">&quot;invoice signature&quot;</span> <span class="at">--kind</span> asset <span class="at">--account</span> Acme <span class="at">--since</span> 90d <span class="at">--limit</span> 20</span></code></pre></div>
+<p>Or via REST (<code>GET/POST /v1/search</code>) and the MCP tool for
+CLI agents (final request §21.3). Target latency &lt; 500 ms (Aggressive
+SLO). Results return source ids that are hydrated from the relational
+store, so you always get the full post/asset context, not just a vector
+hit.</p>
+<blockquote>
+<p><code>[GAP: 1]</code> <strong>If search results look
+irrelevant</strong>, the system was likely started on HelixLLM’s
+<strong>default hash embedder</strong> (non-semantic). Real search
+requires <code>HELIX_EMBEDDING_PROVIDER=llama</code>. See <a
+href="./troubleshooting.md#5-semantic-search-returns-irrelevant-results">troubleshooting.md
+§5</a>.</p>
+</blockquote>
+<h2 id="media-assets-and-downloads">7. Media, assets and downloads</h2>
+<p><strong>Assets, not file paths.</strong> Links from clients to
+downloaded media are <strong>never</strong> direct file paths — they
+resolve through the <strong>Asset Service</strong> (built on
+Catalogizer), which enforces auth/RBAC and maps to real or virtual
+content. Every video is kept as the <strong>raw original</strong> plus a
+web-optimized <code>-web</code> rendition. The <strong>target</strong>
+media profile (Q36, <code>[DEFAULT — adjustable]</code>) is H.264/AAC
+fMP4 baseline + H.265/AV1; adaptive 1080p/720p/480p delivered via
+HLS/DASH; audio MP3 320k + Opus 128k + FLAC.</p>
+<blockquote>
+<p><code>[GAP: 9]</code> <strong>Honest status of
+streaming/transcoding.</strong> Catalogizer is mature but is <strong>not
+yet decoupled</strong> into a standalone Asset Service, and its
+<code>Streaming</code> submodule is a <strong>WebSocket hub, not media
+byte/transcode streaming</strong> — actual media serving is a REST API
+plus a <em>separate</em> transcoder. Full <strong>adaptive HLS/DASH +
+the transcoder integration is a <code>P1</code> improvement</strong> on
+the decoupled Asset Service, not a shipped capability. For the zero
+version, expect the <strong>raw original + a single <code>-web</code>
+rendition + HTTP Range (<code>OpenSeekable</code>) serving</strong>; the
+multi-bitrate HLS/DASH ladder above is the target the <code>P1</code>
+work delivers. Content-hash dedup + integrity checksums land with the
+same <code>P1</code> (see <code>THREADY_ASSET_DEDUP</code>, <a
+href="./configuration.md#13-assets--media-directories">configuration.md
+§13</a>).</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> asset list <span class="at">--post</span> <span class="op">&lt;</span>post-id<span class="op">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> asset get <span class="op">&lt;</span>asset-id<span class="op">&gt;</span> --rendition web <span class="at">-o</span> ./out.mp4    <span class="co"># resolves a signed URL via Asset Service</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> asset reheal <span class="op">&lt;</span>asset-id<span class="op">&gt;</span>                              <span class="co"># re-download if the physical link broke</span></span></code></pre></div>
+<p><strong>Honest status of the download stack</strong> (so you know
+what works today):</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>Status</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Torrents (<code>#Torrent</code>) via <strong>Boba</strong></td>
+<td>FOUNDATION</td>
+<td>SSE + <code>POST /api/v1/hooks</code> callbacks exist; contract
+being standardized <code>[GAP: 6.4]</code>.</td>
+</tr>
+<tr>
+<td>Video (<code>#Video</code>, <code>#Channel</code>, …) via
+<strong>MeTube</strong></td>
+<td>FOUNDATION</td>
+<td><code>[GAP: 5]</code> MeTube is <strong>poll-only</strong> — no
+completion webhook yet; Thready polls status until the outbound webhook
+<code>[BUILD-NEW]</code> lands. Downloads still complete; completion
+notification is slower.</td>
+</tr>
+<tr>
+<td>Direct file URLs (HTTP/FTP/SMB/NFS/WebDav) via <strong>Download
+Manager</strong></td>
+<td><code>[BUILD-NEW]</code></td>
+<td><code>[GAP: 4]</code> The generic multi-protocol Download Manager
+<strong>does not exist yet</strong>; <code>filesystem</code> lacks an
+HTTP source. Direct-URL downloads are not available until it ships.</td>
+</tr>
+<tr>
+<td>OCR for <code>#Comic</code>/<code>#Screenshot</code></td>
+<td><code>[BUILD-NEW]</code> OCR adapter</td>
+<td><code>[GAP: 2]</code> VisionEngine has <strong>no OCR
+engine</strong>; comic transcription currently falls back to LLM-vision
+(lower fidelity) until the Tesseract/PaddleOCR adapter lands.</td>
+</tr>
+</tbody>
+</table>
+<p>If a download never completes, see <a
+href="./troubleshooting.md#6-a-download-never-completes">troubleshooting.md
+§6</a>.</p>
+<h2 id="status-replies-re-processing">8. Status replies &amp;
+re-processing</h2>
+<p>After processing, Thready posts a <strong>status reply</strong> to
+the original post (from the Robot or User account,
+<code>THREADY_REPLY_ACCOUNT</code>) with success/failure, metrics, and
+asset references. The system <strong>never processes its own
+replies</strong>.</p>
+<p>You can <strong>re-process (refresh)</strong> a post explicitly —
+client → REST API → System (final request §3.2.3):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> post reprocess <span class="op">&lt;</span>post-id<span class="op">&gt;</span>            <span class="co"># full refresh</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready</span> post retry <span class="op">&lt;</span>post-id<span class="op">&gt;</span> --step download <span class="co"># retry a single failed step</span></span></code></pre></div>
+<p>Failed steps auto-retry with exponential back-off (max 5, base 2 s,
+factor 2, cap 5 min — <code>[DEFAULT — adjustable]</code>); you can also
+retry manually. Nothing is lost — a failed post sits retriable, and
+persistently failing work lands in a dead-letter queue an Admin can
+inspect.</p>
+<h2 id="sensitive-content">9. Sensitive content</h2>
+<p>Thready handles sensitive material carefully (final request
+§3.6):</p>
+<ul>
+<li><strong>Credentials/tokens/keys</strong> in posts → persisted
+<strong>encrypted</strong> (AES-256-GCM), never logged.
+<code>[GAP: 7]</code> They are intended to be <strong>semantically
+searchable via a redacted representation</strong>, but that
+searchable-but-sealed embedding is <code>[BUILD-NEW]</code> — until it
+lands, credential <em>content</em> is stored encrypted but not yet
+indexed for search.</li>
+<li><strong>Credit cards / contracts / signed docs / QR codes /
+screenshots</strong> → stored in a specially encrypted asset directory;
+only the Asset Service decrypts. PII is detected/redacted
+(<code>security/pkg/pii</code>). QR codes are decoded (target + metadata
+extracted) and treated as sensitive. Screenshots get OCR + Vision to
+extract meaning for search (subject to the OCR gap above).</li>
+</ul>
+<h2 id="tutorials">10. Tutorials</h2>
+<p><strong>Tutorial A — Find everything about a topic across posts and
+research.</strong> 1.
+<code>thready search "rust async runtime" --limit 25</code> 2. Narrow:
+add <code>--kind research --since 180d</code>. 3. Open a hit:
+<code>thready thread show &lt;post-id&gt;</code> to see the source post
++ generated research + assets.</p>
+<p><strong>Tutorial B — Re-download a broken video and get the web
+version.</strong> 1.
+<code>thready asset list --post &lt;post-id&gt;</code> → note the asset
+is <code>missing</code>. 2.
+<code>thready asset reheal &lt;asset-id&gt;</code> → re-downloads the
+raw original. 3.
+<code>thready asset get &lt;asset-id&gt; --rendition web -o ./clip-web.mp4</code>.</p>
+<p><strong>Tutorial C — Turn a link-only post into a research
+doc.</strong> 1. Confirm the reply added
+<code>#Research</code>/<code>#Technology</code> (the tag can live in a
+reply — it still counts). 2.
+<code>thready post reprocess &lt;post-id&gt;</code> if it predates the
+tag. 3. Watch <code>thready events tail --type post.processed</code>;
+then <code>thready search</code> the new material.</p>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: user-1]</code> Direct-URL downloads unavailable until
+the <code>[BUILD-NEW]</code> Download Manager ships
+<code>[GAP: 4]</code>. Tracked: <strong>ATM — Download Manager (HTTP/2/3
++ queue/resume/callback)</strong>.</li>
+<li><code>[OPEN: user-2]</code> Comic/screenshot OCR fidelity limited
+until the OCR adapter lands <code>[GAP: 2]</code>. Tracked: <strong>ATM
+— Tesseract/PaddleOCR adapter behind VisionEngine</strong>.</li>
+<li><code>[OPEN: user-3]</code> Credential semantic search pending the
+sealed-embedding work <code>[GAP: 7]</code>. Tracked: <strong>ATM —
+redacted-token embeddings</strong>.</li>
+<li><code>[OPEN: user-4]</code> MeTube completion is poll-based until
+its outbound webhook lands <code>[GAP: 5]</code>. Tracked: <strong>ATM —
+MeTube completion webhook</strong>.</li>
+<li><code>[OPEN: user-5]</code> Adaptive HLS/DASH streaming +
+content-hash dedup depend on decoupling the Asset Service from
+Catalogizer and wiring the transcoder <code>[GAP: 9]</code>; zero
+version serves raw + a single <code>-web</code> rendition over HTTP
+Range. Tracked: <strong>ATM — decouple Asset Service + HLS/DASH
+transcoder + dedup</strong>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

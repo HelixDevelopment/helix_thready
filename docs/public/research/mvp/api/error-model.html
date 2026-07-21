@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Canonical Error Model</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Canonical Error Model</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#principles" id="toc-principles">1. Principles</a></li>
+<li><a href="#the-error-envelope" id="toc-the-error-envelope">2. The
+error envelope</a></li>
+<li><a href="#code-table-rest-protobufconnect"
+id="toc-code-table-rest-protobufconnect">3. Code table (REST ↔︎
+Protobuf/Connect)</a></li>
+<li><a href="#request-lifecycle-failure-map"
+id="toc-request-lifecycle-failure-map">4. Request-lifecycle failure
+map</a></li>
+<li><a href="#retry-idempotency-rate-limiting"
+id="toc-retry-idempotency-rate-limiting">5. Retry, idempotency &amp;
+rate limiting</a></li>
+<li><a href="#validation-details" id="toc-validation-details">6.
+Validation details</a></li>
+<li><a href="#observability" id="toc-observability">7.
+Observability</a></li>
+<li><a href="#gaps-addressed-open-items"
+id="toc-gaps-addressed-open-items">8. Gaps addressed &amp; open
+items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Canonical Error Model
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/error-model.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./openapi.yaml, ./rest-endpoints.md, ./authn-authz.md, ./sdk-strategy.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial draft: envelope, code table, retry semantics</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Added the idempotency-key store DDL (API-owned); linked
+contract-tests.md; noted universal 401/429/500</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Split the failure-map diagram explanation into true multi-paragraph
+form (CONVENTIONS §4); tied the retryable/non-retryable handler split to
+the SDK retry policy.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-principles">Principles</a></li>
+<li><a href="#2-the-error-envelope">The error envelope</a></li>
+<li><a href="#3-code-table-rest--protobufconnect">Code table (REST ↔︎
+Protobuf/Connect)</a></li>
+<li><a href="#4-request-lifecycle-failure-map">Request-lifecycle failure
+map</a></li>
+<li><a href="#5-retry-idempotency--rate-limiting">Retry, idempotency
+&amp; rate limiting</a></li>
+<li><a href="#6-validation-details">Validation details</a></li>
+<li><a href="#7-observability">Observability</a></li>
+<li><a href="#8-gaps-addressed--open-items">Gaps addressed &amp; open
+items</a></li>
+</ol>
+<h2 id="principles">1. Principles</h2>
+<p>One envelope, everywhere. Because the SDKs are generated from
+<strong>two</strong> contracts (OpenAPI 3.1 for REST, Protobuf/Connect
+for the event/DTO plane — see <a
+href="./sdk-strategy.md">sdk-strategy.md</a>), the error
+<code>code</code> values are chosen to map <strong>1:1</strong> with the
+Connect/gRPC canonical codes. A Go/Rust SDK surfacing a Connect error
+and a TypeScript SDK surfacing a REST error therefore expose the
+<em>same</em> stable code, so application error handling is written
+once. This mirrors the <code>helix_proto</code> REST error taxonomy
+(<code>svc-api.md §10</code>) that HelixVPN already ships
+<code>[RESEARCH: helix_proto]</code>.</p>
+<ul>
+<li><strong>Stable machine <code>code</code></strong> (string) is the
+contract; the HTTP status is a mirror.</li>
+<li><strong>Human <code>message</code></strong> is for developers, not
+end users; it is non-localized by default (localization is available via
+the <code>pkg/i18n</code> translator when a locale is negotiated).</li>
+<li><strong><code>trace_id</code></strong> (OpenTelemetry) is always
+present so a report maps to logs/traces.</li>
+<li>Never leak internals: stack traces, SQL, secrets, or file paths
+never appear in <code>message</code>/<code>details</code>
+<code>[CONSTITUTION §11.4.10]</code>.</li>
+</ul>
+<h2 id="the-error-envelope">2. The error envelope</h2>
+<p>Every non-2xx response body is exactly
+(<code>components.schemas.Error</code> in
+<code>openapi.yaml</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;code&quot;</span><span class="fu">:</span> <span class="st">&quot;permission_denied&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;role &#39;user&#39; cannot administer account&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">403</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;3f9a1c7e-2b4d-4a10-9f2e-8c1b6d0a5e77&quot;</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;retry_after&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;details&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span> <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;account_id&quot;</span><span class="fu">,</span> <span class="dt">&quot;issue&quot;</span><span class="fu">:</span> <span class="st">&quot;not a member&quot;</span><span class="fu">,</span> <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;tenant_mismatch&quot;</span> <span class="fu">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 30%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>code</code></td>
+<td>string enum</td>
+<td>Stable; see §3. The one field application code should branch
+on.</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>string</td>
+<td>Developer-facing; safe to log, never contains secrets.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>Mirrors the HTTP status line.</td>
+</tr>
+<tr>
+<td><code>trace_id</code></td>
+<td>string</td>
+<td>OTel trace id; quote it in support tickets.</td>
+</tr>
+<tr>
+<td><code>retry_after</code></td>
+<td>integer | null</td>
+<td>Seconds to wait, when retryable (also a <code>Retry-After</code>
+header).</td>
+</tr>
+<tr>
+<td><code>details[]</code></td>
+<td>array</td>
+<td>Field/structured detail: <code>{field, issue, reason}</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="code-table-rest-protobufconnect">3. Code table (REST ↔︎
+Protobuf/Connect)</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 12%" />
+<col style="width: 38%" />
+<col style="width: 22%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th><code>code</code></th>
+<th>HTTP</th>
+<th>Connect/gRPC code</th>
+<th>Retryable</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invalid_argument</code></td>
+<td>400</td>
+<td>INVALID_ARGUMENT</td>
+<td>no</td>
+<td>Malformed body/params.</td>
+</tr>
+<tr>
+<td><code>unprocessable</code></td>
+<td>422</td>
+<td>INVALID_ARGUMENT</td>
+<td>no</td>
+<td>Well-formed but semantically invalid.</td>
+</tr>
+<tr>
+<td><code>unauthenticated</code></td>
+<td>401</td>
+<td>UNAUTHENTICATED</td>
+<td>no (re-auth)</td>
+<td>Missing/invalid/expired credential.</td>
+</tr>
+<tr>
+<td><code>permission_denied</code></td>
+<td>403</td>
+<td>PERMISSION_DENIED</td>
+<td>no</td>
+<td>Role/scope/tenant check failed.</td>
+</tr>
+<tr>
+<td><code>not_found</code></td>
+<td>404</td>
+<td>NOT_FOUND</td>
+<td>no</td>
+<td>Absent or not visible to caller.</td>
+</tr>
+<tr>
+<td><code>already_exists</code></td>
+<td>409</td>
+<td>ALREADY_EXISTS</td>
+<td>no</td>
+<td>Unique-constraint / duplicate create.</td>
+</tr>
+<tr>
+<td><code>conflict</code></td>
+<td>409</td>
+<td>ABORTED</td>
+<td>maybe</td>
+<td>Idempotency mismatch / optimistic-lock conflict.</td>
+</tr>
+<tr>
+<td><code>failed_precondition</code></td>
+<td>412</td>
+<td>FAILED_PRECONDITION</td>
+<td>no</td>
+<td>Precondition (<code>If-Match</code>, state) unmet.</td>
+</tr>
+<tr>
+<td><code>rate_limited</code></td>
+<td>429</td>
+<td>RESOURCE_EXHAUSTED</td>
+<td>yes (after <code>Retry-After</code>)</td>
+<td>Quota exhausted.</td>
+</tr>
+<tr>
+<td><code>deadline_exceeded</code></td>
+<td>504</td>
+<td>DEADLINE_EXCEEDED</td>
+<td>yes</td>
+<td>Upstream timed out.</td>
+</tr>
+<tr>
+<td><code>unavailable</code></td>
+<td>503</td>
+<td>UNAVAILABLE</td>
+<td>yes (back-off)</td>
+<td>Downstream subsystem down/degraded.</td>
+</tr>
+<tr>
+<td><code>internal</code></td>
+<td>500</td>
+<td>INTERNAL</td>
+<td>maybe</td>
+<td>Unexpected server fault (bug/panic).</td>
+</tr>
+</tbody>
+</table>
+<p>The enum in <code>openapi.yaml</code> (<code>Error.error.code</code>)
+is the authoritative list; adding a code is an additive (non-breaking)
+change (see <a href="./versioning.md">versioning.md</a>).</p>
+<h2 id="request-lifecycle-failure-map">4. Request-lifecycle failure
+map</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2150px; background-color: white;" viewBox="0 0 2150 2316.39990234375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1089.5,55L1089.5,59.167C1089.5,63.333,1089.5,71.667,1089.5,79.333C1089.5,87,1089.5,94,1089.5,97.5L1089.5,101" id="my-svg-L_REQ_AUTHN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REQ_AUTHN_0" data-points="W3sieCI6MTA4OS41LCJ5Ijo1NX0seyJ4IjoxMDg5LjUsInkiOjgwfSx7IngiOjEwODkuNSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1036.125,168.625L881.854,183.437C727.583,198.25,419.042,227.875,264.771,269.987C110.5,312.1,110.5,366.7,110.5,421.3C110.5,475.9,110.5,530.5,110.5,575.967C110.5,621.433,110.5,657.767,110.5,694.1C110.5,730.433,110.5,766.767,110.5,804.267C110.5,841.767,110.5,880.433,110.5,919.1C110.5,957.767,110.5,996.433,110.5,1025.6C110.5,1054.767,110.5,1074.433,110.5,1094.1C110.5,1113.767,110.5,1133.433,110.5,1162.683C110.5,1191.933,110.5,1230.767,110.5,1269.6C110.5,1308.433,110.5,1347.267,110.5,1386.35C110.5,1425.433,110.5,1464.767,110.5,1504.1C110.5,1543.433,110.5,1582.767,110.5,1622.017C110.5,1661.267,110.5,1700.433,110.5,1739.6C110.5,1778.767,110.5,1817.933,110.5,1855.6C110.5,1893.267,110.5,1929.433,110.5,1965.6C110.5,2001.767,110.5,2037.933,110.5,2062.817C110.5,2087.7,110.5,2101.3,110.5,2108.1L110.5,2114.9" id="my-svg-L_AUTHN_E401_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTHN_E401_0" data-points="W3sieCI6MTAzNi4xMjQ4ODM1MDQxOTM4LCJ5IjoxNjguNjI0ODgzNTA0MTkzODZ9LHsieCI6MTEwLjUsInkiOjI1Ny41fSx7IngiOjExMC41LCJ5Ijo0MjEuMzAwMDAzMDUxNzU3OH0seyJ4IjoxMTAuNSwieSI6NTg1LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTEwLjUsInkiOjY5NC4xMDAwMDYxMDM1MTU2fSx7IngiOjExMC41LCJ5Ijo4MDMuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTAuNSwieSI6OTE5LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTEwLjUsInkiOjEwMzUuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTAuNSwieSI6MTA5NC4xMDAwMDYxMDM1MTU2fSx7IngiOjExMC41LCJ5IjoxMTUzLjEwMDAwNjEwMzUxNTZ9LHsieCI6MTEwLjUsInkiOjEyNjkuNjAwMDA2MTAzNTE1Nn0seyJ4IjoxMTAuNSwieSI6MTM4Ni4xMDAwMDYxMDM1MTU2fSx7IngiOjExMC41LCJ5IjoxNTA0LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTEwLjUsInkiOjE2MjIuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTAuNSwieSI6MTczOS42MDAwMDYxMDM1MTU2fSx7IngiOjExMC41LCJ5IjoxODU3LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTEwLjUsInkiOjE5NjUuNjAwMDA2MTAzNTE1Nn0seyJ4IjoxMTAuNSwieSI6MjA3NC4xMDAwMDYxMDM1MTU2fSx7IngiOjExMC41LCJ5IjoyMTE4LjkwMDAwNTM0MDU3Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1123.775,187.725L1140.229,199.354C1156.684,210.983,1189.592,234.242,1206.046,251.121C1222.5,268,1222.5,278.5,1222.5,283.75L1222.5,289" id="my-svg-L_AUTHN_AUTHZ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTHN_AUTHZ_0" data-points="W3sieCI6MTEyMy43NzUzMzAzOTY0NzU3LCJ5IjoxODcuNzI0NjY5NjAzNTI0MjN9LHsieCI6MTIyMi41LCJ5IjoyNTcuNX0seyJ4IjoxMjIyLjUsInkiOjI5Mi45OTk5OTk5OTk5OTk4M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1115.012,442.112L991.926,465.943C868.841,489.774,622.671,537.437,499.585,579.435C376.5,621.433,376.5,657.767,376.5,694.1C376.5,730.433,376.5,766.767,376.5,804.267C376.5,841.767,376.5,880.433,376.5,919.1C376.5,957.767,376.5,996.433,376.5,1025.6C376.5,1054.767,376.5,1074.433,376.5,1094.1C376.5,1113.767,376.5,1133.433,376.5,1162.683C376.5,1191.933,376.5,1230.767,376.5,1269.6C376.5,1308.433,376.5,1347.267,376.5,1386.35C376.5,1425.433,376.5,1464.767,376.5,1504.1C376.5,1543.433,376.5,1582.767,376.5,1622.017C376.5,1661.267,376.5,1700.433,376.5,1739.6C376.5,1778.767,376.5,1817.933,376.5,1855.6C376.5,1893.267,376.5,1929.433,376.5,1965.6C376.5,2001.767,376.5,2037.933,376.5,2062.733C376.5,2087.533,376.5,2100.967,376.5,2107.683L376.5,2114.4" id="my-svg-L_AUTHZ_E403_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTHZ_E403_0" data-points="W3sieCI6MTExNS4wMTE1ODQyMjA4NzY4LCJ5Ijo0NDIuMTExNTkwMzI0MzkyNX0seyJ4IjozNzYuNSwieSI6NTg1LjEwMDAwNjEwMzUxNTZ9LHsieCI6Mzc2LjUsInkiOjY5NC4xMDAwMDYxMDM1MTU2fSx7IngiOjM3Ni41LCJ5Ijo4MDMuMTAwMDA2MTAzNTE1Nn0seyJ4IjozNzYuNSwieSI6OTE5LjEwMDAwNjEwMzUxNTZ9LHsieCI6Mzc2LjUsInkiOjEwMzUuMTAwMDA2MTAzNTE1Nn0seyJ4IjozNzYuNSwieSI6MTA5NC4xMDAwMDYxMDM1MTU2fSx7IngiOjM3Ni41LCJ5IjoxMTUzLjEwMDAwNjEwMzUxNTZ9LHsieCI6Mzc2LjUsInkiOjEyNjkuNjAwMDA2MTAzNTE1Nn0seyJ4IjozNzYuNSwieSI6MTM4Ni4xMDAwMDYxMDM1MTU2fSx7IngiOjM3Ni41LCJ5IjoxNTA0LjEwMDAwNjEwMzUxNTZ9LHsieCI6Mzc2LjUsInkiOjE2MjIuMTAwMDA2MTAzNTE1Nn0seyJ4IjozNzYuNSwieSI6MTczOS42MDAwMDYxMDM1MTU2fSx7IngiOjM3Ni41LCJ5IjoxODU3LjEwMDAwNjEwMzUxNTZ9LHsieCI6Mzc2LjUsInkiOjE5NjUuNjAwMDA2MTAzNTE1Nn0seyJ4IjozNzYuNSwieSI6MjA3NC4xMDAwMDYxMDM1MTU2fSx7IngiOjM3Ni41LCJ5IjoyMTE4LjQwMDAwNTM0MDU3Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1282.744,489.356L1296.87,505.313C1310.996,521.27,1339.248,553.185,1353.374,574.393C1367.5,595.6,1367.5,606.1,1367.5,611.35L1367.5,616.6" id="my-svg-L_AUTHZ_VAL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTHZ_VAL_0" data-points="W3sieCI6MTI4Mi43NDQ0OTU2NTYyNjA2LCJ5Ijo0ODkuMzU1NTEwNDQ3MjU0OTd9LHsieCI6MTM2Ny41LCJ5Ijo1ODUuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMzY3LjUsInkiOjYyMC42MDAwMDYxMDM1MTU2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1303.891,703.991L1197.659,720.509C1091.427,737.027,878.964,770.064,772.732,805.915C666.5,841.767,666.5,880.433,666.5,919.1C666.5,957.767,666.5,996.433,666.5,1025.6C666.5,1054.767,666.5,1074.433,666.5,1094.1C666.5,1113.767,666.5,1133.433,666.5,1162.683C666.5,1191.933,666.5,1230.767,666.5,1269.6C666.5,1308.433,666.5,1347.267,666.5,1386.35C666.5,1425.433,666.5,1464.767,666.5,1504.1C666.5,1543.433,666.5,1582.767,666.5,1622.017C666.5,1661.267,666.5,1700.433,666.5,1739.6C666.5,1778.767,666.5,1817.933,666.5,1855.6C666.5,1893.267,666.5,1929.433,666.5,1965.6C666.5,2001.767,666.5,2037.933,666.5,2061.35C666.5,2084.767,666.5,2095.433,666.5,2100.767L666.5,2106.1" id="my-svg-L_VAL_E400_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VAL_E400_0" data-points="W3sieCI6MTMwMy44OTA3NDA3NDA3NDA3LCJ5Ijo3MDMuOTkwNzQ2ODQ0MjU2NH0seyJ4Ijo2NjYuNSwieSI6ODAzLjEwMDAwNjEwMzUxNTZ9LHsieCI6NjY2LjUsInkiOjkxOS4xMDAwMDYxMDM1MTU2fSx7IngiOjY2Ni41LCJ5IjoxMDM1LjEwMDAwNjEwMzUxNTZ9LHsieCI6NjY2LjUsInkiOjEwOTQuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo2NjYuNSwieSI6MTE1My4xMDAwMDYxMDM1MTU2fSx7IngiOjY2Ni41LCJ5IjoxMjY5LjYwMDAwNjEwMzUxNTZ9LHsieCI6NjY2LjUsInkiOjEzODYuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo2NjYuNSwieSI6MTUwNC4xMDAwMDYxMDM1MTU2fSx7IngiOjY2Ni41LCJ5IjoxNjIyLjEwMDAwNjEwMzUxNTZ9LHsieCI6NjY2LjUsInkiOjE3MzkuNjAwMDA2MTAzNTE1Nn0seyJ4Ijo2NjYuNSwieSI6MTg1Ny4xMDAwMDYxMDM1MTU2fSx7IngiOjY2Ni41LCJ5IjoxOTY1LjYwMDAwNjEwMzUxNTZ9LHsieCI6NjY2LjUsInkiOjIwNzQuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo2NjYuNSwieSI6MjExMC4xMDAwMDYxMDM1MTU2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1408.166,726.934L1423.888,739.628C1439.611,752.323,1471.055,777.711,1486.778,795.656C1502.5,813.6,1502.5,824.1,1502.5,829.35L1502.5,834.6" id="my-svg-L_VAL_RL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VAL_RL_0" data-points="W3sieCI6MTQwOC4xNjU5ODM2MDY1NTczLCJ5Ijo3MjYuOTM0MDIyNDk2OTU4M30seyJ4IjoxNTAyLjUsInkiOjgwMy4xMDAwMDYxMDM1MTU2fSx7IngiOjE1MDIuNSwieSI6ODM4LjYwMDAwNjEwMzUxNTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1435.692,932.792L1352.493,949.843C1269.295,966.895,1102.897,1000.997,1019.699,1027.882C936.5,1054.767,936.5,1074.433,936.5,1094.1C936.5,1113.767,936.5,1133.433,936.5,1162.683C936.5,1191.933,936.5,1230.767,936.5,1269.6C936.5,1308.433,936.5,1347.267,936.5,1386.35C936.5,1425.433,936.5,1464.767,936.5,1504.1C936.5,1543.433,936.5,1582.767,936.5,1622.017C936.5,1661.267,936.5,1700.433,936.5,1739.6C936.5,1778.767,936.5,1817.933,936.5,1855.6C936.5,1893.267,936.5,1929.433,936.5,1965.6C936.5,2001.767,936.5,2037.933,936.5,2061.35C936.5,2084.767,936.5,2095.433,936.5,2100.767L936.5,2106.1" id="my-svg-L_RL_E429_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RL_E429_0" data-points="W3sieCI6MTQzNS42OTIwODIxMTE0MzcsInkiOjkzMi43OTIwODgyMTQ5NTI2fSx7IngiOjkzNi41LCJ5IjoxMDM1LjEwMDAwNjEwMzUxNTZ9LHsieCI6OTM2LjUsInkiOjEwOTQuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo5MzYuNSwieSI6MTE1My4xMDAwMDYxMDM1MTU2fSx7IngiOjkzNi41LCJ5IjoxMjY5LjYwMDAwNjEwMzUxNTZ9LHsieCI6OTM2LjUsInkiOjEzODYuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo5MzYuNSwieSI6MTUwNC4xMDAwMDYxMDM1MTU2fSx7IngiOjkzNi41LCJ5IjoxNjIyLjEwMDAwNjEwMzUxNTZ9LHsieCI6OTM2LjUsInkiOjE3MzkuNjAwMDA2MTAzNTE1Nn0seyJ4Ijo5MzYuNSwieSI6MTg1Ny4xMDAwMDYxMDM1MTU2fSx7IngiOjkzNi41LCJ5IjoxOTY1LjYwMDAwNjEwMzUxNTZ9LHsieCI6OTM2LjUsInkiOjIwNzQuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo5MzYuNSwieSI6MjExMC4xMDAwMDYxMDM1MTU2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1542.089,960.011L1554.199,972.526C1566.309,985.041,1590.53,1010.07,1602.64,1027.835C1614.75,1045.6,1614.75,1056.1,1614.75,1061.35L1614.75,1066.6" id="my-svg-L_RL_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RL_H_0" data-points="W3sieCI6MTU0Mi4wODg3MTg1MTA0MDUyLCJ5Ijo5NjAuMDExMjg3NTkzMTEwNH0seyJ4IjoxNjE0Ljc1LCJ5IjoxMDM1LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTYxNC43NSwieSI6MTA3MC42MDAwMDYxMDM1MTU2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1614.75,1117.6L1614.75,1123.517C1614.75,1129.433,1614.75,1141.267,1614.75,1152.433C1614.75,1163.6,1614.75,1174.1,1614.75,1179.35L1614.75,1184.6" id="my-svg-L_H_NF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_NF_0" data-points="W3sieCI6MTYxNC43NSwieSI6MTExNy42MDAwMDYxMDM1MTU2fSx7IngiOjE2MTQuNzUsInkiOjExNTMuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxNjE0Ljc1LCJ5IjoxMTg4LjYwMDAwNjEwMzUxNTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1550.298,1286.148L1485.415,1302.807C1420.532,1319.465,1290.766,1352.783,1225.883,1389.108C1161,1425.433,1161,1464.767,1161,1504.1C1161,1543.433,1161,1582.767,1161,1622.017C1161,1661.267,1161,1700.433,1161,1739.6C1161,1778.767,1161,1817.933,1161,1855.6C1161,1893.267,1161,1929.433,1161,1965.6C1161,2001.767,1161,2037.933,1161,2062.733C1161,2087.533,1161,2100.967,1161,2107.683L1161,2114.4" id="my-svg-L_NF_E404_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NF_E404_0" data-points="W3sieCI6MTU1MC4yOTgwMDUyNjA4NTA1LCJ5IjoxMjg2LjE0ODAxMTM2NDM2Nn0seyJ4IjoxMTYxLCJ5IjoxMzg2LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTE2MSwieSI6MTUwNC4xMDAwMDYxMDM1MTU2fSx7IngiOjExNjEsInkiOjE2MjIuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTYxLCJ5IjoxNzM5LjYwMDAwNjEwMzUxNTZ9LHsieCI6MTE2MSwieSI6MTg1Ny4xMDAwMDYxMDM1MTU2fSx7IngiOjExNjEsInkiOjE5NjUuNjAwMDA2MTAzNTE1Nn0seyJ4IjoxMTYxLCJ5IjoyMDc0LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTE2MSwieSI6MjExOC40MDAwMDUzNDA1NzZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1654.899,1310.451L1667.291,1323.059C1679.683,1335.667,1704.466,1360.884,1716.858,1378.742C1729.25,1396.6,1729.25,1407.1,1729.25,1412.35L1729.25,1417.6" id="my-svg-L_NF_PRE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NF_PRE_0" data-points="W3sieCI6MTY1NC44OTkzNTA2NDkzNTA3LCJ5IjoxMzEwLjQ1MDY1NTQ1NDE2NX0seyJ4IjoxNzI5LjI1LCJ5IjoxMzg2LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTcyOS4yNSwieSI6MTQyMS42MDAwMDYxMDM1MTU2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1668.04,1525.39L1621.7,1541.509C1575.36,1557.627,1482.68,1589.863,1436.34,1625.565C1390,1661.267,1390,1700.433,1390,1739.6C1390,1778.767,1390,1817.933,1390,1855.6C1390,1893.267,1390,1929.433,1390,1965.6C1390,2001.767,1390,2037.933,1390,2061.267C1390,2084.6,1390,2095.1,1390,2100.35L1390,2105.6" id="my-svg-L_PRE_E409_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PRE_E409_0" data-points="W3sieCI6MTY2OC4wNDAzMjI1ODA2NDUxLCJ5IjoxNTI1LjM5MDMyODY4NDE2MDd9LHsieCI6MTM5MCwieSI6MTYyMi4xMDAwMDYxMDM1MTU2fSx7IngiOjEzOTAsInkiOjE3MzkuNjAwMDA2MTAzNTE1Nn0seyJ4IjoxMzkwLCJ5IjoxODU3LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTM5MCwieSI6MTk2NS42MDAwMDYxMDM1MTU2fSx7IngiOjEzOTAsInkiOjIwNzQuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMzkwLCJ5IjoyMTA5LjYwMDAwNjEwMzUxNTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1772.056,1543.794L1786.13,1556.845C1800.204,1569.896,1828.352,1595.998,1842.426,1614.299C1856.5,1632.6,1856.5,1643.1,1856.5,1648.35L1856.5,1653.6" id="my-svg-L_PRE_DEP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PRE_DEP_0" data-points="W3sieCI6MTc3Mi4wNTU4MTAzOTc1NTM2LCJ5IjoxNTQzLjc5NDE5NTcwNTk2Mn0seyJ4IjoxODU2LjUsInkiOjE2MjIuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxODU2LjUsInkiOjE2NTcuNjAwMDA2MTAzNTE1Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1803.741,1768.841L1777.201,1783.551C1750.661,1798.261,1697.58,1827.68,1671.04,1860.474C1644.5,1893.267,1644.5,1929.433,1644.5,1965.6C1644.5,2001.767,1644.5,2037.933,1644.5,2061.267C1644.5,2084.6,1644.5,2095.1,1644.5,2100.35L1644.5,2105.6" id="my-svg-L_DEP_E503_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEP_E503_0" data-points="W3sieCI6MTgwMy43NDEyNzQ2NTg1NzM1LCJ5IjoxNzY4Ljg0MTI4MDc2MjA4OTF9LHsieCI6MTY0NC41LCJ5IjoxODU3LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTY0NC41LCJ5IjoxOTY1LjYwMDAwNjEwMzUxNTZ9LHsieCI6MTY0NC41LCJ5IjoyMDc0LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTY0NC41LCJ5IjoyMTA5LjYwMDAwNjEwMzUxNTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1896.925,1781.175L1909.229,1793.829C1921.533,1806.483,1946.142,1831.792,1958.446,1849.696C1970.75,1867.6,1970.75,1878.1,1970.75,1883.35L1970.75,1888.6" id="my-svg-L_DEP_ERR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEP_ERR_0" data-points="W3sieCI6MTg5Ni45MjUwMjY5Njg3MTYzLCJ5IjoxNzgxLjE3NDk3OTEzNDc5OTN9LHsieCI6MTk3MC43NSwieSI6MTg1Ny4xMDAwMDYxMDM1MTU2fSx7IngiOjE5NzAuNzUsInkiOjE4OTIuNjAwMDA2MTAzNTE1Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1936.152,2004.002L1925.627,2015.685C1915.102,2027.368,1894.051,2050.734,1883.525,2069.217C1873,2087.7,1873,2101.3,1873,2108.1L1873,2114.9" id="my-svg-L_ERR_E500_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ERR_E500_0" data-points="W3sieCI6MTkzNi4xNTI0MjQyNDI0MjQzLCJ5IjoyMDA0LjAwMjQzMDM0NTk0fSx7IngiOjE4NzMsInkiOjIwNzQuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxODczLCJ5IjoyMTE4LjkwMDAwNTM0MDU3Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2005.348,2004.002L2015.873,2015.685C2026.398,2027.368,2047.449,2050.734,2057.975,2069.217C2068.5,2087.7,2068.5,2101.3,2068.5,2108.1L2068.5,2114.9" id="my-svg-L_ERR_OK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ERR_OK_0" data-points="W3sieCI6MjAwNS4zNDc1NzU3NTc1NzU3LCJ5IjoyMDA0LjAwMjQzMDM0NTk0fSx7IngiOjIwNjguNSwieSI6MjA3NC4xMDAwMDYxMDM1MTU2fSx7IngiOjIwNjguNSwieSI6MjExOC45MDAwMDUzNDA1NzZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M110.5,2165.9L110.5,2171.617C110.5,2177.333,110.5,2188.767,245.877,2204.093C381.253,2219.419,652.007,2238.638,787.383,2248.247L922.76,2257.857" id="my-svg-L_E401_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E401_ENV_0" data-points="W3sieCI6MTEwLjUsInkiOjIxNjUuOTAwMDA1MzQwNTc2fSx7IngiOjExMC41LCJ5IjoyMjAwLjIwMDAwNDU3NzYzNjd9LHsieCI6OTI2Ljc1LCJ5IjoyMjU4LjE0MDA1MTIxMTc5NzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M376.5,2166.4L376.5,2172.033C376.5,2177.667,376.5,2188.933,467.545,2203.587C558.59,2218.24,740.68,2236.279,831.725,2245.299L922.769,2254.319" id="my-svg-L_E403_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E403_ENV_0" data-points="W3sieCI6Mzc2LjUsInkiOjIxNjYuNDAwMDA1MzQwNTc2fSx7IngiOjM3Ni41LCJ5IjoyMjAwLjIwMDAwNDU3NzYzNjd9LHsieCI6OTI2Ljc1LCJ5IjoyMjU0LjcxMzQyODM5Mzc1NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M666.5,2174.7L666.5,2178.95C666.5,2183.2,666.5,2191.7,709.218,2203.393C751.936,2215.086,837.373,2229.971,880.091,2237.414L922.809,2244.857" id="my-svg-L_E400_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E400_ENV_0" data-points="W3sieCI6NjY2LjUsInkiOjIxNzQuNzAwMDA0NTc3NjM2N30seyJ4Ijo2NjYuNSwieSI6MjIwMC4yMDAwMDQ1Nzc2MzY3fSx7IngiOjkyNi43NSwieSI6MjI0NS41NDM3NTc2MjY0MDA3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M936.5,2174.7L936.5,2178.95C936.5,2183.2,936.5,2191.7,942.949,2199.776C949.399,2207.853,962.297,2215.506,968.747,2219.332L975.196,2223.159" id="my-svg-L_E429_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E429_ENV_0" data-points="W3sieCI6OTM2LjUsInkiOjIxNzQuNzAwMDA0NTc3NjM2N30seyJ4Ijo5MzYuNSwieSI6MjIwMC4yMDAwMDQ1Nzc2MzY3fSx7IngiOjk3OC42MzU4ODY4NTEyNjUyLCJ5IjoyMjI1LjIwMDAwNDU3NzYzNjd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1161,2166.4L1161,2172.033C1161,2177.667,1161,2188.933,1154.551,2198.393C1148.101,2207.853,1135.203,2215.506,1128.753,2219.332L1122.304,2223.159" id="my-svg-L_E404_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E404_ENV_0" data-points="W3sieCI6MTE2MSwieSI6MjE2Ni40MDAwMDUzNDA1NzZ9LHsieCI6MTE2MSwieSI6MjIwMC4yMDAwMDQ1Nzc2MzY3fSx7IngiOjExMTguODY0MTEzMTQ4NzM0OCwieSI6MjIyNS4yMDAwMDQ1Nzc2MzY3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1390,2175.2L1390,2179.367C1390,2183.533,1390,2191.867,1354.113,2203.037C1318.225,2214.208,1246.451,2228.216,1210.563,2235.22L1174.676,2242.224" id="my-svg-L_E409_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E409_ENV_0" data-points="W3sieCI6MTM5MCwieSI6MjE3NS4yMDAwMDQ1Nzc2MzY3fSx7IngiOjEzOTAsInkiOjIyMDAuMjAwMDA0NTc3NjM2N30seyJ4IjoxMTcwLjc1LCJ5IjoyMjQyLjk4OTg5MzcwNzE2MzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1644.5,2175.2L1644.5,2179.367C1644.5,2183.533,1644.5,2191.867,1566.204,2204.786C1487.908,2217.706,1331.317,2235.211,1253.021,2243.964L1174.725,2252.717" id="my-svg-L_E503_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E503_ENV_0" data-points="W3sieCI6MTY0NC41LCJ5IjoyMTc1LjIwMDAwNDU3NzYzNjd9LHsieCI6MTY0NC41LCJ5IjoyMjAwLjIwMDAwNDU3NzYzNjd9LHsieCI6MTE3MC43NSwieSI6MjI1My4xNjEzOTY1NjYwNzk1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1873,2165.9L1873,2171.617C1873,2177.333,1873,2188.767,1756.623,2203.887C1640.246,2219.007,1407.491,2237.813,1291.114,2247.217L1174.737,2256.62" id="my-svg-L_E500_ENV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E500_ENV_0" data-points="W3sieCI6MTg3MywieSI6MjE2NS45MDAwMDUzNDA1NzZ9LHsieCI6MTg3MywieSI6MjIwMC4yMDAwMDQ1Nzc2MzY3fSx7IngiOjExNzAuNzUsInkiOjIyNTYuOTQyMzE0NDY5NjAxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_REQ_AUTHN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(110.5, 1153.1000061035156)"><g class="label" data-id="L_AUTHN_E401_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1222.5, 257.5)"><g class="label" data-id="L_AUTHN_AUTHZ_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(376.5, 1269.6000061035156)"><g class="label" data-id="L_AUTHZ_E403_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1367.5, 585.1000061035156)"><g class="label" data-id="L_AUTHZ_VAL_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(666.5, 1386.1000061035156)"><g class="label" data-id="L_VAL_E400_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1502.5, 803.1000061035156)"><g class="label" data-id="L_VAL_RL_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(936.5, 1504.1000061035156)"><g class="label" data-id="L_RL_E429_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1614.75, 1035.1000061035156)"><g class="label" data-id="L_RL_H_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_H_NF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1161, 1739.6000061035156)"><g class="label" data-id="L_NF_E404_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1729.25, 1386.1000061035156)"><g class="label" data-id="L_NF_PRE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1390, 1857.1000061035156)"><g class="label" data-id="L_PRE_E409_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1856.5, 1622.1000061035156)"><g class="label" data-id="L_PRE_DEP_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1644.5, 1965.6000061035156)"><g class="label" data-id="L_DEP_E503_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1970.75, 1857.1000061035156)"><g class="label" data-id="L_DEP_ERR_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1873, 2074.1000061035156)"><g class="label" data-id="L_ERR_E500_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(2068.5, 2074.1000061035156)"><g class="label" data-id="L_ERR_OK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_E401_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E403_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E400_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E429_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E404_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E409_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E503_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E500_ENV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-REQ-0" data-look="classic" transform="translate(1089.5, 31.5)"><rect class="basic label-container" style="" x="-68.5" y="-23.5" width="137" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Request</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUTHN-1" data-look="classic" transform="translate(1089.5, 163.5)"><polygon points="58.5,0 117,-58.5 58.5,-117 0,-58.5" class="label-container" transform="translate(-58, 58.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">authn</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ok?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E401-3" data-look="classic" transform="translate(110.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-102.5" y="-23.5" width="205" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">401</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> unauthenticated</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUTHZ-5" data-look="classic" transform="translate(1222.5, 421.3000030517578)"><polygon points="128.29999923706055,0 256.5999984741211,-128.29999923706055 128.29999923706055,-256.5999984741211 0,-128.29999923706055" class="label-container" transform="translate(-127.79999923706055, 128.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">role</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> floor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scopes</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tenant</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ok?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E403-7" data-look="classic" transform="translate(376.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-113.5" y="-24" width="227" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">403</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> permission_denied</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VAL-9" data-look="classic" transform="translate(1367.5, 694.1000061035156)"><polygon points="73.5,0 147,-73.5 73.5,-147 0,-73.5" class="label-container" transform="translate(-73, 73.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">request</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> valid?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E400-11" data-look="classic" transform="translate(666.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-126.5" y="-32.29999923706055" width="253" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">400</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> invalid_argument</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 422</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">unprocessable</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RL-13" data-look="classic" transform="translate(1502.5, 919.1000061035156)"><polygon points="80.5,0 161,-80.5 80.5,-161 0,-80.5" class="label-container" transform="translate(-80, 80.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">under</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> limit?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E429-15" data-look="classic" transform="translate(936.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-93.5" y="-32.29999923706055" width="187" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">429</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rate_limited</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Retry-After</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-H-17" data-look="classic" transform="translate(1614.75, 1094.1000061035156)"><rect class="basic label-container" style="" x="-57.5" y="-23.5" width="115" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">handler</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NF-19" data-look="classic" transform="translate(1614.75, 1269.6000061035156)"><polygon points="81,0 162,-81 81,-162 0,-81" class="label-container" transform="translate(-80.5, 81)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">resource</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> found?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E404-21" data-look="classic" transform="translate(1161, 2142.400005340576)"><rect class="basic label-container" style="" x="-81" y="-24" width="162" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">404</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> not_found</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PRE-23" data-look="classic" transform="translate(1729.25, 1504.1000061035156)"><polygon points="82.5,0 165,-82.5 82.5,-165 0,-82.5" class="label-container" transform="translate(-82, 82.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">precondition</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ok?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E409-25" data-look="classic" transform="translate(1390, 2142.400005340576)"><rect class="basic label-container" style="" x="-98" y="-32.79999923706055" width="196" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">409</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> conflict</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 412</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">failed_precondition</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DEP-27" data-look="classic" transform="translate(1856.5, 1739.6000061035156)"><polygon points="82,0 164,-82 82,-164 0,-82" class="label-container" transform="translate(-81.5, 82)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">downstream</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ok?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E503-29" data-look="classic" transform="translate(1644.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-106.5" y="-32.79999923706055" width="213" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">503</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> unavailable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 504</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">deadline_exceeded</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ERR-31" data-look="classic" transform="translate(1970.75, 1965.6000061035156)"><polygon points="73,0 146,-73 73,-146 0,-73" class="label-container" transform="translate(-72.5, 73)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">internal</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> error?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E500-33" data-look="classic" transform="translate(1873, 2142.400005340576)"><rect class="basic label-container" style="" x="-72" y="-23.5" width="144" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">500</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> internal</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-OK-35" data-look="classic" transform="translate(2068.5, 2142.400005340576)"><rect class="basic label-container" style="" x="-73.5" y="-23.5" width="147" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">2xx</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> success</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENV-44" data-look="classic" transform="translate(1048.75, 2266.800003051758)"><rect class="basic label-container" style="" x="-122" y="-41.599998474121094" width="244" height="83.19999694824219"/><g class="label" style="" transform="translate(0, -26.599998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Error</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> envelope:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">message,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> status,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> trace_id,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">details,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retry_after</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/error-model.mmd">diagrams/error-model.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A request is evaluated by the middleware chain and
+handler in a fixed order, and the first failing gate determines the
+error. Authentication is checked first: a missing or invalid credential
+short-circuits to 401 <code>unauthenticated</code>. If authenticated,
+authorization is checked (role floor, scopes, and tenant match); a
+failure yields 403 <code>permission_denied</code>. Next the request is
+validated — a malformed body or bad parameter is 400
+<code>invalid_argument</code>, while a well-formed but semantically
+impossible request (e.g. an unknown enum value in a filter) is 422
+<code>unprocessable</code>. The rate limiter runs before the handler, so
+an over-quota caller gets 429 <code>rate_limited</code> with a
+<code>Retry-After</code> header without touching business logic. These
+four gates are the middleware chain: they run in the same order for
+every route, so an attacker never learns from the error <em>which</em>
+deeper resource exists — a cross-tenant probe is stopped at 403 before
+the 404/200 distinction is even computed.</p>
+<p>Once inside the handler, a missing target is 404
+<code>not_found</code>; an unmet precondition or an
+idempotency/optimistic-lock clash is 409 <code>conflict</code> or 412
+<code>failed_precondition</code>; a failed or timed-out downstream
+subsystem (Herald, Asset Service, search, JetStream) surfaces as 503
+<code>unavailable</code> or 504 <code>deadline_exceeded</code>, both
+retryable with back-off; and an unexpected fault becomes 500
+<code>internal</code>. The split between the retryable
+(<code>unavailable</code>/<code>deadline_exceeded</code>) and
+non-retryable (<code>not_found</code>/<code>failed_precondition</code>)
+handler outcomes is exactly what the SDK retry policy keys on (§5).</p>
+<p>Every one of these terminal states is rendered through the single
+error envelope, so a client parses errors uniformly regardless of which
+gate failed. Success paths (2xx) skip the envelope entirely — the
+envelope is a pure failure channel, which is why a <code>code</code>
+value is always safe for application code to branch on.</p>
+<h2 id="retry-idempotency-rate-limiting">5. Retry, idempotency &amp;
+rate limiting</h2>
+<ul>
+<li><strong>Retryable codes</strong> — <code>rate_limited</code>,
+<code>unavailable</code>, <code>deadline_exceeded</code> (and cautiously
+<code>internal</code>). SDKs retry these with exponential back-off +
+jitter, honoring <code>Retry-After</code>. Non-retryable codes
+(<code>invalid_argument</code>, <code>permission_denied</code>,
+<code>not_found</code>, <code>unprocessable</code>) must not be retried
+blindly.</li>
+<li><strong>Idempotency</strong> — unsafe POSTs accept an
+<code>Idempotency-Key</code> header (UUID). A replay with the same key +
+body returns the original result; a same-key <strong>different</strong>
+body returns <code>409 conflict</code>. Keys are retained 24 h. This
+mirrors the processing engine’s idempotent single-claim-per-post at the
+API edge.</li>
+</ul>
+<p>The idempotency ledger is an <strong>API-plane-owned</strong> table
+(distinct from the domain schema in the <a
+href="../database/index.md">database area</a>); the edge writes it
+before the handler runs and a sweeper prunes it after the 24 h window.
+Real PostgreSQL DDL (<code>[GAP: #14 edge]</code>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- API edge idempotency ledger. One row per (principal, key). The body_hash lets a</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- same-key/different-body replay be detected and rejected with 409 conflict.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> api_idempotency_key (</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    principal_id   uuid        <span class="kw">NOT</span> <span class="kw">NULL</span>,               <span class="co">-- JWT sub or API-key id</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    idempotency_key uuid       <span class="kw">NOT</span> <span class="kw">NULL</span>,               <span class="co">-- client-supplied Idempotency-Key</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    request_method text        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    request_path   text        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    body_hash      bytea       <span class="kw">NOT</span> <span class="kw">NULL</span>,               <span class="co">-- sha256 of the canonical request body</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    response_status <span class="dt">smallint</span>   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    response_body  jsonb       <span class="kw">NOT</span> <span class="kw">NULL</span>,               <span class="co">-- cached original result to replay</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    trace_id       text        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    created_at     timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    expires_at     timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now() <span class="op">+</span> <span class="dt">interval</span> <span class="st">&#39;24 hours&#39;</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (principal_id, idempotency_key)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- Partial index drives the retention sweeper (DELETE ... WHERE expires_at &lt; now()).</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> api_idempotency_key_expiry_idx</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> api_idempotency_key (expires_at);</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- Forward migration:  0007_api_idempotency_key.up.sql   (the CREATE statements above)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- Rollback migration: 0007_api_idempotency_key.down.sql: DROP TABLE api_idempotency_key;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- Run via database/pkg/migration.Runner (Q30, expand→contract, tested rollback).</span></span></code></pre></div>
+<p>The replay/conflict/expiry behaviour above is asserted RED-first in
+<a href="./contract-tests.md">contract-tests.md</a> §stress (event-storm
+single-claim) and §unit (same-key different-body → 409). - <strong>Rate
+limiting</strong> — enforced by <code>digital.vasic.ratelimiter</code>
+ahead of auth. Responses carry <code>RateLimit-Limit</code>,
+<code>RateLimit-Remaining</code>, <code>RateLimit-Reset</code>; a 429
+additionally carries <code>Retry-After</code>. Limits are per-principal
+(JWT <code>sub</code> / API-key id) and per-IP for anonymous endpoints
+(DDoS shedding, <code>[GAP: #14]</code>).</p>
+<h2 id="validation-details">6. Validation details</h2>
+<p><code>details[]</code> gives structured, machine-usable reasons.
+Example — a bad <code>SearchRequest</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;code&quot;</span><span class="fu">:</span> <span class="st">&quot;invalid_argument&quot;</span><span class="fu">,</span> <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;invalid search request&quot;</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;details&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span> <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;top_k&quot;</span><span class="fu">,</span> <span class="dt">&quot;issue&quot;</span><span class="fu">:</span> <span class="st">&quot;must be 1..100&quot;</span><span class="fu">,</span> <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;out_of_range&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span> <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;sources[1]&quot;</span><span class="fu">,</span> <span class="dt">&quot;issue&quot;</span><span class="fu">:</span> <span class="st">&quot;unknown source &#39;videos&#39;&quot;</span><span class="fu">,</span> <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;enum&quot;</span> <span class="fu">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>reason</code> uses a small controlled vocabulary
+(<code>required</code>, <code>enum</code>, <code>out_of_range</code>,
+<code>format</code>, <code>tenant_mismatch</code>,
+<code>conflict</code>, <code>unsupported</code>) so SDKs can localize or
+map to form fields.</p>
+<h2 id="observability">7. Observability</h2>
+<p>Every error is emitted with its <code>trace_id</code> into the OTel
+trace and the logrus/ClickHouse log
+(<code>digital.vasic.observability</code>); 5xx rates and 429 rates feed
+Prometheus/Grafana SLO alerts. The <code>internal</code> code always
+logs the underlying cause server-side (never to the client).
+Correlation-id and request-id headers are attached by
+<code>digital.vasic.middleware</code>.</p>
+<h2 id="gaps-addressed-open-items">8. Gaps addressed &amp; open
+items</h2>
+<ul>
+<li><code>[GAP: #14]</code> DDoS mitigation + rate limiting → §5 (edge
+<code>ratelimiter</code>, <code>Retry-After</code>, per-principal +
+per-IP).</li>
+<li><code>[GAP: #10 error-handling]</code> uniform error categorization
++ SLO alerting → §3, §7.</li>
+<li><code>[OPEN: err-1]</code> Per-plan rate-limit tiers are
+placeholders pending the billing pack — <code>[OPEN: api-2]</code> in
+the <a href="./index.md">area index</a>.</li>
+<li><code>[OPEN: err-2]</code> The localized message catalog
+(en/ru/sr-Cyrl via HelixTranslate) is authored with the User Service;
+this doc fixes the envelope + codes, not the strings.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

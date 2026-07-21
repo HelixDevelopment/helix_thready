@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Static Analysis &amp; Continuous Quality (SonarQube + Snyk)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Static Analysis &amp; Continuous
+Quality (SonarQube + Snyk)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#quality-gate-topology" id="toc-quality-gate-topology">1.
+Quality-gate topology</a></li>
+<li><a href="#sonarqube-cli-rootless-podman-server"
+id="toc-sonarqube-cli-rootless-podman-server">2. SonarQube — CLI +
+rootless-Podman server</a></li>
+<li><a href="#project-configuration" id="toc-project-configuration">3.
+Project configuration</a></li>
+<li><a href="#quality-gate-definition"
+id="toc-quality-gate-definition">4. Quality Gate definition</a></li>
+<li><a href="#snyk" id="toc-snyk">5. Snyk</a></li>
+<li><a href="#cadence-automation" id="toc-cadence-automation">6. Cadence
+&amp; automation</a></li>
+<li><a href="#independent-ai-review" id="toc-independent-ai-review">7.
+Independent AI review</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+<li><a href="#open-items" id="toc-open-items">9. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Static Analysis & Continuous Quality (SonarQube + Snyk)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/static-analysis.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./test-strategy.md, ./test-types.md, ./acceptance-gates.md, ../deployment/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (testing)</td>
+<td>Initial draft — SonarQube (CLI + rootless server), Snyk, quality
+gates, cadence, AI review</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 3 — linked G-SONAR/G-SNYK gate IDs; noted Docs-Chain export
+proven in-org</td>
+</tr>
+</tbody>
+</table>
+<p>SonarQube + Snyk are the <strong>two major columns of product quality
+and real-time checks</strong> <code>[RESEARCH: request §Testing]</code>.
+All technical documentation and code MUST pass comprehensive SonarQube
+and Snyk checks plus independent AI review from every angle — Security,
+Stability, Gaps, Danger zones, Weak spots, Performance, Memory
+management/leak prevention, and DDoS/attack resistance
+<code>[RESEARCH: final §9.3]</code>
+<code>[CONSTITUTION §11.4.184]</code>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-quality-gate-topology">1. Quality-gate topology</a></li>
+<li><a href="#2-sonarqube--cli--rootless-podman-server">2. SonarQube —
+CLI + rootless-Podman server</a></li>
+<li><a href="#3-project-configuration">3. Project configuration</a></li>
+<li><a href="#4-quality-gate-definition">4. Quality Gate
+definition</a></li>
+<li><a href="#5-snyk">5. Snyk</a></li>
+<li><a href="#6-cadence--automation">6. Cadence &amp;
+automation</a></li>
+<li><a href="#7-independent-ai-review">7. Independent AI review</a></li>
+<li><a href="#8-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+<li><a href="#9-open-items">9. Open items</a></li>
+</ul>
+<h2 id="quality-gate-topology">1. Quality-gate topology</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 960.7px; background-color: white;" viewBox="0 0 960.7000122070312 1161.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Server" data-look="classic"><rect style="" x="8" y="545.7999954223633" width="317" height="375.2000045776367"/><g class="cluster-label" transform="translate(34.5, 545.7999954223633)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SonarQube</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> server</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (rootless</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Podman)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M568.2,90.2L568.2,94.367C568.2,98.533,568.2,106.867,568.2,114.533C568.2,122.2,568.2,129.2,568.2,132.7L568.2,136.2" id="my-svg-L_SRC_HOOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SRC_HOOK_0" data-points="W3sieCI6NTY4LjIwMDAwNDU3NzYzNjcsInkiOjkwLjE5OTk5Njk0ODI0MjE5fSx7IngiOjU2OC4yMDAwMDQ1Nzc2MzY3LCJ5IjoxMTUuMTk5OTk2OTQ4MjQyMTl9LHsieCI6NTY4LjIwMDAwNDU3NzYzNjcsInkiOjE0MC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M479.166,292.166L425.388,311.172C371.611,330.177,264.055,368.189,210.89,390.704C157.725,413.22,158.95,420.24,159.563,423.75L160.175,427.26" id="my-svg-L_HOOK_SCAN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HOOK_SCAN_0" data-points="W3sieCI6NDc5LjE2NTgxNTUxNzk4MywieSI6MjkyLjE2NTgwNzg4ODU4ODQ2fSx7IngiOjE1Ni41LCJ5Ijo0MDYuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNjAuODYzMDAxODAzMjkzMzIsInkiOjQzMS4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M626.802,322.598L639.993,336.532C653.184,350.466,679.567,378.333,705.686,397.644C731.804,416.955,757.658,427.709,770.585,433.086L783.512,438.464" id="my-svg-L_HOOK_SNYK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HOOK_SNYK_0" data-points="W3sieCI6NjI2LjgwMTUwNTAxODk0MywieSI6MzIyLjU5ODQ5NjUwNjkzNTkzfSx7IngiOjcwNS45NTAwMDQ1Nzc2MzY3LCJ5Ijo0MDYuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo3ODcuMjA1Njc1NzI3NjkzMywieSI6NDM5Ljk5OTk5NjE4NTMwMjczfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M142.543,635.4L139.452,639.567C136.362,643.733,130.181,652.067,127.09,671.434C124,690.802,124,721.204,124,736.405L124,751.605" id="my-svg-L_SQ_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SQ_PG_0" data-points="W3sieCI6MTQyLjU0Mjc1NzY2Mzk5NjUzLCJ5Ijo2MzUuMzk5OTkzODk2NDg0NH0seyJ4IjoxMjQsInkiOjY2MC4zOTk5OTM4OTY0ODQ0fSx7IngiOjEyNCwieSI6NzUxLjYwNTQ0NTg2MTgxNjR9XQ==" data-look="classic"/><path d="M166.5,495.8L166.5,499.967C166.5,504.133,166.5,512.467,166.5,520.8C166.5,529.133,166.5,537.467,166.5,545.133C166.5,552.8,166.5,559.8,166.5,563.3L166.5,566.8" id="my-svg-L_SCAN_SQ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SCAN_SQ_0" data-points="W3sieCI6MTY2LjUsInkiOjQ5NS43OTk5OTU0MjIzNjMzfSx7IngiOjE2Ni41LCJ5Ijo1MjAuNzk5OTk1NDIyMzYzM30seyJ4IjoxNjYuNSwieSI6NTQ1Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTY2LjUsInkiOjU3MC43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M205.536,635.4L210.572,639.567C215.607,643.733,225.679,652.067,257.198,671.266C288.717,690.466,341.683,720.531,368.167,735.564L394.65,750.597" id="my-svg-L_SQ_QG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SQ_QG_0" data-points="W3sieCI6MjA1LjUzNjIxMjUxMjE5Mzg4LCJ5Ijo2MzUuMzk5OTkzODk2NDg0NH0seyJ4IjoyMzUuNzUsInkiOjY2MC4zOTk5OTM4OTY0ODQ0fSx7IngiOjM5OC4xMjg2MzgyODMzODMwNSwieSI6NzUyLjU3MTM1ODY2NDg1OTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M843.7,487L843.7,492.633C843.7,498.267,843.7,509.533,843.7,519.333C843.7,529.133,843.7,537.467,843.7,551.183C843.7,564.9,843.7,584,843.7,603.1C843.7,622.2,843.7,641.3,843.7,658.65C843.7,676,843.7,691.6,843.7,699.4L843.7,707.2" id="my-svg-L_SNYK_SEV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SNYK_SEV_0" data-points="W3sieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjQ4Ni45OTk5OTYxODUzMDI3M30seyJ4Ijo4NDMuNzAwMDA0NTc3NjM2NywieSI6NTIwLjc5OTk5NTQyMjM2MzN9LHsieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjU0NS43OTk5OTU0MjIzNjMzfSx7IngiOjg0My43MDAwMDQ1Nzc2MzY3LCJ5Ijo2MDMuMDk5OTk0NjU5NDIzOH0seyJ4Ijo4NDMuNzAwMDA0NTc3NjM2NywieSI6NjYwLjM5OTk5Mzg5NjQ4NDR9LHsieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjcxMS4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M465.3,896L465.3,900.167C465.3,904.333,465.3,912.667,465.3,922.75C465.3,932.833,465.3,944.667,471.486,957.471C477.673,970.275,490.046,984.049,496.232,990.937L502.419,997.824" id="my-svg-L_QG_FIX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_QG_FIX_0" data-points="W3sieCI6NDY1LjMwMDAwMzA1MTc1NzgsInkiOjg5Ni4wMDAwMDAwMDAwMDAxfSx7IngiOjQ2NS4zMDAwMDMwNTE3NTc4LCJ5Ijo5MjF9LHsieCI6NDY1LjMwMDAwMzA1MTc1NzgsInkiOjk1Ni41fSx7IngiOjUwNS4wOTE1OTY3MzE1ODA4LCJ5IjoxMDAwLjc5OTk5OTIzNzA2MDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M553.721,1000.8L562.367,993.417C571.014,986.033,588.307,971.267,596.953,957.967C605.6,944.667,605.6,932.833,605.6,905.2C605.6,877.567,605.6,834.133,605.6,790.7C605.6,747.267,605.6,703.833,605.6,672.567C605.6,641.3,605.6,622.2,605.6,603.1C605.6,584,605.6,564.9,605.6,551.183C605.6,537.467,605.6,529.133,605.6,515.417C605.6,501.7,605.6,482.6,605.6,463.5C605.6,444.4,605.6,425.3,603.639,408.122C601.679,390.945,597.757,375.689,595.797,368.062L593.836,360.434" id="my-svg-L_FIX_HOOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FIX_HOOK_0" data-points="W3sieCI6NTUzLjcyMDY1NDM4Mzc1MzksInkiOjEwMDAuNzk5OTk5MjM3MDYwNX0seyJ4Ijo2MDUuNjAwMDA2MTAzNTE1NiwieSI6OTU2LjV9LHsieCI6NjA1LjYwMDAwNjEwMzUxNTYsInkiOjkyMX0seyJ4Ijo2MDUuNjAwMDA2MTAzNTE1NiwieSI6NzkwLjY5OTk5Njk0ODI0MjJ9LHsieCI6NjA1LjYwMDAwNjEwMzUxNTYsInkiOjY2MC4zOTk5OTM4OTY0ODQ0fSx7IngiOjYwNS42MDAwMDYxMDM1MTU2LCJ5Ijo2MDMuMDk5OTk0NjU5NDIzOH0seyJ4Ijo2MDUuNjAwMDA2MTAzNTE1NiwieSI6NTQ1Ljc5OTk5NTQyMjM2MzN9LHsieCI6NjA1LjYwMDAwNjEwMzUxNTYsInkiOjUyMC43OTk5OTU0MjIzNjMzfSx7IngiOjYwNS42MDAwMDYxMDM1MTU2LCJ5Ijo0NjMuNDk5OTk2MTg1MzAyNzN9LHsieCI6NjA1LjYwMDAwNjEwMzUxNTYsInkiOjQwNi4xOTk5OTY5NDgyNDIyfSx7IngiOjU5Mi44NDAyNDU5NDU5ODIyLCJ5IjozNTYuNTU5NzU1NTc5ODk2N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M786.636,813.136L740.914,831.114C695.191,849.091,603.745,885.045,558.023,908.939C512.3,932.833,512.3,944.667,513.68,957.314C515.06,969.961,517.819,983.421,519.199,990.151L520.579,996.882" id="my-svg-L_SEV_FIX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEV_FIX_0" data-points="W3sieCI6Nzg2LjYzNjMyNzE2Nzg2NzMsInkiOjgxMy4xMzYzMTk1Mzg0NzI4fSx7IngiOjUxMi4zMDAwMDMwNTE3NTc4LCJ5Ijo5MjF9LHsieCI6NTEyLjMwMDAwMzA1MTc1NzgsInkiOjk1Ni41fSx7IngiOjUyMS4zODIxNTczODY4NzE1LCJ5IjoxMDAwLjc5OTk5OTIzNzA2MDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M531.999,829.301L558.408,844.584C584.816,859.867,637.633,890.434,664.042,911.633C690.45,932.833,690.45,944.667,703.214,956.23C715.978,967.794,741.506,979.088,754.27,984.735L767.034,990.382" id="my-svg-L_QG_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_QG_REV_0" data-points="W3sieCI6NTMxLjk5OTM4NTY0NDExMzMsInkiOjgyOS4zMDA2MTc0MDc2NDQ1fSx7IngiOjY5MC40NTAwMDQ1Nzc2MzY3LCJ5Ijo5MjF9LHsieCI6NjkwLjQ1MDAwNDU3NzYzNjcsInkiOjk1Ni41fSx7IngiOjc3MC42OTE1MjQ2NTQ2MTkzLCJ5Ijo5OTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M843.7,870.2L843.7,878.667C843.7,887.133,843.7,904.067,843.7,918.45C843.7,932.833,843.7,944.667,843.7,955.833C843.7,967,843.7,977.5,843.7,982.75L843.7,988" id="my-svg-L_SEV_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEV_REV_0" data-points="W3sieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjg3MC4xOTk5OTY5NDgyNDIzfSx7IngiOjg0My43MDAwMDQ1Nzc2MzY3LCJ5Ijo5MjF9LHsieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjk1Ni41fSx7IngiOjg0My43MDAwMDQ1Nzc2MzY3LCJ5Ijo5OTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M843.7,1056.6L843.7,1060.767C843.7,1064.933,843.7,1073.267,843.7,1080.933C843.7,1088.6,843.7,1095.6,843.7,1099.1L843.7,1102.6" id="my-svg-L_REV_PRETAG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REV_PRETAG_0" data-points="W3sieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjEwNTYuNTk5OTk4NDc0MTIxfSx7IngiOjg0My43MDAwMDQ1Nzc2MzY3LCJ5IjoxMDgxLjU5OTk5ODQ3NDEyMX0seyJ4Ijo4NDMuNzAwMDA0NTc3NjM2NywieSI6MTEwNi41OTk5OTg0NzQxMjF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M843.7,293L843.7,311.867C843.7,330.733,843.7,368.467,843.7,392.3C843.7,416.133,843.7,426.067,843.7,431.033L843.7,436" id="my-svg-L_CRON_SNYK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CRON_SNYK_0" data-points="W3sieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjI5Mi45OTk5OTYxODUzMDI3M30seyJ4Ijo4NDMuNzAwMDA0NTc3NjM2NywieSI6NDA2LjE5OTk5Njk0ODI0MjJ9LHsieCI6ODQzLjcwMDAwNDU3NzYzNjcsInkiOjQzOS45OTk5OTYxODUzMDI3M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M739.885,293L679.246,311.867C618.607,330.733,497.328,368.467,418.324,392.355C339.319,416.244,302.589,426.287,284.224,431.309L265.858,436.331" id="my-svg-L_CRON_SCAN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CRON_SCAN_0" data-points="W3sieCI6NzM5Ljg4NDkyMDc4MDQwNDcsInkiOjI5Mi45OTk5OTYxODUzMDI3M30seyJ4IjozNzYuMDUwMDAzMDUxNzU3OCwieSI6NDA2LjE5OTk5Njk0ODI0MjJ9LHsieCI6MjYyLCJ5Ijo0MzcuMzg2MTgxNTk0NzY5NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_SRC_HOOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HOOK_SCAN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HOOK_SNYK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SQ_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SCAN_SQ_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SQ_QG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SNYK_SEV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(465.3000030517578, 956.5)"><g class="label" data-id="L_QG_FIX_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-12.5" y="0" width="25" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fail</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_FIX_HOOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(512.3000030517578, 956.5)"><g class="label" data-id="L_SEV_FIX_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(690.4500045776367, 956.5)"><g class="label" data-id="L_QG_REV_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pass</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(843.7000045776367, 956.5)"><g class="label" data-id="L_SEV_REV_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_REV_PRETAG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CRON_SNYK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CRON_SCAN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-SRC-0" data-look="classic" transform="translate(568.2000045776367, 49.099998474121094)"><rect class="basic label-container" style="" x="-130" y="-41.099998474121094" width="260" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Working</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tree</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> TS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Kotlin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Swift</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Rust</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SQL</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-HOOK-1" data-look="classic" transform="translate(568.2000045776367, 260.6999969482422)"><polygon points="120.5,0 241,-120.5 120.5,-241 0,-120.5" class="label-container" transform="translate(-120, 120.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pre-commit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pre-push</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hook</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SCAN-3" data-look="classic" transform="translate(166.5, 463.49999618530273)"><rect class="basic label-container" style="" x="-95.5" y="-32.29999923706055" width="191" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sonar-scanner</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CLI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PATH</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SNYK-5" data-look="classic" transform="translate(843.7000045776367, 463.49999618530273)"><rect class="basic label-container" style="" x="-105.5" y="-23.5" width="211" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">snyk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> snyk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SQ-6" data-look="classic" transform="translate(166.5, 603.0999946594238)"><rect class="basic label-container" style="" x="-123.5" y="-32.29999923706055" width="247" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sonarqube:community</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">via</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> digital.vasic.containers</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PG-7" data-look="classic" transform="translate(124, 790.6999969482422)"><path d="M0,9.529702970297029 a38.5,9.529702970297029 0,0,0 77,0 a38.5,9.529702970297029 0,0,0 -77,0 l0,59.129701444418124 a38.5,9.529702970297029 0,0,0 77,0 l0,-59.129701444418124" class="basic label-container outer-path" style="" transform="translate(-38.5, -39.09455369250609)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sonar</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> db</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-QG-13" data-look="classic" transform="translate(465.3000030517578, 790.6999969482422)"><polygon points="105.29999923706055,0 210.5999984741211,-105.29999923706055 105.29999923706055,-210.5999984741211 0,-105.29999923706055" class="label-container" transform="translate(-104.79999923706055, 105.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Quality</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Gate</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Sonar</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Way</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> custom</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEV-15" data-look="classic" transform="translate(843.7000045776367, 790.6999969482422)"><polygon points="79.5,0 159,-79.5 79.5,-159 0,-79.5" class="label-container" transform="translate(-79, 79.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">severity</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> high?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FIX-17" data-look="classic" transform="translate(526.2000045776367, 1024.2999992370605)"><rect class="basic label-container" style="" x="-65" y="-23.5" width="130" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> waive</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REV-22" data-look="classic" transform="translate(843.7000045776367, 1024.2999992370605)"><rect class="basic label-container" style="" x="-109" y="-32.29999923706055" width="218" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Independent</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> review</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Fable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> @</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> xhigh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GO</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PRETAG-26" data-look="classic" transform="translate(843.7000045776367, 1130.099998474121)"><rect class="basic label-container" style="" x="-109" y="-23.5" width="218" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pre-tag</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> full-suite</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retest</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CRON-27" data-look="classic" transform="translate(843.7000045776367, 260.6999969482422)"><rect class="basic label-container" style="" x="-105" y="-32.29999923706055" width="210" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">daily</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scheduled</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scan</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">systemd</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> timer</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/static-analysis-quality-gate.mmd"><code>diagrams/static-analysis-quality-gate.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The working tree (Go, TypeScript, Kotlin, Swift, Rust
+and SQL) is scanned by the local
+<code>pre-commit</code>/<code>pre-push</code> git-hook, which invokes
+two tools in parallel: the <code>sonar-scanner</code> CLI (on PATH per
+<code>[CONSTITUTION §11.4.184]</code>) and Snyk (<code>snyk test</code>
+for dependencies + <code>snyk code</code> for SAST). The scanner reports
+to a <strong>SonarQube server run in rootless Podman</strong> (the
+<code>sonarqube:community</code> image plus its Postgres, stood up via
+<code>digital.vasic.containers</code>), which evaluates the change
+against its <strong>Quality Gate</strong> (the built-in Sonar Way plus
+Thready custom conditions). Snyk evaluates severity.</p>
+<p>If the Quality Gate fails or Snyk finds a high/critical issue, the
+change is bounced to fix/waive and re-enters the hook. When both pass,
+the change proceeds to <strong>independent AI review</strong> (Fable @
+xhigh → GO) and then the pre-tag full-suite retest. A <strong>daily
+scheduled scan</strong> (systemd timer) re-runs both tools independently
+of commits so newly disclosed CVEs and rule updates surface even without
+a code change.</p>
+<p>There is no server-side CI — the server is a local rootless
+container, and all orchestration is local hooks/timers
+<code>[CONSTITUTION §11.4.156/161]</code>. These two gates are
+<code>G-SONAR</code> and <code>G-SNYK</code> at Gate-2 of the
+acceptance-gate ladder (<a
+href="./acceptance-gates.md#1-the-gate-ladder">acceptance-gates.md
+§1</a>).</p>
+<h2 id="sonarqube-cli-rootless-podman-server">2. SonarQube — CLI +
+rootless-Podman server</h2>
+<p><code>[CONSTITUTION §11.4.184/161]</code>. Both the CLI and the
+server are mandated; both come from the Constitution’s shared tooling
+(<code>constitution/scripts/sonarqube/</code>) so every project reusing
+the Constitution inherits them.</p>
+<ul>
+<li><strong>CLI</strong> — <code>sonar-scanner</code> installed on PATH
+(added in <code>.bashrc</code>/<code>.zshrc</code>) so Claude Code and
+other CLI agents/skills/MCPs can invoke it.
+<code>[RESEARCH: final §9.3]</code></li>
+<li><strong>Server</strong> — a local <strong>rootless Podman</strong>
+container (<code>sonarqube:community</code> + Postgres), stood up via
+<code>vasic-digital/containers</code>
+(<code>pkg/boot</code>/<code>compose</code>/<code>health</code>), never
+as a root daemon and never as server-side CI. The server holds history,
+the Quality Gate and issue triage state.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Stand up the local server (rootless Podman, via containers submodule tooling)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/sonarqube/up.sh          <span class="co"># boots sonarqube + db, waits for health</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Scan (CLI on PATH) — run by the git-hook and by the daily timer</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">sonar-scanner</span> <span class="at">-Dproject.settings</span><span class="op">=</span>sonar-project.properties</span></code></pre></div>
+<h2 id="project-configuration">3. Project configuration</h2>
+<p><code>sonar-project.properties</code> (illustrative — multi-language
+monorepo):</p>
+<pre class="properties"><code>sonar.projectKey=helix_thready
+sonar.host.url=http://localhost:9000
+sonar.sources=services,clients,packages
+sonar.tests=.
+sonar.test.inclusions=**/*_test.go,**/*.spec.ts,**/*Test.kt,**/*Tests.swift
+sonar.exclusions=**/vendor/**,**/node_modules/**,**/*.mmd,**/testdata/**
+# Coverage feeds (line/branch is secondary to test-type coverage — test-strategy §3)
+sonar.go.coverage.reportPaths=coverage/go-coverage.out
+sonar.javascript.lcov.reportPaths=coverage/lcov.info
+sonar.qualitygate.wait=true</code></pre>
+<p>Coverage reports are produced by <code>go test -coverprofile</code>
+and Karma/<code>nyc</code>; they feed Sonar for regression tracking but
+do <strong>not</strong> replace the 100 % test-type coverage model (<a
+href="./test-strategy.md#3-coverage-model-100--test-type-coverage">test-strategy.md
+§3</a>).</p>
+<h2 id="quality-gate-definition">4. Quality Gate definition</h2>
+<p>The Thready Quality Gate (on top of Sonar Way) blocks a change when,
+on <strong>new code</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Security: new Blocker/Critical vulnerabilities</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>Security hotspots reviewed</td>
+<td><strong>100 %</strong></td>
+</tr>
+<tr>
+<td>New bugs Blocker/Critical</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>New code smells Blocker</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>Duplicated lines on new code</td>
+<td><strong>&lt; 3 %</strong></td>
+</tr>
+<tr>
+<td>New-code line coverage (secondary signal)</td>
+<td><strong>≥ 80 %</strong></td>
+</tr>
+</tbody>
+</table>
+<p>A failing gate returns the change to the author (pipeline in <a
+href="./test-strategy.md#4-tdd-reproduce-first">test-strategy.md
+§4</a>). Waivers require a documented justification and appear as a
+tracked risk in the workable-item register
+<code>[RESEARCH: final §22.4]</code>. This SonarQube Quality Gate is the
+<code>G-SONAR</code> acceptance gate, and the Snyk severity gate below
+is <code>G-SNYK</code>, both at Gate-2 (pre-push) of the ladder (<a
+href="./acceptance-gates.md#2-gate-register-one-row-per-type">acceptance-gates.md
+§2</a>); a new Blocker/Critical finding on either is a non-waivable
+release blocker (<a
+href="./acceptance-gates.md#4-blocking-severity-policy">acceptance-gates.md
+§4</a>).</p>
+<h2 id="snyk">5. Snyk</h2>
+<p>Snyk is the second quality column
+<code>[RESEARCH: request §Testing]</code> (the Constitution is silent on
+Snyk; it is added as a project quality column per the original
+request).</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snyk</span> test                 <span class="co"># dependency vulnerabilities (Go modules, npm, Gradle, Cargo)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">snyk</span> code test            <span class="co"># SAST over first-party code</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">snyk</span> monitor              <span class="co"># snapshot for continuous re-evaluation as new CVEs land</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">snyk</span> container test <span class="op">&lt;</span>img<span class="op">&gt;</span> <span class="co"># scan the rootless Podman images before deploy</span></span></code></pre></div>
+<ul>
+<li><strong>Gate.</strong> No new <strong>high/critical</strong>
+dependency or code finding; the SSRF/secret classes must be clean
+(paired with <code>security/pkg/*</code> runtime tests, <a
+href="./test-types.md#5-security-tests">test-types.md §5</a>).</li>
+<li><strong>Container scan.</strong> Every image built for deployment is
+Snyk-scanned before it can be tagged.</li>
+</ul>
+<h2 id="cadence-automation">6. Cadence &amp; automation</h2>
+<p><code>[RESEARCH: request §Testing]</code> — “regular continuous use
+is planned; discovered issues tackled ASAP”:</p>
+<ul>
+<li><strong>Per-commit / per-push</strong> — SonarQube scan +
+<code>snyk test</code>/<code>snyk code</code> in the local git-hook;
+block on gate failure.</li>
+<li><strong>Daily</strong> — a systemd timer runs
+<code>snyk test</code>/<code>snyk monitor</code> and a full
+<code>sonar-scanner</code> sweep, so newly disclosed CVEs and rule
+changes surface without a code change; findings auto-open a workable
+item.</li>
+<li><strong>Pre-tag</strong> — a clean SonarQube Quality Gate + zero
+high/critical Snyk findings is a precondition of the pre-tag full-suite
+retest.</li>
+<li><strong>Docs</strong> — all technical documentation passes
+SonarQube/Snyk-adjacent link/secret/lint checks and the independent AI
+review before publish <code>[RESEARCH: request §Testing]</code>.</li>
+</ul>
+<h2 id="independent-ai-review">7. Independent AI review</h2>
+<p>In addition to the tools, every change passes <strong>independent AI
+review on Fable @ xhigh (Opus xhigh fallback)</strong>, iterating to
+<strong>GO</strong> <code>[CONSTITUTION §11.4.209/142/194/134]</code>.
+The mandated angles are exactly the original request’s list: Security,
+Stability, Gaps, Danger zones, Weak spots, Performance, Memory
+management &amp; leak prevention, and DDoS/attack resistance. Review
+runs after the tool gates and before the pre-tag retest; it is a gate,
+not advisory.</p>
+<h2 id="gap-register-items-addressed">8. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §7.1]</code> <code>security/pkg/scanner</code>
+integrates Snyk/SonarQube via adapters — wire them: this doc specifies
+the CLI + rootless server + gate that the scanner adapters drive.</li>
+<li><code>[GAP: §12 CI-equivalent gating]</code> — SonarQube/Snyk run in
+local hooks + timers, never server-side CI — §1, §6.</li>
+</ul>
+<h2 id="open-items">9. Open items</h2>
+<ul>
+<li><code>[OPEN: sonarqube-edition]</code> — Community edition covers
+Go/TS/Kotlin/Python; confirm analyzer support for Swift/Rust or
+supplement with <code>swiftlint</code>/<code>clippy</code> feeding Sonar
+generic issues.</li>
+<li><code>[OPEN: snyk-license]</code> — confirm the Snyk plan/seat for
+the org before wiring <code>snyk monitor</code> into the daily
+timer.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

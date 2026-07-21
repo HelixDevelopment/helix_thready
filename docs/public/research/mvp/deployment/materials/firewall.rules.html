@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Host Firewall Rules (materialized)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Host Firewall Rules
+(materialized)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#traffic-flow-diagram" id="toc-traffic-flow-diagram">1.
+Traffic-flow diagram</a></li>
+<li><a href="#open-port-policy-what-and-why"
+id="toc-open-port-policy-what-and-why">2. Open-port policy (what and
+why)</a></li>
+<li><a href="#nftables-ruleset-default"
+id="toc-nftables-ruleset-default">3. nftables ruleset (default)</a></li>
+<li><a href="#ufw-equivalent-alternative"
+id="toc-ufw-equivalent-alternative">4. ufw equivalent
+(alternative)</a></li>
+<li><a href="#firewalld-equivalent-alternative"
+id="toc-firewalld-equivalent-alternative">5. firewalld equivalent
+(alternative)</a></li>
+<li><a href="#reproduce-first-closed-port-test"
+id="toc-reproduce-first-closed-port-test">6. Reproduce-first closed-port
+test</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">7.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">8. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Host Firewall Rules (materialized)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/materials/firewall.rules.md
+  Status          : Review — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ../hetzner-provisioning.md, ../environments.md, ../container-topology.md,
+                    ../service-discovery-ports.md, ../tls-lets-encrypt.md,
+                    ./compose.edge.yaml, ./Caddyfile
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Materialized the <code>hetzner-provisioning.md §5</code> firewall as
+a drop-in nftables ruleset + ufw/firewalld equivalents + a
+reproduce-first closed-port test</td>
+</tr>
+</tbody>
+</table>
+<p>This is the <strong>concrete, drop-in</strong> firewall for the
+single Hetzner host that runs all three Helix Thready environments. It
+materializes <a
+href="../hetzner-provisioning.md#5-firewall">hetzner-provisioning.md
+§5</a>: the entire public attack surface is <strong>SSH + the
+edge</strong> (22, 80, 443/tcp, 443/udp) and <strong>nothing
+else</strong> — every datastore binds <code>127.0.0.1</code> in its <a
+href="../service-discovery-ports.md">port_prefix band</a> and is never
+exposed. <code>[CONSTITUTION §11.4.76]</code> (rootless) ·
+<code>[OPERATOR]</code> (single host, Q8).</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/firewall-flow.mmd"><code>diagrams/firewall-flow.mmd</code></a>.
+Rendered PNG/SVG exported via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-traffic-flow-diagram">Traffic-flow diagram</a></li>
+<li><a href="#2-open-port-policy-what-and-why">Open-port policy (what
+and why)</a></li>
+<li><a href="#3-nftables-ruleset-default">nftables ruleset
+(default)</a></li>
+<li><a href="#4-ufw-equivalent-alternative">ufw equivalent
+(alternative)</a></li>
+<li><a href="#5-firewalld-equivalent-alternative">firewalld equivalent
+(alternative)</a></li>
+<li><a href="#6-reproduce-first-closed-port-test">Reproduce-first
+closed-port test</a></li>
+<li><a href="#7-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#8-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="traffic-flow-diagram">1. Traffic-flow diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1479.8px; background-color: white;" viewBox="0 0 1479.800048828125 362.6000061035156" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M209,159.5L213.167,159.5C217.333,159.5,225.667,159.5,233.333,159.5C241,159.5,248,159.5,251.5,159.5L255,159.5" id="my-svg-L_NET_FW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NET_FW_0" data-points="W3sieCI6MjA5LCJ5IjoxNTkuNDk5OTk4MDkyNjUxMzd9LHsieCI6MjM0LCJ5IjoxNTkuNDk5OTk4MDkyNjUxMzd9LHsieCI6MjU5LCJ5IjoxNTkuNDk5OTk4MDkyNjUxMzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M498.183,114.883L525.285,102.452C552.388,90.022,606.594,65.161,656.114,52.73C705.633,40.3,750.467,40.3,772.883,40.3L795.3,40.3" id="my-svg-L_FW_SSH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FW_SSH_0" data-points="W3sieCI6NDk4LjE4MjUyNjg3NjQ0NzMsInkiOjExNC44ODI1MzcxNzYxMjk4OX0seyJ4Ijo2NjAuNzk5OTg3NzkyOTY4OCwieSI6NDAuMjk5OTk5MjM3MDYwNTV9LHsieCI6Nzk5LjI5OTk4Nzc5Mjk2ODgsInkiOjQwLjI5OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M515.505,132.205L539.721,126.437C563.936,120.67,612.368,109.135,662.935,109.594C713.502,110.053,766.205,122.506,792.556,128.732L818.907,134.959" id="my-svg-L_FW_EDGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FW_EDGE_0" data-points="W3sieCI6NTE1LjUwNDc0MzA5MTA2OTcsInkiOjEzMi4yMDQ3NTMzOTA3NTI0fSx7IngiOjY2MC43OTk5ODc3OTI5Njg4LCJ5Ijo5Ny41OTk5OTg0NzQxMjExfSx7IngiOjgyMi43OTk5ODc3OTI5Njg4LCJ5IjoxMzUuODc4NzYwODUxMDQ0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M540.332,157.032L560.41,156.677C580.488,156.321,620.644,155.611,667.055,155.255C713.467,154.9,766.133,154.9,792.467,154.9L818.8,154.9" id="my-svg-L_FW_EDGE_2" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FW_EDGE_2" data-points="W3sieCI6NTQwLjMzMjE2MTU1NDEyMDQsInkiOjE1Ny4wMzIxNzE4NTM4MDN9LHsieCI6NjYwLjc5OTk4Nzc5Mjk2ODgsInkiOjE1NC44OTk5OTc3MTExODE2NH0seyJ4Ijo4MjIuNzk5OTg3NzkyOTY4OCwieSI6MTU0Ljg5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M515.647,186.653L539.839,192.377C564.032,198.102,612.416,209.551,662.965,208.091C713.514,206.631,766.227,192.263,792.584,185.079L818.941,177.894" id="my-svg-L_FW_EDGE_3" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FW_EDGE_3" data-points="W3sieCI6NTE1LjY0NzM3NDg3OTU4OTIsInkiOjE4Ni42NTI2MTEwMDYwMzA5Mn0seyJ4Ijo2NjAuNzk5OTg3NzkyOTY4OCwieSI6MjIwLjk5OTk5ODA5MjY1MTM3fSx7IngiOjgyMi43OTk5ODc3OTI5Njg4LCJ5IjoxNzYuODQyNDcyMDY0NjE4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M493.96,208.34L521.767,222.933C549.574,237.526,605.187,266.713,651.993,281.307C698.8,295.9,736.8,295.9,755.8,295.9L774.8,295.9" id="my-svg-L_FW_BLOCKED_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FW_BLOCKED_0" data-points="W3sieCI6NDkzLjk2MDMyMjMxMjA4NDQzLCJ5IjoyMDguMzM5NjYzNTczNTM1NjN9LHsieCI6NjYwLjc5OTk4Nzc5Mjk2ODgsInkiOjI5NS44OTk5OTc3MTExODE2NH0seyJ4Ijo3NzguNzk5OTg3NzkyOTY4OCwieSI6Mjk1Ljg5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M983.8,154.9L1007.383,154.9C1030.967,154.9,1078.133,154.9,1117.967,154.9C1157.8,154.9,1190.3,154.9,1206.55,154.9L1222.8,154.9" id="my-svg-L_EDGE_APIS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_APIS_0" data-points="W3sieCI6OTgzLjc5OTk4Nzc5Mjk2ODgsInkiOjE1NC44OTk5OTc3MTExODE2NH0seyJ4IjoxMTI1LjI5OTk4Nzc5Mjk2ODgsInkiOjE1NC44OTk5OTc3MTExODE2NH0seyJ4IjoxMjI2Ljc5OTk4Nzc5Mjk2ODgsInkiOjE1NC44OTk5OTc3MTExODE2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1027.8,295.9L1044.05,295.9C1060.3,295.9,1092.8,295.9,1125.3,295.9C1157.8,295.9,1190.3,295.9,1206.55,295.9L1222.8,295.9" id="my-svg-L_BLOCKED_LOOP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BLOCKED_LOOP_0" data-points="W3sieCI6MTAyNy43OTk5ODc3OTI5Njg4LCJ5IjoyOTUuODk5OTk3NzExMTgxNjR9LHsieCI6MTEyNS4yOTk5ODc3OTI5Njg4LCJ5IjoyOTUuODk5OTk3NzExMTgxNjR9LHsieCI6MTIyMi43OTk5ODc3OTI5Njg4LCJ5IjoyOTUuODk5OTk3NzExMTgxNjR9XQ==" data-look="classic"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_NET_FW_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(660.7999877929688, 40.29999923706055)"><g class="label" data-id="L_FW_SSH_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-60.5" y="0" width="121" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tcp/22</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (key-only)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(669.12169, 99.56632)"><g class="label" data-id="L_FW_EDGE_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-93" y="0" width="186" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tcp/80</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (ACME</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTTP-01</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">redirect)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(660.7999877929688, 154.89999771118164)"><g class="label" data-id="L_FW_EDGE_2" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-58" y="0" width="116" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tcp/443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (H1/H2)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(669.84465, 218.53463)"><g class="label" data-id="L_FW_EDGE_3" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-88" y="0" width="176" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">udp/443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (HTTP/3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> QUIC)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(660.7999877929688, 295.89999771118164)"><g class="label" data-id="L_FW_BLOCKED_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-81.5" y="0" width="163" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DROP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> everything</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> else</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> answer)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1125.2999877929688, 154.89999771118164)"><g class="label" data-id="L_EDGE_APIS_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-72.5" y="0" width="145" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Host-header</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> routing</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">127.0.0.1:6X443</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_BLOCKED_LOOP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-NET-0" data-look="classic" transform="translate(108.5, 159.49999809265137)"><rect class="basic label-container" style="" x="-100.5" y="-32.29999923706055" width="201" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Internet</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(clients</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ACME</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CA)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FW-1" data-look="classic" transform="translate(400.8999938964844, 159.49999809265137)"><polygon points="141.9000015258789,0 283.8000030517578,-141.9000015258789 141.9000015258789,-283.8000030517578 0,-141.9000015258789" class="label-container" transform="translate(-141.4000015258789, 141.9000015258789)"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nftables</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> inet</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">input</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> policy:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DROP</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">allow</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> only</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 22,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 80,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 443/tcp,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">443/udp</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SSH-3" data-look="classic" transform="translate(903.2999877929688, 40.29999923706055)"><rect class="basic label-container" style="" x="-104" y="-32.29999923706055" width="208" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sshd</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> root,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> password</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EDGE-5" data-look="classic" transform="translate(903.2999877929688, 154.89999771118164)"><rect class="basic label-container" style="" x="-80.5" y="-32.29999923706055" width="161" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">caddy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edge</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">0.0.0.0:80/443</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BLOCKED-11" data-look="classic" transform="translate(903.2999877929688, 295.89999771118164)"><rect class="basic label-container" style="" x="-124.5" y="-58.70000076293945" width="249" height="117.4000015258789"/><g class="label" style="" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 5432</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> redis</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 6379</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nats</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4222/8222</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> minio</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">9000/9001</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">clickhouse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prometheus</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">grafana</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ...</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-APIS-13" data-look="classic" transform="translate(1347.2999877929688, 154.89999771118164)"><rect class="basic label-container" style="" x="-120.5" y="-32.29999923706055" width="241" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-api</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (dev/sta/prod)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loopback-only</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LOOP-15" data-look="classic" transform="translate(1347.2999877929688, 295.89999771118164)"><rect class="basic label-container" style="" x="-124.5" y="-58.70000076293945" width="249" height="117.4000015258789"/><g class="label" style="" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">all</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bound</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 127.0.0.1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> their</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">port_prefix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reachable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ONLY</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> via</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">compose</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> network</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> or</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> an</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SSH</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tunnel</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Every packet from the internet — a browser, a CLI/SDK
+client, or the Let’s Encrypt CA validating an ACME challenge — first
+hits the <strong>nftables <code>inet filter</code> input chain</strong>,
+whose default policy is <strong>drop</strong>. The chain lets through
+exactly four things: <code>tcp/22</code> for key-only SSH,
+<code>tcp/80</code> for the ACME HTTP-01 challenge and the HTTP→HTTPS
+redirect, <code>tcp/443</code> for HTTP/1.1 and HTTP/2, and
+<code>udp/443</code> for HTTP/3 (QUIC). Port 22 goes to
+<code>sshd</code> (hardened to no-root, no-password); the three 80/443
+flows go to the single <strong>Caddy edge</strong>, the only process
+bound to public <code>0.0.0.0</code>.</p>
+<p>Everything else is <strong>dropped with no answer</strong> — the
+dashed edge to the <em>BLOCKED</em> box represents every datastore and
+observability port (Postgres 5432, Redis 6379, NATS 4222/8222, MinIO
+9000/9001, ClickHouse, Prometheus, Grafana, Jaeger, …). Those services
+are not merely firewalled; they are <strong>bound to
+<code>127.0.0.1</code></strong> inside each environment’s
+<code>port_prefix</code> band, so even without the firewall they would
+not answer a remote SYN. They are reachable only over the in-container
+compose network (by DNS name) or through an operator <strong>SSH
+tunnel</strong> — the <em>LOOP</em> note. The edge, having accepted a
+443 connection, terminates TLS and reverse-proxies to the correct
+environment by <code>Host</code> header to its loopback API port
+(<code>60443</code>/<code>61443</code>/<code>62443</code>). The net
+effect is a two-line public surface — SSH and the edge — with all state
+strictly private to the host.</p>
+<h2 id="open-port-policy-what-and-why">2. Open-port policy (what and
+why)</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 17%" />
+<col style="width: 27%" />
+<col style="width: 27%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Port</th>
+<th>Proto</th>
+<th>Direction</th>
+<th>Allowed to</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22</td>
+<td>tcp</td>
+<td>ingress</td>
+<td>sshd</td>
+<td>Operator access; <strong>key-only</strong>, no root, no password
+(<code>hetzner-provisioning.md §3</code>).</td>
+</tr>
+<tr>
+<td>80</td>
+<td>tcp</td>
+<td>ingress</td>
+<td>caddy edge</td>
+<td>ACME <strong>HTTP-01</strong> challenge webroot + permanent redirect
+to HTTPS (<code>tls-lets-encrypt.md §4</code>).</td>
+</tr>
+<tr>
+<td>443</td>
+<td>tcp</td>
+<td>ingress</td>
+<td>caddy edge</td>
+<td>HTTPS (HTTP/1.1 + HTTP/2) for all three subdomains.</td>
+</tr>
+<tr>
+<td>443</td>
+<td>udp</td>
+<td>ingress</td>
+<td>caddy edge</td>
+<td><strong>HTTP/3 (QUIC)</strong> — <code>vasic-digital/http3</code> +
+Caddy <code>h3</code> (<code>environments.md §4</code>).</td>
+</tr>
+<tr>
+<td>—</td>
+<td>icmp/icmpv6</td>
+<td>ingress</td>
+<td>host</td>
+<td>Path-MTU discovery + diagnostics (ping).</td>
+</tr>
+<tr>
+<td>(all)</td>
+<td>any</td>
+<td>egress</td>
+<td>host</td>
+<td><strong>Open</strong> — needed for ACME, image pulls, messenger/LLM
+APIs, rclone backups.</td>
+</tr>
+<tr>
+<td><strong>any other</strong></td>
+<td>any</td>
+<td>ingress</td>
+<td>—</td>
+<td><strong>DROP</strong> (default policy). No DB/cache/bus/object/obs
+port is ever public.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>No <code>0.0.0.0</code> datastore bind exists</strong> — the
+<a href="./compose.prod.yaml">compose files</a> publish every non-edge
+port as <code>127.0.0.1:&lt;band&gt;</code> only (<a
+href="../container-topology.md#3-service-inventory">container-topology.md
+§3</a>).</li>
+<li><strong>Forward chain is dropped</strong> — the host is not a
+router; rootless Podman’s own netavark handles in-namespace traffic
+without needing the host forward chain open.</li>
+<li><strong>Egress stays open</strong> — restricting egress is a
+<code>[DEFAULT — adjustable]</code> future hardening; ACME, registry
+pulls, Telegram/Max APIs and <code>rclone</code> to the backup secondary
+all need outbound.</li>
+</ul>
+<h2 id="nftables-ruleset-default">3. nftables ruleset (default)</h2>
+<p>Install as root <strong>once</strong> in provisioning Phase A (<a
+href="../hetzner-provisioning.md#3-phase-a--root-bootstrap-one-time">hetzner-provisioning.md
+§3</a>). This is the authoritative ruleset; the ufw/firewalld blocks
+below are equivalents for other distros.</p>
+<pre class="nft"><code>#!/usr/sbin/nft -f
+# /etc/nftables.conf  — Helix Thready host firewall (install as root, then `systemctl enable --now nftables`)
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    ct state established,related accept
+    ct state invalid drop
+    iif &quot;lo&quot; accept
+
+    ip  protocol icmp   accept          # IPv4 ping / PMTUD
+    ip6 nexthdr  icmpv6 accept          # IPv6 ND / PMTUD
+
+    tcp dport 22          accept        # SSH (key-only, no root)
+    tcp dport { 80, 443 } accept        # edge: ACME HTTP-01 + HTTPS (H1/H2)
+    udp dport 443         accept        # edge: HTTP/3 (QUIC)
+
+    # (optional) rate-limit new SSH connections as light brute-force defence:
+    # tcp dport 22 ct state new limit rate 10/minute accept
+
+    counter comment &quot;dropped-by-default&quot;
+  }
+  chain forward { type filter hook forward priority 0; policy drop; }
+  chain output  { type filter hook output  priority 0; policy accept; }
+}</code></pre>
+<ul>
+<li>Apply/verify: <code>sudo nft -f /etc/nftables.conf</code> then
+<code>sudo nft list ruleset</code>.</li>
+<li>Optional <code>fail2ban</code> on SSH complements (does not replace)
+the key-only policy.</li>
+</ul>
+<h2 id="ufw-equivalent-alternative">4. ufw equivalent (alternative)</h2>
+<p>For Ubuntu/Debian hosts that standardize on <code>ufw</code>
+<code>[DEFAULT — adjustable]</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset to a deny-by-default posture, then open exactly the edge + SSH surface.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw <span class="at">--force</span> reset</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default deny incoming</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default allow outgoing            <span class="co"># egress open (ACME, pulls, APIs, rclone)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 22/tcp    comment <span class="st">&#39;SSH key-only&#39;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 80/tcp    comment <span class="st">&#39;ACME HTTP-01 + redirect&#39;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 443/tcp   comment <span class="st">&#39;HTTPS H1/H2&#39;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 443/udp   comment <span class="st">&#39;HTTP/3 QUIC&#39;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw <span class="at">--force</span> enable</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span></code></pre></div>
+<blockquote>
+<p>ufw does not touch the loopback datastore binds — they are already
+private. ufw and nftables must not both manage the ruleset; pick
+one.</p>
+</blockquote>
+<h2 id="firewalld-equivalent-alternative">5. firewalld equivalent
+(alternative)</h2>
+<p>For AlmaLinux/RHEL-family hosts that standardize on
+<code>firewalld</code> <code>[DEFAULT — adjustable]</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--set-target</span><span class="op">=</span>DROP</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-service</span><span class="op">=</span>ssh</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-service</span><span class="op">=</span>http</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-service</span><span class="op">=</span>https      <span class="co"># 443/tcp</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-port</span><span class="op">=</span>443/udp       <span class="co"># HTTP/3 QUIC (not in the https service)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--reload</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--zone</span><span class="op">=</span>public <span class="at">--list-all</span></span></code></pre></div>
+<h2 id="reproduce-first-closed-port-test">6. Reproduce-first closed-port
+test</h2>
+<p><code>[CONVENTIONS §6]</code> <code>[CONSTITUTION §11.4.27]</code> —
+the firewall’s load-bearing property (“no datastore port answers from
+off-host”) is guarded by a <strong>reproduce-first (RED)</strong> test,
+run from a machine that is <strong>not</strong> the host. It is written
+to fail against a misconfigured host that accidentally publishes a
+datastore on <code>0.0.0.0</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># firewall_closed_ports_test.sh — run from a REMOTE host (not the Thready box).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># RED first: fails if any datastore port is reachable from off-host.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">HOST</span><span class="op">=</span><span class="st">&quot;thready.hxd3v.com&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. The public surface MUST be open.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> 22 80 443<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">nc</span> <span class="at">-z</span> <span class="at">-w3</span> <span class="st">&quot;</span><span class="va">$HOST</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$p</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">fail</span> <span class="st">&quot;expected OPEN port </span><span class="va">$p</span><span class="st"> is closed&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Datastore / obs ports MUST be closed from off-host (loopback-only bind + firewall drop).</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#    Probe both the prod band (62xxx) and the raw internal ports — all must REFUSE/timeout.</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> 5432 6379 4222 8222 9000 9001 8123 9009 9090 3000 16686 <span class="dt">\</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>         62432 62379 62222 62223 62000 62001 62090 62003<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ex">nc</span> <span class="at">-z</span> <span class="at">-w3</span> <span class="st">&quot;</span><span class="va">$HOST</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$p</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">fail</span> <span class="st">&quot;SECURITY: port </span><span class="va">$p</span><span class="st"> is reachable off-host — must be loopback-only + firewalled&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;OK: public surface = {22,80,443} only; all datastore ports closed off-host&quot;</span></span></code></pre></div>
+<p>This pairs with the <a
+href="../service-discovery-ports.md#41-reproduce-first-port-plan-test-tdd">service-discovery-ports.md
+§4.1</a> port-determinism test: one proves the ports are deterministic,
+this proves they are not exposed.</p>
+<h2 id="verified-vs-assumed">7. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED:</strong> the minimal-ingress policy (22 + 80 +
+443/tcp + 443/udp) and the loopback-only datastore binds are read
+directly from <a
+href="../hetzner-provisioning.md#5-firewall">hetzner-provisioning.md
+§5</a> and <a
+href="../container-topology.md#3-service-inventory">container-topology.md
+§3</a>; <code>udp/443</code> is required by the HTTP/3 edge; egress-open
+is the documented stance.</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+choice of nftables over ufw/firewalld (distro-dependent — [OPEN:
+distro]); the optional SSH rate-limit and <code>fail2ban</code>; keeping
+egress fully open (a future egress-allowlist is possible but not
+MVP).</li>
+</ul>
+<h2 id="open-items">8. Open items</h2>
+<ul>
+<li><code>[OPEN: egress-allowlist]</code> — an outbound allowlist (ACME
+endpoints, registries, messenger/LLM APIs, the backup remote) would
+shrink the egress surface; deferred, not MVP-blocking.</li>
+<li><code>[OPEN: distro]</code> — the concrete tool
+(nftables/ufw/firewalld) follows the host distro choice tracked in <a
+href="../hetzner-provisioning.md#10-open-items">hetzner-provisioning.md
+§10</a>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — HelixQA YAML Test Banks</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — HelixQA YAML Test Banks</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#where-helixqa-fits" id="toc-where-helixqa-fits">1. Where
+HelixQA fits</a></li>
+<li><a href="#evidence-anti-bluff-flow"
+id="toc-evidence-anti-bluff-flow">2. Evidence &amp; anti-bluff
+flow</a></li>
+<li><a href="#yaml-test-bank-format" id="toc-yaml-test-bank-format">3.
+YAML test-bank format</a></li>
+<li><a href="#verified-full-bank-schema-from-source"
+id="toc-verified-full-bank-schema-from-source">3.1 Verified full bank
+schema (from source)</a></li>
+<li><a href="#thready-bank-set" id="toc-thready-bank-set">4. Thready
+bank set</a></li>
+<li><a href="#concrete-banks" id="toc-concrete-banks">5. Concrete
+banks</a></li>
+<li><a href="#running-cli" id="toc-running-cli">6. Running &amp;
+CLI</a></li>
+<li><a href="#behavior-proving-verifier-harnesses-helixqa-verify"
+id="toc-behavior-proving-verifier-harnesses-helixqa-verify">6.1
+Behavior-proving verifier harnesses (helixqa-verify)</a></li>
+<li><a href="#autonomous-qa-session" id="toc-autonomous-qa-session">7.
+Autonomous QA session</a></li>
+<li><a href="#platform-coverage-caveats"
+id="toc-platform-coverage-caveats">8. Platform coverage &amp;
+caveats</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">9. Gap-register items
+addressed</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — HelixQA YAML Test Banks
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/helixqa-banks.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./test-strategy.md, ./test-types.md, ./challenges-scenarios.md,
+                    ./acceptance-gates.md, ../user-guides/index.md, ../design/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (testing)</td>
+<td>Initial draft — YAML bank format, evidence rule, Thready banks,
+autonomous session</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 3 — verified <code>pkg/testbank/schema.go</code> full bank
+schema, real
+<code>config.Platform</code>/<code>evidence.Type</code>/<code>issuedetector</code>
+sets, <code>helixqa-verify-*</code> harnesses, closed canonical-repo +
+ios-xctest opens</td>
+</tr>
+</tbody>
+</table>
+<p><strong>HelixQA</strong> (<code>HelixDevelopment/helix_qa</code>) is
+the org’s <strong>anti-bluff QA orchestration framework</strong> for
+cross-platform testing with real-time crash detection, step validation,
+<strong>evidence collection</strong> and automated ticket generation
+<code>[IN-HOUSE: HelixQA]</code> <code>[CONSTITUTION §11.4.27]</code>.
+It is built on <code>digital.vasic.challenges</code> +
+<code>digital.vasic.containers</code> (incorporated at the parent root;
+nested own-org chains forbidden
+<code>[CONSTITUTION §11.4.28/CONST-051]</code>).</p>
+<blockquote>
+<p><strong>The Operative Rule.</strong> The bar for shipping is not
+“tests pass” but <strong>“users can use the feature.”</strong> Every
+PASS HelixQA emits MUST carry positive <strong>runtime evidence</strong>
+captured during execution. A green summary line without that evidence is
+a critical defect of equal severity to a missing feature.
+<code>[CONSTITUTION §11.4]</code> (verbatim operator mandate,
+2026-05-19).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-where-helixqa-fits">1. Where HelixQA fits</a></li>
+<li><a href="#2-evidence--anti-bluff-flow">2. Evidence &amp; anti-bluff
+flow</a></li>
+<li><a href="#3-yaml-test-bank-format">3. YAML test-bank format</a></li>
+<li><a href="#31-verified-full-bank-schema-from-source">3.1 Verified
+full bank schema (from source)</a></li>
+<li><a href="#4-thready-bank-set">4. Thready bank set</a></li>
+<li><a href="#5-concrete-banks">5. Concrete banks</a></li>
+<li><a href="#6-running--cli">6. Running &amp; CLI</a></li>
+<li><a href="#61-behavior-proving-verifier-harnesses-helixqa-verify">6.1
+Behavior-proving verifier harnesses (helixqa-verify)</a></li>
+<li><a href="#7-autonomous-qa-session">7. Autonomous QA session</a></li>
+<li><a href="#8-platform-coverage--caveats">8. Platform coverage &amp;
+caveats</a></li>
+<li><a href="#9-gap-register-items-addressed">9. Gap-register items
+addressed</a></li>
+<li><a href="#10-open-items">10. Open items</a></li>
+</ul>
+<h2 id="where-helixqa-fits">1. Where HelixQA fits</h2>
+<p>HelixQA is test type <strong>#15</strong> and the engine for type
+<strong>#4 (full-automation)</strong>. It targets the running clients
+(Web + Desktop first, <code>[OPERATOR: Web+CLI first]</code>) and drives
+real navigation via ADB (Android), Playwright (Web) and X11 (Desktop).
+Its architecture (from the repo): <code>cmd/helixqa</code> CLI
+(<code>run</code>/<code>list</code>/<code>report</code>/<code>autonomous</code>/<code>version</code>);
+<code>pkg/testbank</code> (YAML banks with platform/priority filtering);
+<code>pkg/detector</code> (ADB/browser/JVM crash+ANR);
+<code>pkg/validator</code> (step-by-step with evidence);
+<code>pkg/evidence</code> (screenshots/video/logs);
+<code>pkg/ticket</code> (Markdown tickets); <code>pkg/reporter</code>
+(reuses <code>challenges/pkg/report</code>);
+<code>pkg/orchestrator</code>; and the
+<code>pkg/autonomous</code>/<code>navigator</code>/<code>issuedetector</code>/<code>session</code>
+set for the autonomous mode.</p>
+<h2 id="evidence-anti-bluff-flow">2. Evidence &amp; anti-bluff flow</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1896px; background-color: white;" viewBox="0 0 1896 845.7999877929688" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Autonomous" data-look="classic"><rect style="" x="8" y="122.5999984741211" width="325" height="600.5999984741211"/><g class="cluster-label" transform="translate(57.5, 122.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">autonomous</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> session</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (4</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> phases)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M1575.5,72.6L1575.5,76.767C1575.5,80.933,1575.5,89.267,1575.5,97.6C1575.5,105.933,1575.5,114.267,1575.5,126.333C1575.5,138.4,1575.5,154.2,1575.5,162.1L1575.5,170" id="my-svg-L_BANKS_ORCH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BANKS_ORCH_0" data-points="W3sieCI6MTU3NS41LCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjE1NzUuNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNTc1LjUsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjE1NzUuNSwieSI6MTc0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1500.249,238.6L1480.291,247.167C1460.333,255.733,1420.416,272.867,1400.458,290.983C1380.5,309.1,1380.5,328.2,1380.5,347.3C1380.5,366.4,1380.5,385.5,1380.5,402.783C1380.5,420.067,1380.5,435.533,1380.5,443.267L1380.5,451" id="my-svg-L_ORCH_DET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ORCH_DET_0" data-points="W3sieCI6MTUwMC4yNDkxMDY0MDYwMzQzLCJ5IjoyMzguNTk5OTk4NDc0MTIxMX0seyJ4IjoxMzgwLjUsInkiOjI5MH0seyJ4IjoxMzgwLjUsInkiOjM0Ny4yOTk5OTkyMzcwNjA1NX0seyJ4IjoxMzgwLjUsInkiOjQwNC41OTk5OTg0NzQxMjExfSx7IngiOjEzODAuNSwieSI6NDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1622.773,238.6L1635.311,247.167C1647.849,255.733,1672.924,272.867,1685.462,284.933C1698,297,1698,304,1698,307.5L1698,311" id="my-svg-L_ORCH_VAL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ORCH_VAL_0" data-points="W3sieCI6MTYyMi43NzI5OTcyNTc3NDc2LCJ5IjoyMzguNTk5OTk4NDc0MTIxMX0seyJ4IjoxNjk4LCJ5IjoyOTB9LHsieCI6MTY5OCwieSI6MzE1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1624.5,351.561L1472,360.4C1319.5,369.24,1014.5,386.92,862,406.427C709.5,425.933,709.5,447.267,709.5,457.933L709.5,468.6" id="my-svg-L_VAL_EV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VAL_EV_0" data-points="W3sieCI6MTYyNC41LCJ5IjozNTEuNTYwNTQ1NDYyNTc3OX0seyJ4Ijo3MDkuNSwieSI6NDA0LjU5OTk5ODQ3NDEyMTF9LHsieCI6NzA5LjUsInkiOjQ3Mi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M650.174,519.6L617.145,532.683C584.116,545.767,518.058,571.933,485.029,591.733C452,611.533,452,624.967,452,631.683L452,638.4" id="my-svg-L_EV_S_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EV_S_0" data-points="W3sieCI6NjUwLjE3NDAxOTYwNzg0MzEsInkiOjUxOS41OTk5OTg0NzQxMjExfSx7IngiOjQ1MiwieSI6NTk4LjA5OTk5ODQ3NDEyMTF9LHsieCI6NDUyLCJ5Ijo2NDIuMzk5OTk3NzExMTgxNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M695.216,519.6L687.263,532.683C679.31,545.767,663.405,571.933,655.453,591.733C647.5,611.533,647.5,624.967,647.5,631.683L647.5,638.4" id="my-svg-L_EV_L_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EV_L_0" data-points="W3sieCI6Njk1LjIxNTY4NjI3NDUwOTgsInkiOjUxOS41OTk5OTg0NzQxMjExfSx7IngiOjY0Ny41LCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4Ijo2NDcuNSwieSI6NjQyLjM5OTk5NzcxMTE4MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M741.755,519.6L759.712,532.683C777.67,545.767,813.585,571.933,831.542,591.733C849.5,611.533,849.5,624.967,849.5,631.683L849.5,638.4" id="my-svg-L_EV_V_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EV_V_0" data-points="W3sieCI6NzQxLjc1NDkwMTk2MDc4NDMsInkiOjUxOS41OTk5OTg0NzQxMjExfSx7IngiOjg0OS41LCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4Ijo4NDkuNSwieSI6NjQyLjM5OTk5NzcxMTE4MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M788.179,519.6L831.982,532.683C875.786,545.767,963.393,571.933,1007.196,591.733C1051,611.533,1051,624.967,1051,631.683L1051,638.4" id="my-svg-L_EV_T_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EV_T_0" data-points="W3sieCI6Nzg4LjE3ODkyMTU2ODYyNzQsInkiOjUxOS41OTk5OTg0NzQxMjExfSx7IngiOjEwNTEsInkiOjU5OC4wOTk5OTg0NzQxMjExfSx7IngiOjEwNTEsInkiOjY0Mi4zOTk5OTc3MTExODE2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1698,379.6L1698,383.767C1698,387.933,1698,396.267,1698,403.933C1698,411.6,1698,418.6,1698,422.1L1698,425.6" id="my-svg-L_VAL_PASS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VAL_PASS_0" data-points="W3sieCI6MTY5OCwieSI6Mzc5LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTY5OCwieSI6NDA0LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTY5OCwieSI6NDI5LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1735.009,525.591L1750.174,537.676C1765.339,549.761,1795.67,573.93,1810.835,592.732C1826,611.533,1826,624.967,1826,631.683L1826,638.4" id="my-svg-L_PASS_NEXT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PASS_NEXT_0" data-points="W3sieCI6MTczNS4wMDg2OTU2NTIxNzM5LCJ5Ijo1MjUuNTkxMzAyODIxOTQ3MX0seyJ4IjoxODI2LCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4IjoxODI2LCJ5Ijo2NDIuMzk5OTk3NzExMTgxNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1644.684,509.284L1584.82,524.086C1524.956,538.889,1405.228,568.495,1345.364,588.547C1285.5,608.6,1285.5,619.1,1285.5,624.35L1285.5,629.6" id="my-svg-L_PASS_BLUFF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PASS_BLUFF_0" data-points="W3sieCI6MTY0NC42ODM2NzM0NjkzODc3LCJ5Ijo1MDkuMjgzNjcxOTQzNTA4ODZ9LHsieCI6MTI4NS41LCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4IjoxMjg1LjUsInkiOjYzMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1681.011,545.611L1678.009,554.359C1675.007,563.107,1669.004,580.604,1659.825,594.826C1650.646,609.049,1638.292,619.998,1632.115,625.472L1625.938,630.947" id="my-svg-L_PASS_TICKET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PASS_TICKET_0" data-points="W3sieCI6MTY4MS4wMTA5NDg5MDUxMDk0LCJ5Ijo1NDUuNjEwOTQ3Mzc5MjMwNX0seyJ4IjoxNjYzLCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4IjoxNjIyLjk0NDY4OTgxNDc1MjYsInkiOjYzMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1425.428,537.2L1436.523,547.35C1447.619,557.5,1469.809,577.8,1488.61,593.478C1507.41,609.156,1522.82,620.212,1530.525,625.74L1538.23,631.268" id="my-svg-L_DET_TICKET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DET_TICKET_0" data-points="W3sieCI6MTQyNS40Mjc5Mzk1MDg0NzU0LCJ5Ijo1MzcuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNDkyLCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4IjoxNTQxLjQ4MDA4OTA1MjM2NDUsInkiOjYzMy41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1826,689.4L1826,695.033C1826,700.667,1826,711.933,1826,721.733C1826,731.533,1826,739.867,1807.065,748.563C1788.13,757.26,1750.26,766.321,1731.325,770.851L1712.39,775.381" id="my-svg-L_NEXT_REP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NEXT_REP_0" data-points="W3sieCI6MTgyNiwieSI6Njg5LjM5OTk5NzcxMTE4MTZ9LHsieCI6MTgyNiwieSI6NzIzLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTgyNiwieSI6NzQ4LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTcwOC41LCJ5Ijo3NzYuMzExNjg3NTk2OTA0NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1586.5,698.2L1586.5,702.367C1586.5,706.533,1586.5,714.867,1586.5,723.2C1586.5,731.533,1586.5,739.867,1586.5,747.533C1586.5,755.2,1586.5,762.2,1586.5,765.7L1586.5,769.2" id="my-svg-L_TICKET_REP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TICKET_REP_0" data-points="W3sieCI6MTU4Ni41LCJ5Ijo2OTguMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNTg2LjUsInkiOjcyMy4xOTk5OTY5NDgyNDIyfSx7IngiOjE1ODYuNSwieSI6NzQ4LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTU4Ni41LCJ5Ijo3NzMuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M170.5,265L170.5,269.167C170.5,273.333,170.5,281.667,170.5,290.8C170.5,299.933,170.5,309.867,170.5,314.833L170.5,319.8" id="my-svg-L_SETUP_DDV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SETUP_DDV_0" data-points="W3sieCI6MTcwLjUsInkiOjI2NX0seyJ4IjoxNzAuNSwieSI6MjkwfSx7IngiOjE3MC41LCJ5IjozMjMuNzk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M170.5,370.8L170.5,376.433C170.5,382.067,170.5,393.333,170.5,409.633C170.5,425.933,170.5,447.267,170.5,457.933L170.5,468.6" id="my-svg-L_DDV_CDE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DDV_CDE_0" data-points="W3sieCI6MTcwLjUsInkiOjM3MC43OTk5OTkyMzcwNjA1NX0seyJ4IjoxNzAuNSwieSI6NDA0LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTcwLjUsInkiOjQ3Mi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M170.5,519.6L170.5,532.683C170.5,545.767,170.5,571.933,170.5,591.733C170.5,611.533,170.5,624.967,170.5,631.683L170.5,638.4" id="my-svg-L_CDE_RC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CDE_RC_0" data-points="W3sieCI6MTcwLjUsInkiOjUxOS41OTk5OTg0NzQxMjExfSx7IngiOjE3MC41LCJ5Ijo1OTguMDk5OTk4NDc0MTIxMX0seyJ4IjoxNzAuNSwieSI6NjQyLjM5OTk5NzcxMTE4MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M170.5,689.4L170.5,695.033C170.5,700.667,170.5,711.933,170.5,721.733C170.5,731.533,170.5,739.867,385.501,752.734C600.501,765.6,1030.502,783.001,1245.503,791.701L1460.503,800.401" id="my-svg-L_RC_REP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RC_REP_0" data-points="W3sieCI6MTcwLjUsInkiOjY4OS4zOTk5OTc3MTExODE2fSx7IngiOjE3MC41LCJ5Ijo3MjMuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNzAuNSwieSI6NzQ4LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTQ2NC41LCJ5Ijo4MDAuNTYzMTMxODQ0MjU2NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_BANKS_ORCH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ORCH_DET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ORCH_VAL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VAL_EV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EV_S_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EV_L_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EV_V_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EV_T_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VAL_PASS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1826, 598.0999984741211)"><g class="label" data-id="L_PASS_NEXT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-55.5" y="0" width="111" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evidence</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1285.5, 598.0999984741211)"><g class="label" data-id="L_PASS_BLUFF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-62" y="0" width="124" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evidence</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1663.31978, 597.16808)"><g class="label" data-id="L_PASS_TICKET_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1481.18036, 588.20221)"><g class="label" data-id="L_DET_TICKET_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-41" y="0" width="82" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">crash/ANR</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_NEXT_REP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TICKET_REP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SETUP_DDV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DDV_CDE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CDE_RC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RC_REP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-BANKS-0" data-look="classic" transform="translate(1575.5, 40.29999923706055)"><rect class="basic label-container" style="" x="-94" y="-32.29999923706055" width="188" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">YAML</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> banks</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tests/banks/*.yaml</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ORCH-1" data-look="classic" transform="translate(1575.5, 206.29999923706055)"><rect class="basic label-container" style="" x="-114" y="-32.29999923706055" width="228" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">orchestrator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">QA</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pipeline</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> coordinator</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DET-3" data-look="classic" transform="translate(1380.5, 496.0999984741211)"><rect class="basic label-container" style="" x="-128.5" y="-41.099998474121094" width="257" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">detector</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">crash/ANR:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ADB</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> browser</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">JVM</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VAL-5" data-look="classic" transform="translate(1698, 347.29999923706055)"><rect class="basic label-container" style="" x="-73.5" y="-32.29999923706055" width="147" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">validator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">step-by-step</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EV-7" data-look="classic" transform="translate(709.5, 496.0999984741211)"><rect class="basic label-container" style="" x="-95" y="-23.5" width="190" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">evidence</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> collector</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-S-9" data-look="classic" transform="translate(452, 665.8999977111816)"><rect class="basic label-container" style="" x="-73" y="-23.5" width="146" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">screenshots</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-L-11" data-look="classic" transform="translate(647.5, 665.8999977111816)"><rect class="basic label-container" style="" x="-72.5" y="-23.5" width="145" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">logcat</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> logs</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-V-13" data-look="classic" transform="translate(849.5, 665.8999977111816)"><rect class="basic label-container" style="" x="-79.5" y="-23.5" width="159" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">video</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> timeline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-T-15" data-look="classic" transform="translate(1051, 665.8999977111816)"><rect class="basic label-container" style="" x="-72" y="-23.5" width="144" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> traces</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PASS-17" data-look="classic" transform="translate(1698, 496.0999984741211)"><polygon points="66.5,0 133,-66.5 66.5,-133 0,-66.5" class="label-container" transform="translate(-66, 66.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">step</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PASS?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NEXT-19" data-look="classic" transform="translate(1826, 665.8999977111816)"><rect class="basic label-container" style="" x="-62" y="-23.5" width="124" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">next</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> step</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BLUFF-21" data-look="classic" transform="translate(1285.5, 665.8999977111816)"><rect class="basic label-container" style="" x="-112.5" y="-32.29999923706055" width="225" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">CRITICAL</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DEFECT</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">green</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> without</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evidence</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TICKET-23" data-look="classic" transform="translate(1586.5, 665.8999977111816)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ticket</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Markdown</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> for</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pipeline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REP-27" data-look="classic" transform="translate(1586.5, 805.4999961853027)"><rect class="basic label-container" style="" x="-122" y="-32.29999923706055" width="244" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reporter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Markdown</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTML</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JSON</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SETUP-30" data-look="classic" transform="translate(170.5, 206.29999923706055)"><rect class="basic label-container" style="" x="-106" y="-58.70000076293945" width="212" height="117.4000015258789"/><g class="label" style="" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Setup:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> LLMsVerifier</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DocProcessor</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">feature-map</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">LLMOrchestrator</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">VisionEngine</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DDV-31" data-look="classic" transform="translate(170.5, 347.29999923706055)"><rect class="basic label-container" style="" x="-109.5" y="-23.5" width="219" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Doc-driven</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> verification</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CDE-32" data-look="classic" transform="translate(170.5, 496.0999984741211)"><rect class="basic label-container" style="" x="-127.5" y="-23.5" width="255" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Curiosity-driven</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> exploration</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RC-33" data-look="classic" transform="translate(170.5, 665.8999977111816)"><rect class="basic label-container" style="" x="-91" y="-23.5" width="182" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Report</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> cleanup</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/helixqa-evidence-flow.mmd"><code>diagrams/helixqa-evidence-flow.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The orchestrator loads YAML test banks and
+coordinates two subsystems per run: the <strong>detector</strong> (which
+watches for crashes/ANRs via ADB on Android, process monitoring in the
+browser, and JVM monitoring on desktop) and the
+<strong>validator</strong> (which walks each test-case step). At every
+step the validator drives the <strong>evidence collector</strong>, which
+captures screenshots, logcat/logs, a video timeline and stack
+traces.</p>
+<p>The step-PASS decision has three branches: a step that passes
+<strong>with</strong> evidence advances to the next; a step that
+“passes” but produced <strong>no</strong> evidence is flagged a
+<strong>critical defect</strong> (the anti-bluff rule — a green line
+without evidence is treated as severe as a missing feature); and a
+failing step (or any crash/ANR from the detector) generates a
+<strong>Markdown ticket</strong> for the AI fix pipeline. All outcomes
+feed the reporter, which emits Markdown/HTML/JSON with links from
+findings to video timestamps.</p>
+<p>The <strong>autonomous session</strong> (bottom) runs four phases —
+Setup (LLMsVerifier picks models, DocProcessor builds a feature-map,
+LLMOrchestrator spawns CLI agents, VisionEngine initializes), Doc-Driven
+Verification, Curiosity-Driven Exploration, then Report &amp; Cleanup —
+and its report merges into the same reporter output.</p>
+<h2 id="yaml-test-bank-format">3. YAML test-bank format</h2>
+<p>The bank schema (from the HelixQA repo) — Thready banks live under
+<code>tests/banks/</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready Core — Ingest &amp; Processing&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_cases</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> TC-ING-001</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Add Telegram channel and read a thread&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">category</span><span class="kw">:</span><span class="at"> functional</span><span class="co">          # functional | security | ux | accessibility | performance</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> critical</span><span class="co">            # critical | high | medium | low</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">platforms</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">web</span><span class="kw">,</span><span class="at"> desktop</span><span class="kw">]</span><span class="co">     # target surfaces</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Open Add-Channel wizard&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Navigate to Channels &gt; Add, submit THREADY_TG_TEST_THREAD&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Channel appears with status &#39;connecting&#39;&quot;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Wait for thread backfill&quot;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Observe processing status&quot;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Root post + organic replies visible; system replies excluded&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">ingest</span><span class="kw">,</span><span class="at"> smoke</span><span class="kw">,</span><span class="at"> anti-bluff</span><span class="kw">]</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">documentation_refs</span><span class="kw">:</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> user_guide</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">section</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3.1&quot;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;docs/public/research/mvp/user-guides/index.md&quot;</span></span></code></pre></div>
+<p>Every field maps to <code>pkg/testbank</code> filtering:
+<code>--platform</code> filters <code>platforms</code>,
+<code>--priority</code> filters <code>priority</code>;
+<code>documentation_refs</code> back the DocProcessor feature-map →
+coverage link (see <a
+href="./test-strategy.md#10-feature-map--coverage-tracking-docprocessor">test-strategy.md
+§10</a>).</p>
+<h2 id="verified-full-bank-schema-from-source">3.1 Verified full bank
+schema (from source)</h2>
+<p>The Rev-1 example above is the common subset. The
+<strong>authoritative</strong> schema is
+<code>pkg/testbank/schema.go</code> in
+<code>HelixDevelopment/helix_qa</code> (module
+<code>digital.vasic.helixqa</code>, <code>go 1.26</code>)
+<code>[IN-HOUSE: helix_qa]</code>. Thready banks may use every field
+below — the load-bearing additions over the subset are
+<code>challenge_id</code>, <code>dispatches_to</code>,
+<code>required_evidence</code>, <code>requires_env</code>,
+<code>dependencies</code>, <code>estimated_duration</code>,
+<code>expected_result</code>, <code>domains</code>, and the structured
+HTTP step fields
+(<code>expect_status</code>/<code>expect_json_path</code>/<code>expect_body_contains</code>/<code>auth</code>):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/testbank/schema.go (verbatim field set)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> BankFile <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Version     <span class="dt">string</span>     <span class="st">`yaml:&quot;version&quot;`</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Name        <span class="dt">string</span>     <span class="st">`yaml:&quot;name&quot;`</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    Description <span class="dt">string</span>     <span class="st">`yaml:&quot;description&quot;`</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    TestCases   <span class="op">[]</span>TestCase <span class="st">`yaml:&quot;test_cases&quot;`</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Metadata    <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="st">`yaml:&quot;metadata,omitempty&quot;`</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TestCase <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    ID                   <span class="dt">string</span>            <span class="st">`yaml:&quot;id&quot;`</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    Name                 <span class="dt">string</span>            <span class="st">`yaml:&quot;name&quot;`</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    Description          <span class="dt">string</span>            <span class="st">`yaml:&quot;description&quot;`</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    Category             <span class="dt">string</span>            <span class="st">`yaml:&quot;category&quot;`</span>     <span class="co">// functional|security|ux|accessibility|performance</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    Priority             Priority          <span class="st">`yaml:&quot;priority&quot;`</span>     <span class="co">// critical|high|medium|low</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    Platforms            <span class="op">[]</span>config<span class="op">.</span>Platform <span class="st">`yaml:&quot;platforms&quot;`</span>    <span class="co">// see §8 enum</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    Steps                <span class="op">[]</span>TestStep        <span class="st">`yaml:&quot;steps&quot;`</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    Dependencies         <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;dependencies&quot;`</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    DocumentationRefs    <span class="op">[]</span>DocRef          <span class="st">`yaml:&quot;documentation_refs&quot;`</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    Tags                 <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;tags&quot;`</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    EstimatedDuration    <span class="dt">string</span>            <span class="st">`yaml:&quot;estimated_duration&quot;`</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    ExpectedResult       <span class="dt">string</span>            <span class="st">`yaml:&quot;expected_result&quot;`</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    AllowForegroundLeave <span class="dt">bool</span>              <span class="st">`yaml:&quot;allow_foreground_leave,omitempty&quot;`</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    RequiresEnv          <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;requires_env,omitempty&quot;`</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    ChallengeID          <span class="dt">string</span>            <span class="st">`yaml:&quot;challenge_id,omitempty&quot;`</span>   <span class="co">// bridge to a challenges bank</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    DispatchesTo         <span class="dt">string</span>            <span class="st">`yaml:&quot;dispatches_to,omitempty&quot;`</span>  <span class="co">// delegate to another executor</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    Domains              <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;domains,omitempty&quot;`</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    RequiredEvidence     <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;required_evidence,omitempty&quot;`</span> <span class="co">// anti-bluff: PASS must emit these</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    Metadata             <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span>    <span class="st">`yaml:&quot;metadata,omitempty&quot;`</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TestStep <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    Name               <span class="dt">string</span>          <span class="st">`yaml:&quot;name&quot;`</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    Action             <span class="dt">string</span>          <span class="st">`yaml:&quot;action&quot;`</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    Expected           <span class="dt">string</span>          <span class="st">`yaml:&quot;expected&quot;`</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    Platform           config<span class="op">.</span>Platform <span class="st">`yaml:&quot;platform,omitempty&quot;`</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    Timeout            <span class="dt">int</span>             <span class="st">`yaml:&quot;timeout,omitempty&quot;`</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    VisionVerify       <span class="dt">bool</span>            <span class="st">`yaml:&quot;vision_verify,omitempty&quot;`</span>     <span class="co">// LLM-vision confirms the screen</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    Body               <span class="dt">any</span>             <span class="st">`yaml:&quot;body,omitempty&quot;`</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    Headers            <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span> <span class="st">`yaml:&quot;headers,omitempty&quot;`</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    AuthMode           <span class="dt">string</span>          <span class="st">`yaml:&quot;auth,omitempty&quot;`</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    ExpectStatus       <span class="dt">int</span>             <span class="st">`yaml:&quot;expect_status,omitempty&quot;`</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    ExpectJSONPath     <span class="dt">string</span>          <span class="st">`yaml:&quot;expect_json_path,omitempty&quot;`</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    ExpectBodyContains <span class="dt">string</span>          <span class="st">`yaml:&quot;expect_body_contains,omitempty&quot;`</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    Skip               <span class="dt">bool</span>            <span class="st">`yaml:&quot;_skip,omitempty&quot;`</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    SkipReason         <span class="dt">string</span>          <span class="st">`yaml:&quot;_skip_reason,omitempty&quot;`</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DocRef <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    Type    <span class="dt">string</span> <span class="st">`yaml:&quot;type&quot;`</span>     <span class="co">// user_guide|api_spec|...</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    Section <span class="dt">string</span> <span class="st">`yaml:&quot;section&quot;`</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    Path    <span class="dt">string</span> <span class="st">`yaml:&quot;path,omitempty&quot;`</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Two fields deserve emphasis for Thready:</p>
+<ul>
+<li><strong><code>challenge_id</code></strong> bridges a HelixQA case to
+a <code>digital.vasic.challenges</code> bank — the same scenario can run
+under the HelixQA orchestrator (with evidence/detector) <em>and</em> the
+Challenges runner (with the <code>assertion.Engine</code>), so the two
+engines share one source of truth rather than drifting. This is how test
+type #14 (Challenges) and #15 (HelixQA) stay consistent.</li>
+<li><strong><code>required_evidence</code></strong> is the per-case
+anti-bluff contract: it lists the <code>evidence.Type</code> artifacts
+(<code>screenshot</code>, <code>video</code>, <code>logcat</code>,
+<code>stacktrace</code>, <code>console_log</code>, <code>audio</code>) a
+PASS MUST produce. The validator fails the case if any is missing — the
+mechanical backing for the <code>G-HELIXQA</code> gate (<a
+href="./acceptance-gates.md#3-evidence-contract-per-gate">acceptance-gates.md
+§3</a>).</li>
+</ul>
+<h2 id="thready-bank-set">4. Thready bank set</h2>
+<p><code>[GAP: §9.1]</code> One bank per service + client, Web +
+CLI/Desktop first:</p>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 21%" />
+<col style="width: 24%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Bank file</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ingest_core.yaml</code></td>
+<td>Herald thread reader (Telegram, Max)</td>
+<td>critical</td>
+<td>web, desktop</td>
+</tr>
+<tr>
+<td><code>classify.yaml</code></td>
+<td>Hashtag + indirect determination</td>
+<td>high</td>
+<td>web</td>
+</tr>
+<tr>
+<td><code>dispatch.yaml</code></td>
+<td>Skill dispatch, multi-hashtag precedence</td>
+<td>critical</td>
+<td>web, desktop</td>
+</tr>
+<tr>
+<td><code>download_asset.yaml</code></td>
+<td>Download Manager → callback → Asset Service</td>
+<td>critical</td>
+<td>web, desktop</td>
+</tr>
+<tr>
+<td><code>search.yaml</code></td>
+<td>Semantic <code>/v1/search</code> (&lt; 500 ms) + UI</td>
+<td>critical</td>
+<td>web, desktop</td>
+</tr>
+<tr>
+<td><code>auth_rbac.yaml</code></td>
+<td>Three-tier login, MFA, negative RBAC</td>
+<td>critical</td>
+<td>web, desktop</td>
+</tr>
+<tr>
+<td><code>events_ws.yaml</code></td>
+<td>WebSocket/SSE live processing events</td>
+<td>high</td>
+<td>web</td>
+</tr>
+<tr>
+<td><code>ocr_comic.yaml</code></td>
+<td>OCR transcription of a comic fixture</td>
+<td>high</td>
+<td>web</td>
+</tr>
+<tr>
+<td><code>ux_a11y.yaml</code></td>
+<td>Onboarding flow + WCAG a11y</td>
+<td>high</td>
+<td>web, desktop</td>
+</tr>
+</tbody>
+</table>
+<h2 id="concrete-banks">5. Concrete banks</h2>
+<p><code>search.yaml</code> — the SLO + anti-bluff bank for semantic
+search:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Semantic Search&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_cases</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> TC-SRCH-001</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Search returns semantic matches within 500ms&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">category</span><span class="kw">:</span><span class="at"> performance</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> critical</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">platforms</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">web</span><span class="kw">,</span><span class="at"> desktop</span><span class="kw">]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Seed known corpus&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Ensure fixture posts about &#39;download backoff&#39; are processed + embedded&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Corpus present in pgvector&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Run paraphrase query&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Search &#39;exponential backoff for downloads&#39;&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Top result is the &#39;download backoff&#39; post; latency badge &lt; 500ms&quot;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Anti-bluff — semantic not hash&quot;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Search an unrelated phrase &#39;price of tea&#39;&quot;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;The download-backoff post does NOT rank top (real embedder, not HashEmbedder)&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">search</span><span class="kw">,</span><span class="at"> slo</span><span class="kw">,</span><span class="at"> anti-bluff</span><span class="kw">,</span><span class="at"> gap</span><span class="fl">-2.1</span><span class="kw">]</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">documentation_refs</span><span class="kw">:</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> api</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">section</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/v1/search&quot;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;docs/public/research/mvp/api/index.md&quot;</span></span></code></pre></div>
+<p><code>auth_rbac.yaml</code> — negative RBAC with evidence:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Auth &amp; RBAC&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_cases</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> TC-AUTH-003</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;A &#39;user&#39; cannot reach account-admin settings&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">category</span><span class="kw">:</span><span class="at"> security</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> critical</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">platforms</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">web</span><span class="kw">,</span><span class="at"> desktop</span><span class="kw">]</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Login as user&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Authenticate with a plain user of Account A&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Dashboard visible; no Admin nav item&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Attempt admin route directly&quot;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Navigate to /account/settings by URL&quot;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;403 / redirect; screenshot proves the block (evidence, not just a green tick)&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">auth</span><span class="kw">,</span><span class="at"> rbac</span><span class="kw">,</span><span class="at"> negative</span><span class="kw">,</span><span class="at"> security</span><span class="kw">]</span></span></code></pre></div>
+<p><code>download_asset.yaml</code> — full-schema bank showing
+<code>challenge_id</code> bridging, <code>required_evidence</code>,
+<code>requires_env</code>, and structured HTTP step assertions:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Download Manager → Asset Service&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_cases</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> TC-DL-001</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Enqueue, kill mid-transfer, resume, receive callback, asset served&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">category</span><span class="kw">:</span><span class="at"> functional</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> critical</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">platforms</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">web</span><span class="kw">,</span><span class="at"> desktop</span><span class="kw">]</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">estimated_duration</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3m&quot;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">requires_env</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">BIG_FILE_URL</span><span class="kw">,</span><span class="at"> THREADY_API_BASE</span><span class="kw">]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">challenge_id</span><span class="kw">:</span><span class="at"> download_resume_callback</span><span class="co">        # same scenario as the challenges bank (§3 there)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dependencies</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">TC-ING</span><span class="dv">-001</span><span class="kw">]</span><span class="co">                    # ingest must work first</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">required_evidence</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">screenshot</span><span class="kw">,</span><span class="at"> video</span><span class="kw">,</span><span class="at"> console_log</span><span class="kw">]</span><span class="co">   # PASS MUST emit all three</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Enqueue large download&quot;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;POST ${THREADY_API_BASE}/v1/downloads {url: BIG_FILE_URL}&quot;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">auth</span><span class="kw">:</span><span class="at"> bearer</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${BIG_FILE_URL}&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expect_status</span><span class="kw">:</span><span class="at"> </span><span class="dv">201</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expect_json_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;$.job_id&quot;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;202/201 with a job id&quot;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Kill worker mid-transfer then resume&quot;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;dm.KillWorker(job); dm.Resume(job)&quot;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;transfer resumes from offset, not from zero&quot;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Await completion callback&quot;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">action</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Observe /hooks/download push callback&quot;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expect_json_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;$.result_asset_ref&quot;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expect_body_contains</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;completed&quot;</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">vision_verify</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">expected</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;callback state=completed, carries asset ref; UI shows the asset&quot;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expected_result</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Resumable transfer + standardized push callback + asset served&quot;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">download</span><span class="kw">,</span><span class="at"> callback</span><span class="kw">,</span><span class="at"> resume</span><span class="kw">,</span><span class="at"> anti-bluff</span><span class="kw">,</span><span class="at"> gap</span><span class="fl">-6.3</span><span class="kw">,</span><span class="at"> gap</span><span class="fl">-6.5</span><span class="kw">]</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">documentation_refs</span><span class="kw">:</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> api_spec</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">section</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/v1/downloads&quot;</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;docs/public/research/mvp/api/index.md&quot;</span></span></code></pre></div>
+<h2 id="running-cli">6. Running &amp; CLI</h2>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the full Thready bank set on Web (dev. stack) with evidence</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixqa</span> run <span class="at">--banks</span> tests/banks/ <span class="at">--platform</span> web <span class="at">--env</span> .env</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Desktop (Tauri) with a specific process target</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helixqa</span> run <span class="at">--banks</span> tests/banks/ <span class="at">--platform</span> desktop <span class="at">--process</span> thready-desktop</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># List/plan cases for a platform</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helixqa</span> list <span class="at">--banks</span> tests/banks/ <span class="at">--platform</span> web</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Report from collected results (evidence-linked)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helixqa</span> report <span class="at">--input</span> qa-results <span class="at">--format</span> markdown,html,json</span></code></pre></div>
+<p>The run is a gate: a red case, a crash/ANR, or an
+<strong>evidence-less PASS</strong> blocks the pre-tag retest (see <a
+href="./test-strategy.md#8-ci-equivalent-gating-no-server-side-ci">test-strategy.md
+§8</a>).</p>
+<h2 id="behavior-proving-verifier-harnesses-helixqa-verify">6.1
+Behavior-proving verifier harnesses (helixqa-verify)</h2>
+<p>HelixQA ships a fleet of <strong>single-purpose behavior
+verifiers</strong> under <code>cmd/</code> that prove a specific
+capability really works — exactly the anti-bluff obligations Thready
+inherits from the gap register <code>[IN-HOUSE: helix_qa]</code>. Rather
+than re-invent them, Thready wires these as <code>ShellChallenge</code>s
+/ bank cases and reuses them as the runtime proof behind its
+scaffold-trap gates (<a
+href="./test-types.md#16-anti-bluff-obligations-per-type">test-types.md
+§16</a>):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 13%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Verifier (<code>cmd/…</code>)</th>
+<th>Proves</th>
+<th>Thready trap it guards <code>[GAP]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helixqa-verify-embeddings</code></td>
+<td>real semantic embeddings, not a hash stub</td>
+<td>HashEmbedder (§2.1)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-rag</code></td>
+<td>end-to-end RAG retrieval returns relevant chunks</td>
+<td>RAG dim hardcode / search (§2.1)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-tesseract</code></td>
+<td>OCR returns real recognized text</td>
+<td>VisionEngine no-OCR (§2.6)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-vision</code></td>
+<td>LLM-vision describes a real image</td>
+<td>vision escalation (§2.6)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-whisper</code></td>
+<td>ASR transcribes real audio</td>
+<td>media transcription</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-translate-nllb</code></td>
+<td>NLLB translation is real</td>
+<td>i18n/translation (§18 Q35)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-mcp-gateway</code> / <code>-netprov</code> /
+<code>-a2a</code></td>
+<td>MCP/provider/agent transports work</td>
+<td>LLMProvider adapters (§2.3)</td>
+</tr>
+<tr>
+<td><code>helixqa-verify-coder-{ddos,chaos,memory,race,concurrency,bench}</code></td>
+<td>service survives fault/load classes</td>
+<td>perf/chaos parity (§3.x)</td>
+</tr>
+</tbody>
+</table>
+<p>These already back real HelixQA banks
+(<code>helixllm_embeddings.yaml</code>, <code>helixllm_rag.yaml</code>,
+<code>helixllm_tesseract.yaml</code>, <code>helixllm_vision.yaml</code>,
+<code>helixllm_whisper.yaml</code>,
+<code>helixllm_coder_ddos.yaml</code>, …), so Thready’s
+<code>search.yaml</code>/<code>ocr_comic.yaml</code> banks point their
+<code>challenge_id</code>/<code>dispatches_to</code> at the
+corresponding verifier and gain a proven anti-bluff harness for free.
+Running one directly:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Anti-bluff proof the local embedder is semantic (fails loudly on the HashEmbedder stub)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run ./cmd/helixqa-verify-embeddings <span class="at">--provider</span> <span class="st">&quot;</span><span class="va">${HELIX_EMBEDDING_PROVIDER</span><span class="op">:-</span>llama<span class="va">}</span><span class="st">&quot;</span> <span class="at">--evidence</span> qa-results/</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># OCR proof over a Thready comic fixture</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run ./cmd/helixqa-verify-tesseract <span class="at">--image</span> tests/fixtures/comic_panel_en.png <span class="at">--expect</span> <span class="st">&quot;HELIX THREADY 2026&quot;</span></span></code></pre></div>
+<h2 id="autonomous-qa-session">7. Autonomous QA session</h2>
+<p>The autonomous mode runs unattended (test type #4) in four phases:
+<strong>Setup</strong> (LLMsVerifier selects models,
+<strong>DocProcessor</strong> builds the feature-map from Thready docs
+<code>[GAP: §9.4]</code>, LLMOrchestrator spawns CLI agents,
+VisionEngine initializes), <strong>Doc-Driven Verification</strong>
+(every documented feature verified against the running app with
+screenshot/video evidence), <strong>Curiosity-Driven
+Exploration</strong> (edge cases — empty inputs, rapid interactions,
+undocumented behavior), and <strong>Report &amp; Cleanup</strong>:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helixqa</span> autonomous <span class="at">--project</span> . <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--platforms</span> web,desktop <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--env</span> .env <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--timeout</span> 2h <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--coverage-target</span> 0.9 <span class="dt">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> qa-results/ <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report</span> markdown,html,json</span></code></pre></div>
+<p>The autonomous session’s <code>issuedetector</code> classifies
+findings across the <strong>six</strong> verified
+<code>IssueCategory</code> values
+(<code>pkg/issuedetector/categories.go</code>) — <strong>visual, ux,
+accessibility, functional, performance, crash</strong> — each at one of
+four <code>IssueSeverity</code> levels (<strong>critical, high, medium,
+low</strong>) <code>[IN-HOUSE: helix_qa]</code>. That single classifier
+therefore satisfies UI (#12, via <code>visual</code>), UX (#13, via
+<code>ux</code>/<code>accessibility</code>), and contributes performance
+and crash findings to the other gates — all with LLM-vision, so a
+rendered-but-wrong screen is caught even when the DOM asserts
+“present”.</p>
+<p>The autonomous pipeline is real, not aspirational — its executor tier
+is source-verified (<code>pkg/autonomous/</code>): an
+<code>executor_factory.go</code> selects among
+<code>real_executor.go</code>, <code>playwright_executor.go</code>,
+<code>http_executor.go</code> and <code>structured_executor.go</code>; a
+<code>coordinator.go</code> drives <code>worker.go</code>s through the
+four <code>phase.go</code> phases; and <code>stagnation.go</code> guards
+the Curiosity-Driven Exploration phase so the explorer is failed as
+<strong>stuck</strong> (not left to spin) when it stops discovering new
+states — the same liveness posture the Challenges runner enforces via
+<code>WithStaleThreshold</code>. The <code>allow_foreground_leave</code>
+bank field (§3.1) opts a case out of the structured-phase foreground
+guard when a step legitimately backgrounds the app.</p>
+<h2 id="platform-coverage-caveats">8. Platform coverage &amp;
+caveats</h2>
+<p>The valid targets are the verified <code>config.Platform</code> enum
+(<code>pkg/config/config.go</code>) — <code>android</code>,
+<code>androidtv</code>, <code>web</code>, <code>desktop</code>,
+<code>cli</code>, <code>api</code>, <code>all</code>,
+<code>linux</code>, <code>tui</code>, <code>ios</code>
+<code>[IN-HOUSE: helix_qa]</code>. There is <strong>no
+<code>harmonyos</code> or <code>aurora</code> constant</strong> — a
+precise, load-bearing fact for the device-farm open item below: those
+surfaces are blocked not only by missing clients but by a missing
+framework binding, so their gates emit SKIP (exit <code>77</code>, <a
+href="./acceptance-gates.md#6-gate-exit-code-protocol">acceptance-gates.md
+§6</a>) rather than a false GREEN.</p>
+<ul>
+<li><strong>Web + Desktop</strong> (<code>web</code>,
+<code>desktop</code>, <code>linux</code>): fully exercisable now —
+Playwright executor + X11/JVM detector; the <code>dev.</code> stack is
+the target <code>[OPERATOR: Web+CLI first]</code>.</li>
+<li><strong>CLI + TUI</strong> (<code>cli</code>, <code>tui</code>):
+driven through the process/CLI executor and the <code>challenges</code>
+userflow adapters; the Cobra CLI and Bubble Tea TUI banks live
+here.</li>
+<li><strong>Android</strong> (<code>android</code>,
+<code>androidtv</code>): <code>pkg/detector/android.go</code> (+
+<code>android_dual_display.go</code>) ADB crash/ANR detection +
+navigator; requires an emulator/device.</li>
+<li><strong>iOS</strong> (<code>ios</code>): <strong>RESOLVED</strong>
+<code>[OPEN: ios-xctest]</code> → the iOS unit framework is
+<strong>XCTest</strong>, fixed authoritatively by the final research
+request <code>[RESEARCH: final §9.4]</code> (“Swift/iOS — XCTest”);
+HelixQA’s iOS <strong>e2e</strong> binding is <strong>Appium +
+XCUITest</strong>, source-verified by the real
+<code>banks/nexus-mobile-ios.yaml</code> bank
+(<code>mobile.NewIOSCaps</code> + <code>AppiumClient.NewSession</code>,
+XCUITest profile build, <code>Gestures{platform: ios}.Tap</code>,
+real-device caps require <code>XcodeOrgID</code> +
+<code>XcodeSigningID</code> together). Blocked only on a native iOS
+Thready client + a mac/simulator farm
+(<code>[OPEN: mobile-device-farm]</code>), not on a framework
+decision.</li>
+<li><strong>HarmonyOS / Aurora</strong>: native ArkTS/Qt clients are
+<strong>scaffolds</strong> <code>[GAP: §8.5]</code>, and — per the enum
+above — HelixQA has no platform binding for them yet; on-device evidence
+is blocked until both land <code>[OPEN: mobile-device-farm]</code>.</li>
+</ul>
+<h2 id="gap-register-items-addressed">9. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §9.1]</code> Thready YAML banks with mandatory runtime
+evidence — §3.1/§4/§5; the canonical-repo question (register §9.1:
+“mirror relationship inferred, not diffed”) is now <strong>diffed and
+resolved</strong> — see §10.</li>
+<li><code>[GAP: §9.4]</code> DocProcessor feature-map drives the
+autonomous Setup phase — §7.</li>
+<li><code>[GAP: §8.5]</code> HarmonyOS/Aurora native-client scaffolds (+
+no <code>config.Platform</code> binding) block on-device QA — §8.</li>
+<li><code>[GAP: §2.1]</code> anti-bluff semantic-search evidence bank +
+<code>helixqa-verify-embeddings</code> — §5, §6.1.</li>
+<li><code>[GAP: §2.6]</code> OCR anti-bluff via
+<code>helixqa-verify-tesseract</code>/<code>-vision</code> — §6.1.</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[RESOLVED: canonical-helixqa-repo]</code> —
+<strong>diffed.</strong> Both <code>HelixDevelopment/helix_qa</code> and
+<code>vasic-digital/HelixQA</code> are <strong>non-fork</strong> repos
+(no GitHub <code>parent</code>), carry the <strong>same</strong> Go
+module path <code>module digital.vasic.helixqa</code> in
+<code>go.mod</code>, share the identical description (“AI-driven QA
+orchestration for multi-platform testing”), and both show recent
+<strong>sync</strong> commits (“sync: recursive push …” / “chore: update
+nested tools/opensource submodules after merge”). They are therefore
+<strong>co-equal, synchronized upstream mirrors</strong> of one
+submodule under the multi-remote fan-out
+<code>[CONSTITUTION §2.1]</code>, not a canonical/fork split with a
+stale side. Thready imports HelixQA <strong>by module path</strong>
+(<code>digital.vasic.helixqa</code>), so bank wiring is unaffected by
+which host mirror is fetched; commits fan out to all upstreams as
+usual.</li>
+<li><code>[RESOLVED: ios-xctest]</code> — iOS unit framework is
+<strong>XCTest</strong> <code>[RESEARCH: final §9.4]</code>; HelixQA iOS
+e2e is <strong>Appium + XCUITest</strong>, verified by
+<code>banks/nexus-mobile-ios.yaml</code> (§8).</li>
+<li><code>[OPEN: mobile-device-farm]</code> — provision
+device/emulator/simulator targets for Android + iOS now, and
+HarmonyOS/Aurora once native clients + a <code>config.Platform</code>
+binding land. Until then those cells emit SKIP (exit <code>77</code>).
+Checked: <code>pkg/config/config.go</code> has no HarmonyOS/Aurora
+constant (§8).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

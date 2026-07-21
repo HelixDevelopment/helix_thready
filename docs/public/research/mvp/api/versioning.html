@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — API Versioning Policy</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — API Versioning Policy</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#decision" id="toc-decision">1. Decision</a></li>
+<li><a href="#what-v1-covers" id="toc-what-v1-covers">2. What
+<code>/v1</code> covers</a></li>
+<li><a href="#additive-vs-breaking" id="toc-additive-vs-breaking">3.
+Additive vs breaking</a></li>
+<li><a href="#rest-protobuf-parity" id="toc-rest-protobuf-parity">4.
+REST ↔︎ Protobuf parity</a></li>
+<li><a href="#breaking-change-gates-no-server-ci"
+id="toc-breaking-change-gates-no-server-ci">5. Breaking-change gates (no
+server CI)</a></li>
+<li><a href="#deprecation-sunset" id="toc-deprecation-sunset">6.
+Deprecation &amp; Sunset</a></li>
+<li><a href="#sdk-release-alignment" id="toc-sdk-release-alignment">7.
+SDK &amp; release alignment</a></li>
+<li><a href="#open-items" id="toc-open-items">8. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — API Versioning Policy
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/versioning.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./openapi.yaml, ./rest-endpoints.md, ./sdk-strategy.md, ./error-model.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial draft: URL-path <code>/v1</code>, additive-vs-breaking, buf
+breaking gate</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Linked the breaking-change gate to its RED-first skeleton in
+contract-tests.md</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Closed <code>[OPEN: ver-2]</code>: <code>GET /version</code> (build
++ contract identity + active deprecations) is now in
+<code>openapi.yaml</code> (<code>getVersion</code> →
+<code>VersionInfo</code>).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-decision">Decision</a></li>
+<li><a href="#2-what-v1-covers">What <code>/v1</code> covers</a></li>
+<li><a href="#3-additive-vs-breaking">Additive vs breaking</a></li>
+<li><a href="#4-rest--protobuf-parity">REST ↔︎ Protobuf parity</a></li>
+<li><a href="#5-breaking-change-gates-no-server-ci">Breaking-change
+gates (no server CI)</a></li>
+<li><a href="#6-deprecation--sunset">Deprecation &amp; Sunset</a></li>
+<li><a href="#7-sdk--release-alignment">SDK &amp; release
+alignment</a></li>
+<li><a href="#8-open-items">Open items</a></li>
+</ol>
+<h2 id="decision">1. Decision</h2>
+<p><strong>URL-path versioning: <code>/v1</code>.</strong> Resolves
+<strong>Q29</strong> <code>[DEFAULT — adjustable]</code>. Every REST
+route is mounted under <code>/v1</code>
+(<code>https://thready.hxd3v.com/v1/...</code>). The parallel Protobuf
+contract uses the matching package suffix
+<strong><code>helix.thready.v1</code></strong>, exactly as
+<code>helix_proto</code> pins <code>helix.&lt;domain&gt;.v1</code>
+<code>[RESEARCH: helix_proto]</code>. A future incompatible surface
+ships as <code>/v2</code> + <code>helix.thready.v2</code>, served
+<strong>side-by-side</strong> with <code>/v1</code> during a deprecation
+window.</p>
+<p>Rationale: path versioning is unambiguous in logs, caches, proxies
+and SDK base URLs; it is the org convention (HelixVPN
+<code>openapi/helix.v1.yaml</code> is served at <code>/v1</code>).</p>
+<h2 id="what-v1-covers">2. What <code>/v1</code> covers</h2>
+<p><code>/v1</code> is the whole authenticated REST surface in
+<code>openapi.yaml</code> <strong>plus</strong> the real-time endpoints
+in <a href="./event-bus-contract.md">event-bus-contract.md</a>
+(<code>/v1/events/ws</code>, <code>/v1/events/stream</code>). The
+unauthenticated ops endpoints (<code>/healthz</code>,
+<code>/readyz</code>, <code>/metrics</code>) are intentionally
+<strong>unversioned</strong> — they are operational, not part of the
+product contract, matching the <code>helix_proto</code> decision to keep
+ops routes out of the versioned slice.</p>
+<h2 id="additive-vs-breaking">3. Additive vs breaking</h2>
+<p>Within a major version we make <strong>additive-only</strong>
+changes. The contract distinguishes:</p>
+<p><strong>Non-breaking (allowed within <code>/v1</code>, no version
+bump):</strong></p>
+<ul>
+<li>Add a new endpoint, a new optional request field, or a new response
+field.</li>
+<li>Add a new enum value <strong>only where the client is documented to
+tolerate unknowns</strong> (e.g. <code>Error.code</code>,
+<code>ContentType</code>, event <code>type</code>). SDKs treat unknown
+enum values as a pass-through/<code>unknown</code> variant — see <a
+href="./sdk-strategy.md">sdk-strategy.md</a>.</li>
+<li>Add a new optional query parameter or header.</li>
+<li>Relax a validation constraint; add a new error
+<code>code</code>.</li>
+</ul>
+<p><strong>Breaking (requires <code>/v2</code>):</strong></p>
+<ul>
+<li>Remove/rename a field, endpoint, or enum value; change a field’s
+type or cardinality.</li>
+<li>Make an optional field required, or tighten validation on existing
+input.</li>
+<li>Change default behaviour, pagination semantics, or an auth
+requirement.</li>
+<li>Change the meaning of an existing error <code>code</code> or status
+mapping.</li>
+</ul>
+<blockquote>
+<p>Adding an enum value is treated as <strong>potentially breaking for
+naive clients</strong>. Because Thready’s SDKs are generated with
+unknown-tolerant enums, it is additive <strong>for conformant SDK
+users</strong> and called out in the changelog regardless.</p>
+</blockquote>
+<h2 id="rest-protobuf-parity">4. REST ↔︎ Protobuf parity</h2>
+<p>Two schema-first contracts describe one system (see <a
+href="./sdk-strategy.md">sdk-strategy.md</a>):</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Plane</th>
+<th>Contract</th>
+<th>Version token</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REST <code>/v1</code></td>
+<td><code>openapi/thready.v1.yaml</code></td>
+<td>path <code>/v1</code> + <code>info.version</code> semver</td>
+</tr>
+<tr>
+<td>Events / DTO wire</td>
+<td><code>proto/helix/thready/v1/*.proto</code></td>
+<td>package <code>helix.thready.v1</code></td>
+</tr>
+</tbody>
+</table>
+<p>The two move together: a change that is breaking in one is breaking
+in the other, and both bump to <code>v2</code> at the same time. Shared
+DTOs (e.g. the event envelope) are defined once in Protobuf and mirrored
+in the OpenAPI <code>components.schemas</code> so the shapes cannot
+drift; a contract test asserts the JSON shapes match (see <a
+href="../testing/index.md">testing/</a>).</p>
+<h2 id="breaking-change-gates-no-server-ci">5. Breaking-change gates (no
+server CI)</h2>
+<p>Server-side CI/CD is forbidden <code>[CONSTITUTION §11.4.156]</code>,
+so version discipline is enforced by <strong>local git-hooks + pre-tag
+full-suite retest</strong> <code>[CONSTITUTION §11.4.75/40]</code>,
+reusing the exact <code>helix_proto</code> gates
+<code>[VERIFIED: helix_proto Makefile]</code>:</p>
+<ul>
+<li><strong><code>buf breaking</code></strong> — the proto contract is
+diffed against the previous tag with
+<code>buf breaking --against '.git#tag=&lt;prev&gt;'</code>; a breaking
+change inside <code>v1</code> <strong>fails the commit</strong>
+(helix_proto’s <code>buf.yaml</code> sets
+<code>breaking: use: [FILE]</code>, and its
+<code>scripts/buf_breaking_gate.sh</code> wires it).
+Renumbering/removing fields inside <code>v1</code> is rejected.</li>
+<li><strong>OpenAPI diff</strong> — <code>openapi.yaml</code> is linted
+(<code>openapi-lint</code>) and diffed against the previous tag;
+removals/renames fail. (<code>oasdiff</code>-style check, run locally as
+part of the Makefile <code>all</code> target modelled on helix_proto’s
+<code>lint → breaking → generate → check-no-handwritten → rust-build → openapi-lint → openapi-generate-ts → roundtrip-test</code>.)</li>
+<li><strong><code>check-no-handwritten</code></strong> — asserts
+generated SDK cores were not hand-edited (drift guard), exactly as
+helix_proto does.</li>
+</ul>
+<p>Only after these pass GREEN, a project-prefixed tag
+<code>THREADY-&lt;version&gt;</code> is cut and pushed to all four
+upstreams <code>[CONSTITUTION §11.4.151/§2.1]</code>. The RED-first
+skeleton that proves the <code>buf breaking</code> and OpenAPI-diff
+gates actually reject a removed field lives in <a
+href="./contract-tests.md">contract-tests.md</a> §full-automation.</p>
+<h2 id="deprecation-sunset">6. Deprecation &amp; Sunset</h2>
+<p>When <code>/v2</code> ships, <code>/v1</code> enters a deprecation
+window (<code>[DEFAULT — adjustable]</code> ≥ 6 months):</p>
+<ul>
+<li>Deprecated operations set <code>deprecated: true</code> in OpenAPI
+and return an RFC 8594
+<strong><code>Sunset: &lt;date&gt;</code></strong> response header
+(declared as <code>components.headers.Sunset</code>), plus a
+<code>Deprecation: true</code> header.</li>
+<li>The changelog + each SDK release note the deprecation; SDKs emit a
+one-time warning when a deprecated endpoint is called.</li>
+<li>After the window, <code>/v1</code> is removed in a tagged release;
+the proto <code>v1</code> package is likewise retired.</li>
+</ul>
+<h2 id="sdk-release-alignment">7. SDK &amp; release alignment</h2>
+<ul>
+<li><code>info.version</code> in <code>openapi.yaml</code> follows
+<strong>semver</strong>: MINOR for additive, PATCH for fixes, MAJOR only
+alongside a new URL path segment (<code>/v2</code>).</li>
+<li>SDKs are versioned to track the contract’s MAJOR.MINOR and published
+per language registry on each <code>THREADY-&lt;version&gt;</code> tag
+(see <a href="./sdk-strategy.md">sdk-strategy.md</a>).</li>
+<li>Tags are mirrored onto every owned submodule and all four upstreams
+<code>[CONSTITUTION §11.4.151/§2.1]</code>; releases carry a changelog +
+multi-format doc export (Docs Chain).</li>
+</ul>
+<h2 id="open-items">8. Open items</h2>
+<ul>
+<li><code>[OPEN: ver-1]</code> The concrete OpenAPI-diff tool
+(<code>oasdiff</code> vs a custom Go differ) is selected with the
+tooling pack; the <em>policy</em> (additive-only, local gate) is fixed
+here.</li>
+<li><code>[RESOLVED: ver-2]</code> The machine-readable
+<strong><code>GET /v1/version</code></strong> endpoint is now specified
+in <code>openapi.yaml</code> (<code>getVersion</code> →
+<code>VersionInfo</code>: <code>api_version</code>,
+<code>contract_hash</code>, <code>proto_package</code>,
+<code>build_commit</code>, <code>built_at</code>, and active
+<code>deprecations</code> with <code>Sunset</code> dates). It is served
+under <code>/v1</code> for discoverability but is operational in spirit;
+support quotes <code>contract_hash</code> + <code>build_commit</code> to
+pin a client to the exact deployed contract.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

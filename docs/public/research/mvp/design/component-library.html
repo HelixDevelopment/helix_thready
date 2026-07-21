@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Component Library</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Component Library</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#layering" id="toc-layering">1. Layering</a></li>
+<li><a href="#component-taxonomy" id="toc-component-taxonomy">2.
+Component taxonomy</a></li>
+<li><a href="#shared-primitives-verbatim-from-design_system"
+id="toc-shared-primitives-verbatim-from-design_system">3. Shared
+primitives (verbatim from design_system)</a></li>
+<li><a href="#angular-adapters-verbatim-interfaces"
+id="toc-angular-adapters-verbatim-interfaces">4. Angular adapters
+(verbatim interfaces)</a></li>
+<li><a href="#thready-composite-components"
+id="toc-thready-composite-components">5. Thready composite
+components</a></li>
+<li><a href="#b.-component-state-lifecycle"
+id="toc-b.-component-state-lifecycle">5b. Component state
+lifecycle</a></li>
+<li><a href="#component-contract-anatomy-props-states-a11y"
+id="toc-component-contract-anatomy-props-states-a11y">6. Component
+contract (anatomy · props · states · a11y)</a>
+<ul>
+<li><a href="#additional-component-contracts"
+id="toc-additional-component-contracts">6.1 Additional component
+contracts</a></li>
+</ul></li>
+<li><a href="#perplatform-adapters" id="toc-perplatform-adapters">7.
+Per‑platform adapters</a>
+<ul>
+<li><a href="#percomponent-variant-matrix-all-platforms"
+id="toc-percomponent-variant-matrix-all-platforms">7.1 Per‑component
+variant matrix (all platforms)</a></li>
+</ul></li>
+<li><a href="#states-emptyskeletonerror"
+id="toc-states-emptyskeletonerror">8. States,
+empty/skeleton/error</a></li>
+<li><a href="#testing-the-library" id="toc-testing-the-library">9.
+Testing the library</a></li>
+<li><a href="#build-backlog-gaps" id="toc-build-backlog-gaps">10. Build
+backlog &amp; gaps</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Component Library
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/component-library.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./index.md, ./design-system.md, ./wireframes.md,
+                    ./ux-flows.md, ../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (design)</td>
+<td>Initial complete draft: shared <code>.ds-*</code> primitives
+(verbatim), Thready composites, per‑platform adapters, states/anatomy,
+build backlog, testing</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (design · review)</td>
+<td>Second-pass review: added a TDD reproduce‑first (RED) test for
+<code>thready-processing-pipeline</code>; added the mandated
+<strong>Challenges</strong> scenario‑bank test type
+(<code>[GAP: 9.3]</code>) + backlog item</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (design · Pass 3)</td>
+<td>Depth pass: verbatim primitives table completed against source
+(<code>--btn--secondary/--ghost</code>, <code>--elev-flat</code>,
+<code>--fg-2</code>/<code>--meta</code>/<code>--border-soft</code>
+aliases); component state-lifecycle diagram (§5b) + <code>.mmd</code>;
+<strong>per-platform variant matrix for every composite</strong> (§7.1
+Angular/React/KMP/Flutter/TUI + status); five more component contracts
+(thread-row, hashtag-chip, search-bar, wizard, branding-editor, toast,
+§6.1); a11y name/role/keyboard per composite</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-layering">1. Layering</a></li>
+<li><a href="#2-component-taxonomy">2. Component taxonomy</a></li>
+<li><a href="#3-shared-primitives-verbatim-from-design_system">3. Shared
+primitives (verbatim from design_system)</a></li>
+<li><a href="#4-angular-adapters-verbatim-interfaces">4. Angular
+adapters (verbatim interfaces)</a></li>
+<li><a href="#5-thready-composite-components">5. Thready composite
+components</a></li>
+<li><a href="#5b-component-state-lifecycle">5b. Component state
+lifecycle</a></li>
+<li><a href="#6-component-contract-anatomy--props--states--a11y">6.
+Component contract (anatomy · props · states · a11y)</a>
+<ul>
+<li><a href="#61-additional-component-contracts">6.1 Additional
+component contracts</a></li>
+</ul></li>
+<li><a href="#7-per-platform-adapters">7. Per‑platform adapters</a>
+<ul>
+<li><a href="#71-per-component-variant-matrix-all-platforms">7.1
+Per‑component variant matrix (all platforms)</a></li>
+</ul></li>
+<li><a href="#8-states-emptyskeletonerror">8. States,
+empty/skeleton/error</a></li>
+<li><a href="#9-testing-the-library">9. Testing the library</a></li>
+<li><a href="#10-build-backlog--gaps">10. Build backlog &amp;
+gaps</a></li>
+<li><a href="#11-open-items">11. Open items</a></li>
+</ul>
+<h2 id="layering">1. Layering</h2>
+<p>Three layers, bottom‑up:</p>
+<ol type="1">
+<li><strong>Tokens</strong> — <code>core.css</code> +
+<code>themes/thready.css</code> (see <a
+href="./design-system.md">design-system.md</a>).</li>
+<li><strong>Primitives</strong> — the <strong>shared, framework‑agnostic
+<code>.ds-*</code></strong> components from
+<code>vasic-digital/design_system</code>
+(<code>components/css/components.css</code>) + the three Angular
+adapters. <strong>Consumed, not re‑authored</strong>
+<code>[CONSTITUTION §11.4.28]</code>.</li>
+<li><strong>Composites / Surfaces</strong> — the
+<strong>Thready‑specific</strong> components (thread rows, processing
+pipeline, search bar, branding editor, etc.) built <em>from</em>
+primitives and contributed upstream where generic.</li>
+</ol>
+<p>The rule: <strong>if a component is generic, it belongs in
+<code>design_system</code></strong> (contribute upstream); if it is
+Thready‑domain (a thread/reply chain, a processing pipeline), it lives
+in Thready’s component package but is still built entirely on tokens +
+primitives.</p>
+<h2 id="component-taxonomy">2. Component taxonomy</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 343px; background-color: white;" viewBox="0 0 343 2733.199951171875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M171.5,72.6L171.5,76.767C171.5,80.933,171.5,89.267,171.5,96.933C171.5,104.6,171.5,111.6,171.5,115.1L171.5,118.6" id="my-svg-L_TOK_PRIM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_PRIM_0" data-points="W3sieCI6MTcxLjUsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MTcxLjUsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTcxLjUsInkiOjEyMi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M171.5,1015.6L171.5,1019.767C171.5,1023.933,171.5,1032.267,171.5,1039.933C171.5,1047.6,171.5,1054.6,171.5,1058.1L171.5,1061.6" id="my-svg-L_PRIM_COMPO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PRIM_COMPO_0" data-points="W3sieCI6MTcxLjUsInkiOjEwMTUuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNzEuNSwieSI6MTA0MC41OTk5OTg0NzQxMjF9LHsieCI6MTcxLjUsInkiOjEwNjUuNTk5OTk4NDc0MTIxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M171.5,2364.2L171.5,2368.367C171.5,2372.533,171.5,2380.867,171.5,2388.533C171.5,2396.2,171.5,2403.2,171.5,2406.7L171.5,2410.2" id="my-svg-L_COMPO_SURF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COMPO_SURF_0" data-points="W3sieCI6MTcxLjUsInkiOjIzNjQuMTk5OTc0MDYwMDU4Nn0seyJ4IjoxNzEuNSwieSI6MjM4OS4xOTk5NzQwNjAwNTg2fSx7IngiOjE3MS41LCJ5IjoyNDE0LjE5OTk3NDA2MDA1ODZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_TOK_PRIM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PRIM_COMPO_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COMPO_SURF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="root" transform="translate(52, 2406.1999740600586)"><g class="clusters"><g class="cluster" id="my-svg-SURF" data-look="classic"><rect style="" x="8" y="8" width="223" height="311"/><g class="cluster-label" transform="translate(97, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SURF</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-SHELL-28" data-look="classic" transform="translate(119.5, 66.5)"><rect class="basic label-container" style="" x="-63" y="-23.5" width="126" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">app-shell</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DASH-29" data-look="classic" transform="translate(119.5, 163.5)"><rect class="basic label-container" style="" x="-68" y="-23.5" width="136" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dashboard</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DETAIL-30" data-look="classic" transform="translate(119.5, 260.5)"><rect class="basic label-container" style="" x="-74" y="-23.5" width="148" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">detail-layout</tspan></tspan></text></g></g></g></g></g><g class="root" transform="translate(0, 1057.599998474121)"><g class="clusters"><g class="cluster" id="my-svg-COMPO" data-look="classic"><rect style="" x="8" y="8" width="327" height="1298.599998474121"/><g class="cluster-label" transform="translate(68, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Composites</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Thready-specific</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-STAT-13" data-look="classic" transform="translate(171.5, 66.5)"><rect class="basic label-container" style="" x="-60.5" y="-23.5" width="121" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stat-card</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THREAD-14" data-look="classic" transform="translate(171.5, 163.5)"><rect class="basic label-container" style="" x="-113.5" y="-23.5" width="227" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thread-row</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reply-chain</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PIPE-15" data-look="classic" transform="translate(171.5, 260.5)"><rect class="basic label-container" style="" x="-100" y="-23.5" width="200" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">processing-pipeline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROG-16" data-look="classic" transform="translate(171.5, 357.5)"><rect class="basic label-container" style="" x="-85" y="-23.5" width="170" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">progress</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retry</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TAGCHIP-17" data-look="classic" transform="translate(171.5, 454.5)"><rect class="basic label-container" style="" x="-126" y="-23.5" width="252" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hashtag-chip</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> direct/indirect</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEARCHBAR-18" data-look="classic" transform="translate(171.5, 551.5)"><rect class="basic label-container" style="" x="-95.5" y="-23.5" width="191" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">search-bar</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filters</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ASSETCARD-19" data-look="classic" transform="translate(171.5, 648.5)"><rect class="basic label-container" style="" x="-121.5" y="-23.5" width="243" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">asset-card</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> media-viewer</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WIZARD-20" data-look="classic" transform="translate(171.5, 745.5)"><rect class="basic label-container" style="" x="-87" y="-23.5" width="174" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">wizard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stepper</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RESULT-21" data-look="classic" transform="translate(171.5, 842.5)"><rect class="basic label-container" style="" x="-91.5" y="-23.5" width="183" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">search-result-row</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SWITCHER-22" data-look="classic" transform="translate(171.5, 939.5)"><rect class="basic label-container" style="" x="-90.5" y="-23.5" width="181" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account-switcher</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BRANDER-23" data-look="classic" transform="translate(171.5, 1036.5)"><rect class="basic label-container" style="" x="-126" y="-23.5" width="252" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">branding-editor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AA-meter</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TOAST-24" data-look="classic" transform="translate(171.5, 1133.5)"><rect class="basic label-container" style="" x="-90.5" y="-23.5" width="181" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">toast</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> live-region</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EMPTY-25" data-look="classic" transform="translate(171.5, 1239.2999992370605)"><rect class="basic label-container" style="" x="-110.5" y="-32.29999923706055" width="221" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">empty</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> skeleton</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> error</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">states</tspan></tspan></text></g></g></g></g></g><g class="root" transform="translate(27, 114.5999984741211)"><g class="clusters"><g class="cluster" id="my-svg-PRIM" data-look="classic"><rect style="" x="8" y="8" width="273" height="893"/><g class="cluster-label" transform="translate(65, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Primitives</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> shared</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .ds-*</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-BTN-2" data-look="classic" transform="translate(144.5, 66.5)"><rect class="basic label-container" style="" x="-52" y="-23.5" width="104" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-btn</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-INPUT-3" data-look="classic" transform="translate(144.5, 163.5)"><rect class="basic label-container" style="" x="-59" y="-23.5" width="118" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-input</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CARD-4" data-look="classic" transform="translate(144.5, 260.5)"><rect class="basic label-container" style="" x="-56.5" y="-23.5" width="113" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-card</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NAV-5" data-look="classic" transform="translate(144.5, 357.5)"><rect class="basic label-container" style="" x="-54" y="-23.5" width="108" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-nav</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FOOT-6" data-look="classic" transform="translate(144.5, 454.5)"><rect class="basic label-container" style="" x="-61.5" y="-23.5" width="123" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-footer</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BADGE-7" data-look="classic" transform="translate(144.5, 551.5)"><rect class="basic label-container" style="" x="-63.5" y="-23.5" width="127" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-badge</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LINK-8" data-look="classic" transform="translate(144.5, 648.5)"><rect class="basic label-container" style="" x="-54" y="-23.5" width="108" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-link</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TT-9" data-look="classic" transform="translate(144.5, 745.5)"><rect class="basic label-container" style="" x="-87.5" y="-23.5" width="175" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-theme-toggle</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LP-10" data-look="classic" transform="translate(144.5, 842.5)"><rect class="basic label-container" style="" x="-99" y="-23.5" width="198" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ds-language-picker</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-TOK-0" data-look="classic" transform="translate(171.5, 40.29999923706055)"><rect class="basic label-container" style="" x="-104.5" y="-32.29999923706055" width="209" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tokens</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">core</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> theme</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/component-taxonomy.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Tokens feed the <strong>primitives</strong> — the
+shared <code>.ds-*</code> set (<code>ds-btn</code>,
+<code>ds-input</code>, <code>ds-card</code>, <code>ds-nav</code>,
+<code>ds-footer</code>, <code>ds-badge</code>, <code>ds-link</code>)
+plus the two Angular utility components (<code>ds-theme-toggle</code>,
+<code>ds-language-picker</code>). Those primitives compose into the
+<strong>Thready composites</strong>: the stat card; the thread row and
+reply‑chain; the processing pipeline and its progress+retry control; the
+direct/indirect hashtag chip; the search bar with filters and the
+search‑result row; the asset card and media viewer; the wizard/stepper;
+the account switcher; the branding editor with its live AA meter; the
+toast/live‑region; and the shared empty/skeleton/error states.
+Composites in turn assemble into <strong>surfaces/templates</strong> —
+the app shell, the dashboard, and the generic detail layout — which the
+concrete screens in <a href="./wireframes.md">wireframes.md</a>
+instantiate. Everything above the token line is built only from the line
+below it, so a token or theme change re‑skins the entire tree.</p>
+<h2 id="shared-primitives-verbatim-from-design_system">3. Shared
+primitives (verbatim from design_system)</h2>
+<p>These ship today
+<code>[VERIFIED — components/css/components.css]</code>. The
+<code>.ds-</code> prefix avoids host‑framework collisions. All are
+token‑bound (a theme swap re‑tints them) and AA‑inherited.</p>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 37%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Class(es)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container / section</td>
+<td><code>.ds-container</code>, <code>.ds-section</code></td>
+<td>responsive gutters + section rhythm</td>
+</tr>
+<tr>
+<td>Button</td>
+<td><code>.ds-btn</code> + <code>--primary</code> /
+<code>--secondary</code> / <code>--ghost</code></td>
+<td>focus‑ring, reduced‑motion aware</td>
+</tr>
+<tr>
+<td>Card</td>
+<td><code>.ds-card</code> + <code>--raised</code></td>
+<td><code>--elev-raised</code> shadow</td>
+</tr>
+<tr>
+<td>Input</td>
+<td><code>.ds-input</code></td>
+<td><code>--border-strong</code>, focus‑ring, placeholder
+<code>--muted</code></td>
+</tr>
+<tr>
+<td>Link</td>
+<td><code>.ds-link</code></td>
+<td><code>--accent</code>, underline on hover</td>
+</tr>
+<tr>
+<td>Nav</td>
+<td><code>.ds-nav</code>, <code>.ds-nav__links</code>,
+<code>.ds-nav__link</code></td>
+<td><code>aria-current</code> styling</td>
+</tr>
+<tr>
+<td>Footer</td>
+<td><code>.ds-footer</code></td>
+<td>carries the slogan (§brand-assets)</td>
+</tr>
+<tr>
+<td>Badge</td>
+<td><code>.ds-badge</code> +
+<code>--success</code>/<code>--warn</code>/<code>--danger</code></td>
+<td>semantic, <code>color-mix</code> tint</td>
+</tr>
+<tr>
+<td>Brand mark</td>
+<td><code>.ds-brand-mark</code></td>
+<td>decorative <code>--brand</code> only</td>
+</tr>
+</tbody>
+</table>
+<p>Example (verbatim button contract, <strong>all three
+variants</strong>
+<code>[VERIFIED — components/css/components.css]</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn</span> { <span class="kw">display</span><span class="ch">:</span><span class="dv">inline-flex</span><span class="op">;</span> <span class="kw">align-items</span><span class="ch">:</span><span class="dv">center</span><span class="op">;</span> <span class="kw">gap</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--space-2</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">font</span><span class="ch">:</span><span class="dv">500</span> <span class="fu">var(</span><span class="va">--text-base</span><span class="fu">)</span>/<span class="dv">1</span> <span class="fu">var(</span><span class="va">--font-body</span><span class="fu">)</span><span class="op">;</span> <span class="kw">padding</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--space-3</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--space-5</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--radius-sm</span><span class="fu">)</span><span class="op">;</span> <span class="kw">border</span><span class="ch">:</span><span class="dv">1</span><span class="dt">px</span> <span class="dv">solid</span> <span class="dv">transparent</span><span class="op">;</span> <span class="kw">cursor</span><span class="ch">:</span><span class="dv">pointer</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">transition</span><span class="ch">:</span> <span class="dv">background-color </span><span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>              <span class="dv">color</span> <span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>              <span class="dv">box-shadow </span><span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn</span><span class="in">:focus-visible</span> { <span class="kw">outline</span><span class="ch">:</span><span class="dv">none</span><span class="op">;</span> <span class="kw">box-shadow</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--focus-ring</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span>   { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-on</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span><span class="in">:hover</span>  { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-hover</span><span class="fu">)</span><span class="op">;</span> }   <span class="co">/* color-mix(accent, black 8%)  */</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span><span class="in">:active</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-active</span><span class="fu">)</span><span class="op">;</span> }  <span class="co">/* color-mix(accent, black 14%) */</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--secondary</span> { <span class="kw">background</span><span class="ch">:</span><span class="dv">transparent</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--fg</span><span class="fu">)</span><span class="op">;</span> <span class="kw">border-color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--border-strong</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--secondary</span><span class="in">:hover</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--surface-warm</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--ghost</span>     { <span class="kw">background</span><span class="ch">:</span><span class="dv">transparent</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--ghost</span><span class="in">:hover</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">,</span> <span class="dv">transparent</span> <span class="dv">90</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-reduced-motion</span><span class="ch">:</span> <span class="dv">reduce</span><span class="fu">)</span> { <span class="fu">.ds-btn</span> { <span class="kw">transition</span><span class="ch">:</span><span class="dv">none</span><span class="op">;</span> } }</span></code></pre></div>
+<p>The <code>.ds-container</code> responsive gutters and
+<code>.ds-section</code> rhythm are token‑driven at the two breakpoints
+(768 / 1024px) <code>[VERIFIED]</code>; the badge tints use
+<code>color-mix(in oklab, &lt;semantic&gt;, transparent 90%)</code>, so
+a theme swap re‑tints every semantic badge without new CSS. Additional
+verified structural aliases the primitives lean on:
+<code>--elev-flat: none</code>, <code>--fg-2</code>/<code>--meta</code>
+(=<code>--fg</code> /<code>--muted</code>), and
+<code>--border-soft</code> (=<code>--border</code>) — declared once in
+<code>core.css</code>/theme so composites never hard‑code a value.</p>
+<h2 id="angular-adapters-verbatim-interfaces">4. Angular adapters
+(verbatim interfaces)</h2>
+<p>Three shipped Angular adapters
+<code>[VERIFIED — components/angular/*]</code> that Thready consumes
+as‑is:</p>
+<ul>
+<li><strong><code>ThemeService</code></strong> — signal
+<code>choice: 'light'|'dark'|'system'</code>, <code>set()</code>,
+<code>resolved()</code>; stamps
+<code>data-theme</code>/<code>.dark</code>, persists to
+<code>${prefix}-theme</code>; SSR‑safe.</li>
+<li><strong><code>I18nService</code></strong> — signal
+<code>lang</code>, <code>t(key)</code>, <code>set(code)</code>; injected
+<code>DS_DICTIONARY</code>/<code>DS_LOCALES</code>; persists to
+<code>${prefix}-lang</code>; roadmap notes drop‑in Transloco
+migration.</li>
+<li><strong><code>FooterComponent</code></strong> — the “Made with ♥ by
+Helix Development” pattern (lucide <code>Heart</code> SVG +
+<code>U+2665</code> + text fallback,
+<code>aria-label="love"</code>).</li>
+<li>Utility components:
+<strong><code>ThemeToggleComponent</code></strong>
+(<code>ds-theme-toggle</code>),
+<strong><code>LanguagePickerComponent</code></strong>
+(<code>ds-language-picker</code>).</li>
+<li>Config: <strong><code>DS_CONFIG</code></strong>
+(<code>storagePrefix</code>, <code>defaultTheme</code>,
+<code>defaultLocale</code>), <strong><code>DS_LOCALES</code></strong>,
+<strong><code>DS_DICTIONARY</code></strong> injection tokens.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The exact injection contract Thready provides at bootstrap (see design-system.md §3.3)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> DsConfig { storagePrefix<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> defaultTheme<span class="op">?:</span> <span class="st">&#39;light&#39;</span><span class="op">|</span><span class="st">&#39;dark&#39;</span><span class="op">|</span><span class="st">&#39;system&#39;</span><span class="op">;</span> defaultLocale<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span> }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> DsDictionary <span class="op">=</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> Locale { code<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> label<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> }</span></code></pre></div>
+<h2 id="thready-composite-components">5. Thready composite
+components</h2>
+<p>Built on §3/§4. Each is listed with its purpose and the primitives it
+uses. <code>[DEFAULT — adjustable]</code> API names.</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+<th>Built from</th>
+<th>Used in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thready-stat-card</code></td>
+<td>KPI tile (channels, posts, assets)</td>
+<td><code>.ds-card</code>, type tokens</td>
+<td>Dashboard</td>
+</tr>
+<tr>
+<td><code>thready-thread-row</code></td>
+<td>One complete post = root + reply count</td>
+<td><code>.ds-card</code>/list, <code>hashtag-chip</code>,
+<code>status-badge</code></td>
+<td>Channel detail, Dashboard</td>
+</tr>
+<tr>
+<td><code>thready-reply-chain</code></td>
+<td>Expandable organic replies (system replies separated)</td>
+<td>list, tokens</td>
+<td>Post detail</td>
+</tr>
+<tr>
+<td><code>thready-hashtag-chip</code></td>
+<td>Tag with <strong>direct/indirect</strong> distinction</td>
+<td><code>.ds-badge</code>,
+<code>--brand</code>/<code>--muted</code></td>
+<td>everywhere tags show</td>
+</tr>
+<tr>
+<td><code>thready-processing-pipeline</code></td>
+<td>Ordered steps download→…→reply + per‑step status</td>
+<td><code>progress</code>, <code>status-badge</code></td>
+<td>Post detail</td>
+</tr>
+<tr>
+<td><code>thready-progress</code></td>
+<td>Determinate/indeterminate bar + <strong>retry</strong>
+affordance</td>
+<td>tokens, <code>.ds-btn--ghost</code></td>
+<td>Dashboard queue, Post detail</td>
+</tr>
+<tr>
+<td><code>thready-status-badge</code></td>
+<td>queued/running/processed/failed</td>
+<td><code>.ds-badge</code> semantics</td>
+<td>lists, detail</td>
+</tr>
+<tr>
+<td><code>thready-search-bar</code></td>
+<td>Query + scope + mode + filters</td>
+<td><code>.ds-input</code>, chips, <code>.ds-btn</code></td>
+<td>Search, app shell</td>
+</tr>
+<tr>
+<td><code>thready-search-result</code></td>
+<td>Scored result row → route</td>
+<td>list, tokens</td>
+<td>Search</td>
+</tr>
+<tr>
+<td><code>thready-asset-card</code> /
+<code>thready-media-viewer</code></td>
+<td>Media tile + Range/HLS viewer</td>
+<td><code>.ds-card</code>, native <code>&lt;video&gt;</code>/player</td>
+<td>Assets</td>
+</tr>
+<tr>
+<td><code>thready-wizard</code> (stepper)</td>
+<td>Multi‑step flows (Add‑Channel)</td>
+<td><code>.ds-card</code>, <code>.ds-btn</code>, form fields</td>
+<td>Add‑Channel</td>
+</tr>
+<tr>
+<td><code>thready-account-switcher</code></td>
+<td>Multi‑Account membership switch</td>
+<td>menu, <code>.ds-nav</code></td>
+<td>app shell</td>
+</tr>
+<tr>
+<td><code>thready-branding-editor</code></td>
+<td>White‑label editor + <strong>live AA meter</strong></td>
+<td><code>.ds-input</code>, swatches, <code>.ds-badge</code></td>
+<td>Settings › Branding</td>
+</tr>
+<tr>
+<td><code>thready-messenger-signin</code></td>
+<td>Interactive/non‑interactive sign‑in</td>
+<td>form, <code>.ds-btn</code></td>
+<td>Settings, Add‑Channel</td>
+</tr>
+<tr>
+<td><code>thready-toast</code> / live‑region</td>
+<td>Async result + SR announcements</td>
+<td>tokens, ARIA live</td>
+<td>global</td>
+</tr>
+<tr>
+<td><code>thready-empty</code> / <code>thready-skeleton</code></td>
+<td>Empty &amp; loading states</td>
+<td>tokens</td>
+<td>every list/detail</td>
+</tr>
+</tbody>
+</table>
+<h2 id="b.-component-state-lifecycle">5b. Component state lifecycle</h2>
+<p>Every data‑bearing composite moves through <strong>one</strong> state
+machine (the legend in <a
+href="./wireframes.md#11-interaction-state-legend">wireframes §1.1</a>).
+Specifying it once means no screen ships a missing state and the
+visual‑regression matrix (§9) has an exhaustive list of cells to
+cover.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="statediagram" style="max-width: 957.5px; background-color: white;" viewBox="0 0 957.5 668.2000122070312" role="graphics-document document" aria-roledescription="stateDiagram"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg defs [id$="-barbEnd"]{fill:#000;stroke:#000;}#my-svg g.stateGroup text{fill:#999;stroke:none;font-size:10px;}#my-svg g.stateGroup text{fill:#000000;stroke:none;font-size:10px;}#my-svg g.stateGroup .state-title{font-weight:bolder;fill:#111111;}#my-svg g.stateGroup rect{fill:#eee;stroke:#999;}#my-svg g.stateGroup line{stroke:#666;stroke-width:1;}#my-svg .transition{stroke:#000;stroke-width:1;fill:none;}#my-svg .stateGroup .composit{fill:#ffffff;border-bottom:1px;}#my-svg .stateGroup .alt-composit{fill:#e0e0e0;border-bottom:1px;}#my-svg .state-note{stroke:#999;fill:#666;}#my-svg .state-note text{fill:#fff;stroke:none;font-size:10px;}#my-svg .stateLabel .box{stroke:none;stroke-width:0;fill:#eee;opacity:0.5;}#my-svg .edgeLabel .label rect{fill:#eee;opacity:0.5;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .edgeLabel .label text{fill:#000000;}#my-svg .label div .edgeLabel{color:#000000;}#my-svg .stateLabel text{fill:#111111;font-size:10px;font-weight:bold;}#my-svg .node circle.state-start{fill:#222;stroke:#222;}#my-svg .node .fork-join{fill:#222;stroke:#222;}#my-svg .node circle.state-end{fill:hsl(0, 0%, 83.3333333333%);stroke:#ffffff;stroke-width:1.5;}#my-svg .end-state-inner{fill:#ffffff;stroke-width:1.5;}#my-svg .node rect{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg .node polygon{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg [id$="-barbEnd"]{fill:#666;}#my-svg .statediagram-cluster rect{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg .cluster-label,#my-svg .nodeLabel{color:#111111;}#my-svg .statediagram-cluster rect.outer{rx:5px;ry:5px;}#my-svg .statediagram-state .divider{stroke:#000;}#my-svg .statediagram-state .title-state{rx:5px;ry:5px;}#my-svg .statediagram-cluster.statediagram-cluster .inner{fill:#ffffff;}#my-svg .statediagram-cluster.statediagram-cluster-alt .inner{fill:#f4f4f4;}#my-svg .statediagram-cluster .inner{rx:0;ry:0;}#my-svg .statediagram-state rect.basic{rx:5px;ry:5px;}#my-svg .statediagram-state rect.divider{stroke-dasharray:10,10;fill:#f4f4f4;}#my-svg .note-edge{stroke-dasharray:5;}#my-svg .statediagram-note rect{fill:#666;stroke:#999;stroke-width:1px;rx:0;ry:0;}#my-svg .statediagram-note rect{fill:#666;stroke:#999;stroke-width:1px;rx:0;ry:0;}#my-svg .statediagram-note text{fill:#fff;}#my-svg .statediagram-note .nodeLabel{color:#fff;}#my-svg .statediagram .edgeLabel{color:red;}#my-svg [id$="-dependencyStart"],#my-svg [id$="-dependencyEnd"]{fill:#666;stroke:#666;stroke-width:1;}#my-svg .statediagramTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg [data-look="neo"].statediagram-cluster rect{fill:#eee;stroke:url(#my-svg-gradient);stroke-width:1;}#my-svg [data-look="neo"].statediagram-cluster rect.outer{rx:5px;ry:5px;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><defs><marker id="my-svg_stateDiagram-barbEnd" refX="19" refY="7" markerWidth="20" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M 19,7 L9,13 L14,7 L9,1 Z"/></marker></defs><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M590.75,22L590.75,26.167C590.75,30.333,590.75,38.667,590.75,47C590.75,55.333,590.75,63.667,590.75,67.833L590.75,72" id="my-svg-edge0" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge0" data-points="W3sieCI6NTkwLjc1LCJ5IjoyMn0seyJ4Ijo1OTAuNzUsInkiOjQ3fSx7IngiOjU5MC43NSwieSI6NzJ9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M590.75,105L590.75,110.917C590.75,116.833,590.75,128.667,590.75,140.5C590.75,152.333,590.75,164.167,590.75,170.083L590.75,176" id="my-svg-edge1" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge1" data-points="W3sieCI6NTkwLjc1LCJ5IjoxMDV9LHsieCI6NTkwLjc1LCJ5IjoxNDAuNX0seyJ4Ijo1OTAuNzUsInkiOjE3Nn1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M553.75,196.957L475.792,206.347C397.833,215.738,241.917,234.519,163.958,251.293C86,268.067,86,282.833,86,290.217L86,297.6" id="my-svg-edge2" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge2" data-points="W3sieCI6NTUzLjc1LCJ5IjoxOTYuOTU2ODU5Nzc1NjczNn0seyJ4Ijo4NiwieSI6MjUzLjI5OTk5OTIzNzA2MDU1fSx7IngiOjg2LCJ5IjoyOTcuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M86,330.6L86,336.517C86,342.433,86,354.267,181.833,368.333C277.667,382.399,469.333,398.697,565.167,406.847L661,414.996" id="my-svg-edge3" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge3" data-points="W3sieCI6ODYsInkiOjMzMC41OTk5OTg0NzQxMjExfSx7IngiOjg2LCJ5IjozNjYuMDk5OTk4NDc0MTIxMX0seyJ4Ijo2NjEsInkiOjQxNC45OTYxNTU0NjUxMjY4M31d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M627.75,206.897L647.625,214.631C667.5,222.365,707.25,237.832,727.125,255.7C747,273.567,747,293.833,747,312.633C747,331.433,747,348.767,741.368,363.35C735.736,377.933,724.471,389.767,718.839,395.683L713.207,401.6" id="my-svg-edge4" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge4" data-points="W3sieCI6NjI3Ljc1LCJ5IjoyMDYuODk3NDM5ODE5MzM1OTR9LHsieCI6NzQ3LCJ5IjoyNTMuMjk5OTk5MjM3MDYwNTV9LHsieCI6NzQ3LCJ5IjozMTQuMDk5OTk4NDc0MTIxMX0seyJ4Ijo3NDcsInkiOjM2Ni4wOTk5OTg0NzQxMjExfSx7IngiOjcxMy4yMDY3MzA3NjkyMzA3LCJ5Ijo0MDEuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M553.75,199.2L503.958,208.217C454.167,217.233,354.583,235.267,315.508,251.667C276.434,268.067,297.867,282.833,308.584,290.217L319.301,297.6" id="my-svg-edge5" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge5" data-points="W3sieCI6NTUzLjc1LCJ5IjoxOTkuMjAwMjIzMjk2NDE0NzJ9LHsieCI6MjU1LCJ5IjoyNTMuMjk5OTk5MjM3MDYwNTV9LHsieCI6MzE5LjMwMDU3NTM1NzM2OTA0LCJ5IjoyOTcuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M587.154,209L585.545,216.383C583.936,223.767,580.718,238.533,583.845,253.3C586.972,268.067,596.444,282.833,601.18,290.217L605.916,297.6" id="my-svg-edge6" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge6" data-points="W3sieCI6NTg3LjE1NDE5NDAzMzgyNiwieSI6MjA5fSx7IngiOjU3Ny41LCJ5IjoyNTMuMjk5OTk5MjM3MDYwNTV9LHsieCI6NjA1LjkxNjExODI4ODI0MjQsInkiOjI5Ny41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M734,408.392L760.5,401.343C787,394.294,840,380.197,866.5,364.482C893,348.767,893,331.433,893,312.633C893,293.833,893,273.567,848.792,254.54C804.583,235.514,716.167,217.729,671.958,208.836L627.75,199.943" id="my-svg-edge7" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge7" data-points="W3sieCI6NzM0LCJ5Ijo0MDguMzkxNTU4NTc2NDIyOX0seyJ4Ijo4OTMsInkiOjM2Ni4wOTk5OTg0NzQxMjExfSx7IngiOjg5MywieSI6MzE0LjA5OTk5ODQ3NDEyMTF9LHsieCI6ODkzLCJ5IjoyNTMuMjk5OTk5MjM3MDYwNTV9LHsieCI6NjI3Ljc1LCJ5IjoxOTkuOTQyODQ1MjMzMzIwOX1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M629.119,297.6L634.766,290.217C640.413,282.833,651.706,268.067,648.579,253.3C645.452,238.533,627.905,223.767,619.131,216.383L610.357,209" id="my-svg-edge8" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge8" data-points="W3sieCI6NjI5LjExOTI0MzU3OTQwMzIsInkiOjI5Ny41OTk5OTg0NzQxMjExfSx7IngiOjY2MywieSI6MjUzLjI5OTk5OTIzNzA2MDU1fSx7IngiOjYxMC4zNTczMTkzMjQ5ODY3LCJ5IjoyMDl9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M367.199,297.6L377.916,290.217C388.633,282.833,410.066,268.067,441.158,252.904C472.25,237.742,513,222.184,533.375,214.405L553.75,206.626" id="my-svg-edge9" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge9" data-points="W3sieCI6MzY3LjE5OTQyNDY0MjYzMDk2LCJ5IjoyOTcuNTk5OTk4NDc0MTIxMX0seyJ4Ijo0MzEuNSwieSI6MjUzLjI5OTk5OTIzNzA2MDU1fSx7IngiOjU1My43NSwieSI6MjA2LjYyNjIxNjQ2MzI0MTd9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M661,423.207L594.667,432.49C528.333,441.772,395.667,460.336,329.333,477.001C263,493.667,263,508.433,263,515.817L263,523.2" id="my-svg-edge10" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge10" data-points="W3sieCI6NjYxLCJ5Ijo0MjMuMjA3NDc4MjcxOTQwOX0seyJ4IjoyNjMsInkiOjQ3OC44OTk5OTc3MTExODE2NH0seyJ4IjoyNjMsInkiOjUyMy4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M661,426.012L620.333,434.826C579.667,443.641,498.333,461.271,471.935,477.469C445.538,493.667,474.075,508.433,488.344,515.817L502.613,523.2" id="my-svg-edge11" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge11" data-points="W3sieCI6NjYxLCJ5Ijo0MjYuMDExNTg0ODI3NjA2Njd9LHsieCI6NDE3LCJ5Ijo0NzguODk5OTk3NzExMTgxNjR9LHsieCI6NTAyLjYxMjY2NDA3MzU1MDksInkiOjUyMy4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M534.5,523.2L534.5,515.817C534.5,508.433,534.5,493.667,555.583,478.419C576.667,463.172,618.833,447.443,639.917,439.579L661,431.715" id="my-svg-edge12" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge12" data-points="W3sieCI6NTM0LjUsInkiOjUyMy4xOTk5OTY5NDgyNDIyfSx7IngiOjUzNC41LCJ5Ijo0NzguODk5OTk3NzExMTgxNjR9LHsieCI6NjYxLCJ5Ijo0MzEuNzE0NzIyMjI5NjU5Mn1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M674.84,434.6L664.7,441.983C654.56,449.367,634.28,464.133,639.623,478.9C644.966,493.667,675.933,508.433,691.416,515.817L706.899,523.2" id="my-svg-edge13" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge13" data-points="W3sieCI6Njc0LjgzOTYzNzg3MzU0NDcsInkiOjQzNC41OTk5OTg0NzQxMjExfSx7IngiOjYxNCwieSI6NDc4Ljg5OTk5NzcxMTE4MTY0fSx7IngiOjcwNi44OTg4NDgyNTAwMjMzLCJ5Ijo1MjMuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M741.5,523.2L741.5,515.817C741.5,508.433,741.5,493.667,736.157,478.9C730.814,464.133,720.127,449.367,714.784,441.983L709.441,434.6" id="my-svg-edge14" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge14" data-points="W3sieCI6NzQxLjUsInkiOjUyMy4xOTk5OTY5NDgyNDIyfSx7IngiOjc0MS41LCJ5Ijo0NzguODk5OTk3NzExMTgxNjR9LHsieCI6NzA5LjQ0MDc4OTYyMzUyMTQsInkiOjQzNC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M698,552.516L675.833,559.047C653.667,565.577,609.333,578.639,608.083,591.332C606.833,604.025,648.667,616.35,669.583,622.512L690.5,628.675" id="my-svg-edge15" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge15" data-points="W3sieCI6Njk4LCJ5Ijo1NTIuNTE1ODYwOTcwOTA1MX0seyJ4Ijo1NjUsInkiOjU5MS42OTk5OTY5NDgyNDIyfSx7IngiOjY5MC41LCJ5Ijo2MjguNjc0NTAxMTk3NTM0fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M741.5,627.2L741.5,621.283C741.5,615.367,741.5,603.533,741.5,591.7C741.5,579.867,741.5,568.033,741.5,562.117L741.5,556.2" id="my-svg-edge16" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge16" data-points="W3sieCI6NzQxLjUsInkiOjYyNy4xOTk5OTY5NDgyNDIyfSx7IngiOjc0MS41LCJ5Ijo1OTEuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo3NDEuNSwieSI6NTU2LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M734,431.841L754.833,439.684C775.667,447.527,817.333,463.214,838.167,480.022C859,496.831,859,514.762,859,523.728L859,532.693" id="my-svg-edge17" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge17" data-points="W3sieCI6NzM0LCJ5Ijo0MzEuODQxMTc0NzcyMjgwM30seyJ4Ijo4NTksInkiOjQ3OC44OTk5OTc3MTExODE2NH0seyJ4Ijo4NTksInkiOjUzMi42OTMzNTAzMTUwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="edge0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(590.75, 140.5)"><g class="label" data-id="edge1" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-47" y="0" width="94" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mount</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fetch</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(86, 253.29999923706055)"><g class="label" data-id="edge2" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-78" y="0" width="156" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">&gt; 150ms (avoid flash)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(86, 366.0999984741211)"><g class="label" data-id="edge3" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-50" y="0" width="100" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">data</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> resolved</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(747, 314.0999984741211)"><g class="label" data-id="edge4" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-69.5" y="0" width="139" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">data</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> resolved</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (fast)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(365.958, 233.20694)"><g class="label" data-id="edge5" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-71" y="0" width="142" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">resolved,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> zero</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rows</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(577.5, 253.29999923706055)"><g class="label" data-id="edge6" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-40.5" y="0" width="81" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fetch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> failed</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(893, 314.0999984741211)"><g class="label" data-id="edge7" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-56.5" y="0" width="113" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">refetch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> refresh</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(663, 253.29999923706055)"><g class="label" data-id="edge8" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-17.5" y="0" width="35" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">retry</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(431.5, 253.29999923706055)"><g class="label" data-id="edge9" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-85.5" y="0" width="171" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">primary</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> action</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (e.g.</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Add</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">channel)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(263, 478.89999771118164)"><g class="label" data-id="edge10" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-52.5" y="0" width="105" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RBAC</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> offline</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(491.89628, 462.6658)"><g class="label" data-id="edge11" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-81.5" y="0" width="163" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">keyboard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> focus-visible</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(534.5, 478.89999771118164)"><g class="label" data-id="edge12" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-15.5" y="0" width="32" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">blur</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(614, 478.89999771118164)"><g class="label" data-id="edge13" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-43" y="0" width="87" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">form</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> submit</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(741.5, 478.89999771118164)"><g class="label" data-id="edge14" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-64" y="0" width="128" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">200</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ok</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (optimistic</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">confirmed)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(568.75, 590.59518)"><g class="label" data-id="edge15" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-91" y="0" width="182" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">4xx</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> field</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> errors</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (--danger)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(741.5, 591.6999969482422)"><g class="label" data-id="edge16" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-65" y="0" width="131" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">correct</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> resubmit</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(859, 478.89999771118164)"><g class="label" data-id="edge17" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-33" y="0" width="67" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">unmount</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-state-root_start-0" data-look="classic" transform="translate(590.75, 15)"><circle class="state-start" r="7" width="14" height="14"/></g><g class="node  statediagram-state" id="my-svg-state-Idle-1" data-look="classic" transform="translate(590.75, 88.5)"><rect class="basic label-container" style="" rx="5" ry="5" x="-21" y="-16.5" width="42" height="33"/><g class="label" style="" transform="translate(-13, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Idle</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Loading-9" data-look="classic" transform="translate(590.75, 192.5)"><rect class="basic label-container" style="" rx="5" ry="5" x="-37" y="-16.5" width="74" height="33"/><g class="label" style="" transform="translate(-29, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Loading</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Skeleton-3" data-look="classic" transform="translate(86, 314.0999984741211)"><rect class="basic label-container" style="" rx="5" ry="5" x="-39.5" y="-16.5" width="79" height="33"/><g class="label" style="" transform="translate(-31.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skeleton</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Content-17" data-look="classic" transform="translate(697.5, 418.0999984741211)"><rect class="basic label-container" style="" rx="5" ry="5" x="-36.5" y="-16.5" width="73" height="33"/><g class="label" style="" transform="translate(-28.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Content</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Empty-9" data-look="classic" transform="translate(343.25, 314.0999984741211)"><rect class="basic label-container" style="" rx="5" ry="5" x="-30.5" y="-16.5" width="61" height="33"/><g class="label" style="" transform="translate(-22.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Empty</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Error-8" data-look="classic" transform="translate(616.5, 314.0999984741211)"><rect class="basic label-container" style="" rx="5" ry="5" x="-26" y="-16.5" width="52" height="33"/><g class="label" style="" transform="translate(-18, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Error</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Disabled-10" data-look="classic" transform="translate(263, 539.6999969482422)"><rect class="basic label-container" style="" rx="5" ry="5" x="-40" y="-16.5" width="80" height="33"/><g class="label" style="" transform="translate(-32, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Disabled</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Focused-12" data-look="classic" transform="translate(534.5, 539.6999969482422)"><rect class="basic label-container" style="" rx="5" ry="5" x="-39" y="-16.5" width="78" height="33"/><g class="label" style="" transform="translate(-31, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Focused</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-Validating-16" data-look="classic" transform="translate(741.5, 539.6999969482422)"><rect class="basic label-container" style="" rx="5" ry="5" x="-43.5" y="-16.5" width="87" height="33"/><g class="label" style="" transform="translate(-35.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Validating</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-InvalidInline-16" data-look="classic" transform="translate(741.5, 643.6999969482422)"><rect class="basic label-container" style="" rx="5" ry="5" x="-51" y="-16.5" width="102" height="33"/><g class="label" style="" transform="translate(-43, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">InvalidInline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-state-root_end-17" data-look="classic" transform="translate(859, 539.6999969482422)"><g class="outer-path"><path d="M7 0 C7 0.40517908122283747, 6.964012880168563 0.816513743121899, 6.893654271085456 1.2155372436685123 C6.823295662002349 1.6145607442151257, 6.716427752933756 2.013397210557766, 6.5778483455013586 2.394141003279681 C6.439268938068961 2.7748847960015954, 6.26476736710249 3.149104622578984, 6.062177826491071 3.4999999999999996 C5.859588285879653 3.8508953774210153, 5.622755194947063 4.189128084166967, 5.362311101832846 4.499513267805774 C5.10186700871863 4.809898451444582, 4.809898451444583 5.10186700871863, 4.499513267805775 5.362311101832846 C4.189128084166968 5.622755194947063, 3.8508953774210166 5.859588285879652, 3.500000000000001 6.06217782649107 C3.149104622578985 6.264767367102489, 2.7748847960015963 6.439268938068961, 2.3941410032796817 6.5778483455013586 C2.013397210557767 6.716427752933756, 1.6145607442151264 6.823295662002349, 1.2155372436685128 6.893654271085456 C0.8165137431218992 6.964012880168563, 0.4051790812228379 7, 4.286263797015736e-16 7 C-0.405179081222837 7, -0.8165137431218985 6.964012880168563, -1.2155372436685121 6.893654271085456 C-1.6145607442151257 6.823295662002349, -2.0133972105577667 6.716427752933756, -2.394141003279681 6.5778483455013586 C-2.774884796001595 6.439268938068961, -3.149104622578983 6.26476736710249, -3.4999999999999982 6.062177826491071 C-3.8508953774210135 5.859588285879653, -4.189128084166966 5.6227551949470636, -4.499513267805773 5.362311101832848 C-4.809898451444581 5.101867008718632, -5.101867008718628 4.809898451444586, -5.3623111018328435 4.499513267805779 C-5.622755194947059 4.189128084166971, -5.859588285879649 3.8508953774210206, -6.062177826491068 3.5000000000000053 C-6.264767367102486 3.14910462257899, -6.439268938068958 2.774884796001602, -6.577848345501356 2.394141003279688 C-6.716427752933754 2.0133972105577738, -6.823295662002347 1.614560744215134, -6.893654271085454 1.215537243668521 C-6.9640128801685615 0.816513743121908, -6.999999999999999 0.4051790812228472, -7 1.0183126166254463e-14 C-7.000000000000001 -0.40517908122282686, -6.964012880168565 -0.8165137431218878, -6.893654271085459 -1.215537243668501 C-6.823295662002352 -1.6145607442151142, -6.716427752933759 -2.0133972105577542, -6.577848345501363 -2.394141003279669 C-6.439268938068967 -2.7748847960015834, -6.264767367102496 -3.149104622578972, -6.062177826491078 -3.4999999999999876 C-5.859588285879661 -3.8508953774210033, -5.6227551949470715 -4.1891280841669545, -5.362311101832856 -4.499513267805763 C-5.10186700871864 -4.809898451444571, -4.809898451444594 -5.10186700871862, -4.499513267805787 -5.362311101832836 C-4.189128084166979 -5.622755194947053, -3.850895377421028 -5.859588285879643, -3.5000000000000133 -6.062177826491062 C-3.1491046225789985 -6.264767367102482, -2.774884796001611 -6.439268938068954, -2.3941410032796973 -6.577848345501353 C-2.0133972105577835 -6.716427752933752, -1.6145607442151435 -6.823295662002345, -1.2155372436685306 -6.893654271085453 C-0.8165137431219176 -6.9640128801685615, -0.40517908122285695 -6.999999999999999, -1.9937625952807352e-14 -7 C0.4051790812228171 -7.000000000000001, 0.8165137431218781 -6.964012880168565, 1.2155372436684913 -6.89365427108546 C1.6145607442151044 -6.823295662002354, 2.013397210557745 -6.716427752933763, 2.3941410032796595 -6.5778483455013665 C2.774884796001574 -6.43926893806897, 3.149104622578963 -6.2647673671025, 3.499999999999979 -6.062177826491083 C3.8508953774209953 -5.859588285879665, 4.189128084166947 -5.622755194947077, 4.499513267805756 -5.362311101832862 C4.809898451444564 -5.1018670087186475, 5.101867008718613 -4.809898451444602, 5.362311101832829 -4.499513267805796 C5.622755194947046 -4.189128084166989, 5.859588285879637 -3.8508953774210393, 6.062177826491056 -3.500000000000025 C6.2647673671024755 -3.1491046225790105, 6.439268938068949 -2.774884796001623, 6.577848345501348 -2.3941410032797092 C6.716427752933747 -2.0133972105577955, 6.823295662002342 -1.6145607442151562, 6.893654271085451 -1.2155372436685434 C6.96401288016856 -0.8165137431219307, 6.982275711847575 -0.2025895406114567, 7 -3.2800750208310675e-14 C7.017724288152425 0.2025895406113911, 7.017724288152424 -0.2025895406114242, 7 0" stroke="none" stroke-width="0" fill="#eee" style=""/><path d="M7 0 C7 0.40517908122283747, 6.964012880168563 0.816513743121899, 6.893654271085456 1.2155372436685123 C6.823295662002349 1.6145607442151257, 6.716427752933756 2.013397210557766, 6.5778483455013586 2.394141003279681 C6.439268938068961 2.7748847960015954, 6.26476736710249 3.149104622578984, 6.062177826491071 3.4999999999999996 C5.859588285879653 3.8508953774210153, 5.622755194947063 4.189128084166967, 5.362311101832846 4.499513267805774 C5.10186700871863 4.809898451444582, 4.809898451444583 5.10186700871863, 4.499513267805775 5.362311101832846 C4.189128084166968 5.622755194947063, 3.8508953774210166 5.859588285879652, 3.500000000000001 6.06217782649107 C3.149104622578985 6.264767367102489, 2.7748847960015963 6.439268938068961, 2.3941410032796817 6.5778483455013586 C2.013397210557767 6.716427752933756, 1.6145607442151264 6.823295662002349, 1.2155372436685128 6.893654271085456 C0.8165137431218992 6.964012880168563, 0.4051790812228379 7, 4.286263797015736e-16 7 C-0.405179081222837 7, -0.8165137431218985 6.964012880168563, -1.2155372436685121 6.893654271085456 C-1.6145607442151257 6.823295662002349, -2.0133972105577667 6.716427752933756, -2.394141003279681 6.5778483455013586 C-2.774884796001595 6.439268938068961, -3.149104622578983 6.26476736710249, -3.4999999999999982 6.062177826491071 C-3.8508953774210135 5.859588285879653, -4.189128084166966 5.6227551949470636, -4.499513267805773 5.362311101832848 C-4.809898451444581 5.101867008718632, -5.101867008718628 4.809898451444586, -5.3623111018328435 4.499513267805779 C-5.622755194947059 4.189128084166971, -5.859588285879649 3.8508953774210206, -6.062177826491068 3.5000000000000053 C-6.264767367102486 3.14910462257899, -6.439268938068958 2.774884796001602, -6.577848345501356 2.394141003279688 C-6.716427752933754 2.0133972105577738, -6.823295662002347 1.614560744215134, -6.893654271085454 1.215537243668521 C-6.9640128801685615 0.816513743121908, -6.999999999999999 0.4051790812228472, -7 1.0183126166254463e-14 C-7.000000000000001 -0.40517908122282686, -6.964012880168565 -0.8165137431218878, -6.893654271085459 -1.215537243668501 C-6.823295662002352 -1.6145607442151142, -6.716427752933759 -2.0133972105577542, -6.577848345501363 -2.394141003279669 C-6.439268938068967 -2.7748847960015834, -6.264767367102496 -3.149104622578972, -6.062177826491078 -3.4999999999999876 C-5.859588285879661 -3.8508953774210033, -5.6227551949470715 -4.1891280841669545, -5.362311101832856 -4.499513267805763 C-5.10186700871864 -4.809898451444571, -4.809898451444594 -5.10186700871862, -4.499513267805787 -5.362311101832836 C-4.189128084166979 -5.622755194947053, -3.850895377421028 -5.859588285879643, -3.5000000000000133 -6.062177826491062 C-3.1491046225789985 -6.264767367102482, -2.774884796001611 -6.439268938068954, -2.3941410032796973 -6.577848345501353 C-2.0133972105577835 -6.716427752933752, -1.6145607442151435 -6.823295662002345, -1.2155372436685306 -6.893654271085453 C-0.8165137431219176 -6.9640128801685615, -0.40517908122285695 -6.999999999999999, -1.9937625952807352e-14 -7 C0.4051790812228171 -7.000000000000001, 0.8165137431218781 -6.964012880168565, 1.2155372436684913 -6.89365427108546 C1.6145607442151044 -6.823295662002354, 2.013397210557745 -6.716427752933763, 2.3941410032796595 -6.5778483455013665 C2.774884796001574 -6.43926893806897, 3.149104622578963 -6.2647673671025, 3.499999999999979 -6.062177826491083 C3.8508953774209953 -5.859588285879665, 4.189128084166947 -5.622755194947077, 4.499513267805756 -5.362311101832862 C4.809898451444564 -5.1018670087186475, 5.101867008718613 -4.809898451444602, 5.362311101832829 -4.499513267805796 C5.622755194947046 -4.189128084166989, 5.859588285879637 -3.8508953774210393, 6.062177826491056 -3.500000000000025 C6.2647673671024755 -3.1491046225790105, 6.439268938068949 -2.774884796001623, 6.577848345501348 -2.3941410032797092 C6.716427752933747 -2.0133972105577955, 6.823295662002342 -1.6145607442151562, 6.893654271085451 -1.2155372436685434 C6.96401288016856 -0.8165137431219307, 6.982275711847575 -0.2025895406114567, 7 -3.2800750208310675e-14 C7.017724288152425 0.2025895406113911, 7.017724288152424 -0.2025895406114242, 7 0" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="0 0" style=""/><g><path d="M2.5 0 C2.5 0.14470681472244193, 2.487147457203058 0.29161205111496386, 2.46201938253052 0.4341204441673258 C2.436891307857982 0.5766288372196877, 2.3987241974763416 0.7190704323420595, 2.3492315519647713 0.8550503583141718 C2.299738906453201 0.991030284286284, 2.2374169168223177 1.124680222349637, 2.165063509461097 1.2499999999999998 C2.092710102099876 1.3753197776503625, 2.0081268553382365 1.496117172916774, 1.915111107797445 1.6069690242163481 C1.8220953602566536 1.7178208755159223, 1.7178208755159226 1.8220953602566536, 1.6069690242163484 1.915111107797445 C1.4961171729167742 2.0081268553382365, 1.375319777650363 2.0927101020998755, 1.2500000000000002 2.1650635094610964 C1.1246802223496375 2.2374169168223172, 0.9910302842862845 2.2997389064532, 0.8550503583141721 2.349231551964771 C0.7190704323420597 2.3987241974763416, 0.576628837219688 2.436891307857982, 0.43412044416732604 2.46201938253052 C0.291612051114964 2.487147457203058, 0.14470681472244212 2.5, 1.5308084989341916e-16 2.5 C-0.1447068147224418 2.5, -0.2916120511149638 2.487147457203058, -0.43412044416732576 2.46201938253052 C-0.5766288372196877 2.436891307857982, -0.7190704323420595 2.3987241974763416, -0.8550503583141718 2.3492315519647713 C-0.991030284286284 2.299738906453201, -1.124680222349637 2.2374169168223177, -1.2499999999999996 2.165063509461097 C-1.375319777650362 2.092710102099876, -1.4961171729167733 2.008126855338237, -1.6069690242163475 1.9151111077974459 C-1.7178208755159217 1.8220953602566548, -1.822095360256653 1.7178208755159234, -1.9151111077974443 1.6069690242163495 C-2.0081268553382357 1.4961171729167755, -2.0927101020998746 1.3753197776503645, -2.1650635094610955 1.250000000000002 C-2.2374169168223164 1.1246802223496395, -2.2997389064531992 0.9910302842862865, -2.34923155196477 0.8550503583141743 C-2.3987241974763407 0.7190704323420621, -2.436891307857981 0.5766288372196907, -2.4620193825305194 0.434120444167329 C-2.487147457203058 0.29161205111496724, -2.5 0.14470681472244545, -2.5 3.636830773662308e-15 C-2.5 -0.14470681472243818, -2.4871474572030587 -0.2916120511149599, -2.4620193825305208 -0.4341204441673218 C-2.436891307857983 -0.5766288372196837, -2.398724197476343 -0.7190704323420553, -2.3492315519647726 -0.8550503583141675 C-2.2997389064532023 -0.9910302842862798, -2.23741691682232 -1.1246802223496328, -2.165063509461099 -1.2499999999999956 C-2.092710102099878 -1.3753197776503583, -2.00812685533824 -1.4961171729167695, -1.9151111077974488 -1.606969024216344 C-1.8220953602566576 -1.7178208755159183, -1.7178208755159263 -1.82209536025665, -1.6069690242163523 -1.9151111077974416 C-1.4961171729167784 -2.0081268553382334, -1.3753197776503672 -2.0927101020998724, -1.2500000000000047 -2.1650635094610937 C-1.1246802223496422 -2.237416916822315, -0.9910302842862897 -2.299738906453198, -0.8550503583141776 -2.3492315519647686 C-0.7190704323420656 -2.3987241974763394, -0.5766288372196942 -2.4368913078579806, -0.43412044416733236 -2.462019382530519 C-0.29161205111497057 -2.4871474572030574, -0.1447068147224489 -2.4999999999999996, -7.120580697431198e-15 -2.5 C0.14470681472243463 -2.5000000000000004, 0.29161205111495647 -2.487147457203059, 0.4341204441673183 -2.4620193825305217 C0.5766288372196802 -2.436891307857984, 0.7190704323420518 -2.3987241974763442, 0.8550503583141642 -2.349231551964774 C0.9910302842862766 -2.2997389064532037, 1.1246802223496295 -2.2374169168223212, 1.2499999999999925 -2.165063509461101 C1.3753197776503554 -2.0927101020998804, 1.4961171729167668 -2.008126855338242, 1.6069690242163412 -1.915111107797451 C1.7178208755159157 -1.82209536025666, 1.8220953602566472 -1.7178208755159294, 1.915111107797439 -1.6069690242163557 C2.0081268553382308 -1.496117172916782, 2.09271010209987 -1.3753197776503712, 2.1650635094610915 -1.2500000000000089 C2.237416916822313 -1.1246802223496466, 2.299738906453196 -0.9910302842862939, 2.3492315519647673 -0.855050358314182 C2.3987241974763385 -0.71907043234207, 2.4368913078579792 -0.5766288372196986, 2.462019382530518 -0.4341204441673369 C2.487147457203057 -0.29161205111497523, 2.4936698970884197 -0.07235340736123454, 2.5 -1.1714553645825241e-14 C2.5063301029115803 0.07235340736121111, 2.50633010291158 -0.07235340736122292, 2.5 0" stroke="none" stroke-width="0" fill="#000" style=""/><path d="M2.5 0 C2.5 0.14470681472244193, 2.487147457203058 0.29161205111496386, 2.46201938253052 0.4341204441673258 C2.436891307857982 0.5766288372196877, 2.3987241974763416 0.7190704323420595, 2.3492315519647713 0.8550503583141718 C2.299738906453201 0.991030284286284, 2.2374169168223177 1.124680222349637, 2.165063509461097 1.2499999999999998 C2.092710102099876 1.3753197776503625, 2.0081268553382365 1.496117172916774, 1.915111107797445 1.6069690242163481 C1.8220953602566536 1.7178208755159223, 1.7178208755159226 1.8220953602566536, 1.6069690242163484 1.915111107797445 C1.4961171729167742 2.0081268553382365, 1.375319777650363 2.0927101020998755, 1.2500000000000002 2.1650635094610964 C1.1246802223496375 2.2374169168223172, 0.9910302842862845 2.2997389064532, 0.8550503583141721 2.349231551964771 C0.7190704323420597 2.3987241974763416, 0.576628837219688 2.436891307857982, 0.43412044416732604 2.46201938253052 C0.291612051114964 2.487147457203058, 0.14470681472244212 2.5, 1.5308084989341916e-16 2.5 C-0.1447068147224418 2.5, -0.2916120511149638 2.487147457203058, -0.43412044416732576 2.46201938253052 C-0.5766288372196877 2.436891307857982, -0.7190704323420595 2.3987241974763416, -0.8550503583141718 2.3492315519647713 C-0.991030284286284 2.299738906453201, -1.124680222349637 2.2374169168223177, -1.2499999999999996 2.165063509461097 C-1.375319777650362 2.092710102099876, -1.4961171729167733 2.008126855338237, -1.6069690242163475 1.9151111077974459 C-1.7178208755159217 1.8220953602566548, -1.822095360256653 1.7178208755159234, -1.9151111077974443 1.6069690242163495 C-2.0081268553382357 1.4961171729167755, -2.0927101020998746 1.3753197776503645, -2.1650635094610955 1.250000000000002 C-2.2374169168223164 1.1246802223496395, -2.2997389064531992 0.9910302842862865, -2.34923155196477 0.8550503583141743 C-2.3987241974763407 0.7190704323420621, -2.436891307857981 0.5766288372196907, -2.4620193825305194 0.434120444167329 C-2.487147457203058 0.29161205111496724, -2.5 0.14470681472244545, -2.5 3.636830773662308e-15 C-2.5 -0.14470681472243818, -2.4871474572030587 -0.2916120511149599, -2.4620193825305208 -0.4341204441673218 C-2.436891307857983 -0.5766288372196837, -2.398724197476343 -0.7190704323420553, -2.3492315519647726 -0.8550503583141675 C-2.2997389064532023 -0.9910302842862798, -2.23741691682232 -1.1246802223496328, -2.165063509461099 -1.2499999999999956 C-2.092710102099878 -1.3753197776503583, -2.00812685533824 -1.4961171729167695, -1.9151111077974488 -1.606969024216344 C-1.8220953602566576 -1.7178208755159183, -1.7178208755159263 -1.82209536025665, -1.6069690242163523 -1.9151111077974416 C-1.4961171729167784 -2.0081268553382334, -1.3753197776503672 -2.0927101020998724, -1.2500000000000047 -2.1650635094610937 C-1.1246802223496422 -2.237416916822315, -0.9910302842862897 -2.299738906453198, -0.8550503583141776 -2.3492315519647686 C-0.7190704323420656 -2.3987241974763394, -0.5766288372196942 -2.4368913078579806, -0.43412044416733236 -2.462019382530519 C-0.29161205111497057 -2.4871474572030574, -0.1447068147224489 -2.4999999999999996, -7.120580697431198e-15 -2.5 C0.14470681472243463 -2.5000000000000004, 0.29161205111495647 -2.487147457203059, 0.4341204441673183 -2.4620193825305217 C0.5766288372196802 -2.436891307857984, 0.7190704323420518 -2.3987241974763442, 0.8550503583141642 -2.349231551964774 C0.9910302842862766 -2.2997389064532037, 1.1246802223496295 -2.2374169168223212, 1.2499999999999925 -2.165063509461101 C1.3753197776503554 -2.0927101020998804, 1.4961171729167668 -2.008126855338242, 1.6069690242163412 -1.915111107797451 C1.7178208755159157 -1.82209536025666, 1.8220953602566472 -1.7178208755159294, 1.915111107797439 -1.6069690242163557 C2.0081268553382308 -1.496117172916782, 2.09271010209987 -1.3753197776503712, 2.1650635094610915 -1.2500000000000089 C2.237416916822313 -1.1246802223496466, 2.299738906453196 -0.9910302842862939, 2.3492315519647673 -0.855050358314182 C2.3987241974763385 -0.71907043234207, 2.4368913078579792 -0.5766288372196986, 2.462019382530518 -0.4341204441673369 C2.487147457203057 -0.29161205111497523, 2.4936698970884197 -0.07235340736123454, 2.5 -1.1714553645825241e-14 C2.5063301029115803 0.07235340736121111, 2.50633010291158 -0.07235340736122292, 2.5 0" stroke="#000" stroke-width="2" fill="none" stroke-dasharray="0 0" style=""/></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/component-state-lifecycle.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A component starts <strong>Idle</strong>, then enters
+<strong>Loading</strong> on mount or fetch. To avoid a flash of
+placeholder for fast responses, the skeleton only shows after ~150ms
+(<code>Loading → Skeleton</code>); a fast response goes straight to
+<strong>Content</strong>. A resolved fetch with zero rows becomes
+<strong>Empty</strong> (never a blank pane — an icon, a one‑line reason,
+and a primary action), and a failed fetch becomes <strong>Error</strong>
+(page‑level with retry, or field‑level inline).</p>
+<p>From <strong>Content</strong> the component can refetch (back to
+Loading), take keyboard focus (<strong>Focused</strong>, drawn with the
+verified <code>--focus-ring</code>), or — for forms — submit into
+<strong>Validating</strong>. A validating submit that the server accepts
+returns to Content with the optimistic value confirmed; one the server
+rejects with <code>4xx</code> field errors moves to
+<strong>InvalidInline</strong> (<code>--danger</code>,
+<code>aria-describedby</code> to the message), from which the user
+corrects and resubmits. <strong>Disabled</strong> covers RBAC‑gated or
+offline controls (muted, <code>aria-disabled</code>, not
+focus‑trapping). Retry and the empty‑state primary action both re‑enter
+Loading, so the loop is closed. Every arrow here is a <strong>test
+cell</strong>: the Challenges scenario banks (§9) drive a component
+through each transition and capture runtime evidence, and each terminal
+state is a row in the visual‑regression theme×state matrix.</p>
+<h2 id="component-contract-anatomy-props-states-a11y">6. Component
+contract (anatomy · props · states · a11y)</h2>
+<p>Every Thready component is documented to this contract. Worked
+example — <code>thready-processing-pipeline</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// thready-processing-pipeline — anatomy + props (Angular signal inputs) [DEFAULT — adjustable]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> ProcessingStep {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="st">&#39;classify&#39;</span><span class="op">|</span><span class="st">&#39;download&#39;</span><span class="op">|</span><span class="st">&#39;convert&#39;</span><span class="op">|</span><span class="st">&#39;analyze&#39;</span><span class="op">|</span><span class="st">&#39;research&#39;</span><span class="op">|</span><span class="st">&#39;reply&#39;</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  label<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  state<span class="op">:</span> <span class="st">&#39;queued&#39;</span><span class="op">|</span><span class="st">&#39;running&#39;</span><span class="op">|</span><span class="st">&#39;done&#39;</span><span class="op">|</span><span class="st">&#39;failed&#39;</span><span class="op">|</span><span class="st">&#39;skipped&#39;</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  progress<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span>        <span class="co">// 0..1 for running</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  error<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>@<span class="fu">Component</span>({ selector<span class="op">:</span> <span class="st">&#39;thready-processing-pipeline&#39;</span><span class="op">,</span> <span class="co">/* … */</span> })</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> ProcessingPipelineComponent {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  steps    <span class="op">=</span> input<span class="op">.</span><span class="fu">required</span><span class="op">&lt;</span>ProcessingStep[]<span class="op">&gt;</span>()<span class="op">;</span>     <span class="co">// ordered per precedence</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  precedence <span class="op">=</span> <span class="fu">input</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>(<span class="st">&#39;download &gt; convert &gt; analyze &gt; research &gt; reply&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  retryStep  <span class="op">=</span> <span class="fu">output</span><span class="op">&lt;</span>ProcessingStep[<span class="st">&#39;id&#39;</span>]<span class="op">&gt;</span>()<span class="op">;</span>       <span class="co">// idempotent single-claim retry</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong>Anatomy:</strong> ordered step rows (icon + label + state +
+optional progress), a precedence caption, and an inline retry on
+<code>failed</code>.</li>
+<li><strong>States:</strong> <code>queued</code> (muted),
+<code>running</code> (accent progress), <code>done</code> (success),
+<code>failed</code> (danger + retry), <code>skipped</code> (muted
+italic).</li>
+<li><strong>Events:</strong> binds <code>processing.progress</code> /
+<code>processing.completed</code> / <code>processing.failed</code> from
+WS/SSE.</li>
+<li><strong>A11y:</strong> each step is a list item with
+<code>aria-label</code> = “<code>label</code>: <code>state</code>”;
+progress uses <code>role="progressbar"</code> with
+<code>aria-valuenow</code>; the retry is a real
+<code>&lt;button&gt;</code> with a clear name; updates are announced via
+a polite live region; motion honors
+<code>prefers-reduced-motion</code>.</li>
+</ul>
+<p>The same contract (anatomy / props / all interaction states / a11y
+name+role+keyboard / theme light+dark) is authored for
+<strong>every</strong> component in §5 — this is the spec the Figma
+component set (<a href="./prototypes.md">prototypes.md</a>) and the
+implementation must both satisfy.</p>
+<h3 id="additional-component-contracts">6.1 Additional component
+contracts</h3>
+<p>The five most load‑bearing composites, to the same contract
+<code>[DEFAULT — adjustable API names, OPEN THREADY-DES-11]</code>:</p>
+<p><strong><code>thready-thread-row</code></strong> — one complete post
+(root + organic reply count).</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> ThreadRow {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  postId<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> author<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> excerpt<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> replyCount<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  tags<span class="op">:</span> HashTag[]<span class="op">;</span> status<span class="op">:</span> <span class="st">&#39;queued&#39;</span><span class="op">|</span><span class="st">&#39;running&#39;</span><span class="op">|</span><span class="st">&#39;processed&#39;</span><span class="op">|</span><span class="st">&#39;failed&#39;</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  hasSystemReplies<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span>                 <span class="co">// system replies are separated, not counted</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>@<span class="fu">Component</span>({ selector<span class="op">:</span> <span class="st">&#39;thready-thread-row&#39;</span> })</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> ThreadRowComponent {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  row     <span class="op">=</span> input<span class="op">.</span><span class="fu">required</span><span class="op">&lt;</span>ThreadRow<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  expanded <span class="op">=</span> <span class="fu">model</span>(<span class="kw">false</span>)<span class="op">;</span>                    <span class="co">// ▸/▾ discloses the organic reply chain inline</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  open     <span class="op">=</span> <span class="fu">output</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>()<span class="op">;</span>                <span class="co">// routes to Post detail</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong>Anatomy:</strong> excerpt + <code>↩︎N</code> reply count +
+hashtag chips + status badge + disclosure caret.</li>
+<li><strong>States:</strong> default / hover / focus‑visible / expanded
+/ running (inline % on the status badge) / failed (danger badge).
+<strong>A11y:</strong> row is a <code>role="button"</code> with
+<code>aria-expanded</code>; <code>Enter/Space</code> toggles disclosure,
+<code>→</code>/<code>←</code> expand/collapse; the count reads “12
+replies”.</li>
+</ul>
+<p><strong><code>thready-hashtag-chip</code></strong> — a tag with the
+<strong>direct vs. AI‑indirect</strong> distinction.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> HashTag { label<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> origin<span class="op">:</span> <span class="st">&#39;direct&#39;</span><span class="op">|</span><span class="st">&#39;indirect&#39;</span><span class="op">;</span> }</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// direct  = --brand fill / brand-ink; indirect = --muted outline + a &quot;derived&quot; tooltip.</span></span></code></pre></div>
+<ul>
+<li><strong>A11y:</strong> indirect chips append “(derived)” to the
+accessible name so the origin is not color‑only; chips are focusable
+when interactive (filter‑on‑click) and inert when decorative.</li>
+</ul>
+<p><strong><code>thready-search-bar</code></strong> — query + mode +
+scope + filters.</p>
+<ul>
+<li><strong>Props:</strong> <code>query = model&lt;string&gt;()</code>,
+<code>mode = model&lt;'semantic'|'keyword'|'hybrid'&gt;()</code>,
+<code>scope = model&lt;Scope[]&gt;()</code>, <code>filters</code>,
+<code>search = output&lt;SearchRequest&gt;()</code>.</li>
+<li><strong>States:</strong> idle (recent searches) / typing /
+validating (busy) / degraded (<code>--warn</code> banner + score column
+hidden when on the hash‑embedder <code>[GAP: 2.1]</code>).
+<strong>A11y:</strong> a labelled <code>role="search"</code>; mode is a
+radio group, scope a checkbox group with ≥ 1 enforced; results announced
+via a polite live region.</li>
+</ul>
+<p><strong><code>thready-wizard</code></strong> (stepper) — multi‑step
+flows (Add‑Channel).</p>
+<ul>
+<li><strong>Props:</strong> <code>steps</code>,
+<code>current = model&lt;number&gt;()</code>, per‑step
+<code>valid</code> guard, <code>complete = output()</code>.</li>
+<li><strong>Behavior:</strong> <em>Next</em> gated on step validity;
+<em>Back</em>/<code>Esc</code> never loses entered data.
+<strong>A11y:</strong> <code>aria-current="step"</code>; each step is a
+labelled region; the busy step sets <code>aria-busy</code>
+(Resolve).</li>
+</ul>
+<p><strong><code>thready-branding-editor</code></strong> + <strong>live
+AA meter</strong> — the white‑label surface.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> AccentCheck { hex<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> surface<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> ratio<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> passes<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span> suggestion<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span> }</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>@<span class="fu">Component</span>({ selector<span class="op">:</span> <span class="st">&#39;thready-branding-editor&#39;</span> })</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> BrandingEditorComponent {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  value  <span class="op">=</span> <span class="fu">model</span><span class="op">&lt;</span>Branding<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  aaLight <span class="op">=</span> <span class="fu">computed</span><span class="op">&lt;</span>AccentCheck<span class="op">&gt;</span>(() <span class="kw">=&gt;</span> <span class="fu">contrast</span>(<span class="kw">this</span><span class="op">.</span><span class="fu">value</span>()<span class="op">.</span><span class="at">accentLight</span><span class="op">,</span> <span class="st">&#39;#ffffff&#39;</span>))<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  aaDark  <span class="op">=</span> <span class="fu">computed</span><span class="op">&lt;</span>AccentCheck<span class="op">&gt;</span>(() <span class="kw">=&gt;</span> <span class="fu">contrast</span>(<span class="kw">this</span><span class="op">.</span><span class="fu">value</span>()<span class="op">.</span><span class="at">accentDark</span><span class="op">,</span>  <span class="st">&#39;#020817&#39;</span>))<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  save   <span class="op">=</span> <span class="fu">output</span><span class="op">&lt;</span>Branding<span class="op">&gt;</span>()<span class="op">;</span>                <span class="co">// disabled while any AccentCheck.passes === false</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong>Contract:</strong> the client meter and the server
+<code>ValidateAccent</code> gate <strong>MUST agree on the
+ratio</strong> (<a
+href="./theming.md#101-tdd-reproduce-first-red-then-green">theming
+§10.1</a>); a server <code>422</code> re‑opens the offending field.
+<strong>States:</strong> default / dirty (unsaved guard) / previewing /
+validating / <code>422</code> / success (audit‑logged).
+<strong>A11y:</strong> each swatch pairs a hex
+<code>&lt;input&gt;</code> with a color picker sharing one label; the AA
+readout is <code>aria-live="polite"</code> (“accent 3.1:1, below AA
+4.5:1 — try #446E12”).</li>
+</ul>
+<p><strong><code>thready-toast</code> / live‑region</strong> — async
+results + SR announcements.</p>
+<ul>
+<li><strong>Props:</strong>
+<code>kind: 'success'|'warn'|'danger'|'info'</code>,
+<code>message</code>, <code>action?</code>, <code>timeout</code>.</li>
+<li><strong>A11y:</strong> <code>role="status"</code> (polite) for
+info/success, <code>role="alert"</code> (assertive) for danger;
+auto‑dismiss pauses on hover/focus; never the only channel for a
+critical error (also inline).</li>
+</ul>
+<h2 id="perplatform-adapters">7. Per‑platform adapters</h2>
+<p>The composites are specified once and realized per platform from the
+same tokens. Honest status:</p>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 41%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Realization</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Angular (Web/Desktop)</strong></td>
+<td>Standalone Angular components on <code>.ds-*</code> + adapters</td>
+<td>Primary; <strong>Web first</strong> <code>[OPERATOR]</code></td>
+</tr>
+<tr>
+<td><strong>React</strong></td>
+<td><code>UI-Components-React</code></td>
+<td><code>SCAFFOLD/FLAGGED</code> <code>[GAP: 8.6]</code> — re‑audit
+before use</td>
+</tr>
+<tr>
+<td><strong>KMP/Compose</strong></td>
+<td><code>UI-Components-KMP</code> + token bridge</td>
+<td><code>SCAFFOLD</code>, <strong>no CI/publish</strong>
+<code>[GAP: 8.4]</code></td>
+</tr>
+<tr>
+<td><strong>Flutter / Qt‑Aurora</strong></td>
+<td><code>helix_design</code> + <code>helix_ui</code></td>
+<td><code>SCAFFOLD</code> <code>[GAP: 8.2/8.3]</code>; Qt/ArkTS via
+<code>helix_shims</code> <code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td><strong>TUI</strong></td>
+<td>Lipgloss component styles</td>
+<td>pattern exists
+<code>[VERIFIED — helix_track/llms_verifier/.../tui]</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cross‑platform component parity is a contract, not an
+aspiration:</strong> each composite’s states and a11y semantics must
+match across platforms (a <code>processing-pipeline</code> behaves the
+same on Web, Compose and the TUI). Parity is enforced by the
+visual‑regression bank (§9) once CI lands <code>[GAP: 9.3]</code>.</p>
+<h3 id="percomponent-variant-matrix-all-platforms">7.1 Per‑component
+variant matrix (all platforms)</h3>
+<p>Each composite is realized per platform from the same tokens. The
+cell records the <strong>realization mechanism</strong> and honest
+<strong>status</strong>; a blank/<code>—</code> means “renders as its
+primitives, no bespoke work”. Legend: ✅ usable today · ◐
+scaffold/needs‑hardening · ○ not‑yet / deferred.</p>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 18%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Composite</th>
+<th>Angular (Web/Desktop) ✅</th>
+<th>React ◐ <code>[GAP: 8.6]</code></th>
+<th>KMP/Compose ◐ <code>[GAP: 8.4]</code></th>
+<th>Flutter/Qt ◐ <code>[GAP: 8.2/8.3]</code></th>
+<th>TUI ✅ <code>[VERIFIED]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stat-card</code></td>
+<td><code>.ds-card</code> + type tokens ✅</td>
+<td>Card ◐</td>
+<td><code>Card</code>/<code>Surface</code> ◐</td>
+<td><code>Card</code> ○</td>
+<td>Lipgloss bordered box ✅</td>
+</tr>
+<tr>
+<td><code>thread-row</code> / <code>reply-chain</code></td>
+<td>standalone cmp ✅</td>
+<td>list item ◐</td>
+<td><code>LazyColumn</code> row ◐</td>
+<td><code>ListTile</code> ○</td>
+<td>list row + disclosure ✅</td>
+</tr>
+<tr>
+<td><code>hashtag-chip</code> (direct/indirect)</td>
+<td><code>.ds-badge</code> variants ✅</td>
+<td>badge ◐</td>
+<td><code>AssistChip</code> ◐</td>
+<td><code>Chip</code> ○</td>
+<td>tinted <code>#tag</code> span ✅</td>
+</tr>
+<tr>
+<td><code>processing-pipeline</code></td>
+<td>signal‑input cmp ✅</td>
+<td>◐</td>
+<td><code>Column</code> of step rows ◐</td>
+<td>○</td>
+<td>vertical step list ✅</td>
+</tr>
+<tr>
+<td><code>progress</code> + retry</td>
+<td><code>&lt;progress&gt;</code>/<code>.ds-btn--ghost</code> ✅</td>
+<td>◐</td>
+<td><code>LinearProgressIndicator</code> ◐</td>
+<td><code>LinearProgressIndicator</code> ○</td>
+<td><code>▓▓░</code> bar + <code>[r]etry</code> ✅</td>
+</tr>
+<tr>
+<td><code>status-badge</code></td>
+<td><code>.ds-badge</code> semantics ✅</td>
+<td>◐</td>
+<td>badge ◐</td>
+<td>badge ○</td>
+<td>glyph <code>✓⭮◷⚠</code> ✅</td>
+</tr>
+<tr>
+<td><code>search-bar</code> + filters</td>
+<td><code>.ds-input</code> + chips ✅</td>
+<td>◐</td>
+<td><code>SearchBar</code> ◐</td>
+<td><code>TextField</code> ○</td>
+<td>query line + selectors ✅</td>
+</tr>
+<tr>
+<td><code>search-result</code></td>
+<td>list row ✅</td>
+<td>◐</td>
+<td>row ◐</td>
+<td>row ○</td>
+<td>scored row ✅</td>
+</tr>
+<tr>
+<td><code>asset-card</code> / <code>media-viewer</code></td>
+<td><code>&lt;video&gt;</code> + Range/HLS ✅</td>
+<td>◐</td>
+<td><code>ExoPlayer</code>/<code>AVPlayer</code> ◐</td>
+<td>platform player ○</td>
+<td>(link‑out; no inline media) ◐</td>
+</tr>
+<tr>
+<td><code>wizard</code> (stepper)</td>
+<td><code>.ds-card</code> steps ✅</td>
+<td>◐</td>
+<td><code>HorizontalPager</code> ◐</td>
+<td><code>Stepper</code> ○</td>
+<td>numbered steps ✅</td>
+</tr>
+<tr>
+<td><code>account-switcher</code></td>
+<td>menu on <code>.ds-nav</code> ✅</td>
+<td>◐</td>
+<td><code>DropdownMenu</code> ◐</td>
+<td><code>PopupMenu</code> ○</td>
+<td><code>acct:</code> selector ✅</td>
+</tr>
+<tr>
+<td><code>branding-editor</code> + AA meter</td>
+<td>inputs + swatches ✅</td>
+<td>◐</td>
+<td>color pickers ◐</td>
+<td>○</td>
+<td>(read‑only preview) ◐</td>
+</tr>
+<tr>
+<td><code>messenger-signin</code></td>
+<td>form + <code>.ds-btn</code> ✅</td>
+<td>◐</td>
+<td>form ◐</td>
+<td>form ○</td>
+<td>prompt sequence ✅</td>
+</tr>
+<tr>
+<td><code>toast</code> / live‑region</td>
+<td>ARIA live ✅</td>
+<td>◐</td>
+<td><code>Snackbar</code> ◐</td>
+<td><code>SnackBar</code> ○</td>
+<td><code>notifications.go</code> pane ✅</td>
+</tr>
+<tr>
+<td><code>empty</code> / <code>skeleton</code></td>
+<td>tokens ✅</td>
+<td>◐</td>
+<td>shimmer/placeholder ◐</td>
+<td>shimmer ○</td>
+<td>text placeholder ✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to read the honesty here.</strong> Only the
+<strong>Angular</strong> and <strong>TUI</strong> columns are grounded
+in usable in‑house code today (the <code>.ds-*</code> set + adapters,
+and the verified Bubble Tea/Lipgloss pattern). The
+<strong>KMP/Compose</strong>, <strong>Flutter/Qt</strong> and
+<strong>React</strong> columns are the <em>plan</em> on scaffolds —
+their status badges are the gap‑register reality
+(<code>[GAP: 8.2/8.3/8.4/8.6]</code>), and the token bridge (§7) is what
+makes a Compose/Flutter cell a re‑tint rather than a re‑author. A cell
+is only marked ✅ when its platform package is real; nothing in a ◐/○
+column may be claimed to “work” until its workable item (§10) closes.
+Two intentional non‑parity cells: the TUI <code>media-viewer</code> and
+<code>branding-editor</code> are link‑out / read‑only (a terminal cannot
+show inline video or a live color picker), which is a documented, tested
+divergence rather than a missing state.</p>
+<h2 id="states-emptyskeletonerror">8. States, empty/skeleton/error</h2>
+<p>Uniform, reusable states (the request demands “full forms
+validations, hints, tooltips”):</p>
+<ul>
+<li><strong>Empty:</strong> <code>thready-empty</code> — icon + one‑line
+explanation + a primary action (e.g. “Add your first channel”). Never a
+blank screen.</li>
+<li><strong>Skeleton:</strong> <code>thready-skeleton</code> —
+token‑tinted placeholder blocks during load (respects reduced motion —
+static shimmer off).</li>
+<li><strong>Error:</strong> inline (<code>--danger</code>, field‑level,
+with hint) and page‑level (<code>thready-error</code> with retry).</li>
+<li><strong>Validation:</strong> synchronous + server‑side; messages are
+specific and actionable (e.g. branding accent “6.03:1 needed, got 3.1:1
+— try #446E12”).</li>
+<li><strong>Tooltips/hints:</strong> on every non‑obvious control;
+keyboard‑reachable, SR‑described.</li>
+</ul>
+<h2 id="testing-the-library">9. Testing the library</h2>
+<p>Per <code>[CONSTITUTION §11.4.27/162]</code> and <a
+href="../testing/index.md">../testing/index.md</a>:</p>
+<ul>
+<li><strong>Unit</strong> (Jasmine/Karma) — component logic,
+inputs/outputs.</li>
+<li><strong>a11y</strong> (<code>cypress-axe</code>/Playwright+axe) —
+zero critical violations per component/state.</li>
+<li><strong>Visual‑regression</strong> — <code>ScreenDiff</code> (pixel)
++ <code>VisualRegression</code> (LLM‑vision) across the theme×state
+matrix (§ design-system.md §8);
+<strong><code>ReplayBuffer</code></strong> for interaction sequences.
+The family has <strong>no CI today</strong> <code>[GAP: 9.3]</code> →
+workable item THREADY‑DES‑VR‑01 adds it.</li>
+<li><strong>Interaction</strong> (Cypress/Playwright) — the flows in <a
+href="./ux-flows.md">ux-flows.md</a>.</li>
+<li><strong>Challenges</strong> (<code>vasic-digital/challenges</code>)
+— one of the 15 mandated test types
+<code>[CONSTITUTION §11.4.27]</code>. Author Thready UI/UX
+<strong>scenario banks</strong> (adversarial/edge‑case decks: a 40‑step
+reply chain, an all‑<code>failed</code> pipeline, a 12‑hashtag post, RTL
++ Cyrillic overflow, a white‑label accent at the 4.5:1 boundary) run
+against the real component tree. This is the second half of
+<code>[GAP: 9.3]</code> (the first half is CI for the visual‑regression
+family) → workable item <strong>THREADY‑DES‑CHAL‑01</strong>.</li>
+<li><strong>Runtime evidence mandatory</strong> (HelixQA anti‑bluff):
+screenshots + DOM snapshot + axe report per case — a green test proves
+real rendering, not a stub.</li>
+</ul>
+<p><strong>TDD reproduce‑first (RED → GREEN)
+<code>[CONSTITUTION §11.4.27/43]</code>.</strong> Every component test
+starts as a <strong>failing RED test that reproduces the
+defect</strong>, then the component is implemented/fixed to GREEN, then
+the case matrix (§6) is filled in. Worked example — the
+<code>thready-processing-pipeline</code> invariant “a
+<strong>failed</strong> step MUST expose a keyboard‑focusable retry, and
+retry MUST be idempotent (single claim, never double‑process)”:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// processing-pipeline.spec.ts — RED FIRST (written before the component/behavior exists).</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { render<span class="op">,</span> <span class="bu">screen</span> } <span class="im">from</span> <span class="st">&#39;@testing-library/angular&#39;</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> userEvent <span class="im">from</span> <span class="st">&#39;@testing-library/user-event&#39;</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { ProcessingPipelineComponent } <span class="im">from</span> <span class="st">&#39;./processing-pipeline.component&#39;</span><span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">describe</span>(<span class="st">&#39;thready-processing-pipeline (reproduce-first)&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">it</span>(<span class="st">&#39;RED: a failed step exposes a focusable retry button&#39;</span><span class="op">,</span> <span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> emitted<span class="op">:</span> <span class="dt">string</span>[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> <span class="fu">render</span>(ProcessingPipelineComponent<span class="op">,</span> {</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      inputs<span class="op">:</span> { steps<span class="op">:</span> [{ id<span class="op">:</span> <span class="st">&#39;convert&#39;</span><span class="op">,</span> label<span class="op">:</span> <span class="st">&#39;convert&#39;</span><span class="op">,</span> state<span class="op">:</span> <span class="st">&#39;failed&#39;</span> }] }<span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      on<span class="op">:</span> { retryStep<span class="op">:</span> (id<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> emitted<span class="op">.</span><span class="fu">push</span>(id) }<span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> retry <span class="op">=</span> <span class="bu">screen</span><span class="op">.</span><span class="fu">getByRole</span>(<span class="st">&#39;button&#39;</span><span class="op">,</span> { name<span class="op">:</span> <span class="ss">/retry/i</span> })<span class="op">;</span> <span class="co">// FAILS until the button exists → RED</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    retry<span class="op">.</span><span class="fu">focus</span>()<span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect</span>(<span class="bu">document</span><span class="op">.</span><span class="at">activeElement</span>)<span class="op">.</span><span class="fu">toBe</span>(retry)<span class="op">;</span>                    <span class="co">// keyboard-reachable</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// EXTEND: retry is single-claim/idempotent — double activation emits exactly one retry.</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> userEvent<span class="op">.</span><span class="fu">click</span>(retry)<span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> userEvent<span class="op">.</span><span class="fu">click</span>(retry)<span class="op">;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect</span>(emitted)<span class="op">.</span><span class="fu">toEqual</span>([<span class="st">&#39;convert&#39;</span>])<span class="op">;</span> <span class="co">// debounced/disabled-after-claim; never double-processes [§3.3]</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">it</span>(<span class="st">&#39;a running step announces progress via role=progressbar with aria-valuenow&#39;</span><span class="op">,</span> <span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> <span class="fu">render</span>(ProcessingPipelineComponent<span class="op">,</span> {</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>      inputs<span class="op">:</span> { steps<span class="op">:</span> [{ id<span class="op">:</span> <span class="st">&#39;download&#39;</span><span class="op">,</span> label<span class="op">:</span> <span class="st">&#39;download&#39;</span><span class="op">,</span> state<span class="op">:</span> <span class="st">&#39;running&#39;</span><span class="op">,</span> progress<span class="op">:</span> <span class="fl">0.63</span> }] }<span class="op">,</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> bar <span class="op">=</span> <span class="bu">screen</span><span class="op">.</span><span class="fu">getByRole</span>(<span class="st">&#39;progressbar&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect</span>(bar)<span class="op">.</span><span class="fu">toHaveAttribute</span>(<span class="st">&#39;aria-valuenow&#39;</span><span class="op">,</span> <span class="st">&#39;63&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># per-component contract test (excerpt)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">component</span><span class="kw">:</span><span class="at"> thready-processing-pipeline</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cases</span><span class="kw">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">state</span><span class="kw">:</span><span class="at"> running,   step: download, progress: 0.63, expect: [progressbar aria-valuenow=63, no-retry]</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">state</span><span class="kw">:</span><span class="at"> failed,    step: convert,  expect: [danger badge, retry button focusable, axe: 0 critical]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-light</span><span class="kw">,</span><span class="at"> thready-dark</span><span class="kw">]</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">reduced_motion</span><span class="kw">:</span><span class="at"> true, expect: no-animation</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">evidence</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">screenshot</span><span class="kw">,</span><span class="at"> dom-snapshot</span><span class="kw">,</span><span class="at"> axe-report</span><span class="kw">]</span></span></code></pre></div>
+<h2 id="build-backlog-gaps">10. Build backlog &amp; gaps</h2>
+<p>Ordered by the <strong>Web + CLI first</strong> priority
+<code>[OPERATOR]</code>:</p>
+<ol type="1">
+<li><strong>THREADY‑DES‑WEB‑01</strong> — Angular composite set (§5) on
+the published <code>design_system</code> primitives. Blocks on
+<code>[GAP: 8.1]</code> (publish
+<code>@vasic-digital/design-system</code> to npm) — until then consume
+via git dependency.</li>
+<li><strong>THREADY‑DES‑TUI‑01</strong> — Lipgloss component styles from
+the token export (<code>[VERIFIED]</code> pattern).</li>
+<li><strong>THREADY‑DES‑VR‑01</strong> — CI for the visual‑regression
+family <code>[GAP: 9.3]</code>.</li>
+<li><strong>THREADY‑DES‑CHAL‑01</strong> — Thready UI/UX
+<strong>Challenges</strong> scenario banks (mandated test type,
+<code>vasic-digital/challenges</code>) — the second half of
+<code>[GAP: 9.3]</code> <code>[CONSTITUTION §11.4.27]</code>.</li>
+<li><strong>THREADY‑DES‑KMP‑01</strong> — <code>UI-Components-KMP</code>
+CI + Maven publish + token bridge <code>[GAP: 8.4]</code>.</li>
+<li><strong>THREADY‑DES‑FLUT‑01 / ‑QT‑01</strong> —
+<code>helix_design</code> per‑platform packages
+<code>[GAP: 8.2/8.3]</code>; native ArkTS/Qt via
+<code>helix_shims</code> <code>[GAP: 8.5]</code>.</li>
+<li><strong>THREADY‑DES‑REACT‑01</strong> — only if a React surface is
+required; re‑audit <code>UI-Components-React</code> first
+<code>[GAP: 8.6]</code>.</li>
+</ol>
+<p><strong>Honesty:</strong> only the Web (Angular) and TUI (Lipgloss)
+realizations are grounded in verified, usable in‑house code today. Every
+other platform’s component package is a <strong>scaffold</strong> — do
+not claim those components work until their workable item closes.</p>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-11]</code> — finalize the Thready composite
+public API names with the web implementation team (names here are
+<code>[DEFAULT — adjustable]</code>).</li>
+<li><code>[OPEN: THREADY-DES-12]</code> — decide which composites are
+generic enough to contribute upstream to <code>design_system</code>
+vs. keep in Thready’s package.</li>
+<li><code>[OPEN: THREADY-DES-04]</code> — Cyrillic font‑subset
+verification affects text‑bearing components.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

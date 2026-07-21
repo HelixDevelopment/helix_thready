@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Rootless Podman Compose Runtime</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Rootless Podman Compose Runtime</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#why-rootless-podman-constraint"
+id="toc-why-rootless-podman-constraint">1. Why rootless Podman
+(constraint)</a></li>
+<li><a href="#compose-command-detection"
+id="toc-compose-command-detection">2. Compose command detection</a></li>
+<li><a href="#compose-file-layout" id="toc-compose-file-layout">3.
+Compose file layout</a></li>
+<li><a href="#the-containers-orchestration-api"
+id="toc-the-containers-orchestration-api">4. The containers
+orchestration API</a></li>
+<li><a href="#boot-sequence-diagram" id="toc-boot-sequence-diagram">5.
+Boot sequence diagram</a></li>
+<li><a href="#health-gating" id="toc-health-gating">6. Health gating</a>
+<ul>
+<li><a href="#operational-health-api-openapi-3.1"
+id="toc-operational-health-api-openapi-3.1">6.1 Operational health API
+(OpenAPI 3.1)</a></li>
+<li><a href="#reproduce-first-health-gate-test-tdd"
+id="toc-reproduce-first-health-gate-test-tdd">6.2 Reproduce-first
+health-gate test (TDD)</a></li>
+</ul></li>
+<li><a href="#rootless-systemd-integration-linger-quadlet"
+id="toc-rootless-systemd-integration-linger-quadlet">7. Rootless systemd
+integration (linger + quadlet)</a></li>
+<li><a href="#bringing-a-stack-up-down-commands"
+id="toc-bringing-a-stack-up-down-commands">8. Bringing a stack up / down
+(commands)</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">9.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Rootless Podman Compose Runtime
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/podman-compose.md
+  Status          : Review — v0.2
+  Revision        : 2 (2026-07-21)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./container-topology.md, ./deploy-and-rollback.md,
+                    ./hetzner-provisioning.md, ../testing/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial rootless runtime + <code>containers</code> boot/orchestrator
+API + compose layout + health gating</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (deployment review)</td>
+<td>Fixed the boot-diagram <code>--wait</code> contradiction; added the
+OpenAPI 3.1 operational health contract; split the boot-sequence prose
+into multiple paragraphs</td>
+</tr>
+</tbody>
+</table>
+<p>This document specifies <strong>how</strong> the Thready stacks run:
+the rootless Podman runtime, the <code>vasic-digital/containers</code>
+orchestration API (<code>pkg/boot</code>, <code>pkg/compose</code>,
+<code>pkg/health</code>), the compose-file layout, and the health-gated
+boot sequence. It is the mechanism layer beneath <a
+href="./container-topology.md">container-topology.md</a> (what runs) and
+<a href="./deploy-and-rollback.md">deploy-and-rollback.md</a> (how a
+release is applied).</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-why-rootless-podman-constraint">Why rootless Podman
+(constraint)</a></li>
+<li><a href="#2-compose-command-detection">Compose command
+detection</a></li>
+<li><a href="#3-compose-file-layout">Compose file layout</a></li>
+<li><a href="#4-the-containers-orchestration-api">The containers
+orchestration API</a></li>
+<li><a href="#5-boot-sequence-diagram">Boot sequence diagram</a></li>
+<li><a href="#6-health-gating">Health gating</a>
+<ul>
+<li><a href="#61-operational-health-api-openapi-31">6.1 Operational
+health API (OpenAPI 3.1)</a></li>
+<li><a href="#62-reproduce-first-health-gate-test-tdd">6.2
+Reproduce-first health-gate test (TDD)</a></li>
+</ul></li>
+<li><a href="#7-rootless-systemd-integration-linger--quadlet">Rootless
+systemd integration (linger + quadlet)</a></li>
+<li><a href="#8-bringing-a-stack-up--down-commands">Bringing a stack up
+/ down (commands)</a></li>
+<li><a href="#9-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="why-rootless-podman-constraint">1. Why rootless Podman
+(constraint)</h2>
+<p><code>[CONSTITUTION §11.4.76/161]</code> makes <strong>rootless
+Podman the sole container orchestration layer</strong> — no Docker
+daemon, no <code>sudo</code>, no root in the runtime path. This is not a
+preference; it is mandated. Consequences that shape everything
+below:</p>
+<ul>
+<li>Containers run in the <code>thready</code> user’s namespace;
+UIDs/GIDs are mapped via <code>/etc/subuid</code> and
+<code>/etc/subgid</code> (set once during <a
+href="./hetzner-provisioning.md">provisioning</a>).</li>
+<li>Binding privileged ports (80/443) from a rootless container requires
+either lowering <code>net.ipv4.ip_unprivileged_port_start</code> (the
+chosen default) or a port-forward helper — a one-time
+<strong>root</strong> provisioning step, never a runtime one.</li>
+<li>Persistent state lives under
+<code>/home/thready/.local/share/containers/</code> — this directory is
+part of the <a href="./backup-dr.md">backup plan</a>.</li>
+<li>The runtime survives logout only if <strong>lingering</strong> is
+enabled (<code>loginctl enable-linger thready</code>), see <a
+href="#7-rootless-systemd-integration-linger--quadlet">§7</a>.</li>
+</ul>
+<h2 id="compose-command-detection">2. Compose command detection</h2>
+<p>The <code>containers</code> module’s <code>pkg/compose</code>
+orchestrator auto-detects the compose command and is
+<strong>Podman-first aware</strong>. This is a real, subtle correctness
+property verified in <code>pkg/compose/orchestrator.go</code>:</p>
+<ul>
+<li><code>detectComposeCmd()</code> probes
+<code>{"docker", ["compose"]}</code> first, then
+<code>podman compose</code>, then standalone
+<code>podman-compose</code>, then <code>docker-compose</code> v1.</li>
+<li>On a <strong>podman-docker compatibility-shim</strong> host,
+<code>docker compose version</code> exits 0 by silently re-execing into
+podman — so the orchestrator also <strong>inspects the combined
+stdout/stderr for a podman banner</strong> and reclassifies the backend
+as podman even when the literal command is <code>docker</code>. Without
+this, <code>Status()</code> and <code>Up(WithWait)</code> would take
+docker-native code paths against a podman backend and break.</li>
+<li><code>isPodmanComposeCmd()</code> distinguishes the standalone
+<code>podman-compose</code> tool (which lacks <code>up --wait</code> and
+emits podman-native JSON from <code>ps</code>) from the
+docker-compose-compatible <code>podman compose</code> provider.</li>
+</ul>
+<p><strong>For Thready we target the standalone
+<code>podman-compose</code> tool</strong> installed rootless during
+provisioning, and we do <strong>not</strong> rely on
+<code>up --wait</code> (which <code>podman-compose</code> lacks); the
+boot sequence uses the <code>containers</code> health checker for
+readiness gating instead (see <a href="#6-health-gating">§6</a>).
+<code>[VERIFIED: containers/pkg/compose/orchestrator.go]</code></p>
+<h2 id="compose-file-layout">3. Compose file layout</h2>
+<p>On the host, under <code>/home/thready</code>, the layout is one
+directory per environment plus a shared edge:</p>
+<pre><code>/home/thready/
+├── edge/                          # host-wide reverse proxy (spans all envs)
+│   ├── compose.edge.yml
+│   ├── Caddyfile
+│   └── certs/                     # live certs installed by lets_encrypt deploy-hook
+├── dev/
+│   ├── compose.thready.dev.yml    # dev stack (port band 60xxx)
+│   ├── .env                       # dev secrets (chmod 600, gitignored)
+│   └── config/
+├── sta/
+│   ├── compose.thready.sta.yml    # sta stack (port band 61xxx)
+│   ├── .env
+│   └── config/
+├── prod/
+│   ├── compose.thready.prod.yml   # prod stack (port band 62xxx)
+│   ├── .env
+│   └── config/
+├── secrets/
+│   └── api_keys.sh                # runtime-sourced API keys (chmod 600)
+└── submodules/
+    ├── containers/                # vasic-digital/containers (deploy tooling)
+    └── lets_encrypt/              # vasic-digital/lets_encrypt</code></pre>
+<p>Each <code>compose.thready.&lt;env&gt;.yml</code> is generated from
+the <code>[]compose.HelixService</code> model (<a
+href="./container-topology.md#10-modelling-the-stack-with-the-containers-api">container-topology.md
+§10</a>) or hand-authored to the same shape. The project name is
+<code>thready-&lt;env&gt;</code>, which namespaces every container,
+network and volume so the three environments cannot collide. A
+representative fragment:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compose.thready.prod.yml (fragment)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> thready-prod</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-postgres</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/library/postgres:17-alpine</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> ${THREADY_PROD_PG_USER}</span><span class="co">         # injected from ./.env — never a literal</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> ${THREADY_PROD_PG_PASSWORD}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> thready</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62432:5432&quot;</span><span class="co">                        # host port from port_prefix band 62</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-prod-pgdata:/var/lib/postgresql/data</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-prod-pgwal:/var/lib/postgresql/wal</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U $${POSTGRES_USER} -d thready&quot;</span><span class="kw">]</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">resources</span><span class="kw">:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;6.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 24g </span><span class="kw">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-net</span><span class="kw">:</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> bridge</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-pgdata</span><span class="kw">:</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-pgwal</span><span class="kw">:</span></span></code></pre></div>
+<blockquote>
+<p>The <code>127.0.0.1:62432:5432</code> host binding is
+<strong>loopback-only</strong> and its host port <code>62432</code> is
+the deterministic <code>port_prefix</code> mapping of internal
+<code>5432</code> in prod’s band <code>62</code> (see <a
+href="./service-discovery-ports.md">service-discovery-ports.md</a>).</p>
+</blockquote>
+<h2 id="the-containers-orchestration-api">4. The containers
+orchestration API</h2>
+<p>Thready drives compose through the <strong>verified</strong>
+<code>containers</code> interfaces rather than shelling out ad hoc, so
+it gets the podman-aware detection, health gating and rollback for
+free.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// VERIFIED signatures from vasic-digital/containers.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> compose</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ComposeOrchestrator <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Up<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> project ComposeProject<span class="op">,</span> opts <span class="op">...</span>UpOption<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Down<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> project ComposeProject<span class="op">,</span> opts <span class="op">...</span>DownOption<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Status<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> project ComposeProject<span class="op">)</span> <span class="op">([]</span>ServiceStatus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Logs<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> project ComposeProject<span class="op">,</span> service <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>io<span class="op">.</span>ReadCloser<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ComposeProject <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    Name     <span class="dt">string</span>   <span class="co">// --project-name  → &quot;thready-prod&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    File     <span class="dt">string</span>   <span class="co">// path to compose.thready.prod.yml</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    Profile  <span class="dt">string</span>   <span class="co">// &quot;&quot; for the default profile; &quot;buildnew&quot; is excluded</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    Services <span class="op">[]</span><span class="dt">string</span> <span class="co">// empty = all services</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Bring-up options (verified from <code>pkg/compose/options.go</code>):
+<code>WithUpDetach(true)</code>, <code>WithRemoveOrphans(true)</code>,
+<code>WithForceRecreate(bool)</code>,
+<code>WithUpTimeout(seconds)</code>. <code>WithWait(true)</code> is
+available for docker-compose backends but is a <strong>no-op
+guard</strong> on standalone <code>podman-compose</code>, which is
+exactly why Thready gates readiness with <code>pkg/health</code>
+instead.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>orch<span class="op">,</span> err <span class="op">:=</span> compose<span class="op">.</span>NewDefaultOrchestrator<span class="op">(</span>logging<span class="op">.</span>NopLogger<span class="op">{})</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>proj <span class="op">:=</span> compose<span class="op">.</span>ComposeProject<span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span> <span class="st">&quot;thready-prod&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    File<span class="op">:</span> <span class="st">&quot;/home/thready/prod/compose.thready.prod.yml&quot;</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// buildnew placeholders are excluded by NOT selecting that profile.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> orch<span class="op">.</span>Up<span class="op">(</span>ctx<span class="op">,</span> proj<span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    compose<span class="op">.</span>WithUpDetach<span class="op">(</span><span class="ot">true</span><span class="op">),</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    compose<span class="op">.</span>WithRemoveOrphans<span class="op">(</span><span class="ot">true</span><span class="op">),</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    compose<span class="op">.</span>WithUpTimeout<span class="op">(</span><span class="dv">1800</span><span class="op">),</span> <span class="co">// image build can be slow</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="boot-sequence-diagram">5. Boot sequence diagram</h2>
+<p>The <code>pkg/boot.BootManager</code> wraps discovery + compose-up +
+health-check + rollback into one gated sequence. It is the primitive the
+<a href="./deploy-and-rollback.md">deploy script</a> calls.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="max-width: 1924.5px; background-color: white;" viewBox="-50 -10 1924.5 865" role="graphics-document document" aria-roledescription="sequence"><g><rect x="1638.5" y="779" fill="#eaeaea" stroke="#666" width="186" height="65" name="HC" rx="3" ry="3" class="actor actor-bottom"/><text x="1731.5" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1731.5" dy="0">pkg/health.HealthChecker</tspan></text></g><g><rect x="1394.5" y="779" fill="#eaeaea" stroke="#666" width="194" height="65" name="Pod" rx="3" ry="3" class="actor actor-bottom"/><text x="1491.5" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1491.5" dy="0">podman-compose (rootless)</tspan></text></g><g><rect x="936" y="779" fill="#eaeaea" stroke="#666" width="247" height="65" name="Orch" rx="3" ry="3" class="actor actor-bottom"/><text x="1059.5" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1059.5" dy="0">pkg/compose.ComposeOrchestrator</tspan></text></g><g><rect x="704" y="779" fill="#eaeaea" stroke="#666" width="182" height="65" name="Disc" rx="3" ry="3" class="actor actor-bottom"/><text x="795" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="795" dy="0">pkg/discovery.Discoverer</tspan></text></g><g><rect x="282" y="779" fill="#eaeaea" stroke="#666" width="236" height="65" name="Boot" rx="3" ry="3" class="actor actor-bottom"/><text x="400" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="400" dy="0">containers pkg/boot.BootManager</tspan></text></g><g><rect x="0" y="779" fill="#eaeaea" stroke="#666" width="150" height="65" name="Op" rx="3" ry="3" class="actor actor-bottom"/><text x="75" y="811.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Operator / deploy.sh</tspan></text></g><g><line id="actor5" x1="1731.5" y1="65" x2="1731.5" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="HC" data-et="life-line" data-id="HC"/><g id="root-5" data-et="participant" data-type="participant" data-id="HC"><rect x="1638.5" y="0" fill="#eaeaea" stroke="#666" width="186" height="65" name="HC" rx="3" ry="3" class="actor actor-top"/><text x="1731.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1731.5" dy="0">pkg/health.HealthChecker</tspan></text></g></g><g><line id="actor4" x1="1491.5" y1="65" x2="1491.5" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Pod" data-et="life-line" data-id="Pod"/><g id="root-4" data-et="participant" data-type="participant" data-id="Pod"><rect x="1394.5" y="0" fill="#eaeaea" stroke="#666" width="194" height="65" name="Pod" rx="3" ry="3" class="actor actor-top"/><text x="1491.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1491.5" dy="0">podman-compose (rootless)</tspan></text></g></g><g><line id="actor3" x1="1059.5" y1="65" x2="1059.5" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Orch" data-et="life-line" data-id="Orch"/><g id="root-3" data-et="participant" data-type="participant" data-id="Orch"><rect x="936" y="0" fill="#eaeaea" stroke="#666" width="247" height="65" name="Orch" rx="3" ry="3" class="actor actor-top"/><text x="1059.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1059.5" dy="0">pkg/compose.ComposeOrchestrator</tspan></text></g></g><g><line id="actor2" x1="795" y1="65" x2="795" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Disc" data-et="life-line" data-id="Disc"/><g id="root-2" data-et="participant" data-type="participant" data-id="Disc"><rect x="704" y="0" fill="#eaeaea" stroke="#666" width="182" height="65" name="Disc" rx="3" ry="3" class="actor actor-top"/><text x="795" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="795" dy="0">pkg/discovery.Discoverer</tspan></text></g></g><g><line id="actor1" x1="400" y1="65" x2="400" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Boot" data-et="life-line" data-id="Boot"/><g id="root-1" data-et="participant" data-type="participant" data-id="Boot"><rect x="282" y="0" fill="#eaeaea" stroke="#666" width="236" height="65" name="Boot" rx="3" ry="3" class="actor actor-top"/><text x="400" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="400" dy="0">containers pkg/boot.BootManager</tspan></text></g></g><g><line id="actor0" x1="75" y1="65" x2="75" y2="779" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Op" data-et="life-line" data-id="Op"/><g id="root-0" data-et="participant" data-type="participant" data-id="Op"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="Op" rx="3" ry="3" class="actor actor-top"/><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Operator / deploy.sh</tspan></text></g></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg rect.note[data-look="neo"]{stroke:#999;fill:#666;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg text.actor&gt;tspan{fill:#333;stroke:none;}#my-svg .actor-line{stroke:hsl(0, 0%, 83%);}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:#333;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:#333;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:#333;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#my-svg .note{stroke:#999;fill:#666;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:#fff;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#eee;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#999;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="note" data-id="i5"><rect x="1034.5" y="295" fill="#EDF2AE" stroke="#666" width="482" height="54" class="note"/><text x="1276" y="300" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="1276">no --wait (standalone podman-compose lacks it) —</tspan></text><text x="1276" y="317" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="1276">readiness is gated in Phase 3, not by compose</tspan></text></g><g data-et="control-structure" data-id="i15"><line x1="64" y1="537" x2="1070.5" y2="537" class="loopLine"/><line x1="1070.5" y1="537" x2="1070.5" y2="759" class="loopLine"/><line x1="64" y1="759" x2="1070.5" y2="759" class="loopLine"/><line x1="64" y1="537" x2="64" y2="759" class="loopLine"/><line x1="64" y1="675" x2="1070.5" y2="675" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="64,537 114,537 114,550 105.6,557 64,557" class="labelBox"/><text x="89" y="550" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="592.25" y="555" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="592.25">[a Required service is unhealthy or ctx cancelled]</tspan></text><text x="567.25" y="693" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[all Required healthy]</text></g><text x="236" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">BootAll(ctx)</text><line x1="76" y1="109" x2="396" y2="109" class="messageLine0" data-et="message" data-id="i0" data-from="Op" data-to="Boot" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="596" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Phase 1 — Discover remote endpoints (HelixLLM)</text><line x1="401" y1="153" x2="791" y2="153" class="messageLine0" data-et="message" data-id="i1" data-from="Boot" data-to="Disc" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="599" y="168" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">found / not-found (mark discovered|skipped)</text><line x1="794" y1="197" x2="404" y2="197" class="messageLine1" data-et="message" data-id="i2" data-from="Disc" data-to="Boot" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="728" y="212" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Phase 2 — Up(project, WithUpDetach, WithRemoveOrphans)</text><line x1="401" y1="241" x2="1055.5" y2="241" class="messageLine0" data-et="message" data-id="i3" data-from="Boot" data-to="Orch" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1274" y="256" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">podman-compose -p thready-prod up -d</text><line x1="1060.5" y1="285" x2="1487.5" y2="285" class="messageLine0" data-et="message" data-id="i4" data-from="Orch" data-to="Pod" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1277" y="364" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">containers started (data plane first via depends_on)</text><line x1="1490.5" y1="395" x2="1063.5" y2="395" class="messageLine1" data-et="message" data-id="i6" data-from="Pod" data-to="Orch" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="731" y="410" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">ok (track booted project for rollback)</text><line x1="1058.5" y1="439" x2="404" y2="439" class="messageLine1" data-et="message" data-id="i7" data-from="Orch" data-to="Boot" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="1064" y="454" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Phase 3 — CheckAll(targets: /health per service)</text><line x1="401" y1="483" x2="1727.5" y2="483" class="messageLine0" data-et="message" data-id="i8" data-from="Boot" data-to="HC" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1067" y="498" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">[]HealthResult (healthy? required?)</text><line x1="1730.5" y1="527" x2="404" y2="527" class="messageLine1" data-et="message" data-id="i9" data-from="HC" data-to="Boot" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="728" y="587" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">rollback — Down(booted projects, reverse order)</text><line x1="401" y1="616" x2="1055.5" y2="616" class="messageLine0" data-et="message" data-id="i11" data-from="Boot" data-to="Orch" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="239" y="631" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">BootSummary{HasFailures=true}, error</text><line x1="399" y1="660" x2="79" y2="660" class="messageLine1" data-et="message" data-id="i12" data-from="Boot" data-to="Op" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="239" y="720" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">BootSummary{Started, Healthy}, nil</text><line x1="399" y1="749" x2="79" y2="749" class="messageLine1" data-et="message" data-id="i14" data-from="Boot" data-to="Op" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The operator (or the deploy script) calls
+<code>BootManager.BootAll(ctx)</code>, which sequences three phases and
+rolls the whole thing back if any of them fails. <strong>Phase 1 —
+Discovery:</strong> for endpoints flagged <code>DiscoveryEnabled</code>
+and <code>Remote</code> (the external HelixLLM), the manager runs the
+<code>Discoverer</code>; if the endpoint answers it is marked
+<em>discovered</em>, and disabled endpoints are marked <em>skipped</em>
+— this is the real behaviour read from <code>pkg/boot/manager.go</code>.
+Discovery happens <em>before</em> compose-up so a <code>Required</code>
+remote that is unreachable can fail the boot early rather than after the
+data plane is already running.</p>
+<p><strong>Phase 2 — Compose up:</strong> the manager calls
+<code>ComposeOrchestrator.Up</code>, which shells out to the detected
+rootless <code>podman-compose</code> with the project name
+<code>thready-prod</code>. Thready passes <code>WithUpDetach</code> +
+<code>WithRemoveOrphans</code> but deliberately <strong>omits
+<code>--wait</code>/<code>WithWait</code></strong> — as noted in <a
+href="#2-compose-command-detection">§2</a> and <a
+href="#4-the-containers-orchestration-api">§4</a>, standalone
+<code>podman-compose</code> has no working <code>up --wait</code>, so
+relying on it would give a false “ready” signal. Ordering is instead
+guaranteed by <code>depends_on</code> in the compose file (the data
+plane — Postgres, NATS, MinIO — starts before the app plane), and
+<em>readiness</em> is proven separately in Phase 3. The manager records
+each successfully-started project so it can be torn down on failure.</p>
+<p><strong>Phase 3 — Health:</strong> the manager runs
+<code>HealthChecker.CheckAll</code> against every service’s health
+target and collects <code>[]HealthResult</code>. If any service marked
+<code>Required</code> is unhealthy — or the context is cancelled between
+phases — the manager <strong>rolls back</strong>: it calls
+<code>Down</code> on the booted projects in reverse order (verified
+<code>BootManager.rollback</code>), so a partial boot never leaks
+half-started containers, and returns a <code>BootSummary</code> whose
+<code>HasFailures()</code> is true plus an error. Only when every
+required service is healthy does it return a clean summary. This gated,
+self-rolling-back boot — with readiness decided by real health probes
+rather than a compose flag — is the foundation of Thready’s safe
+deploys.</p>
+<h2 id="health-gating">6. Health gating</h2>
+<p>Readiness is decided by <code>pkg/health</code>, not by
+<code>podman-compose</code>’s weak <code>--wait</code>. Verified
+surface:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// VERIFIED from containers/pkg/health.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HealthType <span class="dt">string</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span> HealthTCP HealthType <span class="op">=</span> <span class="st">&quot;tcp&quot;</span><span class="op">;</span> HealthHTTP HealthType <span class="op">=</span> <span class="st">&quot;http&quot;</span><span class="op">;</span> HealthGRPC HealthType <span class="op">=</span> <span class="st">&quot;grpc&quot;</span> <span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HealthTarget <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Name     <span class="dt">string</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Host     <span class="dt">string</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    Port     <span class="dt">string</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    URL      <span class="dt">string</span>        <span class="co">// wins over Host:Port for HTTP</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    Type     HealthType</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    Path     <span class="dt">string</span>        <span class="co">// e.g. &quot;/health&quot;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    Timeout  time<span class="op">.</span>Duration</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    Required <span class="dt">bool</span>          <span class="co">// a Required failure is fatal → triggers rollback</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HealthChecker <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    Check<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> target HealthTarget<span class="op">)</span> <span class="op">*</span>HealthResult</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    CheckAll<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> targets <span class="op">[]</span>HealthTarget<span class="op">)</span> <span class="op">[]*</span>HealthResult <span class="co">// concurrent</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Thready’s per-service targets (the app services expose
+<code>/health/*</code> via <code>observability/pkg/health</code>, per
+<code>§22.10</code>):</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Type</th>
+<th>Path</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thready-postgres</code></td>
+<td>tcp</td>
+<td>—</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-nats</code></td>
+<td>http</td>
+<td><code>/healthz</code> (:8222)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-minio</code></td>
+<td>http</td>
+<td><code>/minio/health/ready</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-api</code></td>
+<td>http</td>
+<td><code>/health/ready</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-processing</code></td>
+<td>http</td>
+<td><code>/health/ready</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-semsearch</code></td>
+<td>http</td>
+<td><code>/health/ready</code> (asserts real embedder)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>thready-grafana</code></td>
+<td>http</td>
+<td><code>/api/health</code></td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>The application-side health report uses the
+<code>observability</code> health aggregator (verified surface):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// VERIFIED from vasic-digital/observability/pkg/health.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Status <span class="dt">string</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span> StatusHealthy Status <span class="op">=</span> <span class="st">&quot;healthy&quot;</span><span class="op">;</span> StatusDegraded Status <span class="op">=</span> <span class="st">&quot;degraded&quot;</span><span class="op">;</span> StatusUnhealthy Status <span class="op">=</span> <span class="st">&quot;unhealthy&quot;</span> <span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CheckFunc <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Checker <span class="kw">interface</span> <span class="op">{</span> Check<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">*</span>Report <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>agg <span class="op">:=</span> health<span class="op">.</span>NewAggregator<span class="op">(&amp;</span>health<span class="op">.</span>AggregatorConfig<span class="op">{</span> <span class="co">/* … */</span> <span class="op">})</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>agg<span class="op">.</span>Register<span class="op">(</span><span class="st">&quot;postgres&quot;</span><span class="op">,</span> <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span> <span class="cf">return</span> db<span class="op">.</span>PingContext<span class="op">(</span>ctx<span class="op">)</span> <span class="op">})</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>agg<span class="op">.</span>Register<span class="op">(</span><span class="st">&quot;nats&quot;</span><span class="op">,</span> natsPing<span class="op">)</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>agg<span class="op">.</span>Register<span class="op">(</span><span class="st">&quot;embedder&quot;</span><span class="op">,</span> assertRealEmbedder<span class="op">)</span>   <span class="co">// [GAP: #1] — fails if HashEmbedder is active</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">// GET /health/ready → agg.Check(ctx) → Report{Status, Components[]}</span></span></code></pre></div>
+<blockquote>
+<p><code>[GAP: #1 HelixLLM HashEmbedder]</code> — the
+<code>embedder</code> health component <strong>fails</strong> the
+readiness probe if the active embedding provider is the non-semantic
+<code>HashEmbedder</code>, so a stack that would return garbage
+semantic-search relevance can never pass the boot gate and reach
+production. This is the deployment-side enforcement of the “fail loudly,
+not warn” rule.</p>
+</blockquote>
+<h3 id="operational-health-api-openapi-3.1">6.1 Operational health API
+(OpenAPI 3.1)</h3>
+<p>The readiness/liveness surface that the boot gate and the edge probe
+consume is a real HTTP contract, specified here as <strong>OpenAPI
+3.1</strong> <code>[CONVENTIONS §6]</code>. Every Thready Go service
+exposes it via <code>observability/pkg/health</code>; the deploy gate
+(<a
+href="./deploy-and-rollback.md#7-post-deploy-verification-anti-bluff-gate">deploy-and-rollback.md
+§7</a>) and the TLS renewal probe (<a
+href="./tls-lets-encrypt.md">tls-lets-encrypt.md</a>) both hit
+<code>/health/ready</code>.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openapi</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.1.0</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">info</span><span class="kw">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Helix Thready — Operational Health API</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0.0</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">  description</span><span class="kw">: </span><span class="ch">&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    Liveness/readiness endpoints exposed by every Thready service via</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    observability/pkg/health. The deployment health gate (containers pkg/health.CheckAll)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    and the edge probe (LE_VALIDATE_URL) consume GET /health/ready. A 503 blocks promotion.</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">servers</span><span class="kw">:</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">url</span><span class="kw">:</span><span class="at"> http://thready-api:8443</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> In-network address (compose DNS); the edge fronts this over TLS.</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/health/live</span><span class="kw">:</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> getLiveness</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Liveness — the process is up (no dependency checks).</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;200&#39;</span><span class="kw">:</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Process is alive.</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Report&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/health/ready</span><span class="kw">:</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> getReadiness</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Readiness — every Required dependency component is genuinely healthy.</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;200&#39;</span><span class="kw">:</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Ready — all components healthy, including a verified real embedder.</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Report&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">examples</span><span class="kw">:</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">ready</span><span class="kw">:</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">value</span><span class="kw">:</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="at">                    </span><span class="fu">status</span><span class="kw">:</span><span class="at"> healthy</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="at">                    </span><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> postgres</span><span class="kw">,</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> healthy </span><span class="kw">}</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nats</span><span class="kw">,</span><span class="at">     </span><span class="fu">status</span><span class="kw">:</span><span class="at"> healthy </span><span class="kw">}</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> embedder</span><span class="kw">,</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> healthy </span><span class="kw">}</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;503&#39;</span><span class="kw">:</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="fu">          description</span><span class="kw">: </span><span class="ch">&gt;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>            Not ready — at least one component is unhealthy. Returned (among other cases)</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>            when the embedder component detects the non-semantic HashEmbedder (GAP #1),</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>            so a garbage-relevance stack can never pass the boot gate.</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Report&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">examples</span><span class="kw">:</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">hashEmbedder</span><span class="kw">:</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">value</span><span class="kw">:</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="at">                    </span><span class="fu">status</span><span class="kw">:</span><span class="at"> unhealthy</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="at">                    </span><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> postgres</span><span class="kw">,</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> healthy </span><span class="kw">}</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> embedder</span><span class="kw">,</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> unhealthy</span><span class="kw">,</span><span class="at"> </span><span class="fu">error</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HashEmbedder active — refusing (GAP #1)&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schemas</span><span class="kw">:</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Status</span><span class="kw">:</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">healthy</span><span class="kw">,</span><span class="at"> degraded</span><span class="kw">,</span><span class="at"> unhealthy</span><span class="kw">]</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Component</span><span class="kw">:</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">name</span><span class="kw">,</span><span class="at"> status</span><span class="kw">]</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">examples</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">postgres</span><span class="kw">,</span><span class="at"> nats</span><span class="kw">,</span><span class="at"> embedder</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">status</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Status&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">error</span><span class="kw">:</span><span class="at">  </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&#39;null&#39;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Report</span><span class="kw">:</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">status</span><span class="kw">,</span><span class="at"> components</span><span class="kw">]</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">status</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Status&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">type</span><span class="kw">:</span><span class="at"> array</span></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">items</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Component&#39;</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<p><strong>Explanation.</strong> The contract has exactly two
+operations. <code>GET /health/live</code> is a shallow liveness check —
+it returns <code>200</code> as long as the process is running and is
+used by systemd/quadlet restart policy, never by the promotion gate.
+<code>GET /health/ready</code> is the load-bearing one: it aggregates
+every registered dependency (<code>postgres</code>, <code>nats</code>,
+<code>minio</code>, and — critically — <code>embedder</code>) and
+returns <code>200</code> only when all <code>Required</code> components
+report <code>healthy</code>. When any component is unhealthy it returns
+<code>503</code> with a <code>Report</code> body that names the
+offending component, which is exactly what makes the anti-bluff gate
+possible: the <code>embedder</code> component returns
+<code>unhealthy</code> (→ <code>503</code>) whenever the active provider
+is the <code>HashEmbedder</code>, so <code>[GAP: #1]</code> is enforced
+by the HTTP contract itself rather than by convention. The
+<code>503</code> example above is the machine-readable shape the deploy
+gate asserts against.</p>
+<h3 id="reproduce-first-health-gate-test-tdd">6.2 Reproduce-first
+health-gate test (TDD)</h3>
+<p><code>[CONVENTIONS §6]</code> <code>[CONSTITUTION §11.4.27]</code> —
+the readiness contract ships with a <strong>reproduce-first
+(RED)</strong> test, written to fail against a naive gate that trusts a
+bare <code>200</code>. It reproduces the GAP #1 incident directly:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// health_gate_test.go — RED first: written before the embedder component existed.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// It MUST fail against a stack that returns 200 while the HashEmbedder is active.</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Test types (§11.4.27): regression + anti-bluff (paired-mutation) coverage.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReady_HashEmbedder_Returns503_NotBluff200<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// GIVEN a semsearch service wired to the non-semantic hash embedder (the trap).</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    svc <span class="op">:=</span> startSemsearch<span class="op">(</span>t<span class="op">,</span> withEmbeddingProvider<span class="op">(</span><span class="st">&quot;hash&quot;</span><span class="op">))</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> svc<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// WHEN the deploy gate probes readiness.</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    resp <span class="op">:=</span> httpGet<span class="op">(</span>t<span class="op">,</span> svc<span class="op">.</span>URL<span class="op">+</span><span class="st">&quot;/health/ready&quot;</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// THEN it must be 503 (blocks promotion), and the body must name the real cause —</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// a stub that always answered 200 would FAIL this test, which is the point.</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">503</span><span class="op">,</span> resp<span class="op">.</span>StatusCode<span class="op">)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> r health<span class="op">.</span>Report</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    mustDecode<span class="op">(</span>t<span class="op">,</span> resp<span class="op">.</span>Body<span class="op">,</span> <span class="op">&amp;</span>r<span class="op">)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> health<span class="op">.</span>StatusUnhealthy<span class="op">,</span> r<span class="op">.</span>Status<span class="op">)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>True<span class="op">(</span>t<span class="op">,</span> r<span class="op">.</span>HasComponent<span class="op">(</span><span class="st">&quot;embedder&quot;</span><span class="op">,</span> health<span class="op">.</span>StatusUnhealthy<span class="op">))</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">// GREEN counterpart — with the real llama.cpp embedder, readiness passes.</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReady_RealEmbedder_Returns200<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    svc <span class="op">:=</span> startSemsearch<span class="op">(</span>t<span class="op">,</span> withEmbeddingProvider<span class="op">(</span><span class="st">&quot;llama&quot;</span><span class="op">))</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> svc<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">200</span><span class="op">,</span> httpGet<span class="op">(</span>t<span class="op">,</span> svc<span class="op">.</span>URL<span class="op">+</span><span class="st">&quot;/health/ready&quot;</span><span class="op">).</span>StatusCode<span class="op">)</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The full bank of deployment reproduce-first tests (rollback,
+PITR/RTO, cert rollback, port determinism) lives with the <a
+href="../testing/index.md">testing</a> area; this one is co-located
+because it tests the gate defined in this section.</p>
+<h2 id="rootless-systemd-integration-linger-quadlet">7. Rootless systemd
+integration (linger + quadlet)</h2>
+<p>To make the stacks survive reboot and logout without root:</p>
+<ol type="1">
+<li><strong>Enable lingering</strong> (once, during provisioning):
+<code>loginctl enable-linger thready</code>. This lets the
+<code>thready</code> user’s systemd instance run while nobody is logged
+in — required for both the compose stacks and the
+<code>lets_encrypt</code> renewal timer.</li>
+<li><strong>Generate <code>systemd --user</code> units</strong> for the
+stacks. Two supported approaches <code>[DEFAULT — adjustable]</code>:
+<ul>
+<li><strong>Quadlet</strong> (<code>.container</code>/<code>.kube</code>
+files under <code>~/.config/containers/systemd/</code>) — the modern
+Podman-native path; each service becomes a user unit with
+<code>WantedBy=default.target</code>.</li>
+<li><strong><code>podman-compose systemd</code></strong> generated units
+per env, e.g. <code>thready-prod.service</code> whose
+<code>ExecStart</code> runs
+<code>podman-compose -p thready-prod up</code>.</li>
+</ul></li>
+<li><strong>Enable + start</strong>:
+<code>systemctl --user enable --now thready-prod.service</code>.</li>
+</ol>
+<p>The <code>lets_encrypt</code> renewal timer is installed the same way
+(rootless, <code>~/.config/systemd/user/</code>) — see <a
+href="./tls-lets-encrypt.md">tls-lets-encrypt.md §5</a>.</p>
+<h2 id="bringing-a-stack-up-down-commands">8. Bringing a stack up / down
+(commands)</h2>
+<p>All commands run as the <code>thready</code> user (never root):</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Up (excludes buildnew placeholders by not selecting that profile)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/thready/prod</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod up <span class="at">-d</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Status</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod ps</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Logs for one service</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod logs <span class="at">-f</span> thready-api</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Graceful down (keeps volumes)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod down</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Preferred: go through the health-gated deploy wrapper (see deploy-and-rollback.md)</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="ex">/home/thready/submodules/containers/scripts/thready-deploy.sh</span> <span class="at">--env</span> prod</span></code></pre></div>
+<h2 id="verified-vs-assumed">9. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED (read at source):</strong> the podman-aware compose
+detection, the <code>ComposeOrchestrator</code> /
+<code>BootManager</code> / <code>HealthChecker</code> interfaces and
+option functions, the phased boot-with-rollback in
+<code>pkg/boot/manager.go</code>, and the <code>observability</code>
+health aggregator surface.</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong>
+quadlet-vs-<code>podman-compose systemd</code> for unit generation; the
+exact <code>/health/*</code> paths of Thready’s <em>own</em> services
+(they follow <code>§22.10</code> but the services are
+FOUNDATION/BUILD-NEW); the 30-minute up timeout.</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: unit-strategy]</code> — pick quadlet vs generated
+compose units after the first real host bring-up; both are documented
+and either satisfies the linger/reboot requirement.</li>
+<li><code>[OPEN: buildnew-images]</code> — placeholder services stay
+under the <code>buildnew</code> profile until built (see <a
+href="./container-topology.md#8-build-new-placeholders-no-bluff">container-topology.md
+§8</a>).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

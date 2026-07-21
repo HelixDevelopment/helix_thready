@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Service Discovery &amp; Dynamic Ports</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Service Discovery &amp; Dynamic
+Ports</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#the-problem-three-stacks-one-host"
+id="toc-the-problem-three-stacks-one-host">1. The problem: three stacks,
+one host</a></li>
+<li><a href="#port_prefix-deterministic-host-port-bands"
+id="toc-port_prefix-deterministic-host-port-bands">2. port_prefix:
+deterministic host-port bands</a></li>
+<li><a href="#port-band-diagram" id="toc-port-band-diagram">3. Port band
+diagram</a></li>
+<li><a href="#the-deterministic-port-plan"
+id="toc-the-deterministic-port-plan">4. The deterministic port plan</a>
+<ul>
+<li><a href="#reproduce-first-port-plan-test-tdd"
+id="toc-reproduce-first-port-plan-test-tdd">4.1 Reproduce-first
+port-plan test (TDD)</a></li>
+</ul></li>
+<li><a href="#intra-stack-discovery-serviceregistry"
+id="toc-intra-stack-discovery-serviceregistry">5. Intra-stack discovery
+(serviceregistry)</a></li>
+<li><a href="#network-discovery-mdns" id="toc-network-discovery-mdns">6.
+Network discovery &amp; mDNS</a>
+<ul>
+<li><a href="#external-helixllm-endpoint-verifier-port-gap-17"
+id="toc-external-helixllm-endpoint-verifier-port-gap-17">6.1 External
+HelixLLM endpoint &amp; verifier port (GAP #17)</a></li>
+</ul></li>
+<li><a href="#health-registration-wiring"
+id="toc-health-registration-wiring">7. Health &amp; registration
+wiring</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">8.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">9. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Service Discovery & Dynamic Ports
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/service-discovery-ports.md
+  Status          : Review — v0.2
+  Revision        : 2 (2026-07-21)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./container-topology.md, ./environments.md,
+                    ./podman-compose.md, ../testing/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial port_prefix bands, discovery/mdns, serviceregistry,
+deterministic port plan</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (deployment review)</td>
+<td>Added the HelixLLM verifier-port reconciliation (GAP #17); a
+reproduce-first (RED) port-determinism test; split the port-band prose
+into multiple paragraphs</td>
+</tr>
+</tbody>
+</table>
+<p>This document specifies how Helix Thready assigns host ports
+<strong>deterministically</strong> so three environments coexist on one
+host without collision (<code>§14.3</code>), and how services find each
+other via the in-house <code>port_prefix</code>, <code>discovery</code>,
+<code>mdns</code> and the <code>containers</code>
+<code>serviceregistry</code>.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-the-problem-three-stacks-one-host">The problem: three
+stacks, one host</a></li>
+<li><a href="#2-port_prefix-deterministic-host-port-bands">port_prefix:
+deterministic host-port bands</a></li>
+<li><a href="#3-port-band-diagram">Port band diagram</a></li>
+<li><a href="#4-the-deterministic-port-plan">The deterministic port
+plan</a>
+<ul>
+<li><a href="#41-reproduce-first-port-plan-test-tdd">4.1 Reproduce-first
+port-plan test (TDD)</a></li>
+</ul></li>
+<li><a href="#5-intra-stack-discovery-serviceregistry">Intra-stack
+discovery (serviceregistry)</a></li>
+<li><a href="#6-network-discovery--mdns">Network discovery &amp;
+mDNS</a>
+<ul>
+<li><a href="#61-external-helixllm-endpoint--verifier-port-gap-17">6.1
+External HelixLLM endpoint &amp; verifier port (GAP #17)</a></li>
+</ul></li>
+<li><a href="#7-health--registration-wiring">Health &amp; registration
+wiring</a></li>
+<li><a href="#8-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#9-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="the-problem-three-stacks-one-host">1. The problem: three stacks,
+one host</h2>
+<p>Three fully-separated environments run on a single Hetzner host. If
+two stacks tried to publish the same host port (e.g. both Postgres on
+<code>5432</code>), they would collide. The <code>§14.3</code> mandate —
+“dynamic port allocation (<code>port_prefix</code>), automatic service
+registration (<code>discovery</code> + <code>mdns</code>)” — solves this
+by giving each environment a disjoint <strong>host-port band</strong>
+and resolving intra-stack lookups by name.</p>
+<p>Key insight: <strong>containers talk to each other by service name
+over the compose network</strong> (<code>thready-postgres:5432</code>),
+so host ports are needed only for the edge→api hop, operator debugging,
+and Prometheus scraping. The banding therefore governs the small set of
+<em>published</em> ports, and guarantees they never overlap across
+environments.</p>
+<h2 id="port_prefix-deterministic-host-port-bands">2. port_prefix:
+deterministic host-port bands</h2>
+<p><code>vasic-digital/port_prefix</code> maps an internal port onto a
+host-port <strong>band</strong> identified by a numeric prefix. Verified
+API:</p>
+<pre><code>portprefix.Exposed(prefix, internalPort int, taken map[int]bool) (int, error)</code></pre>
+<ul>
+<li>For prefix <code>P</code>, every exposed port lies in
+<code>P*1000 .. P*1000+999</code> — it “always starts with
+<code>P</code>, always <code>&lt;= 65535</code>”.</li>
+<li>The mapping is <code>P*1000 + (internalPort mod 1000)</code>, with
+<strong>linear probe</strong> within the band on collision (the
+<code>taken</code> set).</li>
+<li>Worked example from the module: prefix <code>52</code>, ports
+<code>443,80,8080,3000</code> → <code>443→52443</code>,
+<code>80→52080</code>, <code>8080→52080</code> (taken)
+<code>→52081</code>, <code>3000→52000</code>.</li>
+</ul>
+<p>CLI form (usable from deploy scripts):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">port_prefix</span> <span class="at">--prefix</span> 62 <span class="at">--ports</span> 5432,4222,9000,8443</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 5432 -&gt; 62432 ; 4222 -&gt; 62222 ; 9000 -&gt; 62000 ; 8443 -&gt; 62443</span></span></code></pre></div>
+<p><strong>Environment → prefix assignment</strong>
+<code>[DEFAULT — adjustable]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 26%" />
+<col style="width: 20%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Env</th>
+<th>Prefix</th>
+<th>Band</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dev</td>
+<td><code>60</code></td>
+<td><code>60000–60999</code></td>
+<td>keeps prefix ≤ 62 so the whole band ≤ 62999 &lt; 65535</td>
+</tr>
+<tr>
+<td>sta</td>
+<td><code>61</code></td>
+<td><code>61000–61999</code></td>
+<td></td>
+</tr>
+<tr>
+<td>prod</td>
+<td><code>62</code></td>
+<td><code>62000–62999</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Prefixes must stay ≤ 65 for the band to remain within the 65535
+ceiling; <code>60/61/62</code> are chosen for readability (a
+<code>62xxx</code> port is obviously prod).</p>
+<h2 id="port-band-diagram">3. Port band diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1694px; background-color: white;" viewBox="0 0 1694 362.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1031.589,113.8L1043.824,103.017C1056.059,92.233,1080.53,70.667,1096.265,59.883C1112,49.1,1119,49.1,1122.5,49.1L1126,49.1" id="my-svg-L_PP_DEV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_DEV_0" data-points="W3sieCI6MTAzMS41ODg1MDQwMzcyODg3LCJ5IjoxMTMuNzk5OTk1NDIyMzYzMjh9LHsieCI6MTEwNSwieSI6NDkuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjExMzAsInkiOjQ5LjA5OTk5ODQ3NDEyMTA5NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1080,181.3L1084.167,181.3C1088.333,181.3,1096.667,181.3,1104.333,181.3C1112,181.3,1119,181.3,1122.5,181.3L1126,181.3" id="my-svg-L_PP_STA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_STA_0" data-points="W3sieCI6MTA4MCwieSI6MTgxLjI5OTk5NTQyMjM2MzI4fSx7IngiOjExMDUsInkiOjE4MS4yOTk5OTU0MjIzNjMyOH0seyJ4IjoxMTMwLCJ5IjoxODEuMjk5OTk1NDIyMzYzMjh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1031.589,248.8L1043.824,259.583C1056.059,270.367,1080.53,291.933,1096.265,302.717C1112,313.5,1119,313.5,1122.5,313.5L1126,313.5" id="my-svg-L_PP_PROD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_PROD_0" data-points="W3sieCI6MTAzMS41ODg1MDQwMzcyODg3LCJ5IjoyNDguNzk5OTk1NDIyMzYzMjh9LHsieCI6MTEwNSwieSI6MzEzLjQ5OTk5MjM3MDYwNTQ3fSx7IngiOjExMzAsInkiOjMxMy40OTk5OTIzNzA2MDU0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1388,49.1L1392.167,49.1C1396.333,49.1,1404.667,49.1,1425.447,63.841C1446.228,78.582,1479.457,108.064,1496.071,122.804L1512.685,137.545" id="my-svg-L_DEV_REG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEV_REG_0" data-points="W3sieCI6MTM4OCwieSI6NDkuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjE0MTMsInkiOjQ5LjA5OTk5ODQ3NDEyMTA5NH0seyJ4IjoxNTE1LjY3NzAwNTE4OTAyNywieSI6MTQwLjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1388,181.3L1392.167,181.3C1396.333,181.3,1404.667,181.3,1412.333,181.3C1420,181.3,1427,181.3,1430.5,181.3L1434,181.3" id="my-svg-L_STA_REG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_STA_REG_0" data-points="W3sieCI6MTM4OCwieSI6MTgxLjI5OTk5NTQyMjM2MzI4fSx7IngiOjE0MTMsInkiOjE4MS4yOTk5OTU0MjIzNjMyOH0seyJ4IjoxNDM4LCJ5IjoxODEuMjk5OTk1NDIyMzYzMjh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1388,313.5L1392.167,313.5C1396.333,313.5,1404.667,313.5,1425.447,298.759C1446.228,284.018,1479.457,254.536,1496.071,239.796L1512.685,225.055" id="my-svg-L_PROD_REG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROD_REG_0" data-points="W3sieCI6MTM4OCwieSI6MzEzLjQ5OTk5MjM3MDYwNTQ3fSx7IngiOjE0MTMsInkiOjMxMy40OTk5OTIzNzA2MDU0N30seyJ4IjoxNTE1LjY3NzAwNTE4OTAyNywieSI6MjIyLjM5OTk5Mzg5NjQ4NDM4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M780,181.3L784.167,181.3C788.333,181.3,796.667,181.3,804.333,181.3C812,181.3,819,181.3,822.5,181.3L826,181.3" id="my-svg-L_IN_PP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IN_PP_0" data-points="W3sieCI6NzgwLCJ5IjoxODEuMjk5OTk1NDIyMzYzMjh9LHsieCI6ODA1LCJ5IjoxODEuMjk5OTk1NDIyMzYzMjh9LHsieCI6ODMwLCJ5IjoxODEuMjk5OTk1NDIyMzYzMjh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_PP_DEV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_STA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_PROD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DEV_REG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_STA_REG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROD_REG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IN_PP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="root" transform="translate(0, 112.29999542236328)"><g class="clusters"><g class="cluster" id="my-svg-IN" data-look="classic"><rect style="" x="8" y="8" width="772" height="122"/><g class="cluster-label" transform="translate(241.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Internal</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> container</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ports</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (same</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> every</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> env)</tspan></tspan></text></g></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default" id="my-svg-flowchart-P1-0" data-look="classic" transform="translate(123.5, 69)"><rect class="basic label-container" style="" x="-80.5" y="-23.5" width="161" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 5432</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P2-1" data-look="classic" transform="translate(319, 69)"><rect class="basic label-container" style="" x="-65" y="-23.5" width="130" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nats</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4222</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P3-2" data-look="classic" transform="translate(503.5, 69)"><rect class="basic label-container" style="" x="-69.5" y="-23.5" width="139" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">minio</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 9000</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-P4-3" data-look="classic" transform="translate(684, 69)"><rect class="basic label-container" style="" x="-61" y="-23.5" width="122" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">api</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8443</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-PP-4" data-look="classic" transform="translate(955, 181.29999542236328)"><rect class="basic label-container" style="" x="-125" y="-67.5" width="250" height="135"/><g class="label" style="" transform="translate(0, -52.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">port_prefix.Exposed(prefix,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">internal,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> taken)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prefix*1000</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ..</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prefix*1000+999</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">collision</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> linear</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> probe,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="5.4em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">always</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &lt;=</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 65535</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DEV-8" data-look="classic" transform="translate(1259, 49.099998474121094)"><rect class="basic label-container" style="" x="-129" y="-41.099998474121094" width="258" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 60xxx</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">5432→60432</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4222→60222</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">9000→60000</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8443→60443</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-STA-10" data-look="classic" transform="translate(1259, 181.29999542236328)"><rect class="basic label-container" style="" x="-129" y="-41.099998474121094" width="258" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 61xxx</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">5432→61432</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4222→61222</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">9000→61000</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8443→61443</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROD-12" data-look="classic" transform="translate(1259, 313.49999237060547)"><rect class="basic label-container" style="" x="-129" y="-41.099998474121094" width="258" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 62xxx</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">5432→62432</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4222→62222</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">9000→62000</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8443→62443</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REG-14" data-look="classic" transform="translate(1562, 181.29999542236328)"><rect class="basic label-container" style="" x="-124" y="-41.099998474121094" width="248" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">serviceregistry</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> discovery</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mdns</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">intra-stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> lookup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> health</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Every environment uses the <strong>same</strong>
+internal container ports (Postgres always listens on 5432
+<em>inside</em> its container, NATS on 4222, MinIO on 9000, the API on
+8443) — this uniformity keeps compose files identical across
+environments. The <code>port_prefix.Exposed</code> function is applied
+at deploy time with the environment’s prefix to compute the
+<strong>host</strong> port each published service binds.</p>
+<p>Because the band is <code>prefix*1000 + (internal mod 1000)</code>,
+the same internal 5432 becomes <code>60432</code> in dev,
+<code>61432</code> in sta and <code>62432</code> in prod — three
+disjoint numbers that can never collide on the shared host. If two
+internal ports map to the same last-three digits within one band, the
+linear probe picks the next free slot, and the module guarantees the
+result stays ≤ 65535. This determinism is what lets the edge Caddyfile
+hard-code <code>62443</code>/<code>61443</code>/<code>60443</code>
+without a lookup, and it is asserted by the reproduce-first test in <a
+href="#41-reproduce-first-port-plan-test-tdd">§4.1</a>.</p>
+<p>The computed host ports feed the <code>serviceregistry</code> /
+<code>discovery</code> / <code>mdns</code> layer, which records where
+each service actually landed so other components (and the operator) can
+look it up by name rather than memorizing numbers.</p>
+<h2 id="the-deterministic-port-plan">4. The deterministic port plan</h2>
+<p>Worked host-port plan for <strong>prod (prefix 62)</strong>. The same
+internal layout repeats in dev (<code>60</code>) and sta
+(<code>61</code>) bands. Only services that publish a host port appear;
+internal-only services (<code>thready-processing</code>) bind nothing.
+All bindings are <code>127.0.0.1</code> except the edge.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 13%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Internal</th>
+<th>prod host (62)</th>
+<th>sta host (61)</th>
+<th>dev host (60)</th>
+<th>Bind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>edge (Caddy)</td>
+<td>80 / 443</td>
+<td><strong>80 / 443</strong></td>
+<td><strong>80 / 443</strong></td>
+<td><strong>80 / 443</strong></td>
+<td><code>0.0.0.0</code> (shared, host-wide)</td>
+</tr>
+<tr>
+<td>thready-api</td>
+<td>8443</td>
+<td>62443</td>
+<td>61443</td>
+<td>60443</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-web</td>
+<td>8088</td>
+<td>62088</td>
+<td>61088</td>
+<td>60088</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-postgres</td>
+<td>5432</td>
+<td>62432</td>
+<td>61432</td>
+<td>60432</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-redis</td>
+<td>6379</td>
+<td>62379</td>
+<td>61379</td>
+<td>60379</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-nats (client)</td>
+<td>4222</td>
+<td>62222</td>
+<td>61222</td>
+<td>60222</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-nats (mon)</td>
+<td>8222</td>
+<td>62223¹</td>
+<td>61223¹</td>
+<td>60223¹</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-minio (S3)</td>
+<td>9000</td>
+<td>62000</td>
+<td>61000</td>
+<td>60000</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-minio (console)</td>
+<td>9001</td>
+<td>62001</td>
+<td>61001</td>
+<td>60001</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-clickhouse (HTTP)</td>
+<td>8123</td>
+<td>62123</td>
+<td>61123</td>
+<td>60123</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-clickhouse (native)</td>
+<td>9009</td>
+<td>62009</td>
+<td>61009</td>
+<td>60009</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-herald</td>
+<td>7080</td>
+<td>62080</td>
+<td>61080</td>
+<td>60080</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-assetsvc</td>
+<td>8081</td>
+<td>62081</td>
+<td>61081</td>
+<td>60081</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-downloadmgr</td>
+<td>8082</td>
+<td>62082</td>
+<td>61082</td>
+<td>60082</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-usersvc</td>
+<td>8083</td>
+<td>62083</td>
+<td>61083</td>
+<td>60083</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-eventbus-svc</td>
+<td>8084</td>
+<td>62084</td>
+<td>61084</td>
+<td>60084</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-semsearch</td>
+<td>8085</td>
+<td>62085</td>
+<td>61085</td>
+<td>60085</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>boba</td>
+<td>8000</td>
+<td>62002²</td>
+<td>61002²</td>
+<td>60002²</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>metube</td>
+<td>8091</td>
+<td>62091</td>
+<td>61091</td>
+<td>60091</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-prometheus</td>
+<td>9090</td>
+<td>62090</td>
+<td>61090</td>
+<td>60090</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-grafana</td>
+<td>3000</td>
+<td>62003³</td>
+<td>61003³</td>
+<td>60003³</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-jaeger (UI)</td>
+<td>16686</td>
+<td>62686</td>
+<td>61686</td>
+<td>60686</td>
+<td>loopback</td>
+</tr>
+<tr>
+<td>thready-jaeger (OTLP gRPC)</td>
+<td>4317</td>
+<td>62317</td>
+<td>61317</td>
+<td>60317</td>
+<td>loopback</td>
+</tr>
+</tbody>
+</table>
+<p>¹ <code>8222 mod 1000 = 222</code> collides with NATS-client
+<code>4222</code>; linear probe → <code>…223</code>. ²
+<code>8000 mod 1000 = 000</code> collides with MinIO S3
+<code>9000</code>; probe skips <code>…000/…001</code> →
+<code>…002</code>. ³ <code>3000 mod 1000 = 000</code> collides too;
+probe → next free <code>…003</code>.</p>
+<p>The <code>taken</code> set is fed to <code>port_prefix.Exposed</code>
+in a <strong>fixed service order</strong> (data plane first) so the plan
+is fully <strong>deterministic and reproducible</strong> — the same
+inputs always yield the same host ports, which is what lets the edge
+Caddyfile hardcode <code>62443</code>, <code>61443</code>,
+<code>60443</code> safely.</p>
+<h3 id="reproduce-first-port-plan-test-tdd">4.1 Reproduce-first
+port-plan test (TDD)</h3>
+<p><code>[CONVENTIONS §6]</code> <code>[CONSTITUTION §11.4.27]</code> —
+the two properties the whole scheme rests on (<em>reproducible</em> and
+<em>collision-free across environments</em>) are guarded by a
+<strong>reproduce-first (RED)</strong> test. It is written to fail if
+<code>port_prefix</code> is ever swapped for a non-deterministic or
+overlapping allocator, and it hard-codes the documented collision-probe
+result so a regression in the probe is caught. Authored in <a
+href="../testing/index.md">testing</a>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// port_plan_test.go — RED first. Guards determinism + cross-env disjointness + the 65535 ceiling.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPortPlan_DeterministicDisjointAndBounded<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    internal <span class="op">:=</span> <span class="op">[]</span><span class="dt">int</span><span class="op">{</span><span class="dv">5432</span><span class="op">,</span> <span class="dv">4222</span><span class="op">,</span> <span class="dv">9000</span><span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> <span class="dv">8222</span><span class="op">,</span> <span class="dv">3000</span><span class="op">,</span> <span class="dv">8000</span><span class="op">}</span> <span class="co">// fixed service order (data first)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    dev  <span class="op">:=</span> plan<span class="op">(</span>t<span class="op">,</span> <span class="dv">60</span><span class="op">,</span> internal<span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    sta  <span class="op">:=</span> plan<span class="op">(</span>t<span class="op">,</span> <span class="dv">61</span><span class="op">,</span> internal<span class="op">)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    prod <span class="op">:=</span> plan<span class="op">(</span>t<span class="op">,</span> <span class="dv">62</span><span class="op">,</span> internal<span class="op">)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Reproducible: identical inputs → identical output.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> prod<span class="op">,</span> plan<span class="op">(</span>t<span class="op">,</span> <span class="dv">62</span><span class="op">,</span> internal<span class="op">))</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Disjoint across environments: no dev host port equals any sta/prod host port.</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Empty<span class="op">(</span>t<span class="op">,</span> intersect<span class="op">(</span>values<span class="op">(</span>dev<span class="op">),</span> values<span class="op">(</span>sta<span class="op">)))</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Empty<span class="op">(</span>t<span class="op">,</span> intersect<span class="op">(</span>values<span class="op">(</span>sta<span class="op">),</span> values<span class="op">(</span>prod<span class="op">)))</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Empty<span class="op">(</span>t<span class="op">,</span> intersect<span class="op">(</span>values<span class="op">(</span>dev<span class="op">),</span> values<span class="op">(</span>prod<span class="op">)))</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Bounded: every mapped port stays within the 65535 ceiling.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> p <span class="op">:=</span> <span class="kw">range</span> values<span class="op">(</span>prod<span class="op">)</span> <span class="op">{</span> require<span class="op">.</span>LessOrEqual<span class="op">(</span>t<span class="op">,</span> p<span class="op">,</span> <span class="dv">65535</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Documented collision-probe results hold (8222 &amp; 3000 &amp; 8000 all collide on last-3-digits).</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">62223</span><span class="op">,</span> prod<span class="op">[</span><span class="dv">8222</span><span class="op">])</span> <span class="co">// 222 taken by 4222 → probe → 223</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">62003</span><span class="op">,</span> prod<span class="op">[</span><span class="dv">3000</span><span class="op">])</span> <span class="co">// 000 taken by 9000 → probe → 003</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">62002</span><span class="op">,</span> prod<span class="op">[</span><span class="dv">8000</span><span class="op">])</span> <span class="co">// 000/001 taken → probe → 002</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="intra-stack-discovery-serviceregistry">5. Intra-stack discovery
+(serviceregistry)</h2>
+<p>Within one environment, services resolve each other via the
+<code>containers</code> <code>serviceregistry</code> (verified
+<code>pkg/serviceregistry</code>). The registry persists to disk and
+supports name-based lookup, endpoint/URL resolution, health marking, and
+port-range discovery:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// VERIFIED from containers/pkg/serviceregistry.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Service <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Name       <span class="dt">string</span><span class="op">;</span> Host <span class="dt">string</span><span class="op">;</span> Port <span class="dt">int</span><span class="op">;</span> Protocol <span class="dt">string</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    HealthPath <span class="dt">string</span><span class="op">;</span> HealthType <span class="dt">string</span><span class="op">;</span> Labels <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Healthy    <span class="dt">bool</span><span class="op">;</span> DiscoveredAt time<span class="op">.</span>Time<span class="op">;</span> LastChecked time<span class="op">.</span>Time</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>reg <span class="op">:=</span> serviceregistry<span class="op">.</span>New<span class="op">()</span>                              <span class="co">// persists under registryDir</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> reg<span class="op">.</span>Register<span class="op">(</span><span class="st">&quot;thready-postgres&quot;</span><span class="op">,</span> <span class="dv">62432</span><span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    serviceregistry<span class="op">.</span>WithProtocol<span class="op">(</span><span class="st">&quot;tcp&quot;</span><span class="op">))</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>ep <span class="op">:=</span> reg<span class="op">.</span>GetEndpoint<span class="op">(</span><span class="st">&quot;thready-postgres&quot;</span><span class="op">)</span>                 <span class="co">// &quot;127.0.0.1:62432&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> reg<span class="op">.</span>UpdateHealth<span class="op">(</span><span class="st">&quot;thready-postgres&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Discover a service in a port range if its exact port is unknown:</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>svc<span class="op">,</span> err <span class="op">:=</span> reg<span class="op">.</span>Discover<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;thready-api&quot;</span><span class="op">,</span> <span class="dv">62443</span><span class="op">,</span> <span class="dv">62443</span><span class="op">,</span> <span class="dv">62543</span><span class="op">)</span></span></code></pre></div>
+<ul>
+<li><code>Discover</code> dials candidate ports in a range and registers
+the first that answers — a fallback for when a service moved within its
+band.</li>
+<li><code>GetURL</code>/<code>GetEndpoint</code> give callers a ready
+connection string, so application config references a
+<strong>name</strong>, not a hardcoded port — the port plan can change
+without touching app code.</li>
+</ul>
+<h2 id="network-discovery-mdns">6. Network discovery &amp; mDNS</h2>
+<p>For LAN-level discovery (e.g. the operator workstation finding the
+host, or the host finding the external HelixLLM GPU node), the in-house
+modules apply:</p>
+<ul>
+<li><p><strong><code>vasic-digital/mdns</code></strong> — RFC 6762/6763
+announcement/discovery. A service is announced as
+<code>_&lt;service&gt;._tcp</code> with typed TXT records; clients
+<code>Browse</code> for it. Compatible with Android
+<code>NsdManager</code> / Apple Bonjour. Thready can announce the API on
+the LAN for zero-config workstation access; the HelixLLM node can be
+discovered by <code>Browse</code> instead of a hardcoded host.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Announce the API on the LAN (illustrative — mdns Announce/Browse pair).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>h<span class="op">,</span> _ <span class="op">:=</span> mdns<span class="op">.</span>Announce<span class="op">(</span>mdns<span class="op">.</span>Service<span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Instance<span class="op">:</span> <span class="st">&quot;thready-prod-api&quot;</span><span class="op">,</span> Type<span class="op">:</span> <span class="st">&quot;_thready._tcp&quot;</span><span class="op">,</span> Port<span class="op">:</span> <span class="dv">62443</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Text<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;env&quot;</span><span class="op">:</span> <span class="st">&quot;prod&quot;</span><span class="op">,</span> <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;/v1&quot;</span><span class="op">},</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> h<span class="op">.</span>Stop<span class="op">()</span></span></code></pre></div></li>
+<li><p><strong><code>vasic-digital/discovery</code></strong> —
+network/service <strong>scanning</strong>
+(<code>pkg/scanner.Scanner</code>, DNS + TCP discoverers). The
+<code>containers</code> boot manager uses a <code>Discoverer</code> in
+Phase 1 to resolve <code>Remote</code> endpoints (HelixLLM) before
+compose-up; the DNS method resolves <code>gpu-node.helix.lan</code>, the
+TCP method probes reachability.</p></li>
+</ul>
+<blockquote>
+<p>mDNS is a <strong>LAN convenience</strong>, not the public routing
+mechanism — public access is always through DNS + the edge proxy (<a
+href="./environments.md">environments.md</a>). mDNS/discovery are for
+host-local and workstation-to-host resolution.</p>
+</blockquote>
+<h3 id="external-helixllm-endpoint-verifier-port-gap-17">6.1 External
+HelixLLM endpoint &amp; verifier port (GAP #17)</h3>
+<p>The external HelixLLM GPU node is resolved as a
+<code>ServiceEndpoint</code> at boot Phase 1 (<a
+href="./container-topology.md#9-helixllm-as-an-external-endpoint">container-topology.md
+§9</a>). Two ports must be pinned in the environment so discovery
+targets the right sockets:</p>
+<table>
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 36%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Env var</th>
+<th>Thready value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixLLM OpenAI-compatible base (<code>/v1/chat</code>,
+<code>/v1/embeddings</code>)</td>
+<td><code>HELIX_LLM_BASE_URL</code></td>
+<td><code>http://gpu-node.helix.lan:8080</code></td>
+<td><code>Required</code> for <code>thready-semsearch</code></td>
+</tr>
+<tr>
+<td>HelixLLM → LLMsVerifier</td>
+<td><code>HELIX_LLM_VERIFIER_URL</code></td>
+<td><code>http://gpu-node.helix.lan:8080</code></td>
+<td>see the reconciliation below</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>[GAP: #17 verifier port]</code> — the gap register flags that
+<strong>HelixLLM defaults <code>HELIX_LLM_VERIFIER_URL</code> to
+<code>:7061</code> while LLMsVerifier actually serves
+<code>:8080</code></strong> (gap-register §2.1.3 / §2.5). Left unset,
+discovery/health would probe a dead port. Thready therefore <strong>pins
+<code>HELIX_LLM_VERIFIER_URL</code> explicitly</strong> in each env
+<code>.env</code> to the port LLMsVerifier really listens on (confirmed
+at first bring-up), and the boot Phase-1 <code>Discoverer</code> marks
+the endpoint <code>Required</code> only if the verifier is actually in
+the fallback chain — otherwise it is <code>Enabled:false</code> and
+skipped, so a stale default port can never silently fail a deploy. The
+reconciliation is a tracked item in <a
+href="../development/index.md">development</a> (single-source-of-truth
+in config, per the gap’s improvement).</p>
+</blockquote>
+<h2 id="health-registration-wiring">7. Health &amp; registration
+wiring</h2>
+<p>Discovery, ports and health compose into one flow at boot (matching
+<a href="./podman-compose.md#5-boot-sequence-diagram">podman-compose.md
+§5</a>):</p>
+<ol type="1">
+<li>Deploy computes each service’s host port via
+<code>port_prefix.Exposed</code> in fixed order → writes them into the
+compose file’s <code>ports:</code> (loopback) and the release
+manifest.</li>
+<li><code>BootManager</code> brings the stack up; on success, each
+service is <code>Register</code>ed in the <code>serviceregistry</code>
+with its <code>{name, host, port, healthPath, healthType}</code>.</li>
+<li><code>HealthChecker.CheckAll</code> probes every registered service;
+results feed <code>reg.UpdateHealth(name, healthy)</code>, so the
+registry reflects live health.</li>
+<li>The edge and the app services read connection targets from the
+registry (or from injected <code>THREADY_*_URL</code> env vars derived
+from it) — never from a hardcoded port literal.</li>
+</ol>
+<h2 id="verified-vs-assumed">8. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED:</strong> the <code>port_prefix.Exposed</code>
+signature + band semantics + collision probe (module README); the
+<code>serviceregistry</code>
+<code>Service</code>/<code>Register</code>/<code>Discover</code>/<code>GetEndpoint</code>/<code>UpdateHealth</code>
+surface; <code>mdns</code> <code>Announce</code>/<code>Browse</code>;
+<code>discovery</code> <code>pkg/scanner.Scanner</code> + DNS/TCP
+discoverers; the boot manager’s Phase-1 discovery of <code>Remote</code>
+endpoints.</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+<code>60/61/62</code> prefix assignment; the specific internal port
+numbers of Thready’s <em>own</em> services (FOUNDATION/BUILD-NEW); which
+services announce over mDNS.</li>
+</ul>
+<h2 id="open-items">9. Open items</h2>
+<ul>
+<li><code>[OPEN: prefix-registry]</code> — as more environments or
+ephemeral preview stacks are added, prefixes must be centrally
+registered to stay disjoint; a tiny <code>ports.yaml</code> prefix
+registry per host is the proposed mechanism.</li>
+<li><code>[OPEN: buildnew-ports]</code> — BUILD-NEW services occupy
+their band slots but do not bind until built; the plan reserves the
+numbers so a later build does not shift the plan.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Complete Rootless Podman Compose Files (per environment)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Complete Rootless Podman Compose Files
+(per environment)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#how-these-files-are-produced-generated-not-hand-drifted"
+id="toc-how-these-files-are-produced-generated-not-hand-drifted">1. How
+these files are produced (generated, not hand-drifted)</a></li>
+<li><a href="#compose-file-composition-diagram"
+id="toc-compose-file-composition-diagram">2. Compose-file composition
+diagram</a></li>
+<li><a href="#edge-compose-compose.edge.yml"
+id="toc-edge-compose-compose.edge.yml">3. Edge compose
+(<code>compose.edge.yml</code>)</a></li>
+<li><a href="#production-stack-compose.thready.prod.yml"
+id="toc-production-stack-compose.thready.prod.yml">4. Production stack
+(<code>compose.thready.prod.yml</code>)</a></li>
+<li><a href="#rendering-dev-and-sta-the-deltas"
+id="toc-rendering-dev-and-sta-the-deltas">5. Rendering dev and sta (the
+deltas)</a></li>
+<li><a href="#the-build-new-profile-in-the-file"
+id="toc-the-build-new-profile-in-the-file">6. The BUILD-NEW profile in
+the file</a></li>
+<li><a href="#prometheus-scrape-config-sibling"
+id="toc-prometheus-scrape-config-sibling">7. Prometheus scrape config
+sibling</a></li>
+<li><a href="#validation-before-first-boot"
+id="toc-validation-before-first-boot">8. Validation before first
+boot</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">9.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Complete Rootless Podman Compose Files (per environment)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/compose-files.md
+  Status          : Review — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./podman-compose.md, ./container-topology.md,
+                    ./service-discovery-ports.md, ./environments.md,
+                    ./secrets-and-config.md, ./tls-lets-encrypt.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Full copy-paste-ready edge + dev/sta/prod compose YAML, buildnew
+profile, healthchecks, resource limits, loopback bindings, generator
+step</td>
+</tr>
+</tbody>
+</table>
+<p>This document is the <strong>concrete, implementation-ready</strong>
+compose layer: the complete rootless Podman Compose YAML for the
+host-wide <strong>edge</strong> and for each of the three environment
+stacks (<code>dev</code> / <code>sta</code> / <code>prod</code>). Where
+<a href="./podman-compose.md">podman-compose.md</a> specifies the
+<em>runtime mechanism</em> (the <code>containers</code> orchestration
+API, boot gating) and <a
+href="./container-topology.md">container-topology.md</a> specifies
+<em>what services exist</em>, this document is the <strong>rendered
+artifact</strong> an operator drops onto the host under
+<code>/home/thready/&lt;env&gt;/</code>.</p>
+<p>Every port literal here is the <strong>verified
+<code>port_prefix</code> mapping</strong> from <a
+href="./service-discovery-ports.md#4-the-deterministic-port-plan">service-discovery-ports.md
+§4</a>; every credential is injected from the environment
+(<code>.env</code>, <code>chmod 600</code>) per <a
+href="./secrets-and-config.md">secrets-and-config.md</a> — <strong>never
+a literal</strong>.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a
+href="#1-how-these-files-are-produced-generated-not-hand-drifted">How
+these files are produced (generated, not hand-drifted)</a></li>
+<li><a href="#2-compose-file-composition-diagram">Compose-file
+composition diagram</a></li>
+<li><a href="#3-edge-compose-composeedgeyml">Edge compose
+(<code>compose.edge.yml</code>)</a></li>
+<li><a href="#4-production-stack-composethreadyprodyml">Production stack
+(<code>compose.thready.prod.yml</code>)</a></li>
+<li><a href="#5-rendering-dev-and-sta-the-deltas">Rendering dev and sta
+(the deltas)</a></li>
+<li><a href="#6-the-build-new-profile-in-the-file">The BUILD-NEW profile
+in the file</a></li>
+<li><a href="#7-prometheus-scrape-config-sibling">Prometheus scrape
+config sibling</a></li>
+<li><a href="#8-validation-before-first-boot">Validation before first
+boot</a></li>
+<li><a href="#9-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="how-these-files-are-produced-generated-not-hand-drifted">1. How
+these files are produced (generated, not hand-drifted)</h2>
+<p>The three per-environment files are <strong>the same template
+rendered three times</strong> with the environment’s
+<code>port_prefix</code> band and resource fractions substituted. This
+matches the verified design in <a
+href="./service-discovery-ports.md#7-health--registration-wiring">service-discovery-ports.md
+§7</a>: <em>“Deploy computes each service’s host port via
+<code>port_prefix.Exposed</code> in fixed order → writes them into the
+compose file’s <code>ports:</code> and the release manifest.”</em> Two
+supported production paths, both <code>[VERIFIED]</code> against
+<code>vasic-digital/containers</code>:</p>
+<ul>
+<li><strong>Programmatic (preferred):</strong> build the stack as a
+<code>[]compose.HelixService</code> and render it with
+<code>compose.NewHelixComposeProject("thready-"+env, services)</code>
+(verified <code>pkg/compose/helix_project.go</code>), so the
+<code>HelixResourceLimits</code>/<code>HelixHealthCheck</code>/<code>PortMapping</code>
+structs are the single source of truth and the host ports come from
+<code>portprefix.Exposed</code>. See <a
+href="./container-topology.md#10-modelling-the-stack-with-the-containers-api">container-topology.md
+§10</a>.</li>
+<li><strong>Hand-authored to the same shape (shown here):</strong> the
+literal YAML below, kept byte-identical to what the generator emits, so
+an operator can read and diff it. The <code>name:</code> key namespaces
+every container/network/volume as <code>thready-&lt;env&gt;</code> so
+the three stacks cannot collide.</li>
+</ul>
+<blockquote>
+<p><strong>Anti-drift rule <code>[GAP: #12]</code>.</strong> The compose
+files are <strong>build artifacts</strong>, not a second source of
+truth. If the <code>[]HelixService</code> model and a hand-authored file
+disagree, the model wins and the file is regenerated. The <a
+href="./deploy-and-rollback.md#4-the-deploy-script-bash--go-gate">deploy
+pre-flight</a> refuses to promote a stack whose rendered ports do not
+match the release manifest.</p>
+</blockquote>
+<h2 id="compose-file-composition-diagram">2. Compose-file composition
+diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1261px; background-color: white;" viewBox="0 0 1261 672.9999389648438" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-RENDER" data-look="classic"><rect style="" x="256" y="207.8000030517578" width="485" height="114.5999984741211"/><g class="cluster-label" transform="translate(438.5, 207.8000030517578)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Render</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> env)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-SRC" data-look="classic"><rect style="" x="190.5" y="8" width="613" height="149.8000030517578"/><g class="cluster-label" transform="translate(445.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> of</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> truth</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M347,132.8L347,136.967C347,141.133,347,149.467,347,157.8C347,166.133,347,174.467,347,182.8C347,191.133,347,199.467,359.019,207.591C371.039,215.716,395.078,223.633,407.097,227.591L419.117,231.549" id="my-svg-L_MODEL_TPL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MODEL_TPL_0" data-points="W3sieCI6MzQ3LCJ5IjoxMzIuODAwMDAzMDUxNzU3OH0seyJ4IjozNDcsInkiOjE1Ny44MDAwMDMwNTE3NTc4fSx7IngiOjM0NywieSI6MTgyLjgwMDAwMzA1MTc1Nzh9LHsieCI6MzQ3LCJ5IjoyMDcuODAwMDAzMDUxNzU3OH0seyJ4Ijo0MjIuOTE2MjMxMzc3MzAzNDYsInkiOjIzMi44MDAwMDMwNTE3NTc4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M643.5,132.8L643.5,136.967C643.5,141.133,643.5,149.467,643.5,157.8C643.5,166.133,643.5,174.467,643.5,182.8C643.5,191.133,643.5,199.467,635.196,207.518C626.892,215.568,610.284,223.337,601.98,227.221L593.676,231.105" id="my-svg-L_PP_TPL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_TPL_0" data-points="W3sieCI6NjQzLjUsInkiOjEzMi44MDAwMDMwNTE3NTc4fSx7IngiOjY0My41LCJ5IjoxNTcuODAwMDAzMDUxNzU3OH0seyJ4Ijo2NDMuNSwieSI6MTgyLjgwMDAwMzA1MTc1Nzh9LHsieCI6NjQzLjUsInkiOjIwNy44MDAwMDMwNTE3NTc4fSx7IngiOjU5MC4wNTMyMjc5MDk2NTcsInkiOjIzMi44MDAwMDMwNTE3NTc4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M422.916,297.4L410.264,301.567C397.611,305.733,372.305,314.067,332.319,325.7C292.333,337.333,237.667,352.267,214.713,366.637C191.76,381.007,200.521,394.815,204.901,401.719L209.281,408.622" id="my-svg-L_TPL_DEVF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TPL_DEVF_0" data-points="W3sieCI6NDIyLjkxNjIzMTM3NzMwMzQ2LCJ5IjoyOTcuNDAwMDAxNTI1ODc4OX0seyJ4IjozNDcsInkiOjMyMi40MDAwMDE1MjU4Nzg5fSx7IngiOjE4MywieSI6MzY3LjIwMDAwMDc2MjkzOTQ1fSx7IngiOjIxMS40MjM3NDg4MTgxMjEwNiwieSI6NDEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M521,297.4L521,301.567C521,305.733,521,314.067,521,325.7C521,337.333,521,352.267,526.935,366.693C532.869,381.119,544.738,395.038,550.673,401.997L556.607,408.956" id="my-svg-L_TPL_STAF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TPL_STAF_0" data-points="W3sieCI6NTIxLCJ5IjoyOTcuNDAwMDAxNTI1ODc4OX0seyJ4Ijo1MjEsInkiOjMyMi40MDAwMDE1MjU4Nzg5fSx7IngiOjUyMSwieSI6MzY3LjIwMDAwMDc2MjkzOTQ1fSx7IngiOjU1OS4yMDI1NjE0ODQ5MDU4LCJ5Ijo0MTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M599.354,297.4L609.462,301.567C619.57,305.733,639.785,314.067,683.101,325.7C726.417,337.333,792.833,352.267,846.319,366.976C899.804,381.685,940.358,396.17,960.636,403.412L980.913,410.655" id="my-svg-L_TPL_PRODF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TPL_PRODF_0" data-points="W3sieCI6NTk5LjM1NDI3NDkzNDIyMzEsInkiOjI5Ny40MDAwMDE1MjU4Nzg5fSx7IngiOjY2MCwieSI6MzIyLjQwMDAwMTUyNTg3ODl9LHsieCI6ODU5LjI1LCJ5IjozNjcuMjAwMDAwNzYyOTM5NDV9LHsieCI6OTg0LjY3OTU3MDQ3MjYyNTksInkiOjQxMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M237.5,494.2L237.5,500.117C237.5,506.033,237.5,517.867,271.125,532.531C304.75,547.196,372,564.693,405.625,573.441L439.25,582.189" id="my-svg-L_DEVF_EDGEF_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEVF_EDGEF_0" data-points="W3sieCI6MjM3LjUsInkiOjQ5NC4xOTk5OTY5NDgyNDIyfSx7IngiOjIzNy41LCJ5Ijo1MjkuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo0MzkuMjUsInkiOjU4Mi4xODg4MDIxNTExMjQ0fV0=" data-look="classic"/><path d="M594.25,494.2L594.25,500.117C594.25,506.033,594.25,517.867,592.275,529.7C590.301,541.533,586.352,553.367,584.377,559.283L582.403,565.2" id="my-svg-L_STAF_EDGEF_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_STAF_EDGEF_0" data-points="W3sieCI6NTk0LjI1LCJ5Ijo0OTQuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo1OTQuMjUsInkiOjUyOS42OTk5OTY5NDgyNDIyfSx7IngiOjU4Mi40MDI4MTA1MTYxMjg1LCJ5Ijo1NjUuMTk5OTk2OTQ4MjQyMn1d" data-look="classic"/><path d="M1099.75,494.2L1099.75,500.117C1099.75,506.033,1099.75,517.867,1031.833,534.645C963.917,551.423,828.083,573.146,760.167,584.008L692.25,594.869" id="my-svg-L_PRODF_EDGEF_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PRODF_EDGEF_0" data-points="W3sieCI6MTA5OS43NSwieSI6NDk0LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTA5OS43NSwieSI6NTI5LjY5OTk5Njk0ODI0MjJ9LHsieCI6NjkyLjI1LCJ5Ijo1OTQuODY5NDczNzY4MDg0M31d" data-look="classic"/><path d="M114.5,288.6L114.5,294.233C114.5,299.867,114.5,311.133,141.917,324.233C169.333,337.333,224.167,352.267,248.266,366.6C272.365,380.933,265.731,394.666,262.414,401.532L259.096,408.398" id="my-svg-L_ENVDEV_DEVF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ENVDEV_DEVF_0" data-points="W3sieCI6MTE0LjUsInkiOjI4OC42MDAwMDIyODg4MTgzNn0seyJ4IjoxMTQuNSwieSI6MzIyLjQwMDAwMTUyNTg3ODl9LHsieCI6Mjc5LCJ5IjozNjcuMjAwMDAwNzYyOTM5NDV9LHsieCI6MjU3LjM1NjIyNzk2NDE4MzA2LCJ5Ijo0MTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M880,288.6L880,294.233C880,299.867,880,311.133,861.958,324.233C843.917,337.333,807.833,352.267,774.963,366.91C742.093,381.553,712.435,395.905,697.606,403.081L682.778,410.258" id="my-svg-L_ENVSTA_STAF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ENVSTA_STAF_0" data-points="W3sieCI6ODgwLCJ5IjoyODguNjAwMDAyMjg4ODE4MzZ9LHsieCI6ODgwLCJ5IjozMjIuNDAwMDAxNTI1ODc4OX0seyJ4Ijo3NzEuNzUsInkiOjM2Ny4yMDAwMDA3NjI5Mzk0NX0seyJ4Ijo2NzkuMTc3MjQwMDg3NzcwOSwieSI6NDEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1143.5,288.6L1143.5,294.233C1143.5,299.867,1143.5,311.133,1143.5,324.233C1143.5,337.333,1143.5,352.267,1140,366.606C1136.499,380.945,1129.499,394.69,1125.998,401.563L1122.498,408.436" id="my-svg-L_ENVPROD_PRODF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ENVPROD_PRODF_0" data-points="W3sieCI6MTE0My41LCJ5IjoyODguNjAwMDAyMjg4ODE4MzZ9LHsieCI6MTE0My41LCJ5IjozMjIuNDAwMDAxNTI1ODc4OX0seyJ4IjoxMTQzLjUsInkiOjM2Ny4yMDAwMDA3NjI5Mzk0NX0seyJ4IjoxMTIwLjY4Mjc3MDQ0NDE2OSwieSI6NDEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_MODEL_TPL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_TPL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(183, 367.20000076293945)"><g class="label" data-id="L_TPL_DEVF_0" transform="translate(0, -19.799999237060547)"><g><rect class="background" style="" x="-76" y="0" width="152" height="39.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prefix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 60,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ⅓</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> limits,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">LE_STAGING</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> then</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 0</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(521, 367.20000076293945)"><g class="label" data-id="L_TPL_STAF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-63.5" y="0" width="127" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prefix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 61,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ⅓</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> limits</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(859.25, 367.20000076293945)"><g class="label" data-id="L_TPL_PRODF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-67.5" y="0" width="135" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prefix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 62,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> full</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> limits</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(237.5, 529.6999969482422)"><g class="label" data-id="L_DEVF_EDGEF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-71" y="0" width="142" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loopback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ports</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(594.25, 529.6999969482422)"><g class="label" data-id="L_STAF_EDGEF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-71" y="0" width="142" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loopback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ports</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1099.75, 529.6999969482422)"><g class="label" data-id="L_PRODF_EDGEF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-71" y="0" width="142" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loopback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ports</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_ENVDEV_DEVF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ENVSTA_STAF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ENVPROD_PRODF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-MODEL-0" data-look="classic" transform="translate(347, 82.9000015258789)"><rect class="basic label-container" style="" x="-121.5" y="-49.900001525878906" width="243" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[]compose.HelixService</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(containers</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pkg/compose)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">images</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> env(from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .env)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">healthcheck</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> limits</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PP-1" data-look="classic" transform="translate(643.5, 82.9000015258789)"><rect class="basic label-container" style="" x="-125" y="-49.900001525878906" width="250" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">port_prefix.Exposed(prefix,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">internal,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> taken)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fixed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> order</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">deterministic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ports</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TPL-2" data-look="classic" transform="translate(521, 265.10000228881836)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">template:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">compose.thready..yml</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DEVF-8" data-look="classic" transform="translate(237.5, 453.0999984741211)"><rect class="basic label-container" style="" x="-130" y="-41.099998474121094" width="260" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/home/thready/dev/compose</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.thready.dev.yml</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">name:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready-dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 60xxx</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-STAF-10" data-look="classic" transform="translate(594.25, 453.0999984741211)"><rect class="basic label-container" style="" x="-129.5" y="-41.099998474121094" width="259" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/home/thready/sta/compose.</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready.sta.yml</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">name:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready-sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 61xxx</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PRODF-12" data-look="classic" transform="translate(1099.75, 453.0999984741211)"><rect class="basic label-container" style="" x="-128.5" y="-41.099998474121094" width="257" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/home/thready/prod/compos</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">e.thready.prod.yml</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">name:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready-prod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 62xxx</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EDGEF-13" data-look="classic" transform="translate(565.75, 615.0999984741211)"><rect class="basic label-container" style="" x="-126.5" y="-49.900001525878906" width="253" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/home/thready/edge/compo</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">se.edge.yml</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">name:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready-edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">80/443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (0.0.0.0)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENVDEV-18" data-look="classic" transform="translate(114.5, 265.10000228881836)"><rect class="basic label-container" style="" x="-106.5" y="-23.5" width="213" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (chmod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 600)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENVSTA-20" data-look="classic" transform="translate(880, 265.10000228881836)"><rect class="basic label-container" style="" x="-104" y="-23.5" width="208" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (chmod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 600)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENVPROD-22" data-look="classic" transform="translate(1143.5, 265.10000228881836)"><rect class="basic label-container" style="" x="-109.5" y="-23.5" width="219" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (chmod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 600)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The top band is the <strong>single source of
+truth</strong>: a <code>[]compose.HelixService</code> slice (the
+verified <code>containers</code> model that carries each service’s
+image, environment references, health check and resource limits)
+together with the <code>port_prefix.Exposed</code> function that
+computes deterministic host ports from a fixed service order. These two
+inputs feed one <strong>template</strong>, which is the only thing that
+ever changes between environments.</p>
+<p>The middle-to-bottom flow shows the template being <strong>rendered
+three times</strong>. For <code>dev</code> it is rendered with band
+prefix <code>60</code>, roughly one-third of the production resource
+limits, and <code>LE_STAGING=1</code> on the first pass (then
+<code>0</code>); for <code>sta</code> with prefix <code>61</code> and
+the same reduced limits; for <code>prod</code> with prefix
+<code>62</code> and the full baseline limits. The output of each render
+is a concrete file placed under that environment’s directory, with the
+compose <code>name:</code> set to <code>thready-&lt;env&gt;</code> so
+the container, network and volume namespaces are disjoint. Because only
+the prefix and the limit fractions differ, <code>sta</code> is a
+faithful mirror of <code>prod</code> — the same images, the same
+topology, the same health gates — which is exactly what makes staging a
+trustworthy pre-production step.</p>
+<p>The <strong>edge</strong> file is rendered separately and once: it is
+the only host-wide, <code>0.0.0.0</code>-bound stack (ports 80/443), and
+it reaches each environment over the loopback host ports the three env
+files publish (<code>62443</code>, <code>61443</code>,
+<code>60443</code>, …). Finally, each rendered file is bound to its own
+<code>chmod 600</code> <code>.env</code>, from which every credential
+and the port prefix are injected at runtime — no secret and no
+environment-specific literal is ever baked into a tracked file.</p>
+<h2 id="edge-compose-compose.edge.yml">3. Edge compose
+(<code>compose.edge.yml</code>)</h2>
+<p>The edge is the <strong>only</strong> stack bound to public
+<code>0.0.0.0</code>. Its ACME is disabled — certs come from
+<code>lets_encrypt</code> (see <a
+href="./tls-lets-encrypt.md">tls-lets-encrypt.md</a>) — and it
+hot-reloads on <code>podman kill -s HUP caddy</code>, the rootless idiom
+the <code>lets_encrypt</code> <code>deploy-hook.sh</code> runs as
+<code>LE_RELOAD_CMD</code>
+<code>[VERIFIED: lets_encrypt/scripts/deploy-hook.sh]</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /home/thready/edge/compose.edge.yml</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> thready-edge</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">caddy</span><span class="kw">:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/library/caddy:2.8-alpine</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> caddy</span><span class="co">                       # stable name so `podman kill -s HUP caddy` targets it</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;0.0.0.0:80:80&quot;</span><span class="co">                          # HTTP-01 challenge + HTTPS redirect</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;0.0.0.0:443:443/tcp&quot;</span><span class="co">                     # HTTP/1.1 + HTTP/2</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;0.0.0.0:443:443/udp&quot;</span><span class="co">                     # HTTP/3 (QUIC) — needs udp/443 open (firewall §5)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./Caddyfile:/etc/caddy/Caddyfile:ro,Z</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./certs:/certs:ro,Z</span><span class="co">                       # dev/ sta/ prod/ cert dirs installed by lets_encrypt</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> /var/www/acme:/var/www/acme:ro,Z</span><span class="co">          # shared ACME webroot (HTTP-01)</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-edge-data:/data:Z</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-edge-config:/config:Z</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;-qO-&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;http://127.0.0.1:2019/config/&quot;</span><span class="kw">]</span><span class="co">  # Caddy admin API liveness</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-edge-data</span><span class="kw">:</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-edge-config</span><span class="kw">:</span></span></code></pre></div>
+<blockquote>
+<p>The <code>:Z</code> mount flag relabels the volume for SELinux under
+rootless Podman — omit on non-SELinux hosts. The Caddyfile itself is in
+<a href="./environments.md#4-the-edge-reverse-proxy">environments.md
+§4</a>.</p>
+</blockquote>
+<h2 id="production-stack-compose.thready.prod.yml">4. Production stack
+(<code>compose.thready.prod.yml</code>)</h2>
+<p>The complete production stack. All host ports are
+<code>127.0.0.1</code>-only in the <strong>prod band
+<code>62</code></strong> (verified mapping, <a
+href="./service-discovery-ports.md#4-the-deterministic-port-plan">service-discovery-ports.md
+§4</a>), every credential comes from <code>env_file: ./.env</code>,
+health checks match the <code>containers</code>
+<code>DefaultHelixServices()</code> idioms
+<code>[VERIFIED: pkg/compose/helix_project.go]</code>, and resource
+limits are the prod baseline from <a
+href="./container-topology.md#7-resource-limits">container-topology.md
+§7</a>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /home/thready/prod/compose.thready.prod.yml</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Rendered from the []compose.HelixService model with port_prefix band=62, full limits.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Every credential is injected from ./.env (chmod 600, gitignored) — NEVER a literal.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> thready-prod</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">x-restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">&amp;restart</span><span class="at"> unless-stopped</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">x-logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">&amp;logging</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> json-file</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">options</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">max-size</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;50m&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">max-file</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5&quot;</span><span class="at"> </span><span class="kw">}</span><span class="co">    # bounded logs; ClickHouse holds the durable copy</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---------- data plane (loopback host ports only) ----------</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-postgres</span><span class="kw">:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/pgvector/pgvector:pg17</span><span class="co">        # pg17 + pgvector; see [OPEN: pgvector-image]</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> ${THREADY_PG_USER}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> ${THREADY_PG_PASSWORD}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> thready</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">    command</span><span class="kw">: </span><span class="ch">&gt;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      postgres -c wal_level=replica -c archive_mode=on</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>               -c archive_command=&#39;rclone copyto %p thready-secondary:wal/prod/%f&#39;</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>               -c archive_timeout=3600 -c max_wal_senders=3</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62432:5432&quot;</span><span class="kw">]</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-prod-pgdata:/var/lib/postgresql/data:Z</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-prod-pgwal:/var/lib/postgresql/wal:Z</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U $${POSTGRES_USER} -d thready&quot;</span><span class="kw">]</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;6.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 24g </span><span class="kw">},</span><span class="at"> </span><span class="fu">reservations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 8g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pids_limit</span><span class="kw">:</span><span class="at"> </span><span class="dv">512</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-redis</span><span class="kw">:</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/library/redis:7-alpine</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;redis-server&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--save&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--appendonly&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;no&quot;</span><span class="kw">]</span><span class="co">  # cache only; rebuildable</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62379:6379&quot;</span><span class="kw">]</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-redis:/data:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;redis-cli&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;ping&quot;</span><span class="kw">]</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 3s</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 2g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-nats</span><span class="kw">:</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/library/nats:2.10-alpine</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;-js&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;-sd&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;/data&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;-m&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;8222&quot;</span><span class="kw">]</span><span class="co">   # JetStream + monitoring endpoint on 8222</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62222:4222&quot;</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62223:8222&quot;</span><span class="co">                        # 8222 mod 1000 collides with 4222→probe→…223</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-nats:/data:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:8222/healthz || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 3s</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 4g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-minio</span><span class="kw">:</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/minio/minio:latest</span><span class="co">              # pin by digest in the real file</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;server&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;/data&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--console-address&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;:9001&quot;</span><span class="kw">]</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MINIO_ROOT_USER</span><span class="kw">:</span><span class="at"> ${THREADY_MINIO_ROOT_USER}</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MINIO_ROOT_PASSWORD</span><span class="kw">:</span><span class="at"> ${THREADY_MINIO_ROOT_PASSWORD}</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62000:9000&quot;</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62001:9001&quot;</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-minio:/data:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;curl -fsS http://localhost:9000/minio/health/ready || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 20s</span></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 4g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-clickhouse</span><span class="kw">:</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/clickhouse/clickhouse-server:24-alpine</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62123:8123&quot;</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62009:9009&quot;</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-clickhouse:/var/lib/clickhouse:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ulimits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">nofile</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">soft</span><span class="kw">:</span><span class="at"> </span><span class="dv">262144</span><span class="kw">,</span><span class="at"> </span><span class="fu">hard</span><span class="kw">:</span><span class="at"> </span><span class="dv">262144</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:8123/ping || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 4g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---------- application plane (FOUNDATION services) ----------</span></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-api</span><span class="kw">:</span></span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-api:${THREADY_VERSION}</span><span class="co">   # digest-pinned in the release manifest</span></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-postgres</span><span class="kw">,</span><span class="at"> thready-redis</span><span class="kw">,</span><span class="at"> thready-nats</span><span class="kw">,</span><span class="at"> thready-minio</span><span class="kw">]</span></span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62443:8443&quot;</span><span class="kw">]</span></span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:8443/health/ready || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 20s</span></span>
+<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 2g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-web</span><span class="kw">:</span></span>
+<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-web:${THREADY_VERSION}</span></span>
+<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-api</span><span class="kw">]</span></span>
+<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62088:8088&quot;</span><span class="kw">]</span></span>
+<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:8088/ || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-138"><a href="#cb2-138" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.5&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 256m </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-139"><a href="#cb2-139" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-140"><a href="#cb2-140" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-141"><a href="#cb2-141" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-142"><a href="#cb2-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-143"><a href="#cb2-143" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-herald</span><span class="kw">:</span></span>
+<span id="cb2-144"><a href="#cb2-144" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-herald:${THREADY_VERSION}</span></span>
+<span id="cb2-145"><a href="#cb2-145" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-146"><a href="#cb2-146" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-postgres</span><span class="kw">,</span><span class="at"> thready-nats</span><span class="kw">]</span></span>
+<span id="cb2-147"><a href="#cb2-147" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62080:7080&quot;</span><span class="kw">]</span></span>
+<span id="cb2-148"><a href="#cb2-148" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-149"><a href="#cb2-149" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:7080/health/ready || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-150"><a href="#cb2-150" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb2-151"><a href="#cb2-151" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-152"><a href="#cb2-152" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-153"><a href="#cb2-153" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 20s</span></span>
+<span id="cb2-154"><a href="#cb2-154" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 1g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-155"><a href="#cb2-155" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-156"><a href="#cb2-156" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-157"><a href="#cb2-157" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-158"><a href="#cb2-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-159"><a href="#cb2-159" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-processing</span><span class="kw">:</span></span>
+<span id="cb2-160"><a href="#cb2-160" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-processing:${THREADY_VERSION}</span></span>
+<span id="cb2-161"><a href="#cb2-161" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-162"><a href="#cb2-162" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-163"><a href="#cb2-163" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HELIX_EMBEDDING_PROVIDER</span><span class="kw">:</span><span class="at"> ${HELIX_EMBEDDING_PROVIDER}</span><span class="co">   # GAP #1 — must be &quot;llama&quot;</span></span>
+<span id="cb2-164"><a href="#cb2-164" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">THREADY_BG_WORKERS</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;32&quot;</span><span class="co">                                 # prod worker count (Q4)</span></span>
+<span id="cb2-165"><a href="#cb2-165" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-postgres</span><span class="kw">,</span><span class="at"> thready-nats</span><span class="kw">,</span><span class="at"> thready-redis</span><span class="kw">]</span></span>
+<span id="cb2-166"><a href="#cb2-166" aria-hidden="true" tabindex="-1"></a><span class="co">    # internal-only: no host port published (see topology §3)</span></span>
+<span id="cb2-167"><a href="#cb2-167" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-168"><a href="#cb2-168" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:8080/health/ready || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-169"><a href="#cb2-169" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb2-170"><a href="#cb2-170" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-171"><a href="#cb2-171" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-172"><a href="#cb2-172" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start_period</span><span class="kw">:</span><span class="at"> 20s</span></span>
+<span id="cb2-173"><a href="#cb2-173" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;4.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 8g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-174"><a href="#cb2-174" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-175"><a href="#cb2-175" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-176"><a href="#cb2-176" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-177"><a href="#cb2-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-178"><a href="#cb2-178" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---------- 3rd-party download workers ----------</span></span>
+<span id="cb2-179"><a href="#cb2-179" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">boba</span><span class="kw">:</span></span>
+<span id="cb2-180"><a href="#cb2-180" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/boba:${BOBA_VERSION}</span></span>
+<span id="cb2-181"><a href="#cb2-181" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62002:8000&quot;</span><span class="kw">]</span><span class="co">                 # 8000 mod 1000 collides with minio 9000→probe→…002</span></span>
+<span id="cb2-182"><a href="#cb2-182" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-boba:/downloads:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-183"><a href="#cb2-183" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 1g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-184"><a href="#cb2-184" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-185"><a href="#cb2-185" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-186"><a href="#cb2-186" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-187"><a href="#cb2-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-188"><a href="#cb2-188" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">metube</span><span class="kw">:</span></span>
+<span id="cb2-189"><a href="#cb2-189" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/metube:${METUBE_VERSION}</span></span>
+<span id="cb2-190"><a href="#cb2-190" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62091:8091&quot;</span><span class="kw">]</span></span>
+<span id="cb2-191"><a href="#cb2-191" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-metube:/downloads:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-192"><a href="#cb2-192" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 1g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-193"><a href="#cb2-193" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-194"><a href="#cb2-194" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-195"><a href="#cb2-195" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-196"><a href="#cb2-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-197"><a href="#cb2-197" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---------- observability (per env) ----------</span></span>
+<span id="cb2-198"><a href="#cb2-198" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prometheus</span><span class="kw">:</span></span>
+<span id="cb2-199"><a href="#cb2-199" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/prom/prometheus:v2.50.0</span></span>
+<span id="cb2-200"><a href="#cb2-200" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;--config.file=/etc/prometheus/prometheus.yml&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--storage.tsdb.retention.time=15d&quot;</span><span class="kw">]</span></span>
+<span id="cb2-201"><a href="#cb2-201" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62090:9090&quot;</span><span class="kw">]</span></span>
+<span id="cb2-202"><a href="#cb2-202" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-203"><a href="#cb2-203" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./config/prometheus:/etc/prometheus:ro,Z</span></span>
+<span id="cb2-204"><a href="#cb2-204" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> thready-prod-prometheus:/prometheus:Z</span></span>
+<span id="cb2-205"><a href="#cb2-205" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-206"><a href="#cb2-206" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:9090/-/healthy || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-207"><a href="#cb2-207" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb2-208"><a href="#cb2-208" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-209"><a href="#cb2-209" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-210"><a href="#cb2-210" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 2g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-211"><a href="#cb2-211" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-212"><a href="#cb2-212" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-213"><a href="#cb2-213" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-214"><a href="#cb2-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-215"><a href="#cb2-215" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-grafana</span><span class="kw">:</span></span>
+<span id="cb2-216"><a href="#cb2-216" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/grafana/grafana:10.4.0</span></span>
+<span id="cb2-217"><a href="#cb2-217" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-218"><a href="#cb2-218" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-219"><a href="#cb2-219" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">GF_SECURITY_ADMIN_USER</span><span class="kw">:</span><span class="at"> ${THREADY_GRAFANA_ADMIN_USER}</span></span>
+<span id="cb2-220"><a href="#cb2-220" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">GF_SECURITY_ADMIN_PASSWORD</span><span class="kw">:</span><span class="at"> ${THREADY_GRAFANA_ADMIN_PASSWORD}</span></span>
+<span id="cb2-221"><a href="#cb2-221" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prometheus</span><span class="kw">]</span></span>
+<span id="cb2-222"><a href="#cb2-222" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62003:3000&quot;</span><span class="kw">]</span><span class="co">                 # 3000 mod 1000 collides with minio 9000→probe→…003</span></span>
+<span id="cb2-223"><a href="#cb2-223" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-prod-grafana:/var/lib/grafana:Z&quot;</span><span class="kw">]</span></span>
+<span id="cb2-224"><a href="#cb2-224" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb2-225"><a href="#cb2-225" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;wget -qO- http://localhost:3000/api/health || exit 1&quot;</span><span class="kw">]</span></span>
+<span id="cb2-226"><a href="#cb2-226" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb2-227"><a href="#cb2-227" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-228"><a href="#cb2-228" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-229"><a href="#cb2-229" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.5&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 512m </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-230"><a href="#cb2-230" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-231"><a href="#cb2-231" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-232"><a href="#cb2-232" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-233"><a href="#cb2-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-234"><a href="#cb2-234" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-jaeger</span><span class="kw">:</span></span>
+<span id="cb2-235"><a href="#cb2-235" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> docker.io/jaegertracing/all-in-one:1.55</span></span>
+<span id="cb2-236"><a href="#cb2-236" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">COLLECTOR_OTLP_ENABLED</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;true&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-237"><a href="#cb2-237" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-238"><a href="#cb2-238" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62686:16686&quot;</span><span class="co">                     # UI</span></span>
+<span id="cb2-239"><a href="#cb2-239" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;127.0.0.1:62317:4317&quot;</span><span class="co">                       # OTLP gRPC (loopback; scraped in-network)</span></span>
+<span id="cb2-240"><a href="#cb2-240" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">limits</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">cpus</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.5&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">memory</span><span class="kw">:</span><span class="at"> 1g </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb2-241"><a href="#cb2-241" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logging</span><span class="kw">:</span><span class="at"> </span><span class="ot">*logging</span></span>
+<span id="cb2-242"><a href="#cb2-242" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> </span><span class="ot">*restart</span></span>
+<span id="cb2-243"><a href="#cb2-243" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-244"><a href="#cb2-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-245"><a href="#cb2-245" aria-hidden="true" tabindex="-1"></a><span class="co">  # ---------- BUILD-NEW placeholders (kept OUT of a default `up` by the profile) ----------</span></span>
+<span id="cb2-246"><a href="#cb2-246" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-assetsvc</span><span class="kw">:</span></span>
+<span id="cb2-247"><a href="#cb2-247" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-assetsvc:${THREADY_VERSION}</span></span>
+<span id="cb2-248"><a href="#cb2-248" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;buildnew&quot;</span><span class="kw">]</span><span class="co">                           # [GAP: #9/#20] not started by default</span></span>
+<span id="cb2-249"><a href="#cb2-249" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-250"><a href="#cb2-250" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-minio</span><span class="kw">,</span><span class="at"> thready-postgres</span><span class="kw">]</span></span>
+<span id="cb2-251"><a href="#cb2-251" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62081:8081&quot;</span><span class="kw">]</span></span>
+<span id="cb2-252"><a href="#cb2-252" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-253"><a href="#cb2-253" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-downloadmgr</span><span class="kw">:</span></span>
+<span id="cb2-254"><a href="#cb2-254" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-downloadmgr:${THREADY_VERSION}</span></span>
+<span id="cb2-255"><a href="#cb2-255" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;buildnew&quot;</span><span class="kw">]</span><span class="co">                           # [GAP: #4/#20]</span></span>
+<span id="cb2-256"><a href="#cb2-256" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-257"><a href="#cb2-257" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62082:8082&quot;</span><span class="kw">]</span></span>
+<span id="cb2-258"><a href="#cb2-258" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-259"><a href="#cb2-259" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-usersvc</span><span class="kw">:</span></span>
+<span id="cb2-260"><a href="#cb2-260" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-usersvc:${THREADY_VERSION}</span></span>
+<span id="cb2-261"><a href="#cb2-261" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;buildnew&quot;</span><span class="kw">]</span><span class="co">                           # [GAP: #20]</span></span>
+<span id="cb2-262"><a href="#cb2-262" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-263"><a href="#cb2-263" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-postgres</span><span class="kw">]</span></span>
+<span id="cb2-264"><a href="#cb2-264" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62083:8083&quot;</span><span class="kw">]</span></span>
+<span id="cb2-265"><a href="#cb2-265" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-266"><a href="#cb2-266" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-eventbus-svc</span><span class="kw">:</span></span>
+<span id="cb2-267"><a href="#cb2-267" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-eventbus-svc:${THREADY_VERSION}</span></span>
+<span id="cb2-268"><a href="#cb2-268" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;buildnew&quot;</span><span class="kw">]</span><span class="co">                           # [GAP: #20]</span></span>
+<span id="cb2-269"><a href="#cb2-269" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-270"><a href="#cb2-270" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-nats</span><span class="kw">]</span></span>
+<span id="cb2-271"><a href="#cb2-271" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62084:8084&quot;</span><span class="kw">]</span></span>
+<span id="cb2-272"><a href="#cb2-272" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-273"><a href="#cb2-273" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-semsearch</span><span class="kw">:</span></span>
+<span id="cb2-274"><a href="#cb2-274" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/thready-semsearch:${THREADY_VERSION}</span></span>
+<span id="cb2-275"><a href="#cb2-275" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;buildnew&quot;</span><span class="kw">]</span><span class="co">                           # [GAP: #20 + #1 embedder]</span></span>
+<span id="cb2-276"><a href="#cb2-276" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env_file</span><span class="kw">:</span><span class="at"> ./.env</span></span>
+<span id="cb2-277"><a href="#cb2-277" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-278"><a href="#cb2-278" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HELIX_EMBEDDING_PROVIDER</span><span class="kw">:</span><span class="at"> ${HELIX_EMBEDDING_PROVIDER}</span><span class="co">   # GAP #1 — must be &quot;llama&quot;</span></span>
+<span id="cb2-279"><a href="#cb2-279" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HELIX_LLM_BASE_URL</span><span class="kw">:</span><span class="at"> ${HELIX_LLM_BASE_URL}</span></span>
+<span id="cb2-280"><a href="#cb2-280" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-postgres</span><span class="kw">]</span></span>
+<span id="cb2-281"><a href="#cb2-281" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;127.0.0.1:62085:8085&quot;</span><span class="kw">]</span></span>
+<span id="cb2-282"><a href="#cb2-282" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-prod-net</span><span class="kw">]</span></span>
+<span id="cb2-283"><a href="#cb2-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-284"><a href="#cb2-284" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb2-285"><a href="#cb2-285" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-net</span><span class="kw">:</span></span>
+<span id="cb2-286"><a href="#cb2-286" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> bridge</span><span class="co">                                    # rootless: netavark + aardvark-dns in-network DNS</span></span>
+<span id="cb2-287"><a href="#cb2-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-288"><a href="#cb2-288" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-289"><a href="#cb2-289" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-pgdata</span><span class="kw">:</span></span>
+<span id="cb2-290"><a href="#cb2-290" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-pgwal</span><span class="kw">:</span></span>
+<span id="cb2-291"><a href="#cb2-291" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-redis</span><span class="kw">:</span></span>
+<span id="cb2-292"><a href="#cb2-292" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-nats</span><span class="kw">:</span></span>
+<span id="cb2-293"><a href="#cb2-293" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-minio</span><span class="kw">:</span></span>
+<span id="cb2-294"><a href="#cb2-294" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-clickhouse</span><span class="kw">:</span></span>
+<span id="cb2-295"><a href="#cb2-295" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-prometheus</span><span class="kw">:</span></span>
+<span id="cb2-296"><a href="#cb2-296" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-grafana</span><span class="kw">:</span></span>
+<span id="cb2-297"><a href="#cb2-297" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-boba</span><span class="kw">:</span></span>
+<span id="cb2-298"><a href="#cb2-298" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-prod-metube</span><span class="kw">:</span></span></code></pre></div>
+<blockquote>
+<p><strong>Escaping note.</strong> Inside a compose
+<code>healthcheck.test</code> the <code>$${POSTGRES_USER}</code>
+double-dollar is compose-escaped so the <em>container’s</em> shell
+expands it, not the compose renderer — matching the verified
+<code>DefaultHelixServices()</code> <code>pg_isready</code> idiom.
+Application host ports use <code>${THREADY_VERSION}</code> which
+<em>is</em> rendered by compose from <code>.env</code>.</p>
+</blockquote>
+<h2 id="rendering-dev-and-sta-the-deltas">5. Rendering dev and sta (the
+deltas)</h2>
+<p><code>dev</code> and <code>sta</code> are the <strong>same
+file</strong> with three mechanical substitutions. Do
+<strong>not</strong> maintain three divergent files by hand — render
+them.</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 27%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>Knob</th>
+<th>prod</th>
+<th>sta</th>
+<th>dev</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name:</code></td>
+<td><code>thready-prod</code></td>
+<td><code>thready-sta</code></td>
+<td><code>thready-dev</code></td>
+</tr>
+<tr>
+<td>host-port band (all <code>ports:</code> first field)</td>
+<td><code>62xxx</code></td>
+<td><code>61xxx</code></td>
+<td><code>60xxx</code></td>
+</tr>
+<tr>
+<td>network / volume prefix</td>
+<td><code>thready-prod-*</code></td>
+<td><code>thready-sta-*</code></td>
+<td><code>thready-dev-*</code></td>
+</tr>
+<tr>
+<td><code>deploy.resources.limits</code></td>
+<td>full baseline</td>
+<td>≈ ⅓</td>
+<td>≈ ⅓</td>
+</tr>
+<tr>
+<td><code>THREADY_BG_WORKERS</code></td>
+<td><code>32</code></td>
+<td><code>16</code></td>
+<td><code>8</code></td>
+</tr>
+<tr>
+<td><code>archive_command</code> target</td>
+<td><code>…:wal/prod/%f</code></td>
+<td><code>…:wal/sta/%f</code></td>
+<td><code>…:wal/dev/%f</code></td>
+</tr>
+<tr>
+<td>Prometheus retention</td>
+<td><code>15d</code></td>
+<td><code>10d</code></td>
+<td><code>5d</code></td>
+</tr>
+</tbody>
+</table>
+<p>The band substitution is exactly the <a
+href="./service-discovery-ports.md#4-the-deterministic-port-plan">verified
+port plan</a>: <code>5432→6X432</code>, <code>4222→6X222</code>,
+<code>9000→6X000</code>, <code>8443→6X443</code>, with the three
+documented collision probes (<code>8222→6X223</code>,
+<code>8000→6X002</code>, <code>3000→6X003</code>). Generate with the
+<code>port_prefix</code> CLI and a template, e.g.:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># render-compose.sh &lt;env&gt; &lt;prefix&gt;  — regenerate one env file from the template (idempotent).</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">ENV</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span><span class="kw">;</span> <span class="va">PREFIX</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Compute the host ports deterministically (fixed service order → reproducible).</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">port_prefix</span> <span class="at">--prefix</span> <span class="st">&quot;</span><span class="va">$PREFIX</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">--ports</span> 5432,6379,4222,8222,9000,9001,8123,9009,8443,8088,7080,8081,8082,8083,8084,8085,8000,8091,9090,3000,16686,4317 <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">--export</span><span class="va">)</span><span class="st">&quot;</span>                                   <span class="co"># exports PP_5432=6X432 … for the template</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Render the template with the env name + computed ports + resource fraction.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span> THREADY_ENV=<span class="st">&quot;</span><span class="va">$ENV</span><span class="st">&quot;</span> PP_PREFIX=<span class="st">&quot;</span><span class="va">$PREFIX</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    envsubst <span class="op">&lt;</span> templates/compose.thready.tmpl.yml <span class="op">&gt;</span> <span class="st">&quot;/home/thready/</span><span class="va">$ENV</span><span class="st">/compose.thready.</span><span class="va">$ENV</span><span class="st">.yml&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Sanity: the file must parse and its ports must match the release manifest.</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-f</span> <span class="st">&quot;/home/thready/</span><span class="va">$ENV</span><span class="st">/compose.thready.</span><span class="va">$ENV</span><span class="st">.yml&quot;</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> config <span class="op">&gt;</span>/dev/null</span></code></pre></div>
+<blockquote>
+<p><code>--export</code> / <code>PP_*</code> is the deterministic-plan
+contract described in <a
+href="./service-discovery-ports.md">service-discovery-ports.md</a>; the
+exact flag name is a <code>[DEFAULT — adjustable]</code> Thready wrapper
+over the verified <code>portprefix.Exposed</code> core. dev/sta reduce
+<code>deploy.resources.limits</code> to roughly one-third so prod keeps
+headroom on the shared host (<a
+href="./container-topology.md#7-resource-limits">container-topology.md
+§7</a>).</p>
+</blockquote>
+<h2 id="the-build-new-profile-in-the-file">6. The BUILD-NEW profile in
+the file</h2>
+<p>The five <code>[BUILD-NEW]</code> services carry
+<code>profiles: ["buildnew"]</code>. A default
+<code>podman-compose -p thready-prod up -d</code> <strong>does
+not</strong> start them, so the stack never presents an empty
+placeholder as if it were working <code>[GAP: #20]</code>. They are
+brought up only when explicitly selected:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Default up — buildnew services are EXCLUDED (the honest, no-bluff default).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod up <span class="at">-d</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Only once a placeholder is really built and its image exists:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> thready-prod <span class="at">--profile</span> buildnew up <span class="at">-d</span> thready-semsearch</span></code></pre></div>
+<p>The <a
+href="./deploy-and-rollback.md#7-post-deploy-verification-anti-bluff-gate">post-deploy
+anti-bluff gate</a> asserts <em>no</em> <code>buildnew</code> container
+is running in a promoted prod stack unless its gap is closed and its
+<code>/health/ready</code> proves real behaviour
+(e.g. <code>thready-semsearch</code> fails if
+<code>HELIX_EMBEDDING_PROVIDER</code> is not <code>llama</code>, per
+[GAP: #1]).</p>
+<h2 id="prometheus-scrape-config-sibling">7. Prometheus scrape config
+sibling</h2>
+<p>Each env’s <code>thready-prometheus</code> mounts
+<code>./config/prometheus/</code>. The scrape targets are the in-network
+compose DNS names (not host ports), so a dev Prometheus can never scrape
+prod:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /home/thready/prod/config/prometheus/prometheus.yml</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">global</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">scrape_interval</span><span class="kw">:</span><span class="at"> 15s</span><span class="kw">,</span><span class="at"> </span><span class="fu">external_labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rule_files</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;rules/backup-integrity.rules.yml&quot;</span><span class="kw">]</span><span class="co">     # see backup-dr.md §8</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> thready-api</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-api:8443&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> thready-herald</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-herald:7080&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> thready-processing</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metrics_path</span><span class="kw">:</span><span class="at"> /metrics</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-processing:8080&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> thready-postgres</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-postgres:9187&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span><span class="co">  # postgres_exporter (if enabled)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> pushgateway</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">honor_labels</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[{</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;thready-pushgateway:9091&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">labels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">env</span><span class="kw">:</span><span class="at"> prod </span><span class="kw">}</span><span class="at"> </span><span class="kw">}]</span><span class="co">  # backup scripts push here</span></span></code></pre></div>
+<p>The backup scripts push their <code>thready_backup_*</code>
+timestamps to the (per-env) Pushgateway, which is what the
+<code>WALArchiveStalled</code> / <code>DailyBaseBackupMissing</code>
+alerts in <a href="./backup-dr.md#8-chaos--dr-validation">backup-dr.md
+§8</a> evaluate.</p>
+<h2 id="validation-before-first-boot">8. Validation before first
+boot</h2>
+<p>Every rendered file is validated before it is ever <code>up</code>’d
+— this is a deploy pre-flight gate:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Structural: compose must parse and interpolate cleanly (fails on a missing .env var).</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-f</span> compose.thready.prod.yml <span class="at">-p</span> thready-prod config <span class="op">&gt;</span>/dev/null</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. No secret literal leaked into the file (defence in depth vs. the pre-commit hook).</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ot">! </span><span class="fu">grep</span> <span class="at">-nE</span> <span class="st">&#39;(PASSWORD|SECRET|TOKEN|KEY)\s*:\s*[&quot;&#39;&quot;&#39;&quot;&#39;]?[A-Za-z0-9]{6,}&#39;</span> compose.thready.prod.yml <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">&quot;FATAL: literal secret in compose file&quot;</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Ports match the release manifest (anti-drift with the port plan).</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">thready-verify-ports</span> <span class="at">--env</span> prod <span class="at">--compose</span> compose.thready.prod.yml <span class="at">--manifest</span> releases/current.json</span></code></pre></div>
+<p><code>podman-compose … config</code> is the compose-native lint; it
+hard-fails if any <code>${VAR}</code> referenced by the file is absent
+from <code>./.env</code>, which is precisely the “fail fast on a missing
+secret” behaviour the <code>mustEnv</code> rule enforces on the
+programmatic path (<a
+href="./container-topology.md#10-modelling-the-stack-with-the-containers-api">container-topology.md
+§10</a>).</p>
+<h2 id="verified-vs-assumed">9. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED (read at source):</strong> the
+<code>HelixService</code>/<code>PortMapping</code>/<code>HelixHealthCheck</code>/
+<code>HelixResourceLimits</code> structs and
+<code>NewHelixComposeProject</code>/<code>DefaultHelixServices</code>
+shape (<code>pkg/compose/helix_project.go</code>); the health-probe
+idioms (<code>pg_isready</code>, <code>redis-cli ping</code>,
+<code>wget …:8222/healthz</code>, <code>…/api/health</code>,
+<code>…/-/healthy</code>); the <code>podman kill -s HUP caddy</code>
+reload target and the <code>LE_RELOAD_CMD</code> deploy-hook contract
+(<code>lets_encrypt/scripts/deploy-hook.sh</code>); the band port
+literals (verified <code>port_prefix</code> plan).</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+exact image tags for Thready’s <em>own</em> services (built from each
+submodule <code>Containerfile</code>); the
+<code>pgvector/pgvector:pg17</code> choice vs
+<code>postgres:17-alpine + extension</code> ([OPEN: pgvector-image]);
+MinIO <code>latest</code> (pin by digest before prod); the
+<code>render-compose.sh</code> / <code>--export</code> /
+<code>thready-verify-ports</code> wrapper names (Thready conventions,
+not module APIs); the <code>json-file</code> log rotation sizes and
+reservations.</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: pgvector-image]</code> —
+<code>pgvector/pgvector:pg17</code> (used above) vs
+<code>postgres:17-alpine</code> + the extension added at build time;
+both satisfy the topology. Owned by the <a
+href="../database/index.md">database</a> area.</li>
+<li><code>[OPEN: minio-digest]</code> — pin <code>minio/minio</code> to
+a specific digest for prod (the file uses <code>latest</code> for
+readability); a <code>[DEFAULT — adjustable]</code> operational
+step.</li>
+<li><code>[OPEN: postgres-exporter]</code> — whether to add
+<code>postgres_exporter</code> (scrape job shown) or scrape Postgres
+metrics another way is an observability-area choice; the scrape stub is
+inert until present.</li>
+<li><code>[OPEN: buildnew-images]</code> — the five
+<code>buildnew</code>-profile services have no real images until their
+P0/P1 gaps are built; the profile keeps them out of a default
+<code>up</code> (<a
+href="./container-topology.md#8-build-new-placeholders-no-bluff">container-topology.md
+§8</a>).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

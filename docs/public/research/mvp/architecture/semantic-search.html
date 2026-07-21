@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Semantic Search</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Semantic Search</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#goal-the-lumen-model" id="toc-goal-the-lumen-model">1.
+Goal &amp; the Lumen model</a></li>
+<li><a href="#subsystem-shape-embeddings-vectordb-rag"
+id="toc-subsystem-shape-embeddings-vectordb-rag">2. Subsystem shape
+(embeddings → vectordb → rag)</a></li>
+<li><a href="#the-hashembedder-trap-must-fail-loud"
+id="toc-the-hashembedder-trap-must-fail-loud">3. The HashEmbedder trap
+(must fail loud)</a></li>
+<li><a href="#embeddings-via-helixllm-v1embeddings"
+id="toc-embeddings-via-helixllm-v1embeddings">4. Embeddings via HelixLLM
+/v1/embeddings</a></li>
+<li><a href="#chunking-strategy" id="toc-chunking-strategy">5. Chunking
+strategy</a></li>
+<li><a href="#pgvector-ddl-index" id="toc-pgvector-ddl-index">6.
+pgvector DDL &amp; index</a></li>
+<li><a href="#relational-semantic-relationship"
+id="toc-relational-semantic-relationship">7. Relational ↔︎ semantic
+relationship</a></li>
+<li><a href="#query-path-the-500-ms-slo"
+id="toc-query-path-the-500-ms-slo">8. Query path &amp; the &lt; 500 ms
+SLO</a></li>
+<li><a href="#search-diagram" id="toc-search-diagram">9. Search
+diagram</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">10.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">12. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Semantic Search (Lumen-style: embeddings → pgvector → rag)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/semantic-search.md
+  Status          : Draft — v0.1
+  Revision        : 4 (2026-07-22)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./system-overview.md, ./processing-pipeline.md, ./data-flow.md,
+                    ./security-model.md, ./component-catalog.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — Lumen-style in-house search, embeddings, pgvector,
+rag</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (review pass)</td>
+<td>Add OpenAPI 3.1 /v1/search contract (§8) per CONVENTIONS §6</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Close SEM-1 — real <code>vectordb</code>
+<code>VectorStore</code>/<code>Vector</code>/<code>SearchQuery</code>/<code>SearchResult</code>/<code>DistanceMetric</code>
+and <code>embeddings</code> <code>EmbeddingProvider</code> read at
+source; confirm no <code>llama</code>/<code>hash</code> provider in
+<code>embeddings</code> (GAP 2.7); deepen search diagram
+explanation</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-goal--the-lumen-model">Goal &amp; the Lumen
+model</a></li>
+<li><a href="#2-subsystem-shape-embeddings--vectordb--rag">Subsystem
+shape (embeddings → vectordb → rag)</a></li>
+<li><a href="#3-the-hashembedder-trap-must-fail-loud">The HashEmbedder
+trap (must fail loud)</a></li>
+<li><a href="#4-embeddings-via-helixllm-v1embeddings">Embeddings via
+HelixLLM /v1/embeddings</a></li>
+<li><a href="#5-chunking-strategy">Chunking strategy</a></li>
+<li><a href="#6-pgvector-ddl--index">pgvector DDL &amp; index</a></li>
+<li><a href="#7-relational--semantic-relationship">Relational ↔︎ semantic
+relationship</a></li>
+<li><a href="#8-query-path--the--500-ms-slo">Query path &amp; the &lt;
+500 ms SLO</a></li>
+<li><a href="#9-search-diagram">Search diagram</a></li>
+<li><a href="#10-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#11-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#12-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="goal-the-lumen-model">1. Goal &amp; the Lumen model</h2>
+<p>The original request mandates a “Lumen-style” semantic search — the
+same “search a codebase by meaning” capability that the Lumen Claude
+Code plugin provides, but re-implemented <strong>in-house</strong> with
+llama.cpp/HelixLLM instead of Ollama, and applied to
+<strong>both</strong> original posts and every generated material
+<code>[request §31, research_request_final §15]</code>. Lumen’s pattern
+(tree-sitter/AST chunk → <code>sqlite-vec</code>) maps onto the in-house
+stack: <code>digital.vasic.embeddings</code> +
+<code>digital.vasic.vectordb</code> (pgvector) +
+<code>digital.vasic.rag</code>, driven by HelixLLM’s OpenAI-compatible
+<code>/v1/embeddings</code>. A fast path exists — point Lumen’s
+OpenAI-compatible backend at HelixLLM — but the delivered system is the
+in-house service so it can index posts, transcripts, research docs, OCR
+text and code uniformly
+<code>[research_request_final §15, §18/semantic]</code>.</p>
+<h2 id="subsystem-shape-embeddings-vectordb-rag">2. Subsystem shape
+(embeddings → vectordb → rag)</h2>
+<p>The Semantic-search service <code>[BUILD-NEW, thin]</code> composes
+three VERIFIED engines:</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 45%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Submodule</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embed</td>
+<td><code>digital.vasic.embeddings</code></td>
+<td>Turn text/code chunks into vectors (OpenAI-compat → HelixLLM)</td>
+</tr>
+<tr>
+<td>Store/search</td>
+<td><code>digital.vasic.vectordb</code> (pgvector)</td>
+<td>Cosine <code>&lt;=&gt;</code> ANN over vectors, co-located with
+Postgres</td>
+</tr>
+<tr>
+<td>Retrieve/answer</td>
+<td><code>digital.vasic.rag</code></td>
+<td>Assemble retrieved context for LLM answers + citations</td>
+</tr>
+<tr>
+<td>Tool exposure</td>
+<td><code>MCP_Module</code></td>
+<td>Expose search as an MCP tool for CLI agents</td>
+</tr>
+</tbody>
+</table>
+<p>Model choices <code>[research_request_final Q15]</code>: embeddings
+<code>voyage-code-3</code> / <code>jina-embeddings-v2-base-code</code>
+(code) via HelixLLM <code>/v1/embeddings</code>; reranking
+<code>BAAI/bge-small-en-v1.5</code>.</p>
+<p><strong>Verified interfaces (SEM-1, read at source this
+pass).</strong> Both engines were read field-by-field:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// digital.vasic.vectordb/pkg/client — VERIFIED (Pass 3)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VectorStore <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Connect<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Close<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Upsert<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> collection <span class="dt">string</span><span class="op">,</span> vectors <span class="op">[]</span>Vector<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Search<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> collection <span class="dt">string</span><span class="op">,</span> query SearchQuery<span class="op">)</span> <span class="op">([]</span>SearchResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    Delete<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> collection <span class="dt">string</span><span class="op">,</span> ids <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Get<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> collection <span class="dt">string</span><span class="op">,</span> ids <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="op">([]</span>Vector<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CollectionManager <span class="kw">interface</span> <span class="op">{</span> CreateCollection<span class="op">(</span>ctx<span class="op">,</span> CollectionConfig<span class="op">)</span> <span class="dt">error</span><span class="op">;</span> DeleteCollection<span class="op">(</span>ctx<span class="op">,</span> name<span class="op">)</span> <span class="dt">error</span><span class="op">;</span> ListCollections<span class="op">(</span>ctx<span class="op">)</span> <span class="op">([]</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Vector       <span class="kw">struct</span> <span class="op">{</span> ID <span class="dt">string</span><span class="op">;</span> Values <span class="op">[]</span><span class="dt">float32</span><span class="op">;</span> Metadata <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SearchResult <span class="kw">struct</span> <span class="op">{</span> ID <span class="dt">string</span><span class="op">;</span> Score <span class="dt">float32</span><span class="op">;</span> Vector <span class="op">[]</span><span class="dt">float32</span><span class="op">;</span> Metadata <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SearchQuery  <span class="kw">struct</span> <span class="op">{</span> Vector <span class="op">[]</span><span class="dt">float32</span><span class="op">;</span> TopK <span class="dt">int</span><span class="op">;</span> Filter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">;</span> MinScore <span class="dt">float64</span> <span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DistanceMetric <span class="dt">string</span> <span class="co">// &quot;cosine&quot; | &quot;dot_product&quot; | &quot;euclidean&quot;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CollectionConfig <span class="kw">struct</span> <span class="op">{</span> Name <span class="dt">string</span><span class="op">;</span> Dimension <span class="dt">int</span><span class="op">;</span> Metric DistanceMetric <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// digital.vasic.embeddings/pkg/provider — VERIFIED (Pass 3)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EmbeddingProvider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    Embed<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> text <span class="dt">string</span><span class="op">)</span> <span class="op">([]</span><span class="dt">float32</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    EmbedBatch<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> texts <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="op">([][]</span><span class="dt">float32</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    Dimensions<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Config <span class="kw">struct</span> <span class="op">{</span> Model <span class="dt">string</span><span class="op">;</span> BatchSize <span class="dt">int</span><span class="op">;</span> MaxRetries <span class="dt">int</span><span class="op">;</span> Timeout time<span class="op">.</span>Duration <span class="op">}</span></span></code></pre></div>
+<p>Two facts fall out of the source and shape the design. (1)
+<code>vectordb</code> ships <strong>four</strong> backend clients at
+source — <code>pkg/pgvector</code> (pgxpool;
+<code>DistanceOperator(metric)</code> maps
+<code>cosine</code>→<code>&lt;=&gt;</code>), <code>pkg/qdrant</code>,
+<code>pkg/pinecone</code>, <code>pkg/milvus</code> — all behind the one
+<code>VectorStore</code> seam, so Thready swaps backend by wiring, not
+by rewriting callers (this is the mechanism behind
+<code>[GAP: 3.1]</code>: pgvector is the wired/verified MVP backend, the
+others are present-but-unhardened). (2) <code>embeddings</code> ships
+providers <code>openai</code>, <code>voyage</code>, <code>jina</code>,
+<code>google</code>, <code>cohere</code>, <code>bedrock</code> — and
+<strong>no <code>llama</code>, <code>local</code>, or <code>hash</code>
+provider</strong>. That is the physical confirmation of
+<code>[GAP: 2.7]</code> (no native llama.cpp backend) <em>and</em>
+clarifies <code>[GAP: 2.1]</code>: the <code>HashEmbedder</code> trap
+lives in <strong>HelixLLM</strong> (the model server), not in
+<code>embeddings</code>; the local path is
+<code>embeddings/pkg/openai</code> with <code>BaseURL</code> pointed at
+HelixLLM’s <code>/v1/embeddings</code>.</p>
+<h2 id="the-hashembedder-trap-must-fail-loud">3. The HashEmbedder trap
+(must fail loud)</h2>
+<blockquote>
+<p><strong><code>[GAP: 2.1]</code> (P0) — the single most dangerous trap
+in the whole stack.</strong> HelixLLM’s default local embedder is a
+<strong>non-semantic <code>HashEmbedder</code> stub</strong>: the
+advertised <code>all-mpnet-base-v2</code> is <em>not actually
+loaded</em>; the default <code>local</code>/<code>hash</code> provider
+emits deterministic pseudo-vectors with only a startup
+<strong>WARNING</strong>. Any semantic search built on the default
+silently returns garbage relevance. VERIFIED at source.</p>
+</blockquote>
+<p><strong>Plan (enforced, not optional):</strong></p>
+<ul>
+<li>Make <code>HELIX_EMBEDDING_PROVIDER=llama</code> (llama.cpp
+<code>/embedding</code>) the <strong>enforced default</strong> for any
+semantic workload; <strong>fail loudly (not warn)</strong> if the hash
+embedder is selected in a RAG/search context. Load a real local
+embedding GGUF (code-tuned).</li>
+<li>Parameterize embedding dimension end-to-end (config-driven,
+validated against the model) — remove HelixLLM’s hardcoded 768
+(<code>[GAP: 2.1.2]</code> RAG dimension hardcoding).</li>
+<li>Confirm <code>/v1/embeddings</code> returns the OpenAI
+<code>{data:[{embedding,index}]}</code> shape (consumers sort by
+<code>index</code>); add a contract test
+(<code>[GAP: 2.1] improvement</code>).</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Startup guard — refuse to run semantic search on the hash embedder.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> mustSemanticEmbedder<span class="op">(</span>cfg EmbedConfig<span class="op">)</span> <span class="op">(</span>Embedder<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>Provider <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">||</span> cfg<span class="op">.</span>Provider <span class="op">==</span> <span class="st">&quot;hash&quot;</span> <span class="op">||</span> cfg<span class="op">.</span>Provider <span class="op">==</span> <span class="st">&quot;local&quot;</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;REFUSING to start: HELIX_EMBEDDING_PROVIDER=%q is the &quot;</span><span class="op">+</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;non-semantic HashEmbedder; set =llama with a real embedding GGUF [GAP 2.1]&quot;</span><span class="op">,</span> cfg<span class="op">.</span>Provider<span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    e <span class="op">:=</span> newProvider<span class="op">(</span>cfg<span class="op">)</span>                    <span class="co">// Thready factory → a provider.EmbeddingProvider</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> got <span class="op">:=</span> e<span class="op">.</span>Dimensions<span class="op">();</span> got <span class="op">!=</span> cfg<span class="op">.</span>ExpectedDim <span class="op">{</span> <span class="co">// real method is Dimensions() (plural)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;embedding dim %d != configured %d [GAP 2.1.2]&quot;</span><span class="op">,</span> got<span class="op">,</span> cfg<span class="op">.</span>ExpectedDim<span class="op">)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This guard is the anti-bluff gate the constitution demands
+<code>[CONSTITUTION §11.4.27]</code>: a green search test must prove
+real semantic behavior, not a deterministic hash.</p>
+<h2 id="embeddings-via-helixllm-v1embeddings">4. Embeddings via HelixLLM
+/v1/embeddings</h2>
+<p>Embeddings are generated by <code>digital.vasic.embeddings</code>
+pointed at HelixLLM’s OpenAI-compatible <code>/v1/embeddings</code>
+endpoint (<code>HELIX_EMBEDDING_PROVIDER=llama</code>).</p>
+<blockquote>
+<p><strong><code>[GAP: 2.7]</code> No native llama.cpp/Ollama backend
+package.</strong> <code>embeddings</code> local use currently relies on
+pointing the <code>pkg/openai</code> provider’s <code>BaseURL</code> at
+an OpenAI-compatible endpoint; <code>nomic-embed</code> is not
+supported. <strong>Plan:</strong> add a first-class <strong>llama.cpp /
+HelixLLM embeddings provider</strong> (not a repurposed OpenAI client)
+with health checks + dimension discovery; optionally add a
+<code>nomic-embed-code</code> backend for code fidelity. Until then the
+OpenAI-compat path is used but is documented as the interim, not the
+target.</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Real embeddings API (VERIFIED): construction is PER-PROVIDER (pkg/openai has its own</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// BaseURL/APIKey config); provider.Config carries only {Model,BatchSize,MaxRetries,Timeout}.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// The local path is the openai-compatible provider pointed at HelixLLM (GAP 2.7 interim).</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> emb provider<span class="op">.</span>EmbeddingProvider <span class="op">=</span> openai<span class="op">.</span>New<span class="op">(</span>openai<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    BaseURL<span class="op">:</span> helixLLMURL <span class="op">+</span> <span class="st">&quot;/v1&quot;</span><span class="op">,</span>             <span class="co">// …pointed at HelixLLM (GAP 2.7 interim)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    APIKey<span class="op">:</span>  <span class="st">&quot;local&quot;</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Config<span class="op">:</span>  provider<span class="op">.</span>Config<span class="op">{</span>Model<span class="op">:</span> <span class="st">&quot;voyage-code-3&quot;</span><span class="op">,</span> BatchSize<span class="op">:</span> <span class="dv">100</span><span class="op">,</span> MaxRetries<span class="op">:</span> <span class="dv">3</span><span class="op">},</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>vecs<span class="op">,</span> err <span class="op">:=</span> emb<span class="op">.</span>EmbedBatch<span class="op">(</span>ctx<span class="op">,</span> chunks<span class="op">)</span>      <span class="co">// [][]float32, one per input; Dimensions() must match</span></span></code></pre></div>
+<p><code>[GAP: 2.5]</code> note: HelixLLM defaults
+<code>HELIX_LLM_VERIFIER_URL=:7061</code> while LLMsVerifier serves
+<code>:8080</code>. Reconcile the port in a single config source before
+wiring the fallback-scoring path; tracked, not assumed working.</p>
+<h2 id="chunking-strategy">5. Chunking strategy</h2>
+<p>Both <strong>documents and paragraphs</strong> are chunked at
+symbol/section granularity, not whole files
+<code>[research_request_final §19.1]</code>:</p>
+<ul>
+<li><strong>Code</strong> (from GitHub research, generated Skills) →
+<strong>AST / tree-sitter</strong> chunks (function/ symbol level) — the
+Lumen approach.</li>
+<li><strong>Docs / research / transcripts / OCR</strong> →
+Markdown/structured section chunks.</li>
+<li>Each chunk carries <code>{source_id, kind, span, account_id}</code>
+referencing the relational row.</li>
+</ul>
+<h2 id="pgvector-ddl-index">6. pgvector DDL &amp; index</h2>
+<p>Vectors live in pgvector, co-located in the same Postgres instance as
+the relational data (keeps the datastore count low, satisfies the &lt;
+500 ms SLO) <code>[research_request_final §2.1.1]</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> EXTENSION <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> vector;</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> semantic_chunks (</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>          UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    account_id  UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> accounts(<span class="kw">id</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    source_id   UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- FK into posts / assets / research_docs (SoR)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    source_kind TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- &#39;post&#39; | &#39;reply&#39; | &#39;transcript&#39; | &#39;research&#39; | &#39;ocr&#39; | &#39;code&#39;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    span        JSONB,                  <span class="co">-- {start,end} or {symbol,file}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    content     TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- chunk text (redacted surrogate for secrets — see security-model)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    embedding   VECTOR(<span class="dv">1024</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,  <span class="co">-- dim = model dim (voyage-code-3 = 1024); config-validated (GAP 2.1.2)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    created_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- Cosine ANN index (HNSW for the aggressive &lt; 500 ms SLO); IVFFlat alternative for lower memory.</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_chunks_embedding <span class="kw">ON</span> semantic_chunks</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> hnsw (embedding vector_cosine_ops) <span class="kw">WITH</span> (m <span class="op">=</span> <span class="dv">16</span>, ef_construction <span class="op">=</span> <span class="dv">64</span>);</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_chunks_account <span class="kw">ON</span> semantic_chunks (account_id, source_kind);</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- Query (cosine distance, tenant-scoped):</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   SELECT source_id, source_kind, content, 1 - (embedding &lt;=&gt; $1) AS score</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">--   FROM semantic_chunks WHERE account_id = $2</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">--   ORDER BY embedding &lt;=&gt; $1 LIMIT 20;</span></span></code></pre></div>
+<p>Forward/rollback migration via
+<code>database/pkg/migration.Runner</code>. Index parameters
+(<code>m</code>, <code>ef_construction</code>, <code>ef_search</code>)
+and IVFFlat-vs-HNSW are tuned against the &lt; 500 ms SLO in the testing
+pack.</p>
+<h2 id="relational-semantic-relationship">7. Relational ↔︎ semantic
+relationship</h2>
+<p>This resolves the progress-doc inconsistency #1
+<code>[research_request_final §2.1.1]</code>: the <strong>relational
+store is the system of record</strong>; the vector store holds
+<strong>embeddings + minimal metadata (source id, kind, span)</strong>
+that <em>reference</em> relational rows. Every vector row carries the
+relational primary key of its source; semantic search returns ids, which
+are <strong>hydrated</strong> from the relational store. Because
+pgvector lives in the same Postgres instance, hydration is a local join,
+not a cross-datastore call.</p>
+<h2 id="query-path-the-500-ms-slo">8. Query path &amp; the &lt; 500 ms
+SLO</h2>
+<p><code>[OPERATOR: aggressive SLO — semantic search &lt; 500 ms]</code>:</p>
+<ol type="1">
+<li>Embed the query with the <strong>same model</strong> used for
+indexing (dimension must match — enforced).</li>
+<li>ANN top-k over pgvector (cosine <code>&lt;=&gt;</code>),
+tenant-scoped by <code>account_id</code>.</li>
+<li>Rerank top-k with <code>bge-small-en-v1.5</code>.</li>
+<li>Hydrate ids from the relational SoR (local join).</li>
+<li><code>rag</code> assembles context for an answer with citations (for
+the agent/MCP path); for the <code>/v1/search</code> UI path, return
+ranked hydrated results directly.</li>
+</ol>
+<p>Latency budget: query-embed (cached for repeat queries via
+<code>digital.vasic.cache</code>) + ANN (HNSW, single-digit ms at MVP
+scale) + rerank + hydrate. The cache tier and HNSW tuning are what hold
+the &lt; 500 ms line at the 50 TB+ / many-chunk scale.</p>
+<p>The <code>/v1/search</code> read contract as <strong>OpenAPI
+3.1</strong> <code>[CONVENTIONS §6]</code> (the full schema set lives in
+the <a href="../api/index.md">api/</a> pack). Results are always
+tenant-scoped by the caller’s <code>account_id</code> from the validated
+token — a query can never reach another account’s chunks:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openapi</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.1.0</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">info</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Helix Thready — Semantic search (architecture excerpt)</span><span class="kw">,</span><span class="at"> </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0.0&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/search</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">post</span><span class="kw">:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> semanticSearch</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Meaning-based search over posts and generated materials (&lt; 500 ms SLO).</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">requestBody</span><span class="kw">:</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#/components/schemas/SearchRequest&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;200&quot;</span><span class="kw">:</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Ranked, hydrated results (+ optional rag answer with citations).</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#/components/schemas/SearchResponse&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;401&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Missing/invalid credentials </span><span class="kw">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;403&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> RBAC denies the requested account </span><span class="kw">}</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;422&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Empty/oversized query </span><span class="kw">}</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">securitySchemes</span><span class="kw">:</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http</span><span class="kw">,</span><span class="at"> </span><span class="fu">scheme</span><span class="kw">:</span><span class="at"> bearer</span><span class="kw">,</span><span class="at"> </span><span class="fu">bearerFormat</span><span class="kw">:</span><span class="at"> JWT </span><span class="kw">}</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schemas</span><span class="kw">:</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SearchRequest</span><span class="kw">:</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">query</span><span class="kw">]</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">query</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">minLength</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">maxLength</span><span class="kw">:</span><span class="at"> </span><span class="dv">4096</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">kinds</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> array</span><span class="kw">,</span><span class="at"> </span><span class="fu">items</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">post</span><span class="kw">,</span><span class="at"> reply</span><span class="kw">,</span><span class="at"> transcript</span><span class="kw">,</span><span class="at"> research</span><span class="kw">,</span><span class="at"> ocr</span><span class="kw">,</span><span class="at"> code</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">top_k</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> integer</span><span class="kw">,</span><span class="at"> </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span><span class="kw">,</span><span class="at"> </span><span class="fu">minimum</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">maximum</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">answer</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> boolean</span><span class="kw">,</span><span class="at"> </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="kw">,</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> If true</span><span class="kw">,</span><span class="at"> rag assembles a cited answer. </span><span class="kw">}</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SearchResponse</span><span class="kw">:</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">results</span><span class="kw">]</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">results</span><span class="kw">:</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">type</span><span class="kw">:</span><span class="at"> array</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">source_id</span><span class="kw">,</span><span class="at"> source_kind</span><span class="kw">,</span><span class="at"> score</span><span class="kw">]</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">source_id</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span><span class="co">   # hydrated from the relational SoR</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">source_kind</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">score</span><span class="kw">:</span><span class="at">       </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> number</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> float </span><span class="kw">}</span><span class="co">   # 1 - cosine distance</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">snippet</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span><span class="co">                  # redacted surrogate for sealed secrets</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">answer</span><span class="kw">:</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">nullable</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">text</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">citations</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> array</span><span class="kw">,</span><span class="at"> </span><span class="fu">items</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<h2 id="search-diagram">9. Search diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 991px; background-color: white;" viewBox="0 0 991 1198.07275390625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .c rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c tspan{fill:rgb(234, 255, 240)!important;}#my-svg .db rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db tspan{fill:rgb(230, 246, 255)!important;}#my-svg .warn rect{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .warn polygon{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .warn ellipse{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .warn circle{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .warn path{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .warn tspan{fill:rgb(255, 236, 236)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Query" data-look="classic"><rect style="" x="8" y="315" width="326.75" height="875.0727844238281"/><g class="cluster-label" transform="translate(109.375, 315)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Query</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> path</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (read)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Ingest" data-look="classic"><rect style="" x="640.75" y="8" width="342.25" height="636.8727874755859"/><g class="cluster-label" transform="translate(750.875, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Index</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> path</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (write)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M804.75,132.8L804.75,136.967C804.75,141.133,804.75,149.467,804.75,157.133C804.75,164.8,804.75,171.8,804.75,175.3L804.75,178.8" id="my-svg-L_SRC_CHUNK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SRC_CHUNK_0" data-points="W3sieCI6ODA0Ljc1LCJ5IjoxMzIuODAwMDAzMDUxNzU3OH0seyJ4Ijo4MDQuNzUsInkiOjE1Ny44MDAwMDMwNTE3NTc4fSx7IngiOjgwNC43NSwieSI6MTgyLjgwMDAwMzA1MTc1Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M804.75,265L804.75,269.167C804.75,273.333,804.75,281.667,804.75,290C804.75,298.333,804.75,306.667,804.75,314.333C804.75,322,804.75,329,804.75,332.5L804.75,336" id="my-svg-L_CHUNK_EMB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CHUNK_EMB_0" data-points="W3sieCI6ODA0Ljc1LCJ5IjoyNjV9LHsieCI6ODA0Ljc1LCJ5IjoyOTB9LHsieCI6ODA0Ljc1LCJ5IjozMTV9LHsieCI6ODA0Ljc1LCJ5IjozNDB9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M825.542,439.8L828.618,447.183C831.694,454.567,837.847,469.333,840.924,483.433C844,497.533,844,510.967,844,517.683L844,524.4" id="my-svg-L_EMB_VEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EMB_VEC_0" data-points="W3sieCI6ODI1LjU0MTY2NzEzNDA1NDgsInkiOjQzOS44MDAwMDMwNTE3NTc4fSx7IngiOjg0NCwieSI6NDg0LjEwMDAwMjI4ODgxODM2fSx7IngiOjg0NCwieSI6NTI4LjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M782.104,439.8L778.754,447.183C775.403,454.567,768.701,469.333,739.942,485.058C711.183,500.783,660.367,517.466,634.959,525.808L609.55,534.149" id="my-svg-L_EMB_GUARD_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EMB_GUARD_0" data-points="W3sieCI6NzgyLjEwNDI5ODg1Mzk5MTMsInkiOjQzOS44MDAwMDMwNTE3NTc4fSx7IngiOjc2MiwieSI6NDg0LjEwMDAwMjI4ODgxODM2fSx7IngiOjYwNS43NSwieSI6NTM1LjM5Njk0NDA2ODYyMzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M166.25,413.4L166.25,425.183C166.25,436.967,166.25,460.533,166.25,482.739C166.25,504.945,166.25,525.791,166.25,536.214L166.25,546.636" id="my-svg-L_Q_QEMB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q_QEMB_0" data-points="W3sieCI6MTY2LjI1LCJ5Ijo0MTMuNDAwMDAxNTI1ODc4OX0seyJ4IjoxNjYuMjUsInkiOjQ4NC4xMDAwMDIyODg4MTgzNn0seyJ4IjoxNjYuMjUsInkiOjU1MC42MzYzOTQ1MDA3MzI0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M166.25,597.636L166.25,605.509C166.25,613.382,166.25,629.127,166.25,641.167C166.25,653.206,166.25,661.539,166.863,669.216C167.475,676.893,168.7,683.912,169.313,687.422L169.925,690.932" id="my-svg-L_QEMB_ANN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_QEMB_ANN_0" data-points="W3sieCI6MTY2LjI1LCJ5Ijo1OTcuNjM2Mzk0NTAwNzMyNH0seyJ4IjoxNjYuMjUsInkiOjY0NC44NzI3ODc0NzU1ODU5fSx7IngiOjE2Ni4yNSwieSI6NjY5Ljg3Mjc4NzQ3NTU4NTl9LHsieCI6MTcwLjYxMzAwMTgwMzI5MzMyLCJ5Ijo2OTQuODcyNzg3NDc1NTg1OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M176.25,759.473L176.25,763.639C176.25,767.806,176.25,776.139,176.25,783.806C176.25,791.473,176.25,798.473,176.25,801.973L176.25,805.473" id="my-svg-L_ANN_RR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ANN_RR_0" data-points="W3sieCI6MTc2LjI1LCJ5Ijo3NTkuNDcyNzg1OTQ5NzA3fSx7IngiOjE3Ni4yNSwieSI6Nzg0LjQ3Mjc4NTk0OTcwN30seyJ4IjoxNzYuMjUsInkiOjgwOS40NzI3ODU5NDk3MDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M176.25,856.473L176.25,860.639C176.25,864.806,176.25,873.139,176.25,880.806C176.25,888.473,176.25,895.473,176.25,898.973L176.25,902.473" id="my-svg-L_RR_HYD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RR_HYD_0" data-points="W3sieCI6MTc2LjI1LCJ5Ijo4NTYuNDcyNzg1OTQ5NzA3fSx7IngiOjE3Ni4yNSwieSI6ODgxLjQ3Mjc4NTk0OTcwN30seyJ4IjoxNzYuMjUsInkiOjkwNi40NzI3ODU5NDk3MDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M176.25,971.073L176.25,975.239C176.25,979.406,176.25,987.739,176.25,995.406C176.25,1003.073,176.25,1010.073,176.25,1013.573L176.25,1017.073" id="my-svg-L_HYD_RAG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HYD_RAG_0" data-points="W3sieCI6MTc2LjI1LCJ5Ijo5NzEuMDcyNzg0NDIzODI4MX0seyJ4IjoxNzYuMjUsInkiOjk5Ni4wNzI3ODQ0MjM4MjgxfSx7IngiOjE3Ni4yNSwieSI6MTAyMS4wNzI3ODQ0MjM4MjgxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M176.25,1068.073L176.25,1072.239C176.25,1076.406,176.25,1084.739,176.25,1092.406C176.25,1100.073,176.25,1107.073,176.25,1110.573L176.25,1114.073" id="my-svg-L_RAG_ANS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RAG_ANS_0" data-points="W3sieCI6MTc2LjI1LCJ5IjoxMDY4LjA3Mjc4NDQyMzgyODF9LHsieCI6MTc2LjI1LCJ5IjoxMDkzLjA3Mjc4NDQyMzgyODF9LHsieCI6MTc2LjI1LCJ5IjoxMTE4LjA3Mjc4NDQyMzgyODF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M844,619.873L844,624.039C844,628.206,844,636.539,744.25,644.873C644.5,653.206,445,661.539,340.728,669.448C236.456,677.356,227.412,684.839,222.89,688.581L218.368,692.323" id="my-svg-L_VEC_ANN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VEC_ANN_0" data-points="W3sieCI6ODQ0LCJ5Ijo2MTkuODcyNzg3NDc1NTg1OX0seyJ4Ijo4NDQsInkiOjY0NC44NzI3ODc0NzU1ODU5fSx7IngiOjI0NS41LCJ5Ijo2NjkuODcyNzg3NDc1NTg1OX0seyJ4IjoyMTUuMjg2MjEyNTEyMTkzODgsInkiOjY5NC44NzI3ODc0NzU1ODU5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_SRC_CHUNK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CHUNK_EMB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EMB_VEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(706.98565, 502.16124)"><g class="label" data-id="L_EMB_GUARD_0" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-58" y="0" width="117" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">FAIL</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> LOUD</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> if</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HashEmbedder</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_Q_QEMB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_QEMB_ANN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ANN_RR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RR_HYD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HYD_RAG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RAG_ANS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VEC_ANN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default c" id="my-svg-flowchart-SRC-0" data-look="classic" transform="translate(804.75, 82.9000015258789)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-123" y="-49.900001525878906" width="246" height="99.80000305175781"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Source:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> posts</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generated</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">materials</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">video</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> transcripts,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> research</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">docs,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> OCR,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-CHUNK-1" data-look="classic" transform="translate(804.75, 223.9000015258789)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-113.5" y="-41.099998474121094" width="227" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Chunk</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">AST/tree-sitter</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Markdown/section</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> docs</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-EMB-2" data-look="classic" transform="translate(804.75, 389.9000015258789)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-129" y="-49.900001525878906" width="258" height="99.80000305175781"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Embeddings</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixLLM</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /v1/embeddings</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HELIX_EMBEDDING_PRO</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">VIDER=llama</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-VEC-3" data-look="classic" transform="translate(844, 574.1363945007324)"><path d="M0,13.957597173144876 a79,13.957597173144876 0,0,0 158,0 a79,13.957597173144876 0,0,0 -158,0 l0,63.55759564726597 a79,13.957597173144876 0,0,0 158,0 l0,-63.55759564726597" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-79, -45.73639499677786)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pgvector</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">vectordb</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> cosine</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &lt;=&gt;</tspan></tspan></text></g></g></g><g class="node default warn" id="my-svg-flowchart-GUARD-9" data-look="classic" transform="translate(487.75, 574.1363945007324)"><rect class="basic label-container" style="fill:#7a2f2f !important;stroke:#3c1414 !important" x="-118" y="-41.099998474121094" width="236" height="82.19999694824219"/><g class="label" style="color:#ffecec !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#ffecec !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">startup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> guard</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">refuse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hash</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> embedder</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ctx</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-Q-10" data-look="classic" transform="translate(166.25, 389.9000015258789)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-88.5" y="-23.5" width="177" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> query</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-QEMB-11" data-look="classic" transform="translate(166.25, 574.1363945007324)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-123" y="-23.5" width="246" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> query</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> same</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> model</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-ANN-13" data-look="classic" transform="translate(176.25, 727.1727867126465)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-93.5" y="-32.29999923706055" width="187" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ANN</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> top-k</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pgvector</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> index</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-RR-15" data-look="classic" transform="translate(176.25, 832.972785949707)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-122" y="-23.5" width="244" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Rerank</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bge-small-en-v1.5</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-HYD-17" data-look="classic" transform="translate(176.25, 938.7727851867676)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Hydrate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ids</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> relational</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SoR</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-RAG-19" data-look="classic" transform="translate(176.25, 1044.5727844238281)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-108" y="-23.5" width="216" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">rag:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> assemble</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> context</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-ANS-21" data-look="classic" transform="translate(176.25, 1141.5727844238281)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-123.5" y="-23.5" width="247" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">answer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> results</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> citations</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/semantic-search.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The subsystem is deliberately mirror-symmetric: a
+write path that indexes and a read path that queries, joined by the
+invariant that the <em>same embedding model</em> is used on both sides.
+That symmetry is the whole reason cosine similarity means anything here,
+so the diagram is best read as two halves that must agree.</p>
+<p>On the <strong>write (index) path</strong>, every source — original
+posts and all generated materials (video transcripts, research docs, OCR
+text, code) — is chunked (AST/tree-sitter for code, section-wise for
+docs), embedded through HelixLLM’s <code>/v1/embeddings</code> with the
+real llama provider, and written to pgvector via
+<code>VectorStore.Upsert(collection, []Vector)</code> where each
+<code>Vector</code> carries <code>{ID, Values, Metadata}</code> and the
+collection is created with <code>DistanceMetric = cosine</code>. A
+<strong>startup guard</strong> branches off the embed step: if the
+non-semantic HashEmbedder is configured (a HelixLLM model-server
+setting, per §2), the service fails loud rather than indexing garbage —
+this is the enforced closure of <code>[GAP: 2.1]</code>, and because the
+guard runs at boot, a misconfigured deployment never writes a single
+poisoned vector.</p>
+<p>On the <strong>read (query) path</strong>, a <code>/v1/search</code>
+query is embedded with the <em>same</em> model, then handed to
+<code>VectorStore.Search(collection, SearchQuery{Vector, TopK, Filter, MinScore})</code>
+— the <code>Filter</code> map is where the <code>account_id</code>
+tenant scope is applied so a query can never reach another account’s
+chunks. The top-k nearest chunks come back as
+<code>[]SearchResult{ID, Score, Metadata}</code>; those are reranked
+with <code>bge-small-en-v1.5</code>, the ids are hydrated from the
+relational system of record (a local join, because pgvector is
+co-located), and <code>rag</code> assembles the final context so the
+answer carries citations back to the exact posts/materials.</p>
+<p>The pieces the diagram does not draw but the source makes explicit
+are worth stating: the same <code>VectorStore</code> seam admits
+pgvector today and qdrant/pinecone/milvus by configuration (the
+<code>[GAP: 3.1]</code> swap-by-wiring), and the query-embedding is
+cache-keyed (<code>digital.vasic.cache</code>) so a repeated query skips
+the model call entirely — one of the levers that holds the &lt; 500 ms
+SLO. The guard is what stops the whole apparatus from silently degrading
+to a deterministic hash; the model-symmetry is what makes it correct
+when it does not.</p>
+<h2 id="gap-register-coverage">10. Gap-register coverage</h2>
+<ul>
+<li><code>[GAP: 2.1]</code> HashEmbedder stub → enforced
+<code>llama</code> provider + fail-loud guard + dimension validation +
+<code>/v1/embeddings</code> contract test (§3–4).</li>
+<li><code>[GAP: 2.7]</code> Embeddings no native llama.cpp backend →
+first-class HelixLLM provider planned; OpenAI-compat path documented as
+interim (§4).</li>
+<li><code>[GAP: 3.1]</code> VectorDB only pgvector wired
+(Qdrant/Pinecone/Milvus unverified) → <strong>plan:</strong> harden +
+integration-test <strong>Qdrant</strong> to full pgvector parity
+(HelixLLM already defaults to Qdrant) so Thready swaps by config; add
+ANN tuning + benchmark tests for the &lt; 500 ms SLO. pgvector is the
+MVP backend; others are not claimed working.</li>
+<li><code>[GAP: 2.8]</code> <code>digital.vasic.memory</code> search is
+word-overlap (Jaccard), not semantic → Thready standardizes on the
+<code>vectordb</code>+<code>embeddings</code>+<code>rag</code> stack,
+<strong>not</strong> <code>Memory</code>, for real recall;
+<code>HelixMemory</code> (4 external services) deferred.</li>
+<li><code>[GAP: 2.5]</code> HelixLLM verifier port <code>:7061</code> vs
+<code>:8080</code> → reconcile in single config source (§4).</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: semantic search must NOT run on the hash embedder.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmbedder_RefusesHash<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> mustSemanticEmbedder<span class="op">(</span>EmbedConfig<span class="op">{</span>Provider<span class="op">:</span> <span class="st">&quot;hash&quot;</span><span class="op">})</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Error<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span> <span class="co">// fail loud, not warn (GAP 2.1)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: index and query dims must match.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmbed_DimensionEnforced<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> mustSemanticEmbedder<span class="op">(</span>EmbedConfig<span class="op">{</span>Provider<span class="op">:</span><span class="st">&quot;llama&quot;</span><span class="op">,</span> Model<span class="op">:</span><span class="st">&quot;voyage-code-3&quot;</span><span class="op">,</span> ExpectedDim<span class="op">:</span> <span class="dv">999</span><span class="op">})</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Error<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span> <span class="co">// model dim 1024 != 999 (GAP 2.1.2)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: /v1/embeddings must return OpenAI shape ordered by index.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmbeddings_OpenAIShape<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    out <span class="op">:=</span> callEmbeddings<span class="op">(</span>t<span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;a&quot;</span><span class="op">,</span><span class="st">&quot;b&quot;</span><span class="op">})</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="op">[]</span><span class="dt">int</span><span class="op">{</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">},</span> indices<span class="op">(</span>out<span class="op">.</span>Data<span class="op">))</span> <span class="co">// consumers sort by index</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: search results are tenant-scoped (no cross-account leakage).</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSearch_TenantScoped<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    seed<span class="op">(</span>t<span class="op">,</span> account<span class="op">=</span><span class="st">&quot;A&quot;</span><span class="op">,</span> <span class="st">&quot;secret-a&quot;</span><span class="op">);</span> seed<span class="op">(</span>t<span class="op">,</span> account<span class="op">=</span><span class="st">&quot;B&quot;</span><span class="op">,</span> <span class="st">&quot;secret-b&quot;</span><span class="op">)</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    res <span class="op">:=</span> search<span class="op">(</span>t<span class="op">,</span> account<span class="op">=</span><span class="st">&quot;A&quot;</span><span class="op">,</span> <span class="st">&quot;secret&quot;</span><span class="op">)</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotContains<span class="op">(</span>t<span class="op">,</span> sourceAccounts<span class="op">(</span>res<span class="op">),</span> <span class="st">&quot;B&quot;</span><span class="op">)</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">12. Open items</h2>
+<ul>
+<li><code>[CLOSED: SEM-1]</code> (was:
+<code>vectordb</code>/<code>embeddings</code> interfaces unread).
+<strong>Source-verified this pass</strong>:
+<code>vectordb/pkg/client.VectorStore</code>
+(<code>Connect</code>/<code>Close</code>/<code>Upsert</code>/<code>Search</code>/<code>Delete</code>/<code>Get</code>)
++
+<code>Vector</code>/<code>SearchQuery{Vector,TopK,Filter,MinScore}</code>/<code>SearchResult{ID,Score,Metadata}</code>/
+<code>DistanceMetric</code>/<code>CollectionConfig</code>, with backend
+clients <code>pgvector</code>/<code>qdrant</code>/<code>pinecone</code>/
+<code>milvus</code>; and
+<code>embeddings/pkg/provider.EmbeddingProvider</code>
+(<code>Embed</code>/<code>EmbedBatch</code>/<code>Dimensions</code>/
+<code>Name</code>) +
+<code>Config{Model,BatchSize,MaxRetries,Timeout}</code> with providers
+<code>openai/voyage/jina/google/cohere/bedrock</code> (no
+<code>llama</code>/<code>hash</code>). §2/§4 now use the real surfaces;
+the pgvector <strong>DDL</strong> in §6 is Thready-side migration (the
+<code>pgvector</code> client operates over an existing table+index),
+reconciled and consistent.</li>
+<li><code>[OPEN: SEM-2]</code> Real code-tuned embedding GGUF selection
+(voyage-code-3 is a hosted model; the <em>local</em> equivalent GGUF,
+e.g. <code>nomic-embed-code</code>, and its dimension) needs a benchmark
+decision <code>[RESEARCH]</code>; tracked as a P0 workable item
+alongside the HelixLLM embedder fix.</li>
+<li><code>[OPEN: SEM-3]</code> HNSW vs IVFFlat and
+<code>ef_search</code> tuning against the &lt; 500 ms SLO at full scale
+is deferred to the testing/benchmark pack.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

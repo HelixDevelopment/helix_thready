@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — ERD Regeneration (er-export)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — ERD Regeneration (er-export)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#regeneration-pipeline-diagram"
+id="toc-regeneration-pipeline-diagram">1. Regeneration pipeline
+(diagram)</a></li>
+<li><a href="#inputs-the-schema-source-of-truth"
+id="toc-inputs-the-schema-source-of-truth">2. Inputs: the schema source
+of truth</a></li>
+<li><a href="#tools-choose-one" id="toc-tools-choose-one">3. Tools
+(choose one)</a></li>
+<li><a href="#step-by-step" id="toc-step-by-step">4.
+Step-by-step</a></li>
+<li><a href="#drift-gate-regenerated-vs-committed"
+id="toc-drift-gate-regenerated-vs-committed">5. Drift gate (regenerated
+vs committed)</a></li>
+<li><a href="#provenance-open-items" id="toc-provenance-open-items">6.
+Provenance &amp; open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — ERD Regeneration (er-export)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/database/materials/er-export.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (database, materials pack)
+  Related         : ../erd.md ../schema-relational.sql ../schema-vector.sql
+                    ../migration-strategy.md ./seed.sql ./diagrams/er-export-pipeline.mmd
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (database, materials)</td>
+<td>Initial: how to regenerate the ERD from the schema (pipeline + tools
++ drift gate)</td>
+</tr>
+</tbody>
+</table>
+<p>How to regenerate the entity-relationship diagrams in <a
+href="../erd.md"><code>../erd.md</code></a> from the schema — so the ERD
+is a <strong>derived artifact</strong> kept in lock-step with the
+migrations, not a hand-drawing that silently drifts. The canonical
+<code>erd.md</code> diagrams are currently hand-authored Mermaid
+<code>[VERIFIED — see ../erd.md]</code>; this document specifies the
+repeatable pipeline that regenerates and <strong>verifies</strong> them
+against the live applied schema.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-regeneration-pipeline-diagram">Regeneration pipeline
+(diagram)</a></li>
+<li><a href="#2-inputs-the-schema-source-of-truth">Inputs: the schema
+source of truth</a></li>
+<li><a href="#3-tools-choose-one">Tools (choose one)</a></li>
+<li><a href="#4-step-by-step">Step-by-step</a></li>
+<li><a href="#5-drift-gate-regenerated-vs-committed">Drift gate
+(regenerated vs committed)</a></li>
+<li><a href="#6-provenance--open-items">Provenance &amp; open
+items</a></li>
+</ol>
+<hr />
+<h2 id="regeneration-pipeline-diagram">1. Regeneration pipeline
+(diagram)</h2>
+<p>Source: <a
+href="./diagrams/er-export-pipeline.mmd"><code>diagrams/er-export-pipeline.mmd</code></a>.</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65).</p>
+</blockquote>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2545px; background-color: white;" viewBox="0 0 2545 350.37762451171875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-PUB" data-look="classic"><rect style="" x="1745" y="189.75" width="792" height="152.1999969482422"/><g class="cluster-label" transform="translate(2114, 189.75)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Publish</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-GEN" data-look="classic"><rect style="" x="682" y="91.55000114440918" width="1013" height="198.149995803833"/><g class="cluster-label" transform="translate(1131, 91.55000114440918)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ERD</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generation</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-SRC" data-look="classic"><rect style="" x="8" y="8" width="624" height="334.37761306762695"/><g class="cluster-label" transform="translate(238.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Schema</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> of</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> truth</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M251,86.673L268,89.819C285,92.965,319,99.258,352.417,111.5C385.834,123.743,418.667,141.936,435.084,151.032L451.501,160.129" id="my-svg-L_MIG_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MIG_PG_0" data-points="W3sieCI6MjUxLCJ5Ijo4Ni42NzI3NDg0MjEwNDA3NX0seyJ4IjozNTMsInkiOjEwNS41NDk5OTkyMzcwNjA1NX0seyJ4Ijo0NTUsInkiOjE2Mi4wNjc2MTQ1MzM1MDI0OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M248,180.239L265.5,180.239C283,180.239,318,180.239,352.5,180.239C387,180.239,421,180.239,438,180.239L455,180.239" id="my-svg-L_SR_PG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SR_PG_0" data-points="W3sieCI6MjQ4LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6MzUzLCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6NDU1LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9XQ==" data-look="classic"/><path d="M236,277.239L255.5,277.239C275,277.239,314,277.239,350.5,265.688C387,254.138,421,231.037,438,219.487L455,207.936" id="my-svg-L_SV_PG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SV_PG_0" data-points="W3sieCI6MjM2LCJ5IjoyNzcuMjM4ODA1NzcwODc0fSx7IngiOjM1MywieSI6Mjc3LjIzODgwNTc3MDg3NH0seyJ4Ijo0NTUsInkiOjIwNy45MzYxMjQ1NTU2MDYxfV0=" data-look="classic"/><path d="M607,180.239L611.167,180.239C615.333,180.239,623.667,180.239,632,180.239C640.333,180.239,648.667,180.239,657,180.239C665.333,180.239,673.667,180.239,681.333,180.239C689,180.239,696,180.239,699.5,180.239L703,180.239" id="my-svg-L_PG_DUMP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PG_DUMP_0" data-points="W3sieCI6NjA3LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6NjMyLCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6NjU3LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6NjgyLCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6NzA3LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M939,180.239L959.75,180.239C980.5,180.239,1022,180.239,1062.833,180.239C1103.667,180.239,1143.833,180.239,1163.917,180.239L1184,180.239" id="my-svg-L_DUMP_TOOL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DUMP_TOOL_0" data-points="W3sieCI6OTM5LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6MTA2My41LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9LHsieCI6MTE4OCwieSI6MTgwLjIzODgwNTc3MDg3NDAyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1419,180.239L1423.167,180.239C1427.333,180.239,1435.667,180.239,1443.333,180.239C1451,180.239,1458,180.239,1461.5,180.239L1465,180.239" id="my-svg-L_TOOL_MMD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOOL_MMD_0" data-points="W3sieCI6MTQxOSwieSI6MTgwLjIzODgwNTc3MDg3NDAyfSx7IngiOjE0NDQsInkiOjE4MC4yMzg4MDU3NzA4NzQwMn0seyJ4IjoxNDY5LCJ5IjoxODAuMjM4ODA1NzcwODc0MDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1629.75,221.339L1640.625,228.757C1651.5,236.176,1673.25,251.013,1688.292,258.431C1703.333,265.85,1711.667,265.85,1720,265.85C1728.333,265.85,1736.667,265.85,1744.333,265.85C1752,265.85,1759,265.85,1762.5,265.85L1766,265.85" id="my-svg-L_MMD_ERD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MMD_ERD_0" data-points="W3sieCI6MTYyOS43NDk3MTMyMTY2MDU2LCJ5IjoyMjEuMzM4ODA0MjQ0OTk1MTJ9LHsieCI6MTY5NSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MTcyMCwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MTc0NSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MTc3MCwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2029,265.85L2033.167,265.85C2037.333,265.85,2045.667,265.85,2053.333,265.85C2061,265.85,2068,265.85,2071.5,265.85L2075,265.85" id="my-svg-L_ERD_DC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ERD_DC_0" data-points="W3sieCI6MjAyOSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MjA1NCwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MjA3OSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2329,265.85L2333.167,265.85C2337.333,265.85,2345.667,265.85,2353.333,265.85C2361,265.85,2368,265.85,2371.5,265.85L2375,265.85" id="my-svg-L_DC_OUT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DC_OUT_0" data-points="W3sieCI6MjMyOSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MjM1NCwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9LHsieCI6MjM3OSwieSI6MjY1Ljg0OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1670,155.904L1674.167,154.895C1678.333,153.886,1686.667,151.868,1695,150.859C1703.333,149.85,1711.667,149.85,1720,149.85C1728.333,149.85,1736.667,149.85,1758.417,140.488C1780.166,131.127,1815.333,112.403,1832.916,103.042L1850.499,93.68" id="my-svg-L_MMD_DRIFT_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MMD_DRIFT_0" data-points="W3sieCI6MTY3MCwieSI6MTU1LjkwMzU0NzI3MTc4OTN9LHsieCI6MTY5NSwieSI6MTQ5Ljg1MDAwMDM4MTQ2OTczfSx7IngiOjE3MjAsInkiOjE0OS44NTAwMDAzODE0Njk3M30seyJ4IjoxNzQ1LCJ5IjoxNDkuODUwMDAwMzgxNDY5NzN9LHsieCI6MTg1NC4wMjk5OTU2MjU3OTg2LCJ5Ijo5MS43OTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1791.838,60.524L1784.032,59.979C1776.225,59.433,1760.613,58.341,1748.64,57.796C1736.667,57.25,1728.333,57.25,1720,57.25C1711.667,57.25,1703.333,57.25,1678.25,57.25C1653.167,57.25,1611.333,57.25,1569.5,57.25C1527.667,57.25,1485.833,57.25,1441.5,57.25C1397.167,57.25,1350.333,57.25,1286.917,57.25C1223.5,57.25,1143.5,57.25,1063.417,57.25C983.333,57.25,903.167,57.25,839.583,57.25C776,57.25,729,57.25,701.333,57.25C673.667,57.25,665.333,57.25,657,57.25C648.667,57.25,640.333,57.25,619.333,57.25C598.333,57.25,564.667,57.25,518.167,57.25C471.667,57.25,412.333,57.25,366.333,57.966C320.332,58.682,287.664,60.114,271.33,60.83L254.996,61.546" id="my-svg-L_DRIFT_MIG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DRIFT_MIG_0" data-points="W3sieCI6MTc5MS44Mzc4NjE4MzM0NzUsInkiOjYwLjUyNDI3MzI4MTI5MjE5Nn0seyJ4IjoxNzQ1LCJ5Ijo1Ny4yNX0seyJ4IjoxNzIwLCJ5Ijo1Ny4yNX0seyJ4IjoxNjk1LCJ5Ijo1Ny4yNX0seyJ4IjoxNTY5LjUsInkiOjU3LjI1fSx7IngiOjE0NDQsInkiOjU3LjI1fSx7IngiOjEzMDMuNSwieSI6NTcuMjV9LHsieCI6MTA2My41LCJ5Ijo1Ny4yNX0seyJ4Ijo4MjMsInkiOjU3LjI1fSx7IngiOjY4MiwieSI6NTcuMjV9LHsieCI6NjU3LCJ5Ijo1Ny4yNX0seyJ4Ijo2MzIsInkiOjU3LjI1fSx7IngiOjUzMSwieSI6NTcuMjV9LHsieCI6MzUzLCJ5Ijo1Ny4yNX0seyJ4IjoyNTEsInkiOjYxLjcyMTU2Mzk4MTA0MjY2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_MIG_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(353, 180.23880577087402)"><g class="label" data-id="L_SR_PG_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-76.5" y="0" width="154" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hand-authored</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mirror</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(353, 277.238805770874)"><g class="label" data-id="L_SV_PG_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-76.5" y="0" width="154" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hand-authored</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mirror</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_PG_DUMP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DUMP_TOOL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOOL_MMD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MMD_ERD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ERD_DC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DC_OUT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MMD_DRIFT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1063.5, 57.25)"><g class="label" data-id="L_DRIFT_MIG_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-99.5" y="0" width="199" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mismatch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fail</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pre-tag</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gate</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-MIG-0" data-look="classic" transform="translate(142, 66.5)"><rect class="basic label-container" style="" x="-109" y="-23.5" width="218" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">migrations/0001..0007</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SR-1" data-look="classic" transform="translate(142, 180.23880577087402)"><rect class="basic label-container" style="" x="-106" y="-23.5" width="212" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">schema-relational.sql</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SV-2" data-look="classic" transform="translate(142, 277.238805770874)"><rect class="basic label-container" style="" x="-94" y="-23.5" width="188" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">schema-vector.sql</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PG-3" data-look="classic" transform="translate(531, 180.23880577087402)"><path d="M0,13.71841155234657 a76,13.71841155234657 0,0,0 152,0 a76,13.71841155234657 0,0,0 -152,0 l0,63.31841002646766 a76,13.71841155234657 0,0,0 152,0 l0,-63.31841002646766" class="basic label-container outer-path" style="" transform="translate(-76, -45.3776165655804)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">live</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PostgreSQL</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 16</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">applied</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> schema</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DUMP-10" data-look="classic" transform="translate(823, 180.23880577087402)"><rect class="basic label-container" style="" x="-116" y="-41.099998474121094" width="232" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pg_dump</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> --schema-only</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">OR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> information_schema</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">introspection</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TOOL-11" data-look="classic" transform="translate(1303.5, 180.23880577087402)"><rect class="basic label-container" style="" x="-115.5" y="-41.599998474121094" width="231" height="83.19999694824219"/><g class="label" style="" transform="translate(0, -26.599998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ERD</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mermerd</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SchemaSpy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgresql_autodoc</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MMD-12" data-look="classic" transform="translate(1569.5, 180.23880577087402)"><rect class="basic label-container" style="" x="-100.5" y="-41.099998474121094" width="201" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">diagrams/*.mmd</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Mermaid</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> erDiagram</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sources</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ERD-17" data-look="classic" transform="translate(1899.5, 265.8499984741211)"><rect class="basic label-container" style="" x="-129.5" y="-32.29999923706055" width="259" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">erd.md</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embedded</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mermaid</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prose</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DC-18" data-look="classic" transform="translate(2204, 265.8499984741211)"><rect class="basic label-container" style="" x="-125" y="-41.099998474121094" width="250" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Docs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Chain</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.65</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> md-</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTML/PDF</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">PNG/SVG</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-OUT-19" data-look="classic" transform="translate(2445.5, 265.8499984741211)"><path d="M0,12.887596899224805 a66.5,12.887596899224805 0,0,0 133,0 a66.5,12.887596899224805 0,0,0 -133,0 l0,44.8875968992248 a66.5,12.887596899224805 0,0,0 133,0 l0,-44.8875968992248" class="basic label-container outer-path" style="" transform="translate(-66.5, -35.331395348837205)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">erd.png</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> erd.svg</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DRIFT-24" data-look="classic" transform="translate(1899.5, 66.5)"><polygon points="12.399999618530273,0 210.39999961853027,0 222.79999923706055,-24.799999237060547 210.39999961853027,-49.599998474121094 12.399999618530273,-49.599998474121094 0,-24.799999237060547" class="label-container" transform="translate(-111.39999961853027,24.799999237060547)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">structural</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> diff</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">regenerated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> vs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> committed</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The pipeline reads left-to-right in three stages. On
+the left, the <strong>schema source of truth</strong> has one
+authoritative producer and two mirrors: the ordered
+<code>migrations/0001..0007</code> are what is actually
+<code>Apply</code>-ed to produce the <strong>live PostgreSQL 16</strong>
+applied schema (the solid <code>MIG → PG</code> edge), while
+<code>schema-relational.sql</code> and <code>schema-vector.sql</code>
+are hand-authored <strong>mirrors</strong> of that same shape (the
+dashed edges) kept for review — the migrations, not the mirror files,
+are what the database ends up matching. Regeneration therefore always
+targets the <strong>live applied schema</strong>, because that is the
+ground truth that the ERD must describe.</p>
+<p>The middle <strong>ERD generation</strong> stage extracts the schema
+and renders diagrams: <code>pg_dump --schema-only</code> (or an
+<code>information_schema</code> / <code>pg_catalog</code> introspection
+query) captures the tables, columns, keys and foreign keys, an
+<strong>ERD generator</strong> (mermerd, SchemaSpy, or
+<code>postgresql_autodoc</code>) turns that into Mermaid
+<code>erDiagram</code> text, and the result is written to the
+<code>diagrams/*.mmd</code> sibling files. The right
+<strong>publish</strong> stage embeds those <code>.mmd</code> sources
+into <code>erd.md</code> as fenced
+``<code>mermaid blocks (each with its mandatory prose paragraph per [CONVENTIONS §4](../../CONVENTIONS.md)), and **Docs Chain** (</code>§11.4.65<code>) exports the whole document to HTML/PDF and the diagrams to</code>erd.png<code>/</code>erd.svg`.</p>
+<p>The dotted <strong>drift gate</strong> node closes the loop: the
+freshly regenerated <code>.mmd</code> is structurally diffed against the
+committed one, and a mismatch <strong>fails the pre-tag gate</strong>
+and points back at the migrations — meaning a schema change shipped
+without regenerating the ERD is caught before a release tag, exactly as
+the migration structural-diff gate works (<a
+href="../migration-strategy.md#10-ci-less-enforcement--tdd">migration-strategy.md
+§10</a>).</p>
+<hr />
+<h2 id="inputs-the-schema-source-of-truth">2. Inputs: the schema source
+of truth</h2>
+<p>The ERD is generated from the <strong>applied schema</strong>,
+obtained by running the migrations into a throwaway database (never from
+the hand-authored <code>.sql</code> mirror directly — that is what the
+drift gate protects against):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Stand up an ephemeral Postgres and apply the canonical chain + seed lookups.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    (dev parity: the same migrations run on SQLite, but the ERD is generated from PG 16</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#     because pgvector types + partitioned parents must be introspected — see §6.)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">-d</span> <span class="at">--name</span> thready_erd <span class="at">-e</span> POSTGRES_PASSWORD=erd <span class="at">-p</span> 5433:5432 pgvector/pgvector:pg16</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DSN</span><span class="op">=</span><span class="st">&quot;postgres://postgres:erd@localhost:5433/postgres?sslmode=disable&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply migrations in version order. Feed each file&#39;s Up section (the runner would; for a</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># raw psql preview we extract the block between the `-- +thready Up`/`-- +thready Down`</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># markers so psql never also runs the Down half):</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">up()</span> <span class="kw">{</span> <span class="fu">awk</span> <span class="st">&#39;/^-- \+thready Up/{u=1;next} /^-- \+thready Down/{u=0} u&#39;</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> 0001_init 0002_classification 0003_assets 0004_billing <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>         0005_events_audit 0006_vector_collections<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">up</span> <span class="st">&quot;../migrations/</span><span class="va">$f</span><span class="st">.sql&quot;</span> <span class="kw">|</span> <span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">-v</span> ON_ERROR_STOP=1</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 0007 (CONCURRENTLY) is applied outside a transaction; for a schema dump the indexes are</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># not required — ERDs describe tables/keys/FKs, not secondary indexes.</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">-v</span> ON_ERROR_STOP=1 <span class="at">-f</span> ./seed.sql   <span class="co"># optional: lookups for a populated preview</span></span></code></pre></div>
+<blockquote>
+<p>The <code>-- +thready Up/Down</code> markers make each file loadable
+by the Go runner; for a raw <code>psql -f</code> preview strip the
+<code>-- +thready Down</code> half (everything after that marker), since
+<code>psql</code> would otherwise also execute the Down. In practice,
+generate from a DB migrated by the service’s own migrate step so Up/Down
+handling is exactly the runtime path.</p>
+</blockquote>
+<hr />
+<h2 id="tools-choose-one">3. Tools (choose one)</h2>
+<p><code>[DEFAULT — adjustable]</code> — the exact generator is not
+mandated; any of these produces the Mermaid the pipeline needs. The
+in-house <strong>Docs Chain</strong> owns the final md→HTML/PDF+image
+export <code>[CONSTITUTION §11.4.65]</code>
+<code>[IN-HOUSE: docs_chain]</code>; the ERD-text generator feeding it
+is the adjustable part.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 35%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Emits</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>mermerd</strong></td>
+<td>Mermaid <code>erDiagram</code> directly</td>
+<td>Best fit — output pastes straight into <code>diagrams/*.mmd</code>;
+connects to <code>$DSN</code>, can select table subsets for the 5 domain
+ERDs.</td>
+</tr>
+<tr>
+<td><strong>SchemaSpy</strong></td>
+<td>HTML + relationship graphs</td>
+<td>Rich HTML; convert its relationships to Mermaid or keep as a
+supplementary browse view.</td>
+</tr>
+<tr>
+<td><strong>postgresql_autodoc</strong></td>
+<td>Dot / HTML / dia</td>
+<td>Classic; post-process Dot → Mermaid.</td>
+</tr>
+<tr>
+<td><strong><code>pg_dump --schema-only</code> + hand map</strong></td>
+<td>raw DDL</td>
+<td>Fallback when no generator is available; script the DDL→erDiagram
+mapping.</td>
+</tr>
+</tbody>
+</table>
+<p>Partition-aware / pgvector caveat: generators that introspect
+<code>pg_catalog</code> see partitioned <strong>parents</strong> and
+their partitions as separate relations, and see <code>vector(N)</code>
+columns as a user type. Filter child partitions (<code>*_YYYY_MM</code>,
+<code>*_default</code>) and render only the parent, and keep the
+<code>vectordb_*</code> collections in the vector sub-diagram — matching
+how <code>erd.md</code> §4/§7 present them.</p>
+<hr />
+<h2 id="step-by-step">4. Step-by-step</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (after §2 produced a migrated DB at $DSN)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># a. Generate the master ERD (all base tables) as Mermaid.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--schema</span> public <span class="at">--useAllTables</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">--encloseWithMermaidBackticks</span><span class="op">=</span>false <span class="op">&gt;</span> /tmp/erd-overview.mmd</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># b. Generate each DOMAIN ERD by selecting its tables (mirrors erd.md §3-§6).</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--selectedTables</span> accounts,users,roles,permissions,role_permissions,memberships <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">&gt;</span> /tmp/erd-tenancy.mmd</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--selectedTables</span> messengers,messenger_accounts,channels,threads,posts,replies,hashtags,categories,post_hashtags,reply_hashtags,post_categories,hashtag_categories <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">&gt;</span> /tmp/erd-ingestion.mmd</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--selectedTables</span> processing_state,skills,skill_runs,generated_artifacts,assets,asset_links <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">&gt;</span> /tmp/erd-processing-assets.mmd</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--selectedTables</span> events,event_subscriptions,plans,subscriptions,usage_records,invoices,audit_log <span class="dt">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">&gt;</span> /tmp/erd-billing-audit.mmd</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># c. Review the generated .mmd, filter child partitions, then update the siblings in</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#    ../diagrams/ and the embedded ```mermaid blocks in ../erd.md. Each embedded diagram</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#    MUST keep its &quot;Explanation (for readers/models...)&quot; prose paragraph (CONVENTIONS §4).</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># d. Export images + HTML/PDF via Docs Chain (the authoritative renderer, §11.4.65).</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> export <span class="at">--input</span> ../erd.md <span class="at">--emit</span> png,svg,html,pdf   <span class="co"># [IN-HOUSE: docs_chain]</span></span></code></pre></div>
+<p>Manual step (kept honest): the <strong>prose explanation</strong>
+under each diagram and the soft-vs-hard-FK annotations are authored by a
+human/model — a generator emits topology, not the multi-paragraph
+narrative CONVENTIONS §4 mandates. Regeneration refreshes the
+<em>topology</em>; the prose is reviewed and updated in the same
+change.</p>
+<hr />
+<h2 id="drift-gate-regenerated-vs-committed">5. Drift gate (regenerated
+vs committed)</h2>
+<p>Because there is <strong>no server-side CI</strong>
+<code>[CONSTITUTION §11.4.156]</code>, the ERD-vs-schema check runs in
+the local pre-tag full-suite retest <code>[§11.4.40]</code>, alongside
+the migration structural-diff already specified in <a
+href="../migration-strategy.md#10-ci-less-enforcement--tdd">migration-strategy.md
+§10</a>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Regenerate into a temp file and diff against the committed sibling; non-empty = drift.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mermerd</span> <span class="at">--connectionString</span> <span class="st">&quot;</span><span class="va">$DSN</span><span class="st">&quot;</span> <span class="at">--useAllTables</span> <span class="op">&gt;</span> /tmp/erd-overview.new.mmd</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ot">! </span><span class="fu">diff</span> <span class="at">-q</span> <span class="op">&lt;(</span><span class="ex">normalize</span> /tmp/erd-overview.new.mmd<span class="op">)</span> <span class="op">&lt;(</span><span class="ex">normalize</span> ../diagrams/erd-overview.mmd<span class="op">)</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;ERD DRIFT: schema changed but diagrams/erd-overview.mmd was not regenerated&quot;</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">exit</span> 1   <span class="co"># blocks the &lt;PREFIX&gt;-&lt;ver&gt; tag until the ERD is regenerated + prose updated</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<p><code>normalize</code> strips ordering/whitespace noise so only
+<strong>structural</strong> changes (a new table, column, or FK) trip
+the gate. This makes the ERD a <em>tested</em> derived artifact: a
+migration that adds <code>usage_rollups</code> or
+<code>billing_events</code> (this pack’s <a
+href="./migrations/0003_billing_metering.sql"><code>0003_billing_metering.sql</code></a>)
+cannot be tagged until the ERD reflects it.</p>
+<hr />
+<h2 id="provenance-open-items">6. Provenance &amp; open items</h2>
+<ul>
+<li><strong>VERIFIED:</strong> the ERD in <a
+href="../erd.md"><code>../erd.md</code></a> is currently hand-authored
+Mermaid with sibling <code>.mmd</code> files in <a
+href="../diagrams/"><code>../diagrams/</code></a>; Docs Chain is the
+mandated md→HTML/PDF renderer <code>[CONSTITUTION §11.4.65]</code>
+<code>[IN-HOUSE: docs_chain]</code>; the migrations are the true
+producer of the applied schema (migration-strategy.md).</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+specific ERD-text generator (mermerd / SchemaSpy / autodoc), the
+<code>pgvector/pgvector:pg16</code> preview image, and the
+<code>normalize</code> filter details — these are tooling choices, not
+schema, and can change without a migration.</li>
+<li><code>[OPEN: erd-autogen-adoption]</code> The pipeline is specified
+and runnable but adopting an auto-generator to <em>replace</em> the
+hand-authored diagrams (vs. only <em>checking</em> them) is a follow-up:
+the domain sub-diagrams and their prose are curated for readability, so
+the near-term use is the <strong>drift gate</strong> (§5), with full
+autogen tracked as a later refinement. This is honest status — the check
+is real; full generation is not yet the source of the committed
+diagrams.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

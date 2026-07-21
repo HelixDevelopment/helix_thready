@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — OpenAPI Structural Validation Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — OpenAPI Structural Validation
+Report</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#summary" id="toc-summary">1. Summary</a></li>
+<li><a href="#tooling-availability-what-ran-what-did-not"
+id="toc-tooling-availability-what-ran-what-did-not">2. Tooling
+availability (what ran, what did not)</a></li>
+<li><a href="#errors-2-must-fix" id="toc-errors-2-must-fix">3. Errors
+(2) — must fix</a>
+<ul>
+<li><a href="#componentsschemaserrorpropertieserrorpropertiesmessage"
+id="toc-componentsschemaserrorpropertieserrorpropertiesmessage">3.1
+<code>#/components/schemas/Error/properties/error/properties/message</code></a></li>
+<li><a
+href="#componentsschemasassetpropertiesrenditionsitemspropertiesurl"
+id="toc-componentsschemasassetpropertiesrenditionsitemspropertiesurl">3.2
+<code>#/components/schemas/Asset/properties/renditions/items/properties/url</code></a></li>
+</ul></li>
+<li><a href="#warnings-39-by-rule" id="toc-warnings-39-by-rule">4.
+Warnings (39) — by rule</a></li>
+<li><a href="#hand-lint-of-required-openapi-3.1-fields"
+id="toc-hand-lint-of-required-openapi-3.1-fields">5. Hand-lint of
+required OpenAPI 3.1 fields</a></li>
+<li><a href="#how-to-reproduce" id="toc-how-to-reproduce">6. How to
+reproduce</a></li>
+<li><a href="#open-items" id="toc-open-items">7. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — OpenAPI Structural Validation Report
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/materials/validation.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (API & SDKs — materials)
+  Related         : ../openapi.yaml, ../asyncapi.yaml, ./README.md, ./codegen/README.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs — materials)</td>
+<td>Initial validation of <code>../openapi.yaml</code> with
+<code>@redocly/cli</code> 2.40.0 + a PyYAML/hand-lint of the required
+OpenAPI 3.1 fields</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-summary">Summary</a></li>
+<li><a href="#2-tooling-availability-what-ran-what-did-not">Tooling
+availability (what ran, what did not)</a></li>
+<li><a href="#3-errors-2--must-fix">Errors (2) — must fix</a></li>
+<li><a href="#4-warnings-39--by-rule">Warnings (39) — by rule</a></li>
+<li><a href="#5-hand-lint-of-required-openapi-31-fields">Hand-lint of
+required OpenAPI 3.1 fields</a></li>
+<li><a href="#6-how-to-reproduce">How to reproduce</a></li>
+<li><a href="#7-open-items">Open items</a></li>
+</ol>
+<h2 id="summary">1. Summary</h2>
+<p><code>../openapi.yaml</code> (<code>openapi: 3.1.0</code>,
+<code>info.version: 1.0.0</code>; <strong>46 paths, 59 operations, 40
+schemas, 1 webhook</strong> — counts confirmed by a PyYAML parse) was
+validated with <strong><code>@redocly/cli</code> 2.40.0</strong> under
+its built-in <code>recommended</code> ruleset
+<code>[VERIFIED: tool run]</code>.</p>
+<p><strong>Result: <code>2 errors, 39 warnings, 0 ignored</code> —
+validation FAILED.</strong></p>
+<p>Both errors are the <strong>same real defect</strong>: a
+<code>description</code> written as an unquoted YAML flow-scalar that
+contains a comma, so YAML splits the clause after the comma into a
+<strong>spurious extra schema property</strong>. This is a genuine bug
+in <code>openapi.yaml</code>, not a linter false-positive — a raw PyYAML
+parse reproduces it independently (§3). It is recorded here and raised
+as an <strong>open item</strong> because this task may write only inside
+<code>materials/</code>; the fix belongs in <code>../openapi.yaml</code>
+and is a one-line quote per site.</p>
+<p>The 39 warnings are style/completeness advisories under the
+<code>recommended</code> ruleset (missing <code>4XX</code> on read-only
+GETs, three unused reusable components, a strict-license note, truncated
+<code>…</code>-style example UUIDs); none blocks codegen and each is
+triaged in §4.</p>
+<blockquote>
+<p>Provenance: <code>[VERIFIED: tool run]</code> = observed output of
+the named tool in this environment; <code>[DEFAULT — adjustable]</code>
+= recommended remediation, not yet applied.</p>
+</blockquote>
+<h2 id="tooling-availability-what-ran-what-did-not">2. Tooling
+availability (what ran, what did not)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 34%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th style="text-align: center;">Present?</th>
+<th style="text-align: center;">Used</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@redocly/cli</code>
+(<code>npx @redocly/cli@latest</code>)</td>
+<td style="text-align: center;"><strong>yes — 2.40.0</strong></td>
+<td style="text-align: center;">✅ primary</td>
+<td>Ran the full <code>recommended</code> OpenAPI 3.1 ruleset.
+<code>[VERIFIED: tool run]</code></td>
+</tr>
+<tr>
+<td><code>buf</code></td>
+<td style="text-align: center;"><strong>yes — 1.71.0</strong>
+(<code>/home/milos/go/bin/buf</code>)</td>
+<td style="text-align: center;">✅ codegen</td>
+<td>Not an OpenAPI validator; drives the proto plane (see
+<code>codegen/</code>).</td>
+</tr>
+<tr>
+<td>PyYAML</td>
+<td style="text-align: center;"><strong>yes — 6.0.3</strong></td>
+<td style="text-align: center;">✅ cross-check</td>
+<td>Independent parse to confirm the two errors + count
+paths/ops/schemas.</td>
+</tr>
+<tr>
+<td><code>@stoplight/spectral-cli</code></td>
+<td style="text-align: center;">not installed</td>
+<td style="text-align: center;">❌</td>
+<td><code>npx</code> install timed out in this sandbox (no cached
+package); not used. Redocly’s <code>recommended</code> ruleset covers
+the same structural checks, so the gap does not leave the spec
+unvalidated.</td>
+</tr>
+<tr>
+<td><code>openapi-generator</code> (CLI)</td>
+<td style="text-align: center;">not installed locally</td>
+<td style="text-align: center;">⚪ n/a</td>
+<td>Available via Docker image
+<code>openapitools/openapi-generator-cli:v7.9.0</code> or npx; its
+<code>--skip-validate-spec=false</code> is a <em>second</em> validator
+the <code>codegen/Makefile</code> runs at generation time. Not exercised
+here (no network pull attempted).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest tooling gap:</strong> only one dedicated OpenAPI
+validator (<code>redocly</code>) actually executed. Spectral and a live
+<code>openapi-generator validate</code> were <strong>not</strong> run
+(sandbox/network limits). The redocly <code>recommended</code> ruleset
+is a superset of the structural (<code>struct</code>) checks that matter
+for 3.1 conformance, and the PyYAML cross-check independently confirms
+the two hard errors, so the two blocking defects are
+<strong>verified</strong>, not merely linter-reported.</p>
+<h2 id="errors-2-must-fix">3. Errors (2) — must fix</h2>
+<p>Both are the <strong>struct</strong> rule:
+<code>Property &lt;x&gt; is not expected here.</code> Root cause: a
+comma inside an <strong>unquoted</strong> flow-mapping
+<code>description</code>, which YAML parses as a key/value separator, so
+the text after the comma becomes an unexpected property whose value is
+<code>null</code>.</p>
+<h3 id="componentsschemaserrorpropertieserrorpropertiesmessage">3.1
+<code>#/components/schemas/Error/properties/error/properties/message</code></h3>
+<ul>
+<li><strong>Location:</strong> <code>openapi.yaml:322</code></li>
+<li><strong>Line:</strong>
+<code>message: { type: string, description: Human-readable, non-localized-by-default. }</code></li>
+<li><strong>What YAML actually parses</strong> (independently reproduced
+with PyYAML):
+<code>keys -&gt; ['type', 'description', 'non-localized-by-default.']</code>
+— the description silently truncates to <code>"Human-readable"</code>
+and a bogus property <code>non-localized-by-default.</code> (value
+<code>null</code>) is injected into the schema.
+<code>[VERIFIED: PyYAML parse]</code></li>
+<li><strong>Fix <code>[DEFAULT — adjustable]</code>:</strong> quote the
+value —
+<code>description: "Human-readable, non-localized-by-default."</code></li>
+</ul>
+<h3
+id="componentsschemasassetpropertiesrenditionsitemspropertiesurl">3.2
+<code>#/components/schemas/Asset/properties/renditions/items/properties/url</code></h3>
+<ul>
+<li><strong>Location:</strong> <code>openapi.yaml:633</code></li>
+<li><strong>Line:</strong>
+<code>url: { type: string, format: uri, description: Asset-Service-resolved, never a raw path. }</code></li>
+<li><strong>What YAML actually parses:</strong>
+<code>keys -&gt; ['type', 'format', 'description', 'never a raw path.']</code>
+— description truncates to <code>"Asset-Service-resolved"</code> and a
+bogus property <code>never a raw path.</code> (value <code>null</code>)
+is injected. <code>[VERIFIED: PyYAML parse]</code></li>
+<li><strong>Fix <code>[DEFAULT — adjustable]</code>:</strong> quote the
+value —
+<code>description: "Asset-Service-resolved, never a raw path."</code></li>
+</ul>
+<blockquote>
+<p>Any inline flow-scalar <code>description:</code> containing a comma,
+colon or <code>#</code> must be quoted. A repo-wide guard
+(<code>redocly lint</code> in a pre-commit hook, see
+<code>codegen/Makefile openapi-lint</code>) prevents regressions.</p>
+</blockquote>
+<h2 id="warnings-39-by-rule">4. Warnings (39) — by rule</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 17%" />
+<col style="width: 28%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;">Count</th>
+<th>Rule</th>
+<th>Severity</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">31</td>
+<td><code>operation-4xx-response</code></td>
+<td>advisory</td>
+<td>Read-only GET/list operations document only <code>200</code>.
+<strong>Intended, per <code>openapi.yaml</code>’s own preamble:</strong>
+the universal <code>401/429/500</code> (and <code>404</code> where
+relevant) are declared once in the info/description and “omitted from
+each operation’s <code>responses</code> for brevity.” Suppress via a
+<code>.redocly.yaml</code> rule override rather than padding every
+GET.</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td><code>no-unused-components</code></td>
+<td>advisory</td>
+<td><code>responses.Internal</code>, <code>headers.Sunset</code>,
+<code>securitySchemes.oauth2</code> are declared but never
+<code>$ref</code>-d. They are <strong>deliberate contract
+surface</strong> (the universal 500 envelope, RFC 8594 deprecation
+header, and the OAuth2 linking flow whose only route —
+<code>/auth/oauth2/authorize</code> — uses a 302, not the scheme). Keep;
+optionally reference <code>Internal</code>/<code>Sunset</code> from one
+op each to silence.</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td><code>no-invalid-media-type-examples</code></td>
+<td>advisory</td>
+<td>Two example <code>id</code> values are <strong>truncated for
+readability</strong> and so fail <code>format: uuid</code>:
+<code>…/posts/{postId}/process</code> 202
+<code>examples.claimed.value.id = "7c9a…job"</code>, and
+<code>…/events/{…}/sticky</code> 200
+<code>examples.lastProgress.value.id = "8f0e…-uuid"</code>. Cosmetic;
+replace the ellipsis ids with full UUIDs to clear.</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>operation-2xx-response</code></td>
+<td>advisory</td>
+<td><code>GET /auth/oauth2/authorize</code> has only <code>302</code>
+(by design — it redirects to the provider consent screen). Acceptable
+for an OAuth start endpoint.</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>info-license-strict</code></td>
+<td>advisory</td>
+<td><code>info.license</code> has <code>name</code>
+(<code>UNLICENSED — internal…</code>) but no
+<code>url</code>/<code>identifier</code>. Intentional (not an SPDX id).
+Add <code>identifier: LicenseRef-Helix-Internal</code> if strict
+compliance is wanted.</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>operation-operationId</code></td>
+<td>advisory</td>
+<td>The <code>eventDelivery</code> <strong>webhook</strong> operation
+has no <code>operationId</code>. Webhook ops are not client-invoked; add
+<code>operationId: onEventDelivery</code> for SDK naming symmetry if
+desired.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Net:</strong> 0 of the 39 warnings indicates a wire-contract
+defect. The 31 <code>operation-4xx</code> warnings are an artifact of
+the spec’s documented “universal responses declared once” convention
+colliding with a per-operation linter rule; the recommended action is a
+scoped rule-severity override, not 31 edits.</p>
+<h2 id="hand-lint-of-required-openapi-3.1-fields">5. Hand-lint of
+required OpenAPI 3.1 fields</h2>
+<p>Independent of redocly, the mandatory 3.1 structural fields were
+confirmed present and well-typed via PyYAML
+<code>[VERIFIED: PyYAML parse]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 23%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Required field</th>
+<th style="text-align: center;">Present</th>
+<th>Value / note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openapi</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>3.1.0</code></td>
+</tr>
+<tr>
+<td><code>info.title</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>Helix Thready Control API</code></td>
+</tr>
+<tr>
+<td><code>info.version</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>1.0.0</code></td>
+</tr>
+<tr>
+<td><code>paths</code></td>
+<td style="text-align: center;">✅</td>
+<td>46 path items, 59 operations</td>
+</tr>
+<tr>
+<td><code>components.schemas</code></td>
+<td style="text-align: center;">✅</td>
+<td>40 schemas; <code>Error</code> envelope + <code>PageMeta</code>
+shared</td>
+</tr>
+<tr>
+<td><code>components.securitySchemes</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>bearerAuth</code>, <code>apiKeyAuth</code>,
+<code>oauth2</code>, <code>hmacAuth</code></td>
+</tr>
+<tr>
+<td>root <code>security</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>bearerAuth</code> / <code>apiKeyAuth</code> (per-op overrides
+with <code>security: []</code>)</td>
+</tr>
+<tr>
+<td><code>servers</code></td>
+<td style="text-align: center;">✅</td>
+<td>prod / staging / dev under <code>/v1</code></td>
+</tr>
+<tr>
+<td><code>webhooks</code> (3.1)</td>
+<td style="text-align: center;">✅</td>
+<td><code>eventDelivery</code> (outbound, HMAC-signed
+<code>EventEnvelope</code>)</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td style="text-align: center;">✅</td>
+<td>14 tags; every operation is tagged</td>
+</tr>
+<tr>
+<td><code>$ref</code> integrity</td>
+<td style="text-align: center;">✅</td>
+<td>redocly resolved all refs with <strong>no</strong>
+unresolved-<code>$ref</code> errors</td>
+</tr>
+</tbody>
+</table>
+<p>The document is therefore <strong>structurally a valid OpenAPI 3.1
+skeleton</strong>; the only conformance blockers are the two
+<code>description</code> mis-parses in §3.</p>
+<h2 id="how-to-reproduce">6. How to reproduce</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> docs/public/research/mvp/api</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Primary validator (recommended ruleset):</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> <span class="at">--yes</span> @redocly/cli@latest lint openapi.yaml</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Machine-readable, to categorise findings:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> <span class="at">--yes</span> @redocly/cli@latest lint openapi.yaml <span class="at">--format</span><span class="op">=</span>json</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Independent confirmation of the two errors (no linter involved):</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-</span> <span class="op">&lt;&lt;&#39;PY&#39;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="st">import yaml</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="st">d = yaml.safe_load(open(&#39;openapi.yaml&#39;))</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;Error.message keys -&gt;&#39;,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="st">      list(d[&#39;components&#39;][&#39;schemas&#39;][&#39;Error&#39;][&#39;properties&#39;][&#39;error&#39;][&#39;properties&#39;][&#39;message&#39;]))</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="st">print(&#39;Asset.renditions.items.url keys -&gt;&#39;,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="st">      list(d[&#39;components&#39;][&#39;schemas&#39;][&#39;Asset&#39;][&#39;properties&#39;][&#39;renditions&#39;][&#39;items&#39;][&#39;properties&#39;][&#39;url&#39;]))</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="op">PY</span></span></code></pre></div>
+<p>Expected: redocly reports <code>2 errors, 39 warnings</code>; the
+PyYAML snippet prints the two spurious keys
+<code>non-localized-by-default.</code> and
+<code>never a raw path.</code>.</p>
+<h2 id="open-items">7. Open items</h2>
+<ul>
+<li><code>[OPEN: val-1]</code> <strong>Fix the two
+<code>description</code> mis-parses in
+<code>../openapi.yaml</code></strong> (§3.1, §3.2) — one-line quote
+each. Out of this task’s write scope (materials-only); raised for the
+API owner. Until fixed, <code>redocly lint</code> fails and any strict
+<code>openapi-generator</code> run with
+<code>--skip-validate-spec=false</code> will reject the spec.</li>
+<li><code>[OPEN: val-2]</code> Add a scoped <code>.redocly.yaml</code>
+that downgrades <code>operation-4xx-response</code> (the spec documents
+universal responses centrally) and fills the two truncated example
+UUIDs, so a clean <code>redocly lint</code> becomes a real pre-tag gate
+(wired in <code>codegen/Makefile: openapi-lint</code>).</li>
+<li><code>[OPEN: val-3]</code> <strong>Tooling gap:</strong> neither
+Spectral nor a live <code>openapi-generator validate</code> ran here
+(sandbox/network). Re-run both in an environment with network to get a
+second and third independent structural opinion before publishing the
+SDKs.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

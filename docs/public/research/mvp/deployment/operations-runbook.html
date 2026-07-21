@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Day-2 Operations &amp; Incident Runbook</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Day-2 Operations &amp; Incident
+Runbook</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#on-call-quick-card" id="toc-on-call-quick-card">1. On-call
+quick card</a></li>
+<li><a href="#routine-operations" id="toc-routine-operations">2. Routine
+operations</a></li>
+<li><a href="#incident-triage-diagram"
+id="toc-incident-triage-diagram">3. Incident-triage diagram</a></li>
+<li><a href="#playbook-a-service-is-unhealthy-crash-looping"
+id="toc-playbook-a-service-is-unhealthy-crash-looping">4. Playbook — a
+service is unhealthy / crash-looping</a></li>
+<li><a href="#playbook-certificate-expiry-imminent-renewal-failing"
+id="toc-playbook-certificate-expiry-imminent-renewal-failing">5.
+Playbook — certificate expiry imminent / renewal failing</a></li>
+<li><a href="#playbook-wal-archive-stalled-rpo-at-risk"
+id="toc-playbook-wal-archive-stalled-rpo-at-risk">6. Playbook — WAL
+archive stalled (RPO at risk)</a></li>
+<li><a href="#playbook-disk-pressure" id="toc-playbook-disk-pressure">7.
+Playbook — disk pressure</a></li>
+<li><a href="#playbook-host-reboot-after-power-loss"
+id="toc-playbook-host-reboot-after-power-loss">8. Playbook — host reboot
+/ after power loss</a></li>
+<li><a href="#playbook-a-deploy-is-stuck-or-a-rollback-did-not-complete"
+id="toc-playbook-a-deploy-is-stuck-or-a-rollback-did-not-complete">9.
+Playbook — a deploy is stuck or a rollback did not complete</a></li>
+<li><a href="#playbook-suspected-secret-leak"
+id="toc-playbook-suspected-secret-leak">10. Playbook — suspected secret
+leak</a></li>
+<li><a href="#maintenance-cadence" id="toc-maintenance-cadence">11.
+Maintenance cadence</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">12.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">13. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Day-2 Operations & Incident Runbook
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/operations-runbook.md
+  Status          : Review — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./hetzner-provisioning.md, ./deploy-and-rollback.md,
+                    ./backup-dr.md, ./tls-lets-encrypt.md, ./podman-compose.md,
+                    ./compose-files.md, ./secrets-and-config.md, ./service-discovery-ports.md,
+                    ./monitoring-observability.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Consolidated day-2 operator runbook: routine ops, on-call quick
+card, incident playbooks, maintenance cadence</td>
+</tr>
+</tbody>
+</table>
+<p>Where <a href="./hetzner-provisioning.md">hetzner-provisioning.md</a>
+is the <strong>day-0/day-1</strong> runbook (bring the host into
+existence) and <a
+href="./deploy-and-rollback.md">deploy-and-rollback.md</a> is the
+<strong>release</strong> mechanism, this is the <strong>day-2</strong>
+runbook: what an operator runs during normal operation and what they do
+when a specific thing breaks. Every command runs <strong>as the
+<code>thready</code> user, rootless, no <code>sudo</code></strong>
+<code>[CONSTITUTION §11.4.76/161]</code>. Every incident playbook ends
+by re-running the same <a
+href="./deploy-and-rollback.md#7-post-deploy-verification-anti-bluff-gate">health-gated
+verification</a> a normal deploy uses, so “resolved” always means
+<em>verified healthy</em>, never <em>looks up</em>.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-on-call-quick-card">On-call quick card</a></li>
+<li><a href="#2-routine-operations">Routine operations</a></li>
+<li><a href="#3-incident-triage-diagram">Incident-triage
+diagram</a></li>
+<li><a
+href="#4-playbook--a-service-is-unhealthy--crash-looping">Playbook — a
+service is unhealthy / crash-looping</a></li>
+<li><a
+href="#5-playbook--certificate-expiry-imminent--renewal-failing">Playbook
+— certificate expiry imminent / renewal failing</a></li>
+<li><a href="#6-playbook--wal-archive-stalled-rpo-at-risk">Playbook —
+WAL archive stalled (RPO at risk)</a></li>
+<li><a href="#7-playbook--disk-pressure">Playbook — disk
+pressure</a></li>
+<li><a href="#8-playbook--host-reboot--after-power-loss">Playbook — host
+reboot / after power loss</a></li>
+<li><a
+href="#9-playbook--a-deploy-is-stuck-or-a-rollback-did-not-complete">Playbook
+— a deploy is stuck or a rollback did not complete</a></li>
+<li><a href="#10-playbook--suspected-secret-leak">Playbook — suspected
+secret leak</a></li>
+<li><a href="#11-maintenance-cadence">Maintenance cadence</a></li>
+<li><a href="#12-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#13-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="on-call-quick-card">1. On-call quick card</h2>
+<p>The five things to know at 3 a.m. Full detail is in the playbooks
+below.</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 36%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>First look</th>
+<th>Playbook</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Site down / 502 / 503</td>
+<td><code>curl -sS -o /dev/null -w '%{http_code}' https://thready.hxd3v.com/health/ready</code></td>
+<td><a
+href="#4-playbook--a-service-is-unhealthy--crash-looping">§4</a></td>
+</tr>
+<tr>
+<td>Cert error / expiry alert</td>
+<td><code>le-api status --config /home/thready/prod/config/lets_encrypt.conf</code></td>
+<td><a
+href="#5-playbook--certificate-expiry-imminent--renewal-failing">§5</a></td>
+</tr>
+<tr>
+<td><code>WALArchiveStalled</code> alert</td>
+<td><code>podman logs thready-postgres 2&gt;&amp;1 \| tail</code> +
+check secondary</td>
+<td><a href="#6-playbook--wal-archive-stalled-rpo-at-risk">§6</a></td>
+</tr>
+<tr>
+<td>Disk full / write errors</td>
+<td><code>df -h; podman system df</code></td>
+<td><a href="#7-playbook--disk-pressure">§7</a></td>
+</tr>
+<tr>
+<td>Deploy hung / half-rolled-back</td>
+<td><code>podman-compose -p thready-prod ps</code></td>
+<td><a
+href="#9-playbook--a-deploy-is-stuck-or-a-rollback-did-not-complete">§9</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Golden rule:</strong> a production change is only “done”
+after <code>thready-deploy.sh --env prod</code> (or the manual
+equivalent) passes the health gate <strong>and</strong> the edge probe
+returns <code>200</code>. Never leave prod on an un-verified state.</p>
+<h2 id="routine-operations">2. Routine operations</h2>
+<p>All paths assume the layout in <a
+href="./podman-compose.md#3-compose-file-layout">podman-compose.md
+§3</a>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">ENV</span><span class="op">=</span>prod                                  <span class="co"># dev | sta | prod</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">DIR</span><span class="op">=</span><span class="st">&quot;/home/thready/</span><span class="va">$ENV</span><span class="st">&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- status &amp; logs --------------------------------------------------------</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> ps                         <span class="co"># what is actually running</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> logs <span class="at">-f</span> <span class="at">--tail</span><span class="op">=</span>200 thready-api</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> healthcheck run thready-api <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span>      <span class="co"># force a healthcheck now (rootless)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="st">&quot;https://thready.hxd3v.com/health/ready&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> .   <span class="co"># end-to-end readiness (Report JSON)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- deploy / rollback (health-gated, self-rolling-back) -------------------</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$DIR</span><span class="st">/../submodules/containers/scripts/thready-deploy.sh&quot;</span> <span class="st">&quot;</span><span class="va">$ENV</span><span class="st">&quot;</span> <span class="st">&quot;THREADY-1.4.0&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># rollback is automatic on gate failure; to force back to the recorded previous release:</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">thready-boot</span> <span class="at">--env</span> <span class="st">&quot;</span><span class="va">$ENV</span><span class="st">&quot;</span> <span class="at">--restore-previous</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- certificates ---------------------------------------------------------</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="va">LE</span><span class="op">=</span>/home/thready/submodules/lets_encrypt</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="va">CFG</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$DIR</span><span class="st">/config/lets_encrypt.conf&quot;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/status.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>                     <span class="co"># subject, SANs, days-left, renew_due</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/renew.sh&quot;</span>  <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>                     <span class="co"># no-op unless inside the window</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-timers <span class="st">&#39;le-renew-*&#39;</span>                  <span class="co"># confirm the renewal timers are armed</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- backup health --------------------------------------------------------</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> lsl thready-secondary:base/<span class="va">$ENV</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-3</span>            <span class="co"># latest daily base backups present?</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> lsl thready-secondary:wal/<span class="va">$ENV</span>  <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-3</span>            <span class="co"># WAL chain flowing?</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-timers <span class="st">&#39;thready-backup-*&#39;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- observability --------------------------------------------------------</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Grafana over an SSH tunnel (host ports are loopback-only):</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">#   ssh -L 3000:127.0.0.1:62003 thready@host   → http://localhost:3000</span></span></code></pre></div>
+<p><code>podman-compose … ps</code> (not merely a zero exit) is the
+anti-bluff habit the <code>containers</code> tooling itself models:
+<strong>read what actually came up</strong>, do not trust a silent
+success.</p>
+<h2 id="incident-triage-diagram">3. Incident-triage diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1503px; background-color: white;" viewBox="0 0 1503 1229.4000244140625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M650.5,72.6L650.5,76.767C650.5,80.933,650.5,89.267,650.5,96.933C650.5,104.6,650.5,111.6,650.5,115.1L650.5,118.6" id="my-svg-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6NjUwLjUsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6NjUwLjUsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6NjUwLjUwMDAwMDAwMDAwMDEsInkiOjEyMi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M736.157,262.543L799.881,282.736C863.605,302.929,991.052,343.314,1054.776,379.707C1118.5,416.1,1118.5,448.5,1118.5,464.7L1118.5,480.9" id="my-svg-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6NzM2LjE1Njk4NzEyNzcyNzIsInkiOjI2Mi41NDMwMTc0NDk5MDk1fSx7IngiOjExMTguNSwieSI6MzgzLjcwMDAwNDU3NzYzNjd9LHsieCI6MTExOC41LCJ5Ijo0ODQuOTAwMDA5MTU1MjczNDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M650.5,348.2L650.5,354.117C650.5,360.033,650.5,371.867,650.5,401.5C650.5,431.133,650.5,478.567,650.5,527.467C650.5,576.367,650.5,626.733,650.5,661.567C650.5,696.4,650.5,715.7,650.5,725.35L650.5,735" id="my-svg-L_B_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_D_0" data-points="W3sieCI6NjUwLjUwMDAwMDAwMDAwMDEsInkiOjM0OC4yMDAwMDQ1Nzc2MzY3fSx7IngiOjY1MC41LCJ5IjozODMuNzAwMDA0NTc3NjM2N30seyJ4Ijo2NTAuNSwieSI6NTI2LjAwMDAwNzYyOTM5NDV9LHsieCI6NjUwLjUsInkiOjY3Ny4xMDAwMDk5MTgyMTI5fSx7IngiOjY1MC41LCJ5Ijo3MzkuMDAwMDA3NjI5Mzk0NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M568.098,265.798L514.832,285.449C461.566,305.099,355.033,344.399,301.766,369.3C248.5,394.2,248.5,404.7,248.5,409.95L248.5,415.2" id="my-svg-L_B_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_E_0" data-points="W3sieCI6NTY4LjA5ODM5OTA5OTg3ODQsInkiOjI2NS43OTg0MDM2Nzc1MTUxfSx7IngiOjI0OC41LCJ5IjozODMuNzAwMDA0NTc3NjM2N30seyJ4IjoyNDguNDk5OTk5OTk5OTk5OTcsInkiOjQxOS4yMDAwMDQ1Nzc2MzY2Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M299.48,581.82L313.984,597.7C328.487,613.58,357.493,645.34,371.997,667.937C386.5,690.533,386.5,703.967,386.5,710.683L386.5,717.4" id="my-svg-L_E_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6Mjk5LjQ4MDI4NDY5MjAwMjYsInkiOjU4MS44MTk3MjU5ODkxNDk4fSx7IngiOjM4Ni41LCJ5Ijo2NzcuMTAwMDA5OTE4MjEyOX0seyJ4IjozODYuNSwieSI6NzIxLjQwMDAwOTE1NTI3MzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M197.52,581.82L183.016,597.7C168.513,613.58,139.507,645.34,125.003,670.87C110.5,696.4,110.5,715.7,110.5,725.35L110.5,735" id="my-svg-L_E_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_G_0" data-points="W3sieCI6MTk3LjUxOTcxNTMwNzk5NzMzLCJ5Ijo1ODEuODE5NzI1OTg5MTQ5N30seyJ4IjoxMTAuNSwieSI6Njc3LjEwMDAwOTkxODIxMjl9LHsieCI6MTEwLjUsInkiOjczOS4wMDAwMDc2MjkzOTQ1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1054.715,567.1L1026.262,585.433C997.81,603.767,940.905,640.433,912.452,668.417C884,696.4,884,715.7,884,725.35L884,735" id="my-svg-L_C_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_H_0" data-points="W3sieCI6MTA1NC43MTQ3NjE3NzI0MTE3LCJ5Ijo1NjcuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo4ODQsInkiOjY3Ny4xMDAwMDk5MTgyMTI5fSx7IngiOjg4NCwieSI6NzM5LjAwMDAwNzYyOTM5NDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1118.5,567.1L1118.5,585.433C1118.5,603.767,1118.5,640.433,1118.5,668.417C1118.5,696.4,1118.5,715.7,1118.5,725.35L1118.5,735" id="my-svg-L_C_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_I_0" data-points="W3sieCI6MTExOC41LCJ5Ijo1NjcuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTE4LjUsInkiOjY3Ny4xMDAwMDk5MTgyMTI5fSx7IngiOjExMTguNSwieSI6NzM5LjAwMDAwNzYyOTM5NDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1188.949,567.1L1220.374,585.433C1251.8,603.767,1314.65,640.433,1346.075,666.95C1377.5,693.467,1377.5,709.833,1377.5,718.017L1377.5,726.2" id="my-svg-L_C_J_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_J_0" data-points="W3sieCI6MTE4OC45NDkzNjc1OTQ2NDk2LCJ5Ijo1NjcuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMzc3LjUsInkiOjY3Ny4xMDAwMDk5MTgyMTI5fSx7IngiOjEzNzcuNSwieSI6NzMwLjIwMDAwODM5MjMzNH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M110.5,786L110.5,793.1C110.5,800.2,110.5,814.4,185.488,839.872C260.477,865.344,410.453,902.089,485.442,920.461L560.43,938.833" id="my-svg-L_G_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_K_0" data-points="W3sieCI6MTEwLjUsInkiOjc4Ni4wMDAwMDc2MjkzOTQ1fSx7IngiOjExMC41LCJ5Ijo4MjguNjAwMDA2MTAzNTE1Nn0seyJ4Ijo1NjQuMzE1MjU4OTg0MTgyNCwieSI6OTM5Ljc4NDc0NzExOTMzMzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M386.5,803.6L386.5,807.767C386.5,811.933,386.5,820.267,417.991,840.215C449.482,860.162,512.463,891.725,543.954,907.506L575.445,923.287" id="my-svg-L_F_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_K_0" data-points="W3sieCI6Mzg2LjUsInkiOjgwMy42MDAwMDYxMDM1MTU2fSx7IngiOjM4Ni41LCJ5Ijo4MjguNjAwMDA2MTAzNTE1Nn0seyJ4Ijo1NzkuMDIwODE2MDc5OTIxOCwieSI6OTI1LjA3OTE5MDAyMzU5Mzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M650.5,786L650.5,793.1C650.5,800.2,650.5,814.4,650.5,825C650.5,835.6,650.5,842.6,650.5,846.1L650.5,849.6" id="my-svg-L_D_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_K_0" data-points="W3sieCI6NjUwLjUsInkiOjc4Ni4wMDAwMDc2MjkzOTQ1fSx7IngiOjY1MC41LCJ5Ijo4MjguNjAwMDA2MTAzNTE1Nn0seyJ4Ijo2NTAuNTAwMDAwMDAwMDAwMSwieSI6ODUzLjYwMDAwNjEwMzUxNTd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M884,786L884,793.1C884,800.2,884,814.4,857.079,836.753C830.158,859.107,776.315,889.614,749.394,904.867L722.473,920.121" id="my-svg-L_H_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_K_0" data-points="W3sieCI6ODg0LCJ5Ijo3ODYuMDAwMDA3NjI5Mzk0NX0seyJ4Ijo4ODQsInkiOjgyOC42MDAwMDYxMDM1MTU2fSx7IngiOjcxOC45OTI0ODM2MDczMzQ1LCJ5Ijo5MjIuMDkyNDg5NzEwODUwMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1118.5,786L1118.5,793.1C1118.5,800.2,1118.5,814.4,1055.084,839.427C991.667,864.455,864.834,900.309,801.418,918.237L738.001,936.164" id="my-svg-L_I_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_I_K_0" data-points="W3sieCI6MTExOC41LCJ5Ijo3ODYuMDAwMDA3NjI5Mzk0NX0seyJ4IjoxMTE4LjUsInkiOjgyOC42MDAwMDYxMDM1MTU2fSx7IngiOjczNC4xNTIxNzU4NjY5NjA2LCJ5Ijo5MzcuMjUyMTgxOTcwNDc2M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M595.62,1013.32L579.85,1028.384C564.08,1043.447,532.54,1073.573,516.77,1095.353C501,1117.133,501,1130.567,501,1137.283L501,1144" id="my-svg-L_K_L_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K_L_0" data-points="W3sieCI6NTk1LjYyMDI1MjE3NjY3NDMsInkiOjEwMTMuMzIwMjY0MzgzNzA1NX0seyJ4Ijo1MDEsInkiOjExMDMuNzAwMDEyMjA3MDMxMn0seyJ4Ijo1MDEsInkiOjExNDguMDAwMDExNDQ0MDkxOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M705.38,1013.32L721.15,1028.384C736.92,1043.447,768.46,1073.573,784.23,1093.887C800,1114.2,800,1124.7,800,1129.95L800,1135.2" id="my-svg-L_K_M_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K_M_0" data-points="W3sieCI6NzA1LjM3OTc0NzgyMzMyNTYsInkiOjEwMTMuMzIwMjY0MzgzNzA1NH0seyJ4Ijo4MDAsInkiOjExMDMuNzAwMDEyMjA3MDMxMn0seyJ4Ijo4MDAsInkiOjExMzkuMjAwMDEyMjA3MDMxMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1118.5, 383.7000045776367)"><g class="label" data-id="L_B_C_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-43.5" y="0" width="87" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">200</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> healthy</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(650.5, 526.0000076293945)"><g class="label" data-id="L_B_D_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-50.5" y="0" width="102" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TLS/cert</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> error</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(248.5, 383.7000045776367)"><g class="label" data-id="L_B_E_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="116" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">5xx</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> answer</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(386.5, 677.1000099182129)"><g class="label" data-id="L_E_F_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-70" y="0" width="140" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (caddy)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> down</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(110.5, 677.1000099182129)"><g class="label" data-id="L_E_G_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-74.5" y="0" width="149" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">a</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Required</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> app/data</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">service</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> unhealthy</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(884, 677.1000099182129)"><g class="label" data-id="L_C_H_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-71" y="0" width="142" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">WALArchiveStalled</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1118.5, 677.1000099182129)"><g class="label" data-id="L_C_I_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-62" y="0" width="124" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">disk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> write</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> errors</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1377.5, 677.1000099182129)"><g class="label" data-id="L_C_J_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">backup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> missing</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_G_K_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_F_K_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_D_K_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_H_K_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_I_K_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(501, 1103.7000122070312)"><g class="label" data-id="L_K_L_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(800, 1103.7000122070312)"><g class="label" data-id="L_K_M_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-A-0" data-look="classic" transform="translate(650.5, 40.29999923706055)"><rect class="basic label-container" style="" x="-99" y="-32.29999923706055" width="198" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Alert</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> report:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">something</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> is</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> wrong</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B-1" data-look="classic" transform="translate(650.5, 235.4000015258789)"><polygon points="112.79999923706055,0 225.5999984741211,-112.79999923706055 112.79999923706055,-225.5999984741211 0,-112.79999923706055" class="label-container" transform="translate(-112.29999923706055, 112.79999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Public</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> probe</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/health/ready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> over</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> TLS</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-C-3" data-look="classic" transform="translate(1118.5, 526.0000076293945)"><rect class="basic label-container" style="" x="-128" y="-41.099998474121094" width="256" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Not</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> an</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> outage</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> check</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">specific</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> alert</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (WAL,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> backup,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">disk)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-D-5" data-look="classic" transform="translate(650.5, 762.5000076293945)"><rect class="basic label-container" style="" x="-90.5" y="-23.5" width="181" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Cert</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> playbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §5</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-E-7" data-look="classic" transform="translate(248.5, 526.0000076293945)"><polygon points="106.79999923706055,0 213.5999984741211,-106.79999923706055 106.79999923706055,-213.5999984741211 0,-106.79999923706055" class="label-container" transform="translate(-106.29999923706055, 106.79999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">podman-compose</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ps</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">which</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-F-9" data-look="classic" transform="translate(386.5, 762.5000076293945)"><rect class="basic label-container" style="" x="-123.5" y="-41.099998474121094" width="247" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Restart</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> unit;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">check</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 80/443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bind</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sysctl</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§8</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G-11" data-look="classic" transform="translate(110.5, 762.5000076293945)"><rect class="basic label-container" style="" x="-102.5" y="-23.5" width="205" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Service</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> playbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §4</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-H-13" data-look="classic" transform="translate(884, 762.5000076293945)"><rect class="basic label-container" style="" x="-93" y="-23.5" width="186" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RPO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> playbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §6</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I-15" data-look="classic" transform="translate(1118.5, 762.5000076293945)"><rect class="basic label-container" style="" x="-91.5" y="-23.5" width="183" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Disk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> playbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §7</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-J-17" data-look="classic" transform="translate(1377.5, 762.5000076293945)"><rect class="basic label-container" style="" x="-117.5" y="-32.29999923706055" width="235" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Backup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> playbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §6/§11</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">drill</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-K-19" data-look="classic" transform="translate(650.5, 960.9000091552734)"><polygon points="107.29999923706055,0 214.5999984741211,-107.29999923706055 107.29999923706055,-214.5999984741211 0,-107.29999923706055" class="label-container" transform="translate(-106.79999923706055, 107.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Recovered</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">anti-bluff</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> green?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-L-29" data-look="classic" transform="translate(501, 1180.3000106811523)"><rect class="basic label-container" style="" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Close:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> record</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RCA,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">update</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> this</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> runbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> if</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> new</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-M-31" data-look="classic" transform="translate(800, 1180.3000106811523)"><rect class="basic label-container" style="" x="-126" y="-41.099998474121094" width="252" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Escalate:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> consider</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">restore</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> runbook</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (backup-dr</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§7)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Triage always begins from the <strong>single public
+signal</strong> every other subsystem also trusts: the
+<code>/health/ready</code> probe over the real TLS endpoint. That one
+call disambiguates the three top-level failure modes. If it returns a
+healthy <code>200</code>, there is no user-facing outage and the
+operator is instead reacting to a <em>specific</em> internal alert (a
+stalled WAL, a missing backup, disk pressure) — those route to their own
+playbooks and never warrant a risky production restart.</p>
+<p>If the probe fails at the <strong>TLS layer</strong> (an expired or
+mis-installed certificate), the certificate playbook in §5 owns it,
+because a cert fault is handled entirely by the
+<code>lets_encrypt</code> risk-free gate and is independent of the
+application. If the probe returns a <strong>5xx or nothing</strong>, the
+operator runs <code>podman-compose ps</code> to localize the fault: an
+edge (Caddy) failure is a narrow “restart the edge, confirm it can still
+bind 80/443” path (§8), whereas a <code>Required</code> application or
+data-plane service being unhealthy routes to the service playbook in §4,
+which leans on the same reverse-order, self-rolling-back machinery a
+deploy uses.</p>
+<p>Every branch <strong>converges on one gate</strong>: is the system
+recovered <em>and</em> does the anti-bluff verification pass? Only a
+green gate closes the incident — and closing it includes writing the
+root-cause note and, if the failure was novel, extending this runbook so
+the next operator inherits the knowledge. If the gate cannot be made
+green in place, the path escalates to the full <a
+href="./backup-dr.md#7-restore-runbook-rto--4h">restore runbook</a>,
+trading a longer RTO for a known-good rebuild rather than fighting an
+unrecoverable live state.</p>
+<h2 id="playbook-a-service-is-unhealthy-crash-looping">4. Playbook — a
+service is unhealthy / crash-looping</h2>
+<p><strong>Detect.</strong> <code>/health/ready</code> returns
+<code>503</code>, or <code>podman-compose -p thready-prod ps</code>
+shows a service <code>unhealthy</code>/<code>restarting</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">ENV</span><span class="op">=</span>prod<span class="kw">;</span> <span class="va">SVC</span><span class="op">=</span>thready-api</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> ps</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> logs <span class="at">--tail</span><span class="op">=</span>300 <span class="st">&quot;</span><span class="va">$SVC</span><span class="st">&quot;</span>     <span class="co"># root-cause in the logs</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="st">&quot;http://127.0.0.1:62443/health/ready&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> .      <span class="co"># which Report component is unhealthy?</span></span></code></pre></div>
+<p><strong>Decide by which component the <code>Report</code>
+names</strong> (the readiness contract in <a
+href="./podman-compose.md#61-operational-health-api-openapi-31">podman-compose.md
+§6.1</a>):</p>
+<table>
+<colgroup>
+<col style="width: 48%" />
+<col style="width: 32%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Unhealthy component</th>
+<th>Likely cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code></td>
+<td>DB down / disk / connections exhausted</td>
+<td><code>podman-compose restart thready-postgres</code>; if it will not
+start → <a href="#7-playbook--disk-pressure">§7</a> / <a
+href="./backup-dr.md#7-restore-runbook-rto--4h">restore</a></td>
+</tr>
+<tr>
+<td><code>nats</code></td>
+<td>JetStream store issue</td>
+<td>restart <code>thready-nats</code>; check
+<code>…:62223/healthz</code></td>
+</tr>
+<tr>
+<td><code>minio</code></td>
+<td>object store / disk</td>
+<td>restart; verify <code>…/minio/health/ready</code>; <a
+href="#7-playbook--disk-pressure">§7</a></td>
+</tr>
+<tr>
+<td><code>embedder</code></td>
+<td><strong>HashEmbedder active or LLM unreachable</strong>
+<code>[GAP: #1]</code></td>
+<td>confirm <code>HELIX_EMBEDDING_PROVIDER=llama</code> and
+<code>HELIX_LLM_BASE_URL</code> reachable — the probe is
+<em>supposed</em> to fail loudly here</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recover (single service, no full redeploy):</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> up <span class="at">-d</span> <span class="at">--force-recreate</span> <span class="st">&quot;</span><span class="va">$SVC</span><span class="st">&quot;</span>   <span class="co"># recreate just this one</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># then re-prove readiness — do NOT declare victory on a restart alone:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="st">&quot;https://thready.hxd3v.com/health/ready&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> <span class="at">-e</span> <span class="st">&#39;.status==&quot;healthy&quot;&#39;</span></span></code></pre></div>
+<p>If a <strong>bad release</strong> is the cause (started failing right
+after a deploy), roll the whole release back rather than nursing one
+container:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">thready-boot</span> <span class="at">--env</span> <span class="st">&quot;</span><span class="va">$ENV</span><span class="st">&quot;</span> <span class="at">--restore-previous</span>     <span class="co"># brings the previous digests back up (releases/previous.json)</span></span></code></pre></div>
+<p>This is the deploy-time <code>restorePrevious</code> path (<a
+href="./deploy-and-rollback.md#4-the-deploy-script-bash--go-gate">deploy-and-rollback.md
+§4</a>) invoked manually. The <code>embedder</code>-unhealthy row is
+deliberately <em>not</em> “make it pass”: a stack that would serve
+garbage-relevance search must stay blocked until a real
+<code>llama</code> embedder is wired.</p>
+<h2 id="playbook-certificate-expiry-imminent-renewal-failing">5.
+Playbook — certificate expiry imminent / renewal failing</h2>
+<p><strong>Detect.</strong> Browser TLS error, or the
+<code>le-api status</code> <code>renew_due</code> is <code>true</code> /
+<code>days_left</code> is low, or the twice-daily timer has been
+failing.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">LE</span><span class="op">=</span>/home/thready/submodules/lets_encrypt</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">CFG</span><span class="op">=</span>/home/thready/prod/config/lets_encrypt.conf</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/status.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>                    <span class="co"># days_left, renew_due, SANs, not_after</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> status le-renew-prod.service              <span class="co"># last run + failure reason</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">--user</span> <span class="at">-u</span> le-renew-prod.service <span class="at">--no-pager</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-40</span></span></code></pre></div>
+<p><strong>Recover.</strong> Force a renewal (the risk-free gate
+protects you — a bad renew self-rolls-back to the current cert, verified
+<code>engine.sh</code>):</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/renew.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span> <span class="at">--force</span>            <span class="co"># bypass the window; still validate→backup→deploy→probe→rollback</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># if the CA is rate-limiting or you suspect a bad state, rehearse on STAGING first:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   set LE_STAGING=1 in the config, run issue.sh, confirm, then flip back to 0.</span></span></code></pre></div>
+<p><strong>If HTTP-01 itself is failing</strong> (port 80 unreachable,
+webroot wrong): confirm the firewall still allows <code>80</code> (<a
+href="./hetzner-provisioning.md#5-firewall">hetzner-provisioning.md
+§5</a>), the edge serves <code>/.well-known/acme-challenge/*</code> (<a
+href="./environments.md#4-the-edge-reverse-proxy">environments.md
+§4</a>), and <code>/var/www/acme</code> is writable by acme.sh. As a
+fallback, switch that env to <strong>DNS-01</strong> (<a
+href="./tls-lets-encrypt.md#4-challenge-types-http-01-vs-dns-01">tls-lets-encrypt.md
+§4</a>) — no port 80 needed. The served site is never taken down by a
+cert operation because the atomic <code>mv</code> deploy-hook +
+probe-and-rollback gate is always in the path.</p>
+<h2 id="playbook-wal-archive-stalled-rpo-at-risk">6. Playbook — WAL
+archive stalled (RPO at risk)</h2>
+<p><strong>Detect.</strong> The <code>WALArchiveStalled</code> alert
+fired (no WAL segment shipped in &gt; 90 min — the RPO guard from <a
+href="./backup-dr.md#8-chaos--dr-validation">backup-dr.md §8</a>).</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">ENV</span><span class="op">=</span>prod</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> logs <span class="at">--tail</span><span class="op">=</span>100 thready-postgres <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> archive</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> lsl thready-secondary:wal/<span class="va">$ENV</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-5</span>            <span class="co"># last shipped segment timestamp</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> about thready-secondary:                           <span class="co"># is the secondary reachable / full?</span></span></code></pre></div>
+<p><strong>Recover.</strong> The three usual causes and their fix:</p>
+<table>
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Secondary unreachable (network/credential)</td>
+<td>Fix <code>rclone</code> remote / credentials; Postgres retries
+<code>archive_command</code> automatically — segments queue in
+<code>pg_wal</code> and flush once it succeeds</td>
+</tr>
+<tr>
+<td>Secondary full</td>
+<td>Free space / expand; apply the <a
+href="./backup-dr.md#6-secondary-store--retention">retention ladder</a>
+prune</td>
+</tr>
+<tr>
+<td><code>archive_command</code> itself failing</td>
+<td><code>podman exec thready-postgres sh -c 'rclone copyto /path %f …'</code>
+to reproduce; fix the command; reload Postgres config</td>
+</tr>
+</tbody>
+</table>
+<p>Do <strong>not</strong> delete unshipped WAL from <code>pg_wal</code>
+to reclaim space — that breaks the PITR chain and the RPO guarantee. If
+<code>pg_wal</code> is filling the disk, expand storage or fix shipping;
+see also <a href="#7-playbook--disk-pressure">§7</a>. Once segments flow
+again, confirm the alert clears and the WAL timestamp on the secondary
+is fresh.</p>
+<h2 id="playbook-disk-pressure">7. Playbook — disk pressure</h2>
+<p><strong>Detect.</strong> <code>DailyBaseBackupMissing</code>/write
+errors, or <code>df -h</code> shows a full filesystem. Rootless Podman
+state lives under <code>/home/thready/.local/share/containers/</code> —
+it is on the same volume as the DB/asset data, so container churn and
+data growth compete.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span> /home/thready</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> system df                                          <span class="co"># image/volume/container space</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> /home/thready/.local/share/containers/storage/volumes/<span class="pp">*</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-h</span> <span class="kw">|</span> <span class="fu">tail</span></span></code></pre></div>
+<p><strong>Recover — safe-to-reclaim, in order:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> image prune <span class="at">-f</span>                                     <span class="co"># dangling images from old releases</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> system prune <span class="at">-f</span>                                    <span class="co"># stopped containers, unused networks (NOT volumes)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Rotate container logs (json-file caps are set in the compose x-logging anchor).</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Old MinIO renditions / old partitions are archived to the object tier by the database area, not deleted here.</span></span></code></pre></div>
+<p><strong>Never</strong> <code>podman volume prune</code> on this host
+without care — it can destroy <code>thready-&lt;env&gt;-pgdata</code>.
+The durable data classes (pgdata, pgwal, minio) are protected by the <a
+href="./backup-dr.md">backup plan</a>; cache (<code>redis</code>) and
+analytics (<code>clickhouse</code>) are rebuildable and safe to shrink.
+If Postgres is out of space specifically, prioritise WAL shipping (<a
+href="#6-playbook--wal-archive-stalled-rpo-at-risk">§6</a>) so archived
+segments can be trimmed from <code>pg_wal</code> normally.</p>
+<h2 id="playbook-host-reboot-after-power-loss">8. Playbook — host reboot
+/ after power loss</h2>
+<p>The stacks come back <strong>automatically</strong> because of
+lingering + <code>systemd --user</code> units (<a
+href="./podman-compose.md#7-rootless-systemd-integration-linger--quadlet">podman-compose.md
+§7</a>). Verify, don’t assume:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> show-user thready <span class="kw">|</span> <span class="fu">grep</span> Linger                  <span class="co"># Linger=yes (else: loginctl enable-linger thready as root once)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-units <span class="st">&#39;thready-*.service&#39;</span> <span class="st">&#39;thready-edge.service&#39;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-timers <span class="st">&#39;le-renew-*&#39;</span> <span class="st">&#39;thready-backup-*&#39;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If a stack did not come up:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> start thready-prod.service</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> https://thready.hxd3v.com/health/ready <span class="kw">|</span> <span class="ex">jq</span> <span class="at">-e</span> <span class="st">&#39;.status==&quot;healthy&quot;&#39;</span></span></code></pre></div>
+<p><strong>If the edge cannot bind 80/443 after reboot,</strong> confirm
+the privileged-port sysctl survived (<a
+href="./hetzner-provisioning.md#4-the-privileged-port-sysctl-why-root-is-needed-once">hetzner-provisioning.md
+§4</a>): <code>sysctl net.ipv4.ip_unprivileged_port_start</code> must be
+<code>80</code> (it is set persistently in
+<code>/etc/sysctl.d/99-thready-ports.conf</code>; a manual
+<code>sysctl --system</code> reapplies it). Bring the edge up before the
+app stacks so routing is ready.</p>
+<h2 id="playbook-a-deploy-is-stuck-or-a-rollback-did-not-complete">9.
+Playbook — a deploy is stuck or a rollback did not complete</h2>
+<p>The <code>BootManager</code> rolls back <strong>internally</strong>
+on any <code>Required</code>-service failure or context cancellation
+(verified reverse-order <code>Down</code>,
+<code>pkg/boot/manager.go</code>), so a <em>clean</em> failed deploy
+already restored itself. This playbook is for the rare case a run was
+killed mid-flight (SSH dropped, host OOM).</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">ENV</span><span class="op">=</span>prod</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> ps                       <span class="co"># is it new digests, old digests, or a mix?</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;/home/thready/</span><span class="va">$ENV</span><span class="st">/releases/current.json&quot;</span>  <span class="kw">|</span> <span class="ex">jq</span> .version</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;/home/thready/</span><span class="va">$ENV</span><span class="st">/releases/previous.json&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> .version</span></code></pre></div>
+<p><strong>Reconcile to the last known-good release:</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Force the previous (or a specific) known-good release fully up, then prove it.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">thready-boot</span> <span class="at">--env</span> <span class="st">&quot;</span><span class="va">$ENV</span><span class="st">&quot;</span> <span class="at">--restore-previous</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> <span class="st">&quot;https://thready.hxd3v.com/health/ready&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> <span class="at">-e</span> <span class="st">&#39;.status==&quot;healthy&quot;&#39;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Confirm no half-booted / buildnew leak (anti-bluff):</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-p</span> <span class="st">&quot;thready-</span><span class="va">$ENV</span><span class="st">&quot;</span> ps <span class="at">--services</span> <span class="at">--filter</span> status=running</span></code></pre></div>
+<p>If the DB migration’s <strong>expand</strong> phase applied but the
+boot failed, the schema is still backward-compatible by design
+(expand-only, <a
+href="./deploy-and-rollback.md#5-expand-contract-database-migrations">deploy-and-rollback.md
+§5</a>), so the previous release runs correctly against it — no schema
+rollback is required to recover service. Only a mid-apply migration
+<em>error</em> triggers <code>migration.Runner.Rollback</code>. Never
+hand-edit <code>current.json</code> to “promote” a stack you have not
+verified.</p>
+<h2 id="playbook-suspected-secret-leak">10. Playbook — suspected secret
+leak</h2>
+<p>Follow the verified rotate-on-leak runbook from <a
+href="./secrets-and-config.md#6-leak-audit--rotation">secrets-and-config.md
+§6</a> — summarized here for on-call:</p>
+<ol type="1">
+<li><strong>Revoke at source</strong> — LLM/messenger console, DB
+<code>ALTER ROLE … PASSWORD</code>, or
+<code>lets_encrypt revoke.sh</code> + <code>rotate.sh</code> for a
+cert/key.</li>
+<li><strong>Replace</strong> the value in the <strong>private
+repo</strong>, refresh <code>/home/thready/&lt;env&gt;/.env</code> /
+<code>secrets/api_keys.sh</code> (<code>chmod 600</code>).</li>
+<li><strong>Redeploy</strong> the affected env — the health gate
+confirms the new credential works.</li>
+<li><strong>Purge history</strong> only if the secret ever reached a
+<em>tracked</em> file (BFG/<code>git filter-repo</code>), then
+force-refresh all four upstreams once (the only sanctioned
+rewrite).</li>
+</ol>
+<p>Treat any hit from the continuous scan
+(<code>security/pkg/scanner</code> + <code>secret-scan.sh</code>) as a
+<strong>P0</strong>. The deploy pre-flight and <code>pre-commit</code>
+hook are the two independent guards that should have caught it; record
+which failed so the gap is closed.</p>
+<h2 id="maintenance-cadence">11. Maintenance cadence</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 17%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Cadence</th>
+<th>Task</th>
+<th>Command / reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Twice daily (auto)</td>
+<td>Cert renewal check (no-op unless due)</td>
+<td><code>le-renew-*.timer</code> (<a
+href="./tls-lets-encrypt.md#10-rootless-systemd-timer-install">tls
+§10</a>)</td>
+</tr>
+<tr>
+<td>Hourly (auto)</td>
+<td>WAL segment ship (<code>archive_timeout=3600</code>)</td>
+<td><a
+href="./backup-dr.md#4-postgresql-daily-full--hourly-wal-pitr">backup-dr
+§4</a></td>
+</tr>
+<tr>
+<td>Daily (auto)</td>
+<td>Full <code>pg_basebackup</code> + asset/nats/config snapshot</td>
+<td><a href="./backup-dr.md#2-what-is-backed-up">backup-dr §2</a></td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td>Review Grafana SLO dashboards; check alert noise;
+<code>podman image prune</code></td>
+<td><a href="#2-routine-operations">§2</a></td>
+</tr>
+<tr>
+<td><strong>Monthly</strong></td>
+<td><strong>Restore drill</strong> — restore latest prod backup into a
+dev-band throwaway, verify RTO ≤ 4 h</td>
+<td><a href="./backup-dr.md#8-chaos--dr-validation">backup-dr
+§8</a></td>
+</tr>
+<tr>
+<td>Monthly</td>
+<td>Cert key hygiene rotation (optional)</td>
+<td><code>rotate.sh</code> (<a
+href="./tls-lets-encrypt.md#6-renewal--rotation-automated">tls
+§6</a>)</td>
+</tr>
+<tr>
+<td>Quarterly</td>
+<td>Secret rotation pass; firewall + SSH audit; OS patch window</td>
+<td><a href="./secrets-and-config.md#6-leak-audit--rotation">secrets
+§6</a>, <a href="./hetzner-provisioning.md#5-firewall">hetzner
+§5</a></td>
+</tr>
+<tr>
+<td>Per release</td>
+<td>Promote dev→sta→prod with health-gated deploy</td>
+<td><a
+href="./environments.md#6-promotion-flow-dev--sta--prod">environments
+§6</a></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>monthly restore drill is not optional</strong>: a backup
+that has never been restored is a hypothesis, not a recovery plan. The
+drill’s measured duration feeds the
+<code>thready_restore_drill_seconds</code> metric and the
+<code>RestoreDrillMissedRTO</code> alert, so an over-4h drill is a
+tracked P1 finding (<a
+href="./backup-dr.md#81-reproduce-first-dr-tests-tdd">backup-dr.md
+§8.1</a>).</p>
+<h2 id="verified-vs-assumed">12. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED (read at source):</strong> the
+<code>BootManager</code> reverse-order self-rollback
+(<code>pkg/boot/manager.go</code>); the <code>lets_encrypt</code>
+<code>status.sh --json</code> fields (<code>days_left</code>,
+<code>renew_due</code>, <code>sans</code>, <code>not_after</code>) and
+the <code>renew.sh --force</code> window bypass with the risk-free gate
+(<code>scripts/renew.sh</code>, <code>lib/engine.sh</code>); the
+twice-daily renewal timer + oneshot service (<code>systemd/*</code>);
+the <code>/health/ready</code> <code>Report</code> shape (<a
+href="./podman-compose.md#61-operational-health-api-openapi-31">podman-compose.md
+§6.1</a>).</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+<code>thready-deploy.sh</code> / <code>thready-boot</code> /
+<code>thready-backup-*</code> wrapper + unit names (Thready conventions,
+not module APIs); the <code>rclone</code> remote name
+<code>thready-secondary</code>; the Grafana SSH-tunnel workflow; the
+maintenance intervals.</li>
+</ul>
+<h2 id="open-items">13. Open items</h2>
+<ul>
+<li><code>[OPEN: alerting-route]</code> — where alerts <em>page</em>
+(email/Telegram/PagerDuty) is an operator choice; the Prometheus rules
+in <a
+href="./monitoring-observability.md#5-alert-rules-complete-set">monitoring-observability.md
+§5</a> (service-down, edge, cert-expiry, latency, resource) and <a
+href="./backup-dr.md#8-chaos--dr-validation">backup-dr.md §8</a>
+(backup-integrity) define <em>what</em> fires, with
+<code>severity</code>/<code>page</code> labels; <em>who</em> is woken is
+the observability wiring in <a
+href="./monitoring-observability.md#6-alert-routing">monitoring-observability.md
+§6</a>.</li>
+<li><code>[OPEN: runbook-automation]</code> — several playbook steps
+(single-service recreate, restore-previous) could be wrapped as
+<code>thready-ops &lt;verb&gt;</code> subcommands; a nice-to-have over
+the documented manual path.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

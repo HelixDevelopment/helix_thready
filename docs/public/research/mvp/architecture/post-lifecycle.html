@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — End-to-End Post Lifecycle</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — End-to-End Post Lifecycle</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#purpose-scope" id="toc-purpose-scope">1. Purpose &amp;
+scope</a></li>
+<li><a href="#the-end-to-end-sequence"
+id="toc-the-end-to-end-sequence">2. The end-to-end sequence</a></li>
+<li><a href="#stage-by-stage-reference"
+id="toc-stage-by-stage-reference">3. Stage-by-stage reference</a></li>
+<li><a href="#event-emission-timeline"
+id="toc-event-emission-timeline">4. Event-emission timeline</a></li>
+<li><a href="#latency-slo-decomposition"
+id="toc-latency-slo-decomposition">5. Latency &amp; SLO
+decomposition</a></li>
+<li><a href="#idempotency-recovery-across-the-lifecycle"
+id="toc-idempotency-recovery-across-the-lifecycle">6. Idempotency &amp;
+recovery across the lifecycle</a></li>
+<li><a href="#verified-at-source-anchor-points"
+id="toc-verified-at-source-anchor-points">7. Verified-at-source anchor
+points</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">8.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">9. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — End-to-End Post Lifecycle (capstone walkthrough)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/post-lifecycle.md
+  Status          : Draft — v0.1
+  Revision        : 3 (2026-07-22)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./messenger-ingestion.md, ./concurrency-and-idempotency.md,
+                    ./event-model.md, ./processing-pipeline.md, ./asset-and-download.md,
+                    ./semantic-search.md, ./data-flow.md, ./system-overview.md,
+                    ./security-model.md, ./component-catalog.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (System Architecture)</td>
+<td>New capstone — full
+ingestion→claim→dispatch→download→asset→semantic→reply sequence;
+stage/event/failure reference; latency-SLO decomposition;
+cross-lifecycle idempotency; homes the <code>post-lifecycle.mmd</code>
+sequence diagram</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 consistency)</td>
+<td>§5 latency-table cell: clarify reprocess sets the sticky
+<code>post.state=reprocessing</code> <em>display</em> value, not a
+<code>TaskStatus</code> (aligns with §6 and concurrency §2)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-purpose--scope">Purpose &amp; scope</a></li>
+<li><a href="#2-the-end-to-end-sequence">The end-to-end
+sequence</a></li>
+<li><a href="#3-stage-by-stage-reference">Stage-by-stage
+reference</a></li>
+<li><a href="#4-event-emission-timeline">Event-emission
+timeline</a></li>
+<li><a href="#5-latency--slo-decomposition">Latency &amp; SLO
+decomposition</a></li>
+<li><a href="#6-idempotency--recovery-across-the-lifecycle">Idempotency
+&amp; recovery across the lifecycle</a></li>
+<li><a href="#7-verified-at-source-anchor-points">Verified-at-source
+anchor points</a></li>
+<li><a href="#8-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#9-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="purpose-scope">1. Purpose &amp; scope</h2>
+<p>This document is the <strong>capstone</strong> of the System
+Architecture area: it follows one post from the moment a message lands
+in a channel to the moment a client can search the generated materials,
+and stitches together the guarantees that each specialist sibling doc
+proves in isolation. It is the single place that reads the lifecycle
+<strong>end to end</strong> across every plane.</p>
+<p>It deliberately does <strong>not</strong> re-derive the mechanisms it
+references — the single-claim proof lives in <a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>,
+the sticky/one-time event semantics in <a
+href="./event-model.md">event-model.md</a>, thread assembly in <a
+href="./messenger-ingestion.md">messenger-ingestion.md</a>, stage
+ordering in <a
+href="./processing-pipeline.md">processing-pipeline.md</a>, the
+fetch/store split in <a
+href="./asset-and-download.md">asset-and-download.md</a>, and the embed
+path in <a href="./semantic-search.md">semantic-search.md</a>. What it
+adds on top of the coarse flow in <a
+href="./data-flow.md">data-flow.md</a> §2 is threefold: (a) a
+<strong>finer-grained sequence</strong> that names the verified
+interface at every hop, (b) a consolidated <strong>event-emission
+timeline</strong> and <strong>stage/failure reference</strong> an
+implementer can build straight against, and (c) a <strong>latency-SLO
+decomposition</strong> showing exactly why the aggressive SLO survives a
+30-minute research step. Every claim traces to a source-verified fact
+already established in a sibling doc (see <a
+href="#7-verified-at-source-anchor-points">§7</a>); nothing here
+upgrades a scaffold to “works”.</p>
+<h2 id="the-end-to-end-sequence">2. The end-to-end sequence</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="max-width: 3052.5px; background-color: white;" viewBox="-50 -10 3052.5 1386" role="graphics-document document" aria-roledescription="sequence"><g><rect x="2762.5" y="1300" fill="#eaeaea" stroke="#666" width="190" height="65" name="LLM" rx="3" ry="3" class="actor actor-bottom"/><text x="2857.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2857.5" dy="0">HelixLLM / LLMProvider</tspan></text></g><g><rect x="2562.5" y="1300" fill="#eaeaea" stroke="#666" width="150" height="65" name="SEM" rx="3" ry="3" class="actor actor-bottom"/><text x="2637.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2637.5" dy="0">Semantic-search</tspan></text></g><g><rect x="2362.5" y="1300" fill="#eaeaea" stroke="#666" width="150" height="65" name="AS" rx="3" ry="3" class="actor actor-bottom"/><text x="2437.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2437.5" dy="0">Asset Service</tspan></text></g><g><rect x="1878.5" y="1300" fill="#eaeaea" stroke="#666" width="250" height="65" name="DL" rx="3" ry="3" class="actor actor-bottom"/><text x="2003.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2003.5" dy="0">Download (Boba/MeTube/DL-Mgr)</tspan></text></g><g><rect x="1613.5" y="1300" fill="#eaeaea" stroke="#666" width="158" height="65" name="DISP" rx="3" ry="3" class="actor actor-bottom"/><text x="1692.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1692.5" dy="0">Skill Dispatch Engine</tspan></text></g><g><rect x="1324.5" y="1300" fill="#eaeaea" stroke="#666" width="239" height="65" name="BG" rx="3" ry="3" class="actor actor-bottom"/><text x="1444" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1444" dy="0">BackgroundTasks (Postgres claim)</tspan></text></g><g><rect x="966.5" y="1300" fill="#eaeaea" stroke="#666" width="157" height="65" name="BUS" rx="3" ry="3" class="actor actor-bottom"/><text x="1045" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1045" dy="0">EventBus (JetStream)</tspan></text></g><g><rect x="766.5" y="1300" fill="#eaeaea" stroke="#666" width="150" height="65" name="PG" rx="3" ry="3" class="actor actor-bottom"/><text x="841.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="841.5" dy="0">PostgreSQL (SoR)</tspan></text></g><g><rect x="283.5" y="1300" fill="#eaeaea" stroke="#666" width="220" height="65" name="TR" rx="3" ry="3" class="actor actor-bottom"/><text x="393.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="393.5" dy="0">ThreadReader (herald Channel)</tspan></text></g><g><rect x="0" y="1300" fill="#eaeaea" stroke="#666" width="179" height="65" name="CH" rx="3" ry="3" class="actor actor-bottom"/><text x="89.5" y="1332.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="89.5" dy="0">Channel (Telegram/Max)</tspan></text></g><g><line id="actor9" x1="2857.5" y1="65" x2="2857.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="LLM" data-et="life-line" data-id="LLM"/><g id="root-9" data-et="participant" data-type="participant" data-id="LLM"><rect x="2762.5" y="0" fill="#eaeaea" stroke="#666" width="190" height="65" name="LLM" rx="3" ry="3" class="actor actor-top"/><text x="2857.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2857.5" dy="0">HelixLLM / LLMProvider</tspan></text></g></g><g><line id="actor8" x1="2637.5" y1="65" x2="2637.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="SEM" data-et="life-line" data-id="SEM"/><g id="root-8" data-et="participant" data-type="participant" data-id="SEM"><rect x="2562.5" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="SEM" rx="3" ry="3" class="actor actor-top"/><text x="2637.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2637.5" dy="0">Semantic-search</tspan></text></g></g><g><line id="actor7" x1="2437.5" y1="65" x2="2437.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="AS" data-et="life-line" data-id="AS"/><g id="root-7" data-et="participant" data-type="participant" data-id="AS"><rect x="2362.5" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="AS" rx="3" ry="3" class="actor actor-top"/><text x="2437.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2437.5" dy="0">Asset Service</tspan></text></g></g><g><line id="actor6" x1="2003.5" y1="65" x2="2003.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="DL" data-et="life-line" data-id="DL"/><g id="root-6" data-et="participant" data-type="participant" data-id="DL"><rect x="1878.5" y="0" fill="#eaeaea" stroke="#666" width="250" height="65" name="DL" rx="3" ry="3" class="actor actor-top"/><text x="2003.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2003.5" dy="0">Download (Boba/MeTube/DL-Mgr)</tspan></text></g></g><g><line id="actor5" x1="1692.5" y1="65" x2="1692.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="DISP" data-et="life-line" data-id="DISP"/><g id="root-5" data-et="participant" data-type="participant" data-id="DISP"><rect x="1613.5" y="0" fill="#eaeaea" stroke="#666" width="158" height="65" name="DISP" rx="3" ry="3" class="actor actor-top"/><text x="1692.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1692.5" dy="0">Skill Dispatch Engine</tspan></text></g></g><g><line id="actor4" x1="1444" y1="65" x2="1444" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="BG" data-et="life-line" data-id="BG"/><g id="root-4" data-et="participant" data-type="participant" data-id="BG"><rect x="1324.5" y="0" fill="#eaeaea" stroke="#666" width="239" height="65" name="BG" rx="3" ry="3" class="actor actor-top"/><text x="1444" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1444" dy="0">BackgroundTasks (Postgres claim)</tspan></text></g></g><g><line id="actor3" x1="1045" y1="65" x2="1045" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="BUS" data-et="life-line" data-id="BUS"/><g id="root-3" data-et="participant" data-type="participant" data-id="BUS"><rect x="966.5" y="0" fill="#eaeaea" stroke="#666" width="157" height="65" name="BUS" rx="3" ry="3" class="actor actor-top"/><text x="1045" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1045" dy="0">EventBus (JetStream)</tspan></text></g></g><g><line id="actor2" x1="841.5" y1="65" x2="841.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="PG" data-et="life-line" data-id="PG"/><g id="root-2" data-et="participant" data-type="participant" data-id="PG"><rect x="766.5" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="PG" rx="3" ry="3" class="actor actor-top"/><text x="841.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="841.5" dy="0">PostgreSQL (SoR)</tspan></text></g></g><g><line id="actor1" x1="393.5" y1="65" x2="393.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="TR" data-et="life-line" data-id="TR"/><g id="root-1" data-et="participant" data-type="participant" data-id="TR"><rect x="283.5" y="0" fill="#eaeaea" stroke="#666" width="220" height="65" name="TR" rx="3" ry="3" class="actor actor-top"/><text x="393.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="393.5" dy="0">ThreadReader (herald Channel)</tspan></text></g></g><g><line id="actor0" x1="89.5" y1="65" x2="89.5" y2="1300" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="CH" data-et="life-line" data-id="CH"/><g id="root-0" data-et="participant" data-type="participant" data-id="CH"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="179" height="65" name="CH" rx="3" ry="3" class="actor actor-top"/><text x="89.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="89.5" dy="0">Channel (Telegram/Max)</tspan></text></g></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg rect.note[data-look="neo"]{stroke:#999;fill:#666;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg text.actor&gt;tspan{fill:#333;stroke:none;}#my-svg .actor-line{stroke:hsl(0, 0%, 83%);}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:#333;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:#333;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:#333;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#my-svg .note{stroke:#999;fill:#666;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:#fff;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#eee;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#999;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="control-structure" data-id="i15"><line x1="1034" y1="655" x2="1703.5" y2="655" class="loopLine"/><line x1="1703.5" y1="655" x2="1703.5" y2="788" class="loopLine"/><line x1="1034" y1="788" x2="1703.5" y2="788" class="loopLine"/><line x1="1034" y1="655" x2="1034" y2="788" class="loopLine"/><polygon points="1034,655 1084,655 1084,668 1075.6,675 1034,675" class="labelBox"/><text x="1059" y="668" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">loop</text><text x="1393.75" y="673" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="1393.75">[each stage: download&gt;convert&gt;analyze&gt;research&gt;reply]</tspan></text></g><text x="240" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Subscribe stream + Poll(since cursor)</text><line x1="96.5" y1="109" x2="389.5" y2="109" class="messageLine0" data-et="message" data-id="i1" data-from="CH" data-to="TR" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="89.5" y1="109" x2="89.5" y2="109" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="89.5" y="113" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">1</text><text x="395" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">ReadThread → assemble root + organic replies</text><path d="M 394.5,153 C 454.5,143 454.5,183 394.5,173" class="messageLine0" data-et="message" data-id="i2" data-from="TR" data-to="TR" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="400.5" style="fill: none;"/><line x1="393.5" y1="153" x2="393.5" y2="153" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="393.5" y="157" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">2</text><text x="395" y="198" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">IsSelfEcho filter (drop own status replies)</text><path d="M 394.5,227 C 454.5,217 454.5,257 394.5,247" class="messageLine0" data-et="message" data-id="i3" data-from="TR" data-to="TR" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="400.5" style="fill: none;"/><line x1="393.5" y1="227" x2="393.5" y2="227" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="393.5" y="231" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">3</text><text x="616" y="272" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">persist Complete Post (posts+replies+hashtags+attachments)</text><line x1="400.5" y1="301" x2="837.5" y2="301" class="messageLine0" data-et="message" data-id="i4" data-from="TR" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="393.5" y1="301" x2="393.5" y2="301" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="393.5" y="305" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">4</text><text x="718" y="316" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish post.received (metadata idempotency_key=post_id)</text><line x1="400.5" y1="347" x2="1041" y2="347" class="messageLine0" data-et="message" data-id="i5" data-from="TR" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="393.5" y1="347" x2="393.5" y2="347" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="393.5" y="351" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">5</text><text x="1243" y="362" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">durable pull consumer (at-least-once, may duplicate)</text><line x1="1052" y1="391" x2="1440" y2="391" class="messageLine0" data-et="message" data-id="i6" data-from="BUS" data-to="BG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1045" y1="391" x2="1045" y2="391" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1045" y="395" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">6</text><text x="1144" y="406" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Enqueue → INSERT post_processing_state ON CONFLICT DO NOTHING</text><line x1="1449" y1="437" x2="845.5" y2="437" class="messageLine0" data-et="message" data-id="i7" data-from="BG" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1444" y1="437" x2="1444" y2="437" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1444" y="441" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">7</text><text x="1144" y="452" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Dequeue → SELECT ... FOR UPDATE SKIP LOCKED (single claim)</text><line x1="1449" y1="481" x2="845.5" y2="481" class="messageLine0" data-et="message" data-id="i8" data-from="BG" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1444" y1="481" x2="1444" y2="481" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1444" y="485" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">8</text><text x="1246" y="496" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish post.claimed (worker_id)</text><line x1="1449" y1="527" x2="1049" y2="527" class="messageLine0" data-et="message" data-id="i9" data-from="BG" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1444" y1="527" x2="1444" y2="527" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1444" y="531" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">9</text><text x="1567" y="542" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">hand claimed post</text><line x1="1451" y1="571" x2="1688.5" y2="571" class="messageLine0" data-et="message" data-id="i10" data-from="BG" data-to="DISP" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1444" y1="571" x2="1444" y2="571" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1444" y="575" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">10</text><text x="1694" y="586" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Classify (hashtags + indirect) → resolve Skill set → order</text><path d="M 1693.5,615 C 1753.5,605 1753.5,645 1693.5,635" class="messageLine0" data-et="message" data-id="i11" data-from="DISP" data-to="DISP" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" x1="1699.5" style="fill: none;"/><line x1="1692.5" y1="615" x2="1692.5" y2="615" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="619" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">11</text><text x="1370" y="705" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish post.processing.progress (one-time)</text><line x1="1697.5" y1="734" x2="1049" y2="734" class="messageLine0" data-et="message" data-id="i13" data-from="DISP" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="734" x2="1692.5" y2="734" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="738" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">12</text><text x="1370" y="749" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish post.state (STICKY last-value)</text><line x1="1697.5" y1="778" x2="1049" y2="778" class="messageLine0" data-et="message" data-id="i14" data-from="DISP" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="778" x2="1692.5" y2="778" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="782" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">13</text><text x="1847" y="803" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">download stage (delegated, own pool)</text><line x1="1699.5" y1="832" x2="1999.5" y2="832" class="messageLine0" data-et="message" data-id="i16" data-from="DISP" data-to="DL" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="832" x2="1692.5" y2="832" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="836" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">14</text><text x="2219" y="847" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">standardized callback (job/state/progress/asset_ref)</text><line x1="2010.5" y1="878" x2="2433.5" y2="878" class="messageLine1" data-et="message" data-id="i17" data-from="DL" data-to="AS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><line x1="2003.5" y1="878" x2="2003.5" y2="878" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="2003.5" y="882" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">15</text><text x="1641" y="893" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">post↔asset link + sha256 checksum (content-hash dedup)</text><line x1="2442.5" y1="922" x2="845.5" y2="922" class="messageLine0" data-et="message" data-id="i18" data-from="AS" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="2437.5" y1="922" x2="2437.5" y2="922" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="2437.5" y="926" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">16</text><text x="1743" y="937" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish asset.stored</text><line x1="2442.5" y1="966" x2="1049" y2="966" class="messageLine0" data-et="message" data-id="i19" data-from="AS" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="2437.5" y1="966" x2="2437.5" y2="966" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="2437.5" y="970" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">17</text><text x="2274" y="981" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">analyze/research (breaker-wrapped; cloud fallback on open)</text><line x1="1699.5" y1="1010" x2="2853.5" y2="1010" class="messageLine0" data-et="message" data-id="i20" data-from="DISP" data-to="LLM" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="1010" x2="1692.5" y2="1010" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="1014" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">18</text><text x="2164" y="1025" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">embed post + artifacts (redacted surrogate for secrets)</text><line x1="1699.5" y1="1054" x2="2633.5" y2="1054" class="messageLine0" data-et="message" data-id="i21" data-from="DISP" data-to="SEM" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="1054" x2="1692.5" y2="1054" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="1058" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">19</text><text x="1741" y="1069" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">write semantic_chunks (pgvector, co-located)</text><line x1="2642.5" y1="1100" x2="845.5" y2="1100" class="messageLine0" data-et="message" data-id="i22" data-from="SEM" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="2637.5" y1="1100" x2="2637.5" y2="1100" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="2637.5" y="1104" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">20</text><text x="1843" y="1115" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish index.updated</text><line x1="2642.5" y1="1144" x2="1049" y2="1144" class="messageLine0" data-et="message" data-id="i23" data-from="SEM" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="2637.5" y1="1144" x2="2637.5" y2="1144" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="2637.5" y="1148" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">21</text><text x="1045" y="1159" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">SendReplyGeneric status reply to source thread</text><line x1="1697.5" y1="1188" x2="397.5" y2="1188" class="messageLine0" data-et="message" data-id="i24" data-from="DISP" data-to="TR" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="1188" x2="1692.5" y2="1188" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="1192" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">22</text><text x="1269" y="1203" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">post_processing_state=completed</text><line x1="1697.5" y1="1234" x2="845.5" y2="1234" class="messageLine0" data-et="message" data-id="i25" data-from="DISP" data-to="PG" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="1234" x2="1692.5" y2="1234" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="1238" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">23</text><text x="1370" y="1249" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">publish post.processed (metrics, asset_refs)</text><line x1="1697.5" y1="1280" x2="1049" y2="1280" class="messageLine0" data-et="message" data-id="i26" data-from="DISP" data-to="BUS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><line x1="1692.5" y1="1280" x2="1692.5" y2="1280" stroke-width="0" marker-start="url(#my-svg-sequencenumber)"/><text x="1692.5" y="1284" font-family="sans-serif" font-size="12px" text-anchor="middle" class="sequenceNumber">24</text></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/post-lifecycle.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The sequence has four movements —
+<strong>ingest</strong>, <strong>claim</strong>,
+<strong>process</strong>, <strong>finalize</strong> — and the value of
+reading it end to end is seeing how the boundary between each is a
+<em>durable artifact</em> (a persisted row or a published event) rather
+than an in-memory hand-off, which is what lets any hop crash and resume
+without losing or double-processing a post.</p>
+<p>The <strong>ingest</strong> movement (steps 1–5) is the ThreadReader
+over the verified herald <code>Channel</code>. It subscribes to the live
+stream and polls from a saved cursor, calls <code>ReadThread</code> to
+assemble the root plus its <em>organic</em> reply chain, and runs the
+verified <code>IsSelfEcho</code> self-filter so Thready’s own earlier
+status reply is dropped before it can loop. Only then does it persist
+the <strong>Complete Post</strong> — posts, replies, the union of
+hashtags across the whole chain, and attachments — to PostgreSQL, the
+system of record. Persisting <em>before</em> publishing is deliberate:
+the <code>post.received</code> event in step 5 carries
+<code>idempotency_key = post_id</code>, and because the row already
+exists, any consumer can re-read authoritative state from the SoR rather
+than trusting the event payload (whose concrete Go type JSON cannot
+preserve — see <a href="./event-model.md">event-model.md</a> §2).</p>
+<p>The <strong>claim</strong> movement (steps 6–10) is the exactly-once
+linchpin. The <code>post.received</code> event is delivered to a durable
+JetStream consumer inside BackgroundTasks <em>at-least-once</em>, so it
+may arrive more than once — and a scheduled poll can independently
+rediscover the same root while the push event is still in flight. Two
+orthogonal gates collapse that fan-out to one unit of work: the
+<strong>enqueue gate</strong>
+(<code>INSERT post_processing_state … ON CONFLICT (post_id, task_kind) DO NOTHING</code>
+admits exactly one writer) and the <strong>claim gate</strong>
+(<code>Dequeue</code> runs <code>SELECT … FOR UPDATE SKIP LOCKED</code>,
+so exactly one worker transitions <code>pending → running</code>).
+<code>post.claimed</code> announces the winner; the losers are acked as
+no-ops. This is the same VERIFIED Postgres primitive proven in <a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>
+§3–4 — Thready does not wait on the DESIGN-ONLY
+<code>session_orchestrator</code> <code>[GAP: 2.9]</code>.</p>
+<p>The <strong>process</strong> movement (steps 11–24) is the Skill
+Dispatch Engine. It classifies the post (hashtags plus indirect
+determination from link shape), resolves the concrete Skill set from the
+HelixSkills DAG, and orders it by the fixed precedence <strong>download
+&gt; convert &gt; analyze &gt; research &gt; reply</strong>. The
+<code>loop</code> box is the heart of live observability: on every stage
+it publishes a one-time <code>post.processing.progress</code> for the
+live UI <em>and</em> a sticky <code>post.state</code> last-value so a
+late subscriber can paint current state without a REST round-trip. The
+download stage is <strong>delegated</strong> to a separate pool
+(Boba/MeTube/Download Manager) and returns through the standardized
+callback to the Asset Service, which writes the post↔︎asset link and
+sha256 checksum (content-hash dedup) and emits <code>asset.stored</code>
+— download bytes and storage are separate concerns joined by one
+callback contract. The analyze/research substeps call the LLM stack
+behind a circuit breaker (cloud fallback when the local breaker opens),
+and every artifact — plus the original post — is embedded into pgvector,
+with a <strong>redacted surrogate</strong> standing in for any secret so
+the vector store never holds plaintext (<a
+href="./security-model.md">security-model.md</a> §7);
+<code>index.updated</code> marks each write.</p>
+<p>The <strong>finalize</strong> movement (steps 25–27) closes the loop:
+the dispatcher posts a status reply back to the <em>source</em> thread
+via the verified <code>SendReplyGeneric</code> (quoting the root;
+<code>replyToID</code> set), flips <code>post_processing_state</code> to
+<code>completed</code>, and emits <code>post.processed</code> carrying
+metrics and asset references. Because the status reply is authored by
+Thready’s own channel identity, the self-filter of the ingest movement
+will drop it on the next poll — the lifecycle is closed <em>and</em>
+self-stable. An explicit reprocess re-enters at the claim movement after
+invalidating the sticky <code>post.state</code> (see <a
+href="#6-idempotency--recovery-across-the-lifecycle">§6</a>).</p>
+<h2 id="stage-by-stage-reference">3. Stage-by-stage reference</h2>
+<p>Each row is one hop of the sequence: what triggers it, what it does,
+which events it emits, its dominant failure mode + degradation, and the
+sibling doc that owns the full design. This is the build-order index for
+the pipeline.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 3%" />
+<col style="width: 7%" />
+<col style="width: 9%" />
+<col style="width: 27%" />
+<col style="width: 16%" />
+<col style="width: 29%" />
+<col style="width: 7%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Phase</th>
+<th>Trigger</th>
+<th>Action (verified engine)</th>
+<th>Events emitted</th>
+<th>Failure mode → degradation</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ingest</td>
+<td>schedule poll + push trigger</td>
+<td>herald <code>Channel.Subscribe</code>/poll; <code>ReadThread</code>
+assembles root+organic; <code>IsSelfEcho</code> filter; persist Complete
+Post</td>
+<td><code>post.received</code>; sticky <code>channel.health</code></td>
+<td><code>FLOOD_WAIT</code>/rate-limit → breaker backs off,
+<code>channel.health</code> degraded; Max stub <code>[GAP: 5.1.2]</code>
+→ ingestion explicitly incomplete</td>
+<td><a href="./messenger-ingestion.md">messenger-ingestion.md</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Claim (enqueue)</td>
+<td><code>post.received</code> (at-least-once)</td>
+<td><code>INSERT post_processing_state … ON CONFLICT DO NOTHING</code>
+(<code>post_id</code> in <code>CorrelationID</code>)</td>
+<td>— (losers ack as no-op)</td>
+<td>duplicate storm → single row; module has <strong>no</strong>
+<code>DedupeKey</code>, dedup is Thready-side
+<code>[CLOSED: CONC-1]</code></td>
+<td><a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Claim (dequeue)</td>
+<td>worker free + resources fit</td>
+<td><code>Dequeue</code> → <code>SELECT … FOR UPDATE SKIP LOCKED</code>;
+<code>pending → running</code></td>
+<td><code>post.claimed</code></td>
+<td>two workers race → exactly one claims; worker death →
+<code>StuckDetector</code> reclaim to <code>pending</code></td>
+<td><a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Classify</td>
+<td>claimed post</td>
+<td>hashtags (union across chain) + indirect determination → category
+set → Skill-Graph resolve → precedence order</td>
+<td>—</td>
+<td>unclassifiable → <code>GenericIngest</code>, never dropped
+<code>[Q32]</code></td>
+<td><a href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Download</td>
+<td>stage 1</td>
+<td>route by link type → Boba / MeTube / Download Manager (<strong>own
+pool</strong>)</td>
+<td><code>post.processing.progress</code>, sticky
+<code>post.state</code>, <code>asset.download.progress</code></td>
+<td>source unavailable → retriable callback → requeue w/ backoff;
+exhausted → <code>post.failed</code>; MeTube poll-only
+<code>[GAP: 6.5]</code></td>
+<td><a href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Convert / Store</td>
+<td>download callback</td>
+<td>Asset Service keeps raw + <code>…-web</code> rendition; content-hash
+dedup; post↔︎asset link + checksum</td>
+<td><code>asset.stored</code></td>
+<td>transcode fail → raw preserved, <code>…-web</code> retried; serve
+falls back to raw</td>
+<td><a href="./asset-and-download.md">asset-and-download.md</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Analyze</td>
+<td>stage 3</td>
+<td>VisionEngine + OCR adapter; transcript; content classification</td>
+<td><code>post.processing.progress</code>, sticky
+<code>post.state</code></td>
+<td>OCR missing today <code>[GAP: 2.6]</code> → BUILD-NEW adapter;
+low-confidence region → LLM-vision second pass</td>
+<td><a href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Research</td>
+<td>stage 4 (token-heavy)</td>
+<td>multi-pass web research → docs → Skill-Graph growth via LLM stack
+(breaker-wrapped)</td>
+<td><code>post.processing.progress</code>, sticky
+<code>post.state</code>, <code>skill.step.retried</code></td>
+<td>local LLM outage → <code>LLMProvider</code> cloud fallback; per-post
+soft budget 30 min; HashEmbedder trap <code>[GAP: 2.1]</code>
+guarded</td>
+<td><a href="./processing-pipeline.md">processing-pipeline.md</a></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Index</td>
+<td>any artifact ready</td>
+<td>chunk → embed (same model both sides) →
+<code>VectorStore.Upsert</code> into pgvector (co-located); secrets as
+redacted surrogate</td>
+<td><code>index.updated</code></td>
+<td>dimension mismatch → refuse; pgvector down → serve from cache /
+relational filter</td>
+<td><a href="./semantic-search.md">semantic-search.md</a></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Reply</td>
+<td>all stages done</td>
+<td><code>SendReplyGeneric</code> status reply to source thread
+(Robot/User account)</td>
+<td>—</td>
+<td>reply authored by self-identity → dropped on next poll
+(self-stable)</td>
+<td><a href="./messenger-ingestion.md">messenger-ingestion.md</a></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Finalize</td>
+<td>reply posted</td>
+<td><code>post_processing_state = completed</code></td>
+<td><code>post.processed</code></td>
+<td>whole-post exhaustion earlier → <code>dead_letter</code> +
+<code>post.failed</code> (manual reprocess allowed)</td>
+<td><a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="event-emission-timeline">4. Event-emission timeline</h2>
+<p>A single successful post emits the following event stream, in order;
+the sticky events additionally retain a last-value per
+<code>post_id</code>. The full per-field catalog is <a
+href="./event-model.md">event-model.md</a> §7 — this is the
+<em>lifecycle ordering</em> of that catalog for one post.</p>
+<pre><code>post.received            (one-time)   — ingest: Complete Post persisted
+post.claimed             (one-time)   — claim: single worker won the row lock
+post.processing.progress (one-time ×N)— once per stage step (live UI)
+post.state               (STICKY  ×N) — last-value {state,progress,asset_refs,last_error}
+asset.download.progress  (one-time ×N)— delegated download callbacks
+asset.stored             (one-time ×N)— each raw / …-web committed to storage
+index.updated            (one-time ×N)— embeddings written for post + each artifact
+post.processed           (one-time)   — finalize: status reply posted, metrics + asset_refs</code></pre>
+<p>Failure and control variants interleave with the above rather than
+replacing it: <code>skill.step.retried</code> on each per-step back-off;
+<code>post.failed</code> (with <code>retriable</code>) on whole-post
+exhaustion after <code>MoveToDeadLetter</code>;
+<code>post.state.invalidate</code> when a reprocess clears the sticky
+value; and the ambient sticky <code>channel.health</code> whenever a
+channel’s reachability/lag changes. Clients receive this stream through
+the thin Event Bus Service, which delivers the <strong>sticky snapshot
+first</strong> on connect and then live deltas (<a
+href="./event-model.md">event-model.md</a> §4.1, §8), so a dashboard
+opened mid-lifecycle paints the post’s current <code>post.state</code>
+immediately and only then begins receiving the tail of the timeline
+above.</p>
+<h2 id="latency-slo-decomposition">5. Latency &amp; SLO
+decomposition</h2>
+<p>The operator SLO is <strong>Aggressive</strong> — API p95 &lt; 150
+ms, semantic search &lt; 500 ms, page &lt; 1.5 s — while a single
+research-heavy post carries a <strong>30-minute</strong> soft processing
+budget <code>[OPERATOR]</code>
+<code>[research_request_final Q14, §3.3]</code>. Those two numbers only
+coexist because the lifecycle splits into a <strong>synchronous
+read/write plane</strong> and an <strong>asynchronous work
+plane</strong> that never share a request thread. The split is the whole
+reason the sequence in §2 crosses the EventBus at step 5 instead of
+calling the dispatcher inline.</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 17%" />
+<col style="width: 37%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>Budget</th>
+<th>What runs on it</th>
+<th>Why it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API write (ingest trigger, reprocess request)</td>
+<td>p95 &lt; 150 ms</td>
+<td>persist row / mark reprocess (sticky
+<code>post.state=reprocessing</code>) + publish one event</td>
+<td>no Skill runs on the request; the event returns immediately, work
+happens off-thread</td>
+</tr>
+<tr>
+<td>API read (browse, status)</td>
+<td>p95 &lt; 150 ms</td>
+<td>SoR read; sticky <code>post.state</code> snapshot from cache</td>
+<td>sticky last-value means “current state” is a cache read, not a
+pipeline wait</td>
+</tr>
+<tr>
+<td>Semantic search</td>
+<td>&lt; 500 ms</td>
+<td><code>VectorStore.Search</code> (pgvector ANN) + hydrate ids from
+SoR</td>
+<td>pgvector co-located with SoR → local join; ANN index tuned;
+query-embedding cached</td>
+</tr>
+<tr>
+<td>Post processing (async)</td>
+<td>soft 30 min / post</td>
+<td>full stage pipeline, delegated downloads, LLM research</td>
+<td>lives entirely in the BackgroundTasks pool; progress surfaced via
+events, never blocking the API</td>
+</tr>
+</tbody>
+</table>
+<p>Three design consequences follow, each already enforced by a sibling
+doc. First, <strong>downloads are delegated to their own pool</strong>
+so a multi-gigabyte transfer cannot occupy a processing worker, let
+alone an API thread (<a
+href="./asset-and-download.md">asset-and-download.md</a> §3). Second,
+<strong>retry timing is bounded</strong> — exponential back-off base 2
+s, factor 2.0, cap 5 min, ±20 % full-jitter, ceiling 5 attempts — so a
+flapping dependency degrades throughput gracefully instead of stalling a
+worker indefinitely (<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>
+§5). Third, <strong>stuck recovery is time-boxed</strong> by the module
+defaults (10 s heartbeat, 300 s stale threshold), so a worker that dies
+inside the 30-minute budget is reclaimed within five minutes rather than
+pinning the post. The aggressive API SLO is therefore a property of
+<em>where work runs</em>, not of how fast any single Skill is.</p>
+<h2 id="idempotency-recovery-across-the-lifecycle">6. Idempotency &amp;
+recovery across the lifecycle</h2>
+<p>The lifecycle survives every partial failure because each movement
+re-enters at a durable boundary, never mid-memory. The recovery
+matrix:</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 50%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Where it re-enters</th>
+<th>Guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>post.received</code> redelivered (at-least-once)</td>
+<td>Claim enqueue gate</td>
+<td><code>ON CONFLICT DO NOTHING</code> → one row; duplicates ack as
+no-op</td>
+</tr>
+<tr>
+<td>Two workers race the pending row</td>
+<td>Claim dequeue gate</td>
+<td><code>FOR UPDATE SKIP LOCKED</code> → exactly one
+<code>running</code></td>
+</tr>
+<tr>
+<td>Worker dies mid-stage</td>
+<td>Stuck recovery</td>
+<td>stale heartbeat → <code>GetStaleTasks</code> → back to
+<code>pending</code>; each Skill step is idempotent so partial
+side-effects are safe</td>
+</tr>
+<tr>
+<td>A single step fails transiently</td>
+<td>Per-step retry</td>
+<td>checkpointed via <code>TaskExecutor.Pause/Resume</code>; only that
+step retries, not the whole post; <code>skill.step.retried</code></td>
+</tr>
+<tr>
+<td>Whole post exhausts retries</td>
+<td>Dead-letter</td>
+<td><code>MoveToDeadLetter</code> + <code>post.failed</code>;
+operator/user manual reprocess
+(<code>DeadLetterTask.ReprocessAfter</code>)</td>
+</tr>
+<tr>
+<td>Explicit reprocess/refresh</td>
+<td>Claim movement</td>
+<td><code>post.state.invalidate</code> clears sticky value → fresh
+claim; re-embed <strong>replaces</strong> chunks for the source, not
+duplicates (<a href="./data-flow.md">data-flow.md</a> §7)</td>
+</tr>
+<tr>
+<td>Client disconnects mid-stream</td>
+<td>Event Bus Service</td>
+<td>durable per-client consumer resumes from ack floor; beyond retention
+→ reconcile via REST <code>updated_since</code> snapshot</td>
+</tr>
+</tbody>
+</table>
+<p>The invariant tying these together is that a post has exactly one
+<code>post_processing_state</code> row and that row’s status walks the
+<strong>real nine-value</strong> <code>models.TaskStatus</code> machine
+(<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>
+§5.1) — “retrying” and “reprocessing” are <em>transitions between</em>
+those states (a return to <code>pending</code>), not statuses of their
+own, so the lifecycle has no illegal state to reconcile after any of the
+recoveries above.</p>
+<h2 id="verified-at-source-anchor-points">7. Verified-at-source anchor
+points</h2>
+<p>Every hop of §2 rests on an interface that was <strong>read at
+source</strong> in a sibling doc this pass; this table is the
+consolidated provenance so a reader can trust the sequence without
+re-deriving it.</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 57%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Hop</th>
+<th>Verified interface (module)</th>
+<th>Where verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ingest / reply / self-filter</td>
+<td>herald <code>commons_messaging/channels.Channel</code>
+(<code>Subscribe</code>/<code>SendReplyGeneric</code>/<code>BotSelfIdentity</code>/<code>DownloadAttachment</code>),
+<code>IsSelfEcho</code>/<code>StampSender</code></td>
+<td><a href="./messenger-ingestion.md">messenger-ingestion.md</a> §2, §5
+<code>[CLOSED: ING-2]</code></td>
+</tr>
+<tr>
+<td>Publish / subscribe</td>
+<td>eventbus <code>pkg/event.Event</code>, <code>pkg/nats</code>
+JetStream (<code>Publish</code>/<code>Subscribe</code>,
+<code>LimitsPolicy</code> <code>EVENTBUS</code> stream, ephemeral
+<code>DeliverNew</code>)</td>
+<td><a href="./event-model.md">event-model.md</a> §1–2</td>
+</tr>
+<tr>
+<td>Claim / retry / stuck</td>
+<td>background <code>TaskQueue</code>/<code>TaskRepository</code>
+(<code>Dequeue</code> = <code>FOR UPDATE SKIP LOCKED</code>), nine-value
+<code>TaskStatus</code>, no <code>DedupeKey</code>
+(<code>CorrelationID</code>), <code>StuckDetector</code></td>
+<td><a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>
+§2 <code>[CLOSED: CONC-1]</code></td>
+</tr>
+<tr>
+<td>Index</td>
+<td>vectordb <code>VectorStore</code>
+(<code>Upsert</code>/<code>Search</code>/<code>Delete</code>/<code>Get</code>),
+embeddings <code>EmbeddingProvider</code>
+(<code>Embed</code>/<code>Dimensions</code>)</td>
+<td><a href="./semantic-search.md">semantic-search.md</a>
+<code>[CLOSED: SEM-1]</code></td>
+</tr>
+<tr>
+<td>Seal / gate</td>
+<td>security <code>pkg/securestorage.Storage</code>
+(<code>IsSecure</code> startup gate),
+<code>pkg/policy.Enforcer.EvaluateAll</code> (most-restrictive)</td>
+<td><a href="./security-model.md">security-model.md</a> §3, §6
+<code>[CLOSED: SEC-1]</code></td>
+</tr>
+<tr>
+<td>Breaker / failover</td>
+<td>discovery <code>pkg/resilience.Manager</code>
+(<code>Connected/Disconnected/Reconnecting/Offline</code>)</td>
+<td><a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>
+§6</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>composition</strong> — ThreadReader, Skill Dispatch
+Engine, Semantic-search service, Asset Service, Download Manager, Event
+Bus Service — is Thready-new orchestration over those verified engines
+and is marked <code>[BUILD-NEW]</code> in <a
+href="./component-catalog.md">component-catalog.md</a> §4. Where an
+engine is a scaffold (HelixLLM default embedder, VisionEngine OCR,
+herald Max, MeTube webhook), the sequence shows the <em>target</em> hop
+and the owning doc carries the <code>[GAP: …]</code> and the plan; no
+hop here claims a stub works.</p>
+<h2 id="gap-register-coverage">8. Gap-register coverage</h2>
+<p>This capstone closes no gaps of its own — it routes each to the
+owning doc and shows where it bites in the lifecycle:</p>
+<ul>
+<li><code>[GAP: 5.1]</code> herald Max stub / MTProto QA-harness → the
+<strong>ingest</strong> movement is explicitly incomplete for Max until
+the OneMe port lands (<a
+href="./messenger-ingestion.md">messenger-ingestion.md</a>).</li>
+<li><code>[GAP: 2.9]</code> <code>session_orchestrator</code>
+DESIGN-ONLY → the <strong>claim</strong> movement reuses the VERIFIED
+BackgroundTasks Postgres claim, not the registry (<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</li>
+<li><code>[GAP: 4.1]</code> helix_skills has no run engine → the
+<strong>process</strong> movement is the BUILD-NEW Skill Dispatch Engine
+over the Skill-Graph (<a
+href="./processing-pipeline.md">processing-pipeline.md</a>).</li>
+<li><code>[GAP: 6.2/6.3/6.5]</code> no Download Manager / no HTTP source
+/ MeTube poll-only → the <strong>download</strong> hop routes to
+BUILD-NEW downloaders + the standardized callback (<a
+href="./asset-and-download.md">asset-and-download.md</a>).</li>
+<li><code>[GAP: 2.1/2.6]</code> HashEmbedder trap / no OCR → the
+<strong>analyze/index</strong> hops guard the embedder and add the OCR
+adapter (<a href="./semantic-search.md">semantic-search.md</a>, <a
+href="./processing-pipeline.md">processing-pipeline.md</a>).</li>
+<li><code>[GAP: 7.1]</code> searchable-but-sealed secrets → the
+<strong>index</strong> hop embeds a redacted surrogate (<a
+href="./security-model.md">security-model.md</a> §7).</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">9. TDD reproduce-first
+skeletons</h2>
+<p>Per <code>[CONSTITUTION §11.4.27/43]</code>, the end-to-end path
+starts RED. These integration-level skeletons assert the lifecycle
+<em>as a whole</em>, complementing the per-stage unit skeletons in the
+sibling docs.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: a post that is duplicated at ingest still emits exactly one post.processed.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestLifecycle_DuplicateReceived_ProcessesOnce<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    sys <span class="op">:=</span> newIntegrationStack<span class="op">(</span>t<span class="op">)</span> <span class="co">// real JetStream + Postgres containers</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    p <span class="op">:=</span> fixtureThread<span class="op">(</span>root<span class="op">=</span><span class="st">&quot;https://youtu.be/x&quot;</span><span class="op">,</span> replies<span class="op">=[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;#Video #ToDownload&quot;</span><span class="op">})</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    sys<span class="op">.</span>PublishReceived<span class="op">(</span>p<span class="op">);</span> sys<span class="op">.</span>PublishReceived<span class="op">(</span>p<span class="op">)</span> <span class="co">// at-least-once duplicate</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    ev <span class="op">:=</span> sys<span class="op">.</span>WaitForTerminal<span class="op">(</span>t<span class="op">,</span> p<span class="op">.</span>ID<span class="op">,</span> <span class="dv">60</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;post.processed&quot;</span><span class="op">,</span> ev<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> sys<span class="op">.</span>CountEvents<span class="op">(</span>p<span class="op">.</span>ID<span class="op">,</span> <span class="st">&quot;post.claimed&quot;</span><span class="op">))</span> <span class="co">// one claim only</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: the status reply Thready posts must NOT be re-ingested (self-stable loop).</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestLifecycle_StatusReplyNotReingested<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    sys <span class="op">:=</span> newIntegrationStack<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    p <span class="op">:=</span> sys<span class="op">.</span>RunToCompletion<span class="op">(</span>t<span class="op">,</span> fixtureThread<span class="op">(</span>root<span class="op">=</span><span class="st">&quot;text&quot;</span><span class="op">))</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    sys<span class="op">.</span>PollAgain<span class="op">(</span>t<span class="op">,</span> p<span class="op">.</span>ChannelID<span class="op">)</span> <span class="co">// next scheduled poll sees our own reply</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> sys<span class="op">.</span>CountEvents<span class="op">(</span>p<span class="op">.</span>ID<span class="op">,</span> <span class="st">&quot;post.received&quot;</span><span class="op">))</span> <span class="co">// filtered by IsSelfEcho</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: reprocess replays the lifecycle without duplicating semantic chunks.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestLifecycle_Reprocess_ReplacesNotDuplicates<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    sys <span class="op">:=</span> newIntegrationStack<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    p <span class="op">:=</span> sys<span class="op">.</span>RunToCompletion<span class="op">(</span>t<span class="op">,</span> fixtureThread<span class="op">(</span>root<span class="op">=</span><span class="st">&quot;https://github.com/o/r&quot;</span><span class="op">,</span> replies<span class="op">=[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;#Research&quot;</span><span class="op">}))</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    before <span class="op">:=</span> sys<span class="op">.</span>ChunkCount<span class="op">(</span>p<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    sys<span class="op">.</span>Reprocess<span class="op">(</span>t<span class="op">,</span> p<span class="op">.</span>ID<span class="op">)</span> <span class="co">// → post.state.invalidate → fresh claim</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    sys<span class="op">.</span>WaitForTerminal<span class="op">(</span>t<span class="op">,</span> p<span class="op">.</span>ID<span class="op">,</span> <span class="dv">60</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> before<span class="op">,</span> sys<span class="op">.</span>ChunkCount<span class="op">(</span>p<span class="op">.</span>ID<span class="op">))</span> <span class="co">// replaced, not doubled</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The 15 mandated test types apply end to end: integration (above, real
+containers), chaos (kill a worker mid-research, assert stuck-reclaim
+then <code>post.processed</code>), stress (10k
+<code>post.received</code>/min, assert one claim each), performance (API
+write p95 &lt; 150 ms while processing runs async), and security (a
+client cannot see another account’s lifecycle events).</p>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: PL-1]</code> The per-stage soft-timeout budgets that
+sum to the 30-minute per-post ceiling are
+<code>[DEFAULT — adjustable]</code> and need load-test validation in the
+testing pack (mirrors <code>[OPEN: PROC-3]</code>); tracked, not
+guessed.</li>
+<li><code>[OPEN: PL-2]</code> The end-to-end <strong>integration
+harness</strong> wiring real JetStream + Postgres containers (used by
+§9) is owned by the testing area; this doc specifies the assertions, the
+harness build is cross-linked, not duplicated.</li>
+<li><code>[NOTE: PL-3]</code> Max ingestion cannot yet run the full
+lifecycle (<code>[GAP: 5.1.2]</code> empty stub); the sequence in §2 is
+verified for Telegram and is the <em>target</em> for Max once the OneMe
+port lands — stated here so the capstone is not read as claiming Max
+works.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

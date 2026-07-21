@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/database/migration-strategy.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (database)
   Related         : ./schema-relational.sql ./migrations/0001_init.sql
                     ./partitioning.md ./indexing.md ./erd.md
@@ -16,6 +16,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (database) | Initial: migration.Runner contract, expand-contract, loader, rollback, CI-less enforcement, verified caveats |
 | 2 | 2026-07-22 | swarm (database, Pass 3) | Shipped runnable `0002`–`0007` migration files (all six previously roadmap-only); reconciled the roadmap table to actual file contents; documented the non-transactional apply path for `0007` and the full-list bootstrap-vs-online index recipe |
+| 3 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -174,7 +175,7 @@ sequenceDiagram
   participant App as Services (N-1 & N)
   Note over Dev,App: EXPAND (backward-compatible)
   Dev->>Run: Apply([0002_expand]) add nullable col / new table / new index
-  Run->>DB: BEGIN; Up; INSERT schema_migrations; COMMIT
+  Run->>DB: BEGIN#59; Up#59; INSERT schema_migrations#59; COMMIT
   Note right of DB: CONCURRENTLY steps run OUTSIDE the tx wrapper (§8)
   App->>DB: N-1 keeps working (old shape intact)
   Dev->>App: Deploy N — dual-write old + new

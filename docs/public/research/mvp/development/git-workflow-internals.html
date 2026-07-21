@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Git-Workflow Internals (Verified Mechanics)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Git-Workflow Internals (Verified
+Mechanics)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#the-enforcement-pipeline-end-to-end"
+id="toc-the-enforcement-pipeline-end-to-end">1. The enforcement pipeline
+(end to end)</a></li>
+<li><a href="#install_git_hooks.sh-symlink-installer"
+id="toc-install_git_hooks.sh-symlink-installer">2.
+<code>install_git_hooks.sh</code> — symlink installer</a></li>
+<li><a href="#pre-commit-three-staged-only-invariants"
+id="toc-pre-commit-three-staged-only-invariants">3.
+<code>pre-commit</code> — three staged-only invariants</a></li>
+<li><a href="#commit-msg-marker-based-bypass-audit"
+id="toc-commit-msg-marker-based-bypass-audit">4. <code>commit-msg</code>
+— marker-based bypass audit</a></li>
+<li><a href="#pre-push-force-push-guard-scoped-secret-scan"
+id="toc-pre-push-force-push-guard-scoped-secret-scan">5.
+<code>pre-push</code> — force-push guard + scoped secret scan</a></li>
+<li><a href="#post-commit-orphan-md-sibling-autogen"
+id="toc-post-commit-orphan-md-sibling-autogen">6.
+<code>post-commit</code> — orphan-md sibling autogen</a></li>
+<li><a href="#commit_all.sh-the-canonical-wrapper"
+id="toc-commit_all.sh-the-canonical-wrapper">7.
+<code>commit_all.sh</code> — the canonical wrapper</a></li>
+<li><a href="#push_all.sh-buffered-background-fan-out"
+id="toc-push_all.sh-buffered-background-fan-out">8.
+<code>push_all.sh</code> — buffered background fan-out</a></li>
+<li><a href="#install_upstreams.sh-remote-wiring"
+id="toc-install_upstreams.sh-remote-wiring">9.
+<code>install_upstreams.sh</code> — remote wiring</a></li>
+<li><a href="#thready-specific-bootstrap-checklist"
+id="toc-thready-specific-bootstrap-checklist">10. Thready-specific
+bootstrap checklist</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Git-Workflow Internals (Verified Mechanics)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/development/git-workflow-internals.md
+  Status          : Review — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (development)
+  Related         : ./contribution-guidelines.md, ./agent-orchestration.md, ./index.md,
+                    ./workable-items-detail.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (development, pass 3)</td>
+<td>Verified mechanics of the commit-all wrapper, four git hooks,
+push-all fan-out and upstreams installer — read at source in the org
+tooling clones</td>
+</tr>
+</tbody>
+</table>
+<p>This document is the <strong>implementation-level</strong> companion
+to <a
+href="./contribution-guidelines.md">contribution-guidelines.md</a>. The
+guidelines state the <em>policy</em> (commit through the wrapper, fan
+out to four upstreams, no server CI); this document documents the
+<em>mechanism</em> — the exact lock strategy, the marker-based bypass
+detection, the scoped secret scan, the per-remote retry — as
+<strong>read at source</strong> in the org tooling clones under
+<code>/home/milos/Factory/projects/tools_and_research/</code>
+(<code>helix_ota</code>, <code>helix_code</code>). Every mechanic below
+carries a <code>[VERIFIED-SOURCE]</code> anchor to the exact file it was
+read from, so an agent implementing <code>ATM-001</code> (repo + hook
+bootstrap, see <a
+href="./workable-items-detail.md#atm-001--repo--4-upstream-bootstrap--git-hooks">workable-items-detail.md
+§3.1</a>) reproduces the real behavior, not a paraphrase.</p>
+<blockquote>
+<p><strong>Why this deserves its own doc.</strong> The Constitution’s
+mechanical-enforcement mandate <code>[§11.4.75]</code> is realized by
+four cooperating hooks plus two wrapper scripts whose
+<em>interactions</em> (marker hand-off between <code>pre-commit</code>
+and <code>commit-msg</code>; lock release before background push; scoped
+vs whole-tree secret scan) are subtle and were the site of a real
+forensic incident (a mutation swept into an unrelated commit).
+Documenting the exact mechanics is the anti-bluff requirement
+<code>[CONVENTIONS §7]</code>.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-the-enforcement-pipeline-end-to-end">1. The enforcement
+pipeline (end to end)</a></li>
+<li><a href="#2-install_git_hookssh--symlink-installer">2.
+<code>install_git_hooks.sh</code> — symlink installer</a></li>
+<li><a href="#3-pre-commit--three-staged-only-invariants">3.
+<code>pre-commit</code> — three staged-only invariants</a></li>
+<li><a href="#4-commit-msg--marker-based-bypass-audit">4.
+<code>commit-msg</code> — marker-based bypass audit</a></li>
+<li><a href="#5-pre-push--force-push-guard--scoped-secret-scan">5.
+<code>pre-push</code> — force-push guard + scoped secret scan</a></li>
+<li><a href="#6-post-commit--orphan-md-sibling-autogen">6.
+<code>post-commit</code> — orphan-md sibling autogen</a></li>
+<li><a href="#7-commit_allsh--the-canonical-wrapper">7.
+<code>commit_all.sh</code> — the canonical wrapper</a></li>
+<li><a href="#8-push_allsh--buffered-background-fan-out">8.
+<code>push_all.sh</code> — buffered background fan-out</a></li>
+<li><a href="#9-install_upstreamssh--remote-wiring">9.
+<code>install_upstreams.sh</code> — remote wiring</a></li>
+<li><a href="#10-thready-specific-bootstrap-checklist">10.
+Thready-specific bootstrap checklist</a></li>
+</ul>
+<h2 id="the-enforcement-pipeline-end-to-end">1. The enforcement pipeline
+(end to end)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1420px; background-color: white;" viewBox="0 0 1420 1932.800048828125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M473.5,55L473.5,59.167C473.5,63.333,473.5,71.667,473.5,79.333C473.5,87,473.5,94,473.5,97.5L473.5,101" id="my-svg-L_DEV_CA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEV_CA_0" data-points="W3sieCI6NDczLjUsInkiOjU1fSx7IngiOjQ3My41LCJ5Ijo4MH0seyJ4Ijo0NzMuNSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M473.5,153L473.5,157.167C473.5,161.333,473.5,169.667,473.5,177.333C473.5,185,473.5,192,473.5,195.5L473.5,199" id="my-svg-L_CA_LOCK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CA_LOCK_0" data-points="W3sieCI6NDczLjUsInkiOjE1M30seyJ4Ijo0NzMuNSwieSI6MTc4fSx7IngiOjQ3My41LCJ5IjoyMDN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M473.5,268.6L473.5,272.767C473.5,276.933,473.5,285.267,473.5,292.933C473.5,300.6,473.5,307.6,473.5,311.1L473.5,314.6" id="my-svg-L_LOCK_CASCADE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_LOCK_CASCADE_0" data-points="W3sieCI6NDczLjUsInkiOjI2OC41OTk5OTg0NzQxMjExfSx7IngiOjQ3My41LCJ5IjoyOTMuNTk5OTk4NDc0MTIxMX0seyJ4Ijo0NzMuNSwieSI6MzE4LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M507.258,446.842L515.507,458.385C523.756,469.928,540.253,493.014,548.501,509.807C556.75,526.6,556.75,537.1,556.75,542.35L556.75,547.6" id="my-svg-L_CASCADE_SUB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CASCADE_SUB_0" data-points="W3sieCI6NTA3LjI1ODQ0ODA2MDA3NTA3LCJ5Ijo0NDYuODQxNTUwNDE0MDQ2fSx7IngiOjU1Ni43NSwieSI6NTE2LjA5OTk5ODQ3NDEyMTF9LHsieCI6NTU2Ljc1LCJ5Ijo1NTEuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M439.742,446.842L431.493,458.385C423.244,469.928,406.747,493.014,398.499,515.857C390.25,538.7,390.25,561.3,390.25,582.15C390.25,603,390.25,622.1,396.826,635.481C403.402,648.862,416.554,656.524,423.13,660.355L429.706,664.186" id="my-svg-L_CASCADE_STAGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CASCADE_STAGE_0" data-points="W3sieCI6NDM5Ljc0MTU1MTkzOTkyNDkzLCJ5Ijo0NDYuODQxNTUwNDE0MDQ2fSx7IngiOjM5MC4yNSwieSI6NTE2LjA5OTk5ODQ3NDEyMTF9LHsieCI6MzkwLjI1LCJ5Ijo1ODMuODk5OTk3NzExMTgxNn0seyJ4IjozOTAuMjUsInkiOjY0MS4xOTk5OTY5NDgyNDIyfSx7IngiOjQzMy4xNjIzNzExMzQwMjA2NSwieSI6NjY2LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M556.75,616.2L556.75,620.367C556.75,624.533,556.75,632.867,550.174,640.864C543.598,648.862,530.446,656.524,523.87,660.355L517.294,664.186" id="my-svg-L_SUB_STAGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SUB_STAGE_0" data-points="W3sieCI6NTU2Ljc1LCJ5Ijo2MTYuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo1NTYuNzUsInkiOjY0MS4xOTk5OTY5NDgyNDIyfSx7IngiOjUxMy44Mzc2Mjg4NjU5Nzk0LCJ5Ijo2NjYuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M473.5,713.2L473.5,717.367C473.5,721.533,473.5,729.867,473.5,737.533C473.5,745.2,473.5,752.2,473.5,755.7L473.5,759.2" id="my-svg-L_STAGE_PC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_STAGE_PC_0" data-points="W3sieCI6NDczLjUsInkiOjcxMy4xOTk5OTY5NDgyNDIyfSx7IngiOjQ3My41LCJ5Ijo3MzguMTk5OTk2OTQ4MjQyMn0seyJ4Ijo0NzMuNSwieSI6NzYzLjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M384,799.374L341.833,805.345C299.667,811.316,215.333,823.258,173.167,834.196C131,845.133,131,855.067,131,860.033L131,865" id="my-svg-L_PC_PC1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PC_PC1_0" data-points="W3sieCI6Mzg0LCJ5Ijo3OTkuMzczNzE5NTc1OTc5NH0seyJ4IjoxMzEsInkiOjgzNS4xOTk5OTY5NDgyNDIyfSx7IngiOjEzMSwieSI6ODY4Ljk5OTk5NjE4NTMwMjd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M444.67,810.2L439.558,814.367C434.447,818.533,424.223,826.867,419.112,836C414,845.133,414,855.067,414,860.033L414,865" id="my-svg-L_PC_PC2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PC_PC2_0" data-points="W3sieCI6NDQ0LjY3MDEwMzA5Mjc4MzUsInkiOjgxMC4xOTk5OTY5NDgyNDIyfSx7IngiOjQxNCwieSI6ODM1LjE5OTk5Njk0ODI0MjJ9LHsieCI6NDE0LCJ5Ijo4NjguOTk5OTk2MTg1MzAyN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M563,806.843L584,811.569C605,816.295,647,825.748,668,835.44C689,845.133,689,855.067,689,860.033L689,865" id="my-svg-L_PC_PC3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PC_PC3_0" data-points="W3sieCI6NTYzLCJ5Ijo4MDYuODQyNjg4MzYzNTU1NX0seyJ4Ijo2ODksInkiOjgzNS4xOTk5OTY5NDgyNDIyfSx7IngiOjY4OSwieSI6ODY4Ljk5OTk5NjE4NTMwMjd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M563,795.22L633,801.883C703,808.546,843,821.873,913,832.037C983,842.2,983,849.2,983,852.7L983,856.2" id="my-svg-L_PC_MARK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PC_MARK_0" data-points="W3sieCI6NTYzLCJ5Ijo3OTUuMjE5NjI0MDMzNjJ9LHsieCI6OTgzLCJ5Ijo4MzUuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo5ODMsInkiOjg2MC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M983,942.4L983,946.567C983,950.733,983,959.067,988.8,967.035C994.6,975.002,1006.199,982.605,1011.999,986.406L1017.799,990.207" id="my-svg-L_MARK_COMMIT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MARK_COMMIT_0" data-points="W3sieCI6OTgzLCJ5Ijo5NDIuMzk5OTkzODk2NDg0NH0seyJ4Ijo5ODMsInkiOjk2Ny4zOTk5OTM4OTY0ODQ0fSx7IngiOjEwMjEuMTQ0MzI5ODk2OTA3MywieSI6OTkyLjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1057,1039.4L1057,1043.567C1057,1047.733,1057,1056.067,1057,1063.733C1057,1071.4,1057,1078.4,1057,1081.9L1057,1085.4" id="my-svg-L_COMMIT_CM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COMMIT_CM_0" data-points="W3sieCI6MTA1NywieSI6MTAzOS4zOTk5OTM4OTY0ODQ0fSx7IngiOjEwNTcsInkiOjEwNjQuMzk5OTkzODk2NDg0NH0seyJ4IjoxMDU3LCJ5IjoxMDg5LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1057,1136.4L1057,1140.567C1057,1144.733,1057,1153.067,1057,1160.733C1057,1168.4,1057,1175.4,1057,1178.9L1057,1182.4" id="my-svg-L_CM_CMDET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CM_CMDET_0" data-points="W3sieCI6MTA1NywieSI6MTEzNi4zOTk5OTM4OTY0ODQ0fSx7IngiOjEwNTcsInkiOjExNjEuMzk5OTkzODk2NDg0NH0seyJ4IjoxMDU3LCJ5IjoxMTg2LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1108.418,1296.981L1133.599,1311.468C1158.779,1325.954,1209.139,1354.927,1234.32,1374.664C1259.5,1394.4,1259.5,1404.9,1259.5,1410.15L1259.5,1415.4" id="my-svg-L_CMDET_CMF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CMDET_CMF_0" data-points="W3sieCI6MTEwOC40MTg0OTUyOTc4MDU3LCJ5IjoxMjk2Ljk4MTQ5ODU5ODY3ODZ9LHsieCI6MTI1OS41LCJ5IjoxMzgzLjg5OTk5Mzg5NjQ4NDR9LHsieCI6MTI1OS41LCJ5IjoxNDE5LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1025.535,1316.935L1018.446,1328.096C1011.357,1339.257,997.178,1361.578,990.089,1379.456C983,1397.333,983,1410.767,983,1417.483L983,1424.2" id="my-svg-L_CMDET_CMOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CMDET_CMOK_0" data-points="W3sieCI6MTAyNS41MzU0MzMwNzA4NjYyLCJ5IjoxMzE2LjkzNTQyNjk2NzM1MDZ9LHsieCI6OTgzLCJ5IjoxMzgzLjg5OTk5Mzg5NjQ4NDR9LHsieCI6OTgzLCJ5IjoxNDI4LjE5OTk5MzEzMzU0NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M983,1475.2L983,1480.833C983,1486.467,983,1497.733,987.854,1507.125C992.708,1516.517,1002.416,1524.034,1007.27,1527.793L1012.124,1531.551" id="my-svg-L_CMOK_RELEASE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CMOK_RELEASE_0" data-points="W3sieCI6OTgzLCJ5IjoxNDc1LjE5OTk5MzEzMzU0NX0seyJ4Ijo5ODMsInkiOjE1MDguOTk5OTkyMzcwNjA1NX0seyJ4IjoxMDE1LjI4NjIxMzM0NDM3MDUsInkiOjE1MzMuOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1259.5,1484L1259.5,1488.167C1259.5,1492.333,1259.5,1500.667,1243.225,1509.439C1226.95,1518.211,1194.399,1527.421,1178.124,1532.026L1161.849,1536.632" id="my-svg-L_CMF_RELEASE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CMF_RELEASE_0" data-points="W3sieCI6MTI1OS41LCJ5IjoxNDgzLjk5OTk5MjM3MDYwNTV9LHsieCI6MTI1OS41LCJ5IjoxNTA4Ljk5OTk5MjM3MDYwNTV9LHsieCI6MTE1OCwieSI6MTUzNy43MjA3MzI3Mjg5MzQ1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1057,1598.6L1057,1602.767C1057,1606.933,1057,1615.267,1057,1622.933C1057,1630.6,1057,1637.6,1057,1641.1L1057,1644.6" id="my-svg-L_RELEASE_PUSH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RELEASE_PUSH_0" data-points="W3sieCI6MTA1NywieSI6MTU5OC41OTk5OTA4NDQ3MjY2fSx7IngiOjEwNTcsInkiOjE2MjMuNTk5OTkwODQ0NzI2Nn0seyJ4IjoxMDU3LCJ5IjoxNjQ4LjU5OTk5MDg0NDcyNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1057,1713.2L1057,1717.367C1057,1721.533,1057,1729.867,1057,1737.533C1057,1745.2,1057,1752.2,1057,1755.7L1057,1759.2" id="my-svg-L_PUSH_PP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PUSH_PP_0" data-points="W3sieCI6MTA1NywieSI6MTcxMy4xOTk5ODkzMTg4NDc3fSx7IngiOjEwNTcsInkiOjE3MzguMTk5OTg5MzE4ODQ3N30seyJ4IjoxMDU3LCJ5IjoxNzYzLjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M929.886,1827.8L913.488,1831.967C897.09,1836.133,864.295,1844.467,847.898,1852.133C831.5,1859.8,831.5,1866.8,831.5,1870.3L831.5,1873.8" id="my-svg-L_PP_GH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_GH_0" data-points="W3sieCI6OTI5Ljg4NTY5MDY2NDI2NCwieSI6MTgyNy43OTk5ODc3OTI5Njg4fSx7IngiOjgzMS41LCJ5IjoxODUyLjc5OTk4Nzc5Mjk2ODh9LHsieCI6ODMxLjUsInkiOjE4NzcuNzk5OTg3NzkyOTY4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1015.286,1827.8L1009.905,1831.967C1004.524,1836.133,993.762,1844.467,988.381,1852.133C983,1859.8,983,1866.8,983,1870.3L983,1873.8" id="my-svg-L_PP_GL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_GL_0" data-points="W3sieCI6MTAxNS4yODYyMTMzNDQzNzA1LCJ5IjoxODI3Ljc5OTk4Nzc5Mjk2ODh9LHsieCI6OTgzLCJ5IjoxODUyLjc5OTk4Nzc5Mjk2ODh9LHsieCI6OTgzLCJ5IjoxODc3Ljc5OTk4Nzc5Mjk2ODh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1098.714,1827.8L1104.095,1831.967C1109.476,1836.133,1120.238,1844.467,1125.619,1852.133C1131,1859.8,1131,1866.8,1131,1870.3L1131,1873.8" id="my-svg-L_PP_GF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_GF_0" data-points="W3sieCI6MTA5OC43MTM3ODY2NTU2Mjk1LCJ5IjoxODI3Ljc5OTk4Nzc5Mjk2ODh9LHsieCI6MTEzMSwieSI6MTg1Mi43OTk5ODc3OTI5Njg4fSx7IngiOjExMzEsInkiOjE4NzcuNzk5OTg3NzkyOTY4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1184.5,1827.195L1201.667,1831.463C1218.833,1835.73,1253.167,1844.265,1270.333,1852.033C1287.5,1859.8,1287.5,1866.8,1287.5,1870.3L1287.5,1873.8" id="my-svg-L_PP_GV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_GV_0" data-points="W3sieCI6MTE4NC41LCJ5IjoxODI3LjE5NTIxNTg5OTYxODV9LHsieCI6MTI4Ny41LCJ5IjoxODUyLjc5OTk4Nzc5Mjk2ODh9LHsieCI6MTI4Ny41LCJ5IjoxODc3Ljc5OTk4Nzc5Mjk2ODh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1287,933.6L1287,939.233C1287,944.867,1287,956.133,1260.402,967.375C1233.805,978.617,1180.609,989.835,1154.012,995.443L1127.414,1001.052" id="my-svg-L_POST_COMMIT_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_POST_COMMIT_0" data-points="W3sieCI6MTI4NywieSI6OTMzLjU5OTk5NDY1OTQyMzh9LHsieCI6MTI4NywieSI6OTY3LjM5OTk5Mzg5NjQ4NDR9LHsieCI6MTEyMy41LCJ5IjoxMDAxLjg3NzE2NzgwOTUyNzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_DEV_CA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CA_LOCK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_LOCK_CASCADE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(556.75, 516.0999984741211)"><g class="label" data-id="L_CASCADE_SUB_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(390.25, 583.8999977111816)"><g class="label" data-id="L_CASCADE_STAGE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_SUB_STAGE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_STAGE_PC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PC_PC1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PC_PC2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PC_PC3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PC_MARK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MARK_COMMIT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COMMIT_CM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CM_CMDET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1259.5, 1383.8999938964844)"><g class="label" data-id="L_CMDET_CMF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-92.5" y="0" width="185" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">absent</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no-verify</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bypass</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(983, 1383.8999938964844)"><g class="label" data-id="L_CMDET_CMOK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-61.5" y="0" width="123" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">present</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> normal</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_CMOK_RELEASE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CMF_RELEASE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RELEASE_PUSH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PUSH_PP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_GH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_GL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_GF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_GV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_POST_COMMIT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-DEV-0" data-look="classic" transform="translate(473.5, 31.5)"><rect class="basic label-container" style="" x="-92" y="-23.5" width="184" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">developer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> agent</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CA-1" data-look="classic" transform="translate(473.5, 129)"><rect class="basic label-container" style="" x="-79" y="-24" width="158" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">commit_all.sh</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LOCK-3" data-look="classic" transform="translate(473.5, 235.79999923706055)"><rect class="basic label-container" style="" x="-106" y="-32.79999923706055" width="212" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mkdir</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> lock</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.git/.commit_all.lock.d</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CASCADE-5" data-look="classic" transform="translate(473.5, 399.5999984741211)"><polygon points="81,0 162,-81 81,-162 0,-81" class="label-container" transform="translate(-80.5, 81)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">--auto-cascade?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SUB-7" data-look="classic" transform="translate(556.75, 583.8999977111816)"><rect class="basic label-container" style="" x="-120.5" y="-32.29999923706055" width="241" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">commit+push</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dirty</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> owned</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">submodules</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> first</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-STAGE-9" data-look="classic" transform="translate(473.5, 689.6999969482422)"><rect class="basic label-container" style="" x="-71" y="-23.5" width="142" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stage</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> paths</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PC-13" data-look="classic" transform="translate(473.5, 786.6999969482422)"><rect class="basic label-container" style="" x="-89.5" y="-23.5" width="179" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pre-commit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hook</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PC1-15" data-look="classic" transform="translate(131, 901.2999954223633)"><rect class="basic label-container" style="" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> markdown-sibling</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> check</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.65</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PC2-17" data-look="classic" transform="translate(414, 901.2999954223633)"><rect class="basic label-container" style="" x="-110" y="-32.29999923706055" width="220" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> forbidden-class</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scan</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.30/10</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PC3-19" data-look="classic" transform="translate(689, 901.2999954223633)"><rect class="basic label-container" style="" x="-115" y="-32.29999923706055" width="230" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mutation-residue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scan</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.84</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MARK-21" data-look="classic" transform="translate(983, 901.2999954223633)"><rect class="basic label-container" style="" x="-129" y="-41.099998474121094" width="258" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">drop</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.git/ATMO_PRECOMMIT_R</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">AN</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> marker</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-COMMIT-23" data-look="classic" transform="translate(1057, 1015.8999938964844)"><rect class="basic label-container" style="" x="-66.5" y="-23.5" width="133" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">git</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> commit</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CM-25" data-look="classic" transform="translate(1057, 1112.8999938964844)"><rect class="basic label-container" style="" x="-93" y="-23.5" width="186" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">commit-msg</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hook</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CMDET-27" data-look="classic" transform="translate(1057, 1267.3999938964844)"><polygon points="81,0 162,-81 81,-162 0,-81" class="label-container" transform="translate(-80.5, 81)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">marker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> present?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CMF-29" data-look="classic" transform="translate(1259.5, 1451.699993133545)"><rect class="basic label-container" style="" x="-117" y="-32.29999923706055" width="234" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">require</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Bypass-rationale</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">footer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> audit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> log</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CMOK-31" data-look="classic" transform="translate(983, 1451.699993133545)"><rect class="basic label-container" style="" x="-109.5" y="-23.5" width="219" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">consume</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> marker,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pass</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RELEASE-33" data-look="classic" transform="translate(1057, 1566.299991607666)"><rect class="basic label-container" style="" x="-101" y="-32.29999923706055" width="202" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">release</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> commit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> lock</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">immediately</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PUSH-37" data-look="classic" transform="translate(1057, 1680.899990081787)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">push_all.sh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> detached</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.88</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PP-39" data-look="classic" transform="translate(1057, 1795.4999885559082)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pre-push</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hook:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> force-push</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">guard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scoped</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> secret</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scan</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GH-41" data-look="classic" transform="translate(831.5, 1901.2999877929688)"><rect class="basic label-container" style="" x="-52" y="-23.5" width="104" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">github</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GL-43" data-look="classic" transform="translate(983, 1901.2999877929688)"><rect class="basic label-container" style="" x="-49.5" y="-23.5" width="99" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gitlab</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GF-45" data-look="classic" transform="translate(1131, 1901.2999877929688)"><rect class="basic label-container" style="" x="-48.5" y="-23.5" width="97" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gitflic</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GV-47" data-look="classic" transform="translate(1287.5, 1901.2999877929688)"><rect class="basic label-container" style="" x="-58" y="-23.5" width="116" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gitverse</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-POST-48" data-look="classic" transform="translate(1287, 901.2999954223633)"><rect class="basic label-container" style="" x="-125" y="-32.29999923706055" width="250" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post-commit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hook:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">orphan-md</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sibling</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> autogen</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A change enters through <code>commit_all.sh</code> —
+never a bare <code>git commit</code>. The wrapper first takes an
+<strong>atomic directory lock</strong>
+(<code>mkdir .git/.commit_all.lock.d</code>, portable across
+Linux/macOS) so two invocations can never interleave. If
+<code>--auto-cascade</code> is set, it walks dirty <strong>owned
+submodules</strong>, committing and pushing each <em>before</em>
+capturing their updated pointers in the parent commit — this preserves
+the “submodule pointer always references a pushed commit” invariant. It
+then stages the target paths and the <code>git commit</code> fires the
+hooks.</p>
+<p>The <code>pre-commit</code> hook evaluates three
+<strong>staged-only</strong> invariants against the index (never the
+whole tree): the markdown-sibling check <code>[§11.4.65]</code>, the
+forbidden-class scan (secrets / build artifacts / private keys,
+<code>[§11.4.30/10]</code>), and the mutation-residue scan
+<code>[§11.4.84]</code>. Immediately before it returns it drops a
+one-shot freshness marker (<code>.git/ATMO_PRECOMMIT_RAN</code>). The
+<code>commit-msg</code> hook then runs and reads that marker: if it is
+<strong>present</strong>, a normal gated commit happened, so the hook
+consumes (deletes) the marker and passes; if it is
+<strong>absent</strong>, the commit used <code>--no-verify</code> (which
+skips <code>pre-commit</code> but <em>not</em> <code>commit-msg</code>),
+and the hook demands a <code>Bypass-rationale:</code> footer, appending
+an entry to <code>docs/audit/bypass_events.md</code>. This marker
+hand-off is the whole bypass-detection mechanism — git provides no
+direct “was <code>--no-verify</code> used” signal.</p>
+<p>Once the local commit is durable, the wrapper <strong>releases the
+lock immediately</strong> and launches <code>push_all.sh</code>
+<strong>detached</strong> <code>[§11.4.88]</code> so the working tree is
+free again while the push proceeds in the background. The push triggers
+the <code>pre-push</code> hook, which blocks force-pushes (via
+<code>/proc/PPID/cmdline</code> inspection) and runs a secret scan
+<strong>scoped to the commits actually being pushed</strong> (not the
+whole working tree), then fans the branch out to all four remotes.
+Independently, <code>post-commit</code> regenerates siblings for any
+orphan <code>.md</code> (idempotent, recursion-guarded).</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/git-hook-layers.mmd">diagrams/git-hook-layers.mmd</a>.</p>
+</blockquote>
+<h2 id="install_git_hooks.sh-symlink-installer">2.
+<code>install_git_hooks.sh</code> — symlink installer</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/scripts/install_git_hooks.sh</code> (canonical §11.4.75
+installer).</p>
+<p>The installer is <strong>symlink-based and idempotent</strong>: it
+symlinks every hook body under <code>scripts/git_hooks/</code> into
+<code>.git/hooks/</code> so a single tracked source of truth drives the
+live hooks — editing the source updates the installed hook with
+<strong>no re-install</strong>. Re-running is a no-op when the symlinks
+already point at the right targets.</p>
+<ul>
+<li>Managed hook names (only these):
+<code>pre-commit pre-push post-commit commit-msg</code>.</li>
+<li>It honours a non-default <code>core.hooksPath</code> if the operator
+configured one (falls back to an absolute target in that case; otherwise
+uses a relative <code>../../scripts/git_hooks/&lt;name&gt;</code> link
+portable across repo relocations).</li>
+<li><code>--dry-run</code> prints what <em>would</em> be installed; a
+non-symlink pre-existing hook is reported as “WOULD replace
+(non-symlink)”.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Idempotent install (Thready ATM-001.2). Editing scripts/git_hooks/&lt;name&gt; updates the live hook.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install_git_hooks.sh</span>            <span class="co"># install/refresh symlinks</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install_git_hooks.sh</span> <span class="at">--dry-run</span>  <span class="co"># preview only</span></span></code></pre></div>
+<p>There is a legacy dash-named
+<code>scripts/install-git-hooks.sh</code> that <em>copies</em> instead
+of symlinking; the underscore form above is the canonical one the
+§11.4.75 mandate names — prefer it.</p>
+<h2 id="pre-commit-three-staged-only-invariants">3.
+<code>pre-commit</code> — three staged-only invariants</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/scripts/git_hooks/pre-commit</code> (“§11.4.75
+mechanical-enforcement layer 1”). All three invariants are evaluated
+<strong>against the index</strong> (what <code>git commit</code> is
+about to write), never against the whole tree:</p>
+<ol type="1">
+<li><strong>Markdown-sibling check
+<code>[§11.4.65 / CONST-066]</code>.</strong> A staged
+<strong>governed</strong> <code>.md</code> MUST ship its
+<code>.html</code> + <code>.pdf</code> siblings in the <em>same</em>
+index. The scope is reconciled to avoid blocking the in-flight backfill:
+a staged <code>.md</code> is sibling-CHECKED iff (a) it is in the
+<strong>core governed set</strong> (root manual / tracker doc /
+<code>Status{,_Summary}.md</code>) — always checked —
+<strong>or</strong> (b) it already has at least one sibling in the tree
+or index (it opted into the export regime, so an update that forgets to
+regenerate siblings is caught). A brand-new md-only working spec (no
+sibling yet) is <strong>not</strong> blocked — it belongs to the
+backfill scope, not a regression. Working specs under
+<code>docs/{superpowers,research,guides,testing}</code> are md-only by
+convention.</li>
+<li><strong>Forbidden-class scan
+<code>[§11.4.30 / §11.4.10]</code>.</strong> No staged secret /
+build-artifact / private-key class file.</li>
+<li><strong>Mutation-residue scan <code>[§11.4.84]</code>.</strong> No
+staged file carrying a paired-mutation marker
+(<code>MUTATED for paired</code>, <code>// always pass</code>,
+<code>// MUTATION</code>, …). This is the guard that prevents the real
+forensic incident where a subagent swept an <code>// always pass</code>
+JWT mutation into an unrelated commit.</li>
+</ol>
+<p>The hook is a <strong>courtesy gate</strong>: on a genuine
+product/security risk it BLOCKS (exit 1); benign tooling gaps (no staged
+files, detached index) degrade to a WARN + exit 0 rather than blocking
+every commit. Immediately before returning it drops
+<code>.git/ATMO_PRECOMMIT_RAN</code> (consumed by §4).</p>
+<blockquote>
+<p><strong>Thready note on
+<code>docs/public/research/mvp/</code>.</strong> These research docs
+live under <code>docs/research/</code> convention scope, so they are
+<strong>md-only by default</strong> unless they have opted into
+siblings. <code>ATM-009</code>/<code>ATM-069</code> provision
+pandoc/weasyprint and wire the Docs Chain context so the whole tree can
+generate HTML/PDF/DOCX siblings and move into the fully-checked set
+<code>[§11.4.65]</code>.</p>
+</blockquote>
+<h2 id="commit-msg-marker-based-bypass-audit">4. <code>commit-msg</code>
+— marker-based bypass audit</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/scripts/git_hooks/commit-msg</code> (“§11.4.75
+audit-trail seam for <code>--no-verify</code>”).</p>
+<p>Mechanism: the <code>pre-commit</code> hook drops
+<code>.git/ATMO_PRECOMMIT_RAN</code> right before it runs; this hook
+<strong>consumes</strong> it. If the marker is absent when
+<code>commit-msg</code> runs, <code>pre-commit</code> did not run for
+<em>this</em> commit — i.e. <code>--no-verify</code> was used (it skips
+<code>pre-commit</code> but not <code>commit-msg</code>). An explicit
+<code>HELIX_COMMIT_NO_VERIFY=1</code> environment override forces the
+footer requirement on regardless.</p>
+<ul>
+<li><strong>Bypass without footer → BLOCKED (exit 1).</strong> The
+required footer is <code>Bypass-rationale: &lt;reason&gt;</code>
+(matched case-insensitively:
+<code>^Bypass-rationale:[[:space:]]*[^[:space:]]</code>).</li>
+<li><strong>Bypass with footer → accepted</strong>, and one line is
+appended to <code>docs/audit/bypass_events.md</code> (audit trail;
+best-effort, never fatal).</li>
+<li><strong>Normal commit (marker present) → passes
+unconditionally</strong> and the marker is consumed one-shot so it
+cannot mask a subsequent bypass commit.</li>
+</ul>
+<p>This hook <strong>never</strong> blocks a normal commit; it only
+blocks a <em>detected</em> bypass that lacks the rationale footer.
+Thready’s commit-message policy layered on top (from <a
+href="./contribution-guidelines.md#3-the-commit-all-wrapper">contribution-guidelines.md
+§3</a>): first line <code>ATM-NNN: &lt;summary&gt;</code>; body explains
+what and why; <code>Co-Authored-By:</code> trailer.</p>
+<h2 id="pre-push-force-push-guard-scoped-secret-scan">5.
+<code>pre-push</code> — force-push guard + scoped secret scan</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/scripts/git_hooks/pre-push</code> (“force-push
+protection per CONST-042”).</p>
+<p>Two gates:</p>
+<ol type="1">
+<li><strong>Force-push detection.</strong> The hook inspects
+<code>/proc/$PPID/cmdline</code> for <code>--force</code> /
+<code>-f</code> / <code>--force-with-lease</code> and rejects the push
+unless <code>HELIX_FORCE_PUSH_APPROVED=1</code> is set. On platforms
+without <code>/proc</code> (macOS/BSD) it <strong>degrades
+gracefully</strong> — warns and exits 0 rather than blocking every push.
+The constitutional clause (CONST-042 / <code>[§11.4.113]</code>) is the
+actual contract; the hook is the courtesy gate.</li>
+<li><strong>Scoped secret scan.</strong> It runs
+<code>scripts/scan-secrets.sh --range &lt;base&gt; &lt;new&gt;</code>
+scoped to the <strong>commits actually being pushed</strong> (read from
+the ref-update lines git supplies on STDIN:
+<code>&lt;local-ref&gt; &lt;local-oid&gt; &lt;remote-ref&gt; &lt;remote-oid&gt;</code>).
+For an existing remote ref the range is
+<code>remote-oid..local-oid</code> (diffs only the new commits); for a
+brand-new ref it resolves the best merge-base against existing
+remote-tracking refs, falling back to the git empty-tree object for a
+genuine first-ever push. This scoping was a deliberate 2026-07-11 fix: a
+prior whole-working-tree scan swept <strong>untracked</strong> files
+(scratchpad reports, local notes) and blocked unrelated pushes on their
+content — <code>[§11.4.6]</code>: a push is judged on what it actually
+publishes, not on whatever is lying around locally.</li>
+</ol>
+<p>If the scanner is missing (early bootstrap), the check SKIPs with a
+warning rather than blocking.</p>
+<p>The <code>pre-push</code> hook also composes with the propagation
+gate <code>[§11.4.71]</code>: <strong>fetch + investigate + integrate
+before push</strong>, so a push always lands on top of the latest remote
+state (no force needed).</p>
+<h2 id="post-commit-orphan-md-sibling-autogen">6.
+<code>post-commit</code> — orphan-md sibling autogen</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/scripts/git_hooks/post-commit</code>.</p>
+<p>After a successful commit, this hook regenerates HTML/PDF/DOCX
+siblings for any orphan <code>.md</code>, <strong>idempotently</strong>
+and <strong>recursion-guarded</strong> (it must not trigger itself into
+a loop). It is the best-effort backfill companion to the
+<code>pre-commit</code> sibling <em>check</em>: <code>pre-commit</code>
+blocks a governed <code>.md</code> that ships without siblings;
+<code>post-commit</code> proactively generates siblings so the next
+commit is already compliant.</p>
+<h2 id="commit_all.sh-the-canonical-wrapper">7.
+<code>commit_all.sh</code> — the canonical wrapper</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_ota/scripts/commit_all.sh</code> (“the ONLY authorized
+commit+push tool”).</p>
+<p>Key mechanics:</p>
+<ul>
+<li><strong>Atomic lock:</strong>
+<code>mkdir "$PROJECT_ROOT/.git/.commit_all.lock.d"</code> (mkdir is
+atomic on Linux+macOS); writes the owner PID;
+<code>trap … EXIT INT TERM</code> cleans it up. A second invocation
+exits <strong>2</strong> on lock contention with a directed recovery
+hint. This is stronger than a bare <code>flock</code> for cross-platform
+portability.</li>
+<li><strong>Workflow:</strong> validate submodule pointers → stage →
+commit → push to all upstreams.</li>
+<li><strong>Options</strong> (verified in <code>--help</code>):
+<code>-m/--message</code>, <code>-n/--no-push</code>,
+<code>--auto-cascade</code> (commit+push dirty owned submodules first,
+then capture their pointers in the parent commit),
+<code>--docs-only</code> (stage+commit only doc files —
+Issues/Fixed/CONTINUATION/Status + exports, <code>[§11.4.22]</code>),
+<code>--sync-push</code> (synchronous; <strong>default is
+detached</strong> per <code>[§11.4.88]</code>),
+<code>--paths "p1 p2"</code> (fast path), <code>--dry-run</code>.</li>
+<li><strong>Exit codes:</strong> 0 success · 1 validation failure · 2
+lock contention.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Thready commit through the wrapper (ATM-028 example). Detached push is the default (§11.4.88).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/commit_all.sh</span> <span class="at">-m</span> <span class="st">&quot;ATM-028: Download Manager — segmented HTTP/3 transfer + resume</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="st">Implements the multi-protocol download engine reusing digital.vasic.filesystem</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">for FTP/SMB/NFS/WebDav and vasic-digital/http3 for the HTTP source. RED-&gt;GREEN</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">covered by unit+integration+stress; Fable @ xhigh: GO.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.8 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
+<h2 id="push_all.sh-buffered-background-fan-out">8.
+<code>push_all.sh</code> — buffered background fan-out</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_ota/scripts/push_all.sh</code> (“buffered background push to
+all upstreams”).</p>
+<ul>
+<li><strong>Remote list (verified):</strong>
+<code>github gitlab gitflic gitverse</code>.</li>
+<li><strong>Per-remote serialization:</strong> a per-remote
+<code>flock</code> on <code>.git/.push.&lt;remote&gt;.lock</code> so
+concurrent pushes to the same remote never race.</li>
+<li><strong>Retry with backoff:</strong> default <strong>3 retries per
+remote</strong>, initial delay <strong>5 s</strong>
+(<code>-r/--retries</code>, <code>-d/--delay</code> override); output is
+buffered to a log (<code>-l/--log</code>, else auto-generated under
+<code>qa-results/push_failures/</code>).</li>
+<li><strong>Honest exit:</strong> exit <strong>0 only if ALL remotes
+succeed</strong>, 1 if <strong>any</strong> fail — no false green (there
+is a regression guard <code>guard_push_all_honest_exit.sh</code>
+protecting exactly this).</li>
+<li>Designed to run <strong>detached</strong>
+(<code>nohup … &amp;</code>) per <code>[§11.4.88]</code> so
+<code>commit_all.sh</code> releases its lock as soon as the local commit
+is durable.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nohup</span> bash scripts/push_all.sh main <span class="at">--retries</span> 5 <span class="op">&gt;</span> /tmp/push.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">&amp;</span>   <span class="co"># detached, 5 retries</span></span></code></pre></div>
+<h2 id="install_upstreams.sh-remote-wiring">9.
+<code>install_upstreams.sh</code> — remote wiring</h2>
+<p><strong><code>[VERIFIED-SOURCE]</code></strong>
+<code>helix_code/constitution/install_upstreams.sh</code> (+ the Thready
+<code>upstreams/</code> recipes verified in-repo).</p>
+<ul>
+<li>Reads every <code>./upstreams/*.sh</code> declaration; each
+<strong>MUST</strong>
+<code>export UPSTREAMABLE_REPOSITORY=&lt;git-url&gt;</code> (verified
+shape — see the four Thready recipes below).</li>
+<li>Decodes a short remote name from the host:
+<code>github.com→github</code>, <code>gitlab.com→gitlab</code>,
+<code>gitflic.ru→gitflic</code>, <code>gitverse.ru→gitverse</code> (plus
+<code>bitbucket</code>/<code>codeberg</code>/generic-first-label).</li>
+<li>Prefers the lowercase <code>upstreams/</code> dir
+(<code>[§11.4.29 / CONST-052]</code>), falling back to a legacy
+<code>Upstreams/</code> with a rename warning.</li>
+<li>Wires each as a git remote so <strong>one push fans out</strong> to
+every provider.</li>
+</ul>
+<p><strong>Thready’s four recipes (VERIFIED in-repo,
+<code>helix_thready/upstreams/</code>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th><code>UPSTREAMABLE_REPOSITORY</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GitHub.sh</code></td>
+<td><code>git@github.com:HelixDevelopment/helix_thready.git</code></td>
+</tr>
+<tr>
+<td><code>GitLab.sh</code></td>
+<td><code>git@gitlab.com:helixdevelopment1/helix_thready.git</code></td>
+</tr>
+<tr>
+<td><code>GitFlic.sh</code></td>
+<td><code>git@gitflic.ru:helixdevelopment/helix_thready.git</code></td>
+</tr>
+<tr>
+<td><code>GitVerse.sh</code></td>
+<td><code>git@gitverse.ru:helixdevelopment/helix_thready.git</code></td>
+</tr>
+</tbody>
+</table>
+<p>Git URLs are <strong>SSH only</strong> <code>[CONST-003]</code>; no
+HTTPS git. Each <code>[BUILD-NEW]</code> submodule (Asset Service,
+Download Manager, Max adapter, OCR adapter, User Service, callback
+module) gets its <strong>own</strong> repo on all four providers with
+its own <code>upstreams/</code> recipe <code>[§11.4.36]</code>, and
+<code>install_upstreams.sh</code> is invoked on clone/add
+<code>[CONST-056]</code> — skipping it silently breaks §2.1 (the next
+push lands on only one upstream).</p>
+<h2 id="thready-specific-bootstrap-checklist">10. Thready-specific
+bootstrap checklist</h2>
+<p>This is the executable form of <code>ATM-001</code> (see <a
+href="./workable-items-detail.md#atm-001--repo--4-upstream-bootstrap--git-hooks">workable-items-detail.md
+§3.1</a>):</p>
+<ul class="task-list">
+<li><label><input
+type="checkbox" /><code>upstreams/{GitHub,GitLab,GitFlic,GitVerse}.sh</code>
+present (VERIFIED in-repo) → run <code>install_upstreams.sh</code> →
+<code>git remote</code> shows
+<code>github gitlab gitflic gitverse</code> (SSH URLs).</label></li>
+<li><label><input
+type="checkbox" /><code>scripts/git_hooks/{pre-commit,pre-push,post-commit,commit-msg}</code>
+vendored → run <code>scripts/install_git_hooks.sh</code> (symlink,
+idempotent).</label></li>
+<li><label><input type="checkbox" /><code>scripts/commit_all.sh</code> +
+<code>scripts/push_all.sh</code> vendored;
+<code>docs/audit/bypass_events.md</code> created.</label></li>
+<li><label><input type="checkbox" /><code>docs/private</code> submodule
+wired (VERIFIED <code>.gitmodules</code> →
+<code>git@github.com:HelixDevelopment/helix_thready_private.git</code>).</label></li>
+<li><label><input type="checkbox" />Dry-run each hook: a governed
+<code>.md</code> without siblings blocks (<code>pre-commit</code>); a
+<code>--no-verify</code> without footer blocks
+(<code>commit-msg</code>); a <code>--force</code> push blocks unless
+approved (<code>pre-push</code>).</label></li>
+<li><label><input type="checkbox" /><code>commit_all.sh --dry-run</code>
+succeeds; a detached <code>push_all.sh</code> reaches all four
+remotes.</label></li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

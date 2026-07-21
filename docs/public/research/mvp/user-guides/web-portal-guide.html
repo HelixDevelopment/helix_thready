@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Web Portal Guide</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Web Portal Guide</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#accessing-the-portal" id="toc-accessing-the-portal">1.
+Accessing the portal</a></li>
+<li><a href="#information-architecture-diagram"
+id="toc-information-architecture-diagram">2. Information architecture
+(diagram)</a></li>
+<li><a href="#login-mfa" id="toc-login-mfa">3. Login &amp; MFA</a></li>
+<li><a href="#threads-posts" id="toc-threads-posts">4. Threads &amp;
+posts</a></li>
+<li><a href="#semantic-search" id="toc-semantic-search">5. Semantic
+search</a></li>
+<li><a href="#administration-screens" id="toc-administration-screens">6.
+Administration screens</a></li>
+<li><a href="#real-time-updates" id="toc-real-time-updates">7. Real-time
+updates</a></li>
+<li><a href="#accessibility-seo-performance-bar"
+id="toc-accessibility-seo-performance-bar">8. Accessibility, SEO &amp;
+performance bar</a></li>
+<li><a href="#desktop-tauri-notes" id="toc-desktop-tauri-notes">9.
+Desktop (Tauri) notes</a></li>
+<li><a href="#tutorials" id="toc-tutorials">10. Tutorials</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Web Portal Guide
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/user-guides/web-portal-guide.md
+  Status          : Draft — v0.1 (zero-version)
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (user-guides)
+  Related         : ./end-user-manual.md, ./account-admin-guide.md, ./root-admin-guide.md,
+                    ../design/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (user-guides)</td>
+<td>Initial Angular portal guide</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (user-guides, Pass 3)</td>
+<td>Depth pass: split the information-architecture diagram explanation
+into multi-paragraph form; added a screen-by-screen reference table and
+linked <a href="./quickstart.md">quickstart.md</a></td>
+</tr>
+</tbody>
+</table>
+<p>The Web portal is the <strong>primary management surface</strong>
+(<code>[OPERATOR]</code> Web+CLI first). It is an
+<strong>Angular</strong> app on the shared <strong>OpenDesign
+<code>design_system</code></strong> (Angular 19 for the product client;
+Angular 22 for marketing/SSG) <code>[IN-HOUSE]</code>
+<code>[CONSTITUTION §11.4.162]</code>. Everything a user or admin needs
+— browsing threads, semantic search, assets, administration — is here.
+It consumes the same REST <code>/v1</code> + event bus as the
+CLI/TUI.</p>
+<blockquote>
+<p><strong>VERIFIED vs ASSUMPTION.</strong> Angular + OpenDesign is
+VERIFIED from the decision matrix. Exact screen names/routes below are
+this guide’s proposal <code>[DEFAULT — adjustable]</code>, aligned to
+the <a href="../design/index.md">design area</a> once its wireframes are
+published. <code>design_system</code> is FOUNDATION (web-only, extracted
+from HelixOTA) <code>[GAP register §8.1]</code> — the Thready brand
+theme layer is a <code>P1</code>.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-accessing-the-portal">Accessing the portal</a></li>
+<li><a href="#2-information-architecture-diagram">Information
+architecture (diagram)</a></li>
+<li><a href="#3-login--mfa">Login &amp; MFA</a></li>
+<li><a href="#4-threads--posts">Threads &amp; posts</a></li>
+<li><a href="#5-semantic-search">Semantic search</a></li>
+<li><a href="#6-administration-screens">Administration screens</a></li>
+<li><a href="#7-real-time-updates">Real-time updates</a></li>
+<li><a href="#8-accessibility-seo--performance-bar">Accessibility, SEO
+&amp; performance bar</a></li>
+<li><a href="#9-desktop-tauri-notes">Desktop (Tauri) notes</a></li>
+<li><a href="#10-tutorials">Tutorials</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<h2 id="accessing-the-portal">1. Accessing the portal</h2>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Production</td>
+<td><code>https://thready.hxd3v.com</code></td>
+</tr>
+<tr>
+<td>Staging</td>
+<td><code>https://sta.thready.hxd3v.com</code></td>
+</tr>
+<tr>
+<td>Development</td>
+<td><code>https://dev.thready.hxd3v.com</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each subdomain routes to a fully isolated stack (final request §8.2).
+Use a modern evergreen browser; HTTP/3 is used when available with
+HTTP/2 fallback.</p>
+<h2 id="information-architecture-diagram">2. Information architecture
+(diagram)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2195.25px; background-color: white;" viewBox="0 0 2195.25 459.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M812.25,55L812.25,59.167C812.25,63.333,812.25,71.667,812.25,79.333C812.25,87,812.25,94,812.25,97.5L812.25,101" id="my-svg-L_LOGIN_DASH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_LOGIN_DASH_0" data-points="W3sieCI6ODEyLjI1LCJ5Ijo1NX0seyJ4Ijo4MTIuMjUsInkiOjgwfSx7IngiOjgxMi4yNSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M694.75,157.247L598.208,166.406C501.667,175.565,308.583,193.882,212.042,208.008C115.5,222.133,115.5,232.067,115.5,237.033L115.5,242" id="my-svg-L_DASH_CHAN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_CHAN_0" data-points="W3sieCI6Njk0Ljc1LCJ5IjoxNTcuMjQ3MTA5ODA2MzE5NX0seyJ4IjoxMTUuNSwieSI6MjEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTE1LjUsInkiOjI0NS45OTk5OTYxODUzMDI3M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M694.75,164.872L645.375,172.76C596,180.648,497.25,196.424,447.875,207.812C398.5,219.2,398.5,226.2,398.5,229.7L398.5,233.2" id="my-svg-L_DASH_THREADS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_THREADS_0" data-points="W3sieCI6Njk0Ljc1LCJ5IjoxNjQuODcxNTk5MjQ5MjQ5MTN9LHsieCI6Mzk4LjUsInkiOjIxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjM5OC41LCJ5IjoyMzcuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M732.817,187.2L724.764,191.367C716.711,195.533,700.606,203.867,692.553,213C684.5,222.133,684.5,232.067,684.5,237.033L684.5,242" id="my-svg-L_DASH_SEARCH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_SEARCH_0" data-points="W3sieCI6NzMyLjgxNjk0NTEzOTU3MzUsInkiOjE4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjY4NC41LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo2ODQuNSwieSI6MjQ1Ljk5OTk5NjE4NTMwMjczfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M891.683,187.2L899.736,191.367C907.789,195.533,923.894,203.867,931.947,211.533C940,219.2,940,226.2,940,229.7L940,233.2" id="my-svg-L_DASH_ASSETS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_ASSETS_0" data-points="W3sieCI6ODkxLjY4MzA1NDg2MDQyNjUsInkiOjE4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjk0MCwieSI6MjEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6OTQwLCJ5IjoyMzcuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M929.75,165.8L975.875,173.533C1022,181.267,1114.25,196.733,1160.375,209.433C1206.5,222.133,1206.5,232.067,1206.5,237.033L1206.5,242" id="my-svg-L_DASH_SKILLS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_SKILLS_0" data-points="W3sieCI6OTI5Ljc1LCJ5IjoxNjUuODAwMDYxNDMwODk3ODR9LHsieCI6MTIwNi41LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxMjA2LjUsInkiOjI0NS45OTk5OTYxODUzMDI3M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M929.75,156.747L1031.75,165.989C1133.75,175.231,1337.75,193.716,1439.75,209.391C1541.75,225.067,1541.75,237.933,1541.75,244.367L1541.75,250.8" id="my-svg-L_DASH_ADMIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DASH_ADMIN_0" data-points="W3sieCI6OTI5Ljc1LCJ5IjoxNTYuNzQ2Njc0MDMzNjk1MX0seyJ4IjoxNTQxLjc1LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNTQxLjc1LCJ5IjoyNTQuNzk5OTk1NDIyMzYzMjh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1457.75,288.432L1380.417,297.76C1303.083,307.088,1148.417,325.744,1071.083,341.505C993.75,357.267,993.75,370.133,993.75,376.567L993.75,383" id="my-svg-L_ADMIN_MEMBERS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_MEMBERS_0" data-points="W3sieCI6MTQ1Ny43NSwieSI6Mjg4LjQzMjExMTk3Njc5MDZ9LHsieCI6OTkzLjc1LCJ5IjozNDQuMzk5OTkzODk2NDg0NH0seyJ4Ijo5OTMuNzUsInkiOjM4Ni45OTk5OTIzNzA2MDU0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1457.75,294.631L1415.083,302.925C1372.417,311.22,1287.083,327.81,1244.417,342.538C1201.75,357.267,1201.75,370.133,1201.75,376.567L1201.75,383" id="my-svg-L_ADMIN_RETENTION_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_RETENTION_0" data-points="W3sieCI6MTQ1Ny43NSwieSI6Mjk0LjYzMDU4MzI4MDY3NTV9LHsieCI6MTIwMS43NSwieSI6MzQ0LjM5OTk5Mzg5NjQ4NDR9LHsieCI6MTIwMS43NSwieSI6Mzg2Ljk5OTk5MjM3MDYwNTQ3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1498.554,301.8L1485.503,308.9C1472.453,316,1446.351,330.2,1433.301,343.733C1420.25,357.267,1420.25,370.133,1420.25,376.567L1420.25,383" id="my-svg-L_ADMIN_BRANDING_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_BRANDING_0" data-points="W3sieCI6MTQ5OC41NTQwODM3MjI5NjkyLCJ5IjozMDEuNzk5OTk1NDIyMzYzM30seyJ4IjoxNDIwLjI1LCJ5IjozNDQuMzk5OTkzODk2NDg0NH0seyJ4IjoxNDIwLjI1LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1584.946,301.8L1597.997,308.9C1611.047,316,1637.149,330.2,1650.199,343.733C1663.25,357.267,1663.25,370.133,1663.25,376.567L1663.25,383" id="my-svg-L_ADMIN_PROCESSING_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_PROCESSING_0" data-points="W3sieCI6MTU4NC45NDU5MTYyNzcwMzA4LCJ5IjozMDEuNzk5OTk1NDIyMzYzM30seyJ4IjoxNjYzLjI1LCJ5IjozNDQuMzk5OTkzODk2NDg0NH0seyJ4IjoxNjYzLjI1LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1625.75,294.347L1669.417,302.689C1713.083,311.032,1800.417,327.716,1844.083,342.491C1887.75,357.267,1887.75,370.133,1887.75,376.567L1887.75,383" id="my-svg-L_ADMIN_BILLINGV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_BILLINGV_0" data-points="W3sieCI6MTYyNS43NSwieSI6Mjk0LjM0NzM5Mzg5NTg0OTM0fSx7IngiOjE4ODcuNzUsInkiOjM0NC4zOTk5OTM4OTY0ODQ0fSx7IngiOjE4ODcuNzUsInkiOjM4Ni45OTk5OTIzNzA2MDU0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1625.75,288.153L1705.667,297.528C1785.583,306.902,1945.417,325.651,2025.333,341.459C2105.25,357.267,2105.25,370.133,2105.25,376.567L2105.25,383" id="my-svg-L_ADMIN_AUDIT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADMIN_AUDIT_0" data-points="W3sieCI6MTYyNS43NSwieSI6Mjg4LjE1MzQxMTM0Mzk3MTR9LHsieCI6MjEwNS4yNSwieSI6MzQ0LjM5OTk5Mzg5NjQ4NDR9LHsieCI6MjEwNS4yNSwieSI6Mzg2Ljk5OTk5MjM3MDYwNTQ3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M398.5,319.4L398.5,323.567C398.5,327.733,398.5,336.067,398.5,343.733C398.5,351.4,398.5,358.4,398.5,361.9L398.5,365.4" id="my-svg-L_THREADS_POSTDETAIL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_THREADS_POSTDETAIL_0" data-points="W3sieCI6Mzk4LjUsInkiOjMxOS4zOTk5OTM4OTY0ODQ0fSx7IngiOjM5OC41LCJ5IjozNDQuMzk5OTkzODk2NDg0NH0seyJ4IjozOTguNSwieSI6MzY5LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M684.5,310.6L684.5,316.233C684.5,321.867,684.5,333.133,684.5,345.2C684.5,357.267,684.5,370.133,684.5,376.567L684.5,383" id="my-svg-L_SEARCH_RESULT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEARCH_RESULT_0" data-points="W3sieCI6Njg0LjUsInkiOjMxMC41OTk5OTQ2NTk0MjM4fSx7IngiOjY4NC41LCJ5IjozNDQuMzk5OTkzODk2NDg0NH0seyJ4Ijo2ODQuNSwieSI6Mzg2Ljk5OTk5MjM3MDYwNTQ3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_LOGIN_DASH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_CHAN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_THREADS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_SEARCH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_ASSETS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_SKILLS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DASH_ADMIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_MEMBERS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_RETENTION_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_BRANDING_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_PROCESSING_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_BILLINGV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ADMIN_AUDIT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_THREADS_POSTDETAIL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEARCH_RESULT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-LOGIN-0" data-look="classic" transform="translate(812.25, 31.5)"><rect class="basic label-container" style="" x="-103" y="-23.5" width="206" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Login</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MFA</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (TOTP)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DASH-1" data-look="classic" transform="translate(812.25, 146.0999984741211)"><rect class="basic label-container" style="" x="-117.5" y="-41.099998474121094" width="235" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Dashboard</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> switcher</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> KPIs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">live</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> events</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CHAN-3" data-look="classic" transform="translate(115.5, 278.2999954223633)"><rect class="basic label-container" style="" x="-107.5" y="-32.29999923706055" width="215" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Channels</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">add/list/recognize/poll</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THREADS-5" data-look="classic" transform="translate(398.5, 278.2999954223633)"><rect class="basic label-container" style="" x="-125.5" y="-41.099998474121094" width="251" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Threads</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Posts</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">complete</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> view</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> status</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reply</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> assets</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEARCH-7" data-look="classic" transform="translate(684.5, 278.2999954223633)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Search</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">query</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filters</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> facets</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ASSETS-9" data-look="classic" transform="translate(940, 278.2999954223633)"><rect class="basic label-container" style="" x="-98.5" y="-41.099998474121094" width="197" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Assets</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">renditions</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reheal</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">downloads</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SKILLS-11" data-look="classic" transform="translate(1206.5, 278.2999954223633)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skills</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Recipes</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">enable/tune</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> category</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ADMIN-13" data-look="classic" transform="translate(1541.75, 278.2999954223633)"><rect class="basic label-container" style="" x="-84" y="-23.5" width="168" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Administration*</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MEMBERS-15" data-look="classic" transform="translate(993.75, 410.49999237060547)"><rect class="basic label-container" style="" x="-93.5" y="-23.5" width="187" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Members</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Roles</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RETENTION-17" data-look="classic" transform="translate(1201.75, 410.49999237060547)"><rect class="basic label-container" style="" x="-64.5" y="-23.5" width="129" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Retention</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BRANDING-19" data-look="classic" transform="translate(1420.25, 410.49999237060547)"><rect class="basic label-container" style="" x="-104" y="-23.5" width="208" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">White-label</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> branding</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROCESSING-21" data-look="classic" transform="translate(1663.25, 410.49999237060547)"><rect class="basic label-container" style="" x="-89" y="-23.5" width="178" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Pause</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Resume</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BILLINGV-23" data-look="classic" transform="translate(1887.75, 410.49999237060547)"><rect class="basic label-container" style="" x="-85.5" y="-23.5" width="171" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Billing</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Usage</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUDIT-25" data-look="classic" transform="translate(2105.25, 410.49999237060547)"><rect class="basic label-container" style="" x="-82" y="-23.5" width="164" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Audit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> log</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (root)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-POSTDETAIL-27" data-look="classic" transform="translate(398.5, 410.49999237060547)"><rect class="basic label-container" style="" x="-108.5" y="-41.099998474121094" width="217" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> detail</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reprocess</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retry</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> step</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">events</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RESULT-29" data-look="classic" transform="translate(684.5, 410.49999237060547)"><rect class="basic label-container" style="" x="-127.5" y="-23.5" width="255" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Result</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post/asset</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/web-portal-ia.mmd">diagrams/web-portal-ia.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> After login and TOTP MFA the user lands on the
+<strong>Dashboard</strong>, which is the hub of the whole IA. It carries
+an account switcher (for people who belong to multiple Accounts),
+headline KPIs, and a live event feed. The account switcher is
+load-bearing: because a person can hold different roles in different
+Accounts, the switcher is what scopes every subsequent screen to a
+single tenant.</p>
+<p>From the dashboard the primary navigation fans out to the consumption
+surfaces. <strong>Channels</strong> lets you add/list channels and see
+auto-recognition and poll settings. <strong>Threads &amp; Posts</strong>
+is the complete-post reading experience, with each post’s status reply
+and linked assets. <strong>Semantic Search</strong> is a query box with
+structured filters and facets. <strong>Assets</strong> handles
+renditions, reheal, and downloads. And <strong>Skills/Recipes</strong>
+lets an Admin enable and tune the per-hashtag recipes. These five are
+what a Standard User spends nearly all their time in.</p>
+<p>An <strong>Administration</strong> section marked <code>*</code> is
+visible only to Admin tiers. It expands to Members &amp; Roles,
+Retention, White-label branding, processing Pause/Resume, Billing &amp;
+Usage, and — for the Root Admin only — the Audit log. Visibility here is
+RBAC-driven: the section does not merely disable controls, it does not
+render for users who lack the role, and the server rejects the
+underlying calls regardless of what the UI shows.</p>
+<p>Two drill-down paths are shown explicitly because they are the ones
+users follow most. A thread opens a <strong>Post detail</strong> view
+with reprocess/retry-step controls and that post’s event history. A
+search result links straight back to its <strong>source post or
+asset</strong> — so search is a navigation <em>entry point</em>, not a
+dead-end results list. This “search deep-links to source” behaviour is
+what makes semantic search feel like part of the app rather than a
+bolt-on.</p>
+<p>The IA mirrors the <a
+href="./cli-reference.md#2-command-tree-diagram">CLI command tree</a>
+and the <a href="./tui-usage.md#4-views">TUI views</a> one-to-one, which
+is why a workflow learned in the portal transfers directly to the
+terminal surfaces and vice-versa.</p>
+<p><strong>Screen-by-screen reference.</strong>
+<code>[DEFAULT — adjustable]</code> routes align to the <a
+href="../design/index.md">design area</a> wireframes on publish
+(<code>[OPEN: web-1]</code>).</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 26%" />
+<col style="width: 14%" />
+<col style="width: 24%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Route (proposed)</th>
+<th>Min role</th>
+<th>Primary actions</th>
+<th>CLI equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dashboard</td>
+<td><code>/</code></td>
+<td>user</td>
+<td>switch account, view KPIs, watch live feed</td>
+<td><code>thready events tail</code></td>
+</tr>
+<tr>
+<td>Channels</td>
+<td><code>/channels</code></td>
+<td>account_admin</td>
+<td>add/list/recognize/poll</td>
+<td><code>thready channel …</code></td>
+</tr>
+<tr>
+<td>Threads &amp; Posts</td>
+<td><code>/threads</code></td>
+<td>user</td>
+<td>browse complete posts, open detail</td>
+<td><code>thready thread …</code></td>
+</tr>
+<tr>
+<td>Post detail</td>
+<td><code>/threads/:id</code></td>
+<td>user</td>
+<td>reprocess, retry step, view events</td>
+<td><code>thready post …</code></td>
+</tr>
+<tr>
+<td>Search</td>
+<td><code>/search</code></td>
+<td>user</td>
+<td>query + filters, deep-link to source</td>
+<td><code>thready search</code></td>
+</tr>
+<tr>
+<td>Assets</td>
+<td><code>/assets</code></td>
+<td>user</td>
+<td>list renditions, reheal, download</td>
+<td><code>thready asset …</code></td>
+</tr>
+<tr>
+<td>Skills / Recipes</td>
+<td><code>/skills</code></td>
+<td>account_admin</td>
+<td>enable/disable/tune per hashtag</td>
+<td><code>thready skill …</code></td>
+</tr>
+<tr>
+<td>Members &amp; Roles</td>
+<td><code>/admin/members</code></td>
+<td>account_admin</td>
+<td>invite/remove/set role</td>
+<td><code>thready member …</code></td>
+</tr>
+<tr>
+<td>Retention</td>
+<td><code>/admin/retention</code></td>
+<td>account_admin (global: root)</td>
+<td>set per-account default</td>
+<td><code>thready retention …</code></td>
+</tr>
+<tr>
+<td>Branding</td>
+<td><code>/admin/branding</code></td>
+<td>account_admin (if enabled)</td>
+<td>color/logo/slogan</td>
+<td><code>thready brand set</code></td>
+</tr>
+<tr>
+<td>Processing</td>
+<td><code>/admin/processing</code></td>
+<td>account_admin (global: root)</td>
+<td>pause/resume</td>
+<td><code>thready processing …</code></td>
+</tr>
+<tr>
+<td>Billing &amp; Usage</td>
+<td><code>/admin/billing</code></td>
+<td>account_admin (all: root)</td>
+<td>view meter</td>
+<td><code>thready billing …</code></td>
+</tr>
+<tr>
+<td>Audit log</td>
+<td><code>/admin/audit</code></td>
+<td>root</td>
+<td>query/export append-only log</td>
+<td><code>thready audit …</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="login-mfa">3. Login &amp; MFA</h2>
+<ol type="1">
+<li>Enter email + password (Argon2id-hashed server-side, ≥12 chars,
+breach-checked).</li>
+<li>Enter your TOTP code — <strong>mandatory for Admin tiers</strong>,
+optional for Standard Users
+(<code>THREADY_MFA_REQUIRED_TIERS</code>).</li>
+<li>Sessions: access token 15 min, refresh 7 d, idle logout 30 min
+(Aggressive posture, Q9).</li>
+</ol>
+<p>First-time Admins are forced through TOTP enrolment before any other
+screen loads.</p>
+<h2 id="threads-posts">4. Threads &amp; posts</h2>
+<p>The Threads view lists complete posts per channel. Opening a post
+shows:</p>
+<ul>
+<li>The <strong>complete post</strong>: root message + full organic
+reply chain (system replies excluded).</li>
+<li>Detected <strong>categories</strong> (hashtags + content type),
+including any inferred by indirect determination.</li>
+<li>The <strong>status reply</strong> Thready posted back
+(success/metrics/asset refs).</li>
+<li><strong>Linked assets</strong> (raw + <code>-web</code> renditions)
+resolved via the Asset Service, and any generated
+<strong>research</strong> documents.</li>
+<li><strong>Processing state</strong> with <code>Reprocess</code> and
+<code>Retry step</code> actions (client → REST → System).</li>
+</ul>
+<h2 id="semantic-search">5. Semantic search</h2>
+<p>A single query box backed by pgvector + a real llama.cpp embedder
+searches <strong>both</strong> original posts and generated materials by
+meaning (&lt; 500 ms target). Filters: kind (post/asset/research),
+account, date range, category, sensitivity. Each result deep-links to
+its source.</p>
+<blockquote>
+<p><code>[GAP: 1]</code> If the deployment is running on HelixLLM’s
+default <strong>hash embedder</strong>, search relevance is garbage. The
+portal surfaces an amber banner <em>“Semantic search degraded:
+non-semantic embedder”</em> and links to <a
+href="./troubleshooting.md#5-semantic-search-returns-irrelevant-results">troubleshooting.md
+§5</a>.</p>
+</blockquote>
+<h2 id="administration-screens">6. Administration screens</h2>
+<p>Visible per RBAC:</p>
+<ul>
+<li><strong>Members &amp; Roles</strong> — invite/remove, set
+<code>account_admin</code>/<code>user</code> (Account scope); Root can
+edit any.</li>
+<li><strong>Retention</strong> — per-account default (shorten within
+Root’s cap); Root sets global.</li>
+<li><strong>White-label branding</strong> — colors/logo/slogan per
+Account; Helix attribution persists in footers.</li>
+<li><strong>Processing</strong> — pause/resume (Account scope for
+Admins, global for Root).</li>
+<li><strong>Billing &amp; Usage</strong> — the metering view (own
+account for Admins; all for Root).</li>
+<li><strong>Audit log</strong> — append-only, queryable (Root
+Admin).</li>
+</ul>
+<p>These map to the <a href="./account-admin-guide.md">Account Admin</a>
+and <a href="./root-admin-guide.md">Root Admin</a> guides.</p>
+<h2 id="real-time-updates">7. Real-time updates</h2>
+<p>The portal subscribes to the event bus over WebSocket (SSE fallback).
+Lists and the post detail view update live as
+<code>post.received</code>/<code>post.processed</code>/error events
+arrive; sticky events (last-value with invalidation) rehydrate state on
+load, and durable replay covers reconnects (final request §3.4). The
+complete set of topics the portal consumes — and which are one-time vs
+sticky — is the consolidated <a
+href="./sdk-quickstart.md#61-event-catalog-topics--payloads--semantics">event
+catalog</a>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Illustrative Angular service (final contract in ../api/index.md)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">this</span><span class="op">.</span><span class="at">events</span><span class="op">.</span><span class="fu">subscribe</span>(<span class="st">&#39;post.processed&#39;</span><span class="op">,</span> (e<span class="op">:</span> PostProcessed) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">this</span><span class="op">.</span><span class="at">store</span><span class="op">.</span><span class="fu">upsertPost</span>(e<span class="op">.</span><span class="at">postId</span><span class="op">,</span> { status<span class="op">:</span> <span class="st">&#39;processed&#39;</span><span class="op">,</span> assets<span class="op">:</span> e<span class="op">.</span><span class="at">assets</span> })<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="accessibility-seo-performance-bar">8. Accessibility, SEO &amp;
+performance bar</h2>
+<p>Websites/portal meet the engineering-quality bar
+<code>[CONSTITUTION §11.4.190]</code>: fully responsive, <strong>WCAG
+AA</strong>, Core Web Vitals, page &lt; 1.5 s (Aggressive SLO), semantic
+HTML, and for marketing surfaces SEO-complete (meta/OG/Twitter,
+canonical, schema.org/JSON-LD, robots+sitemap). Proven with captured
+screenshots + Lighthouse and visual-regression tests
+(<code>VisualRegression</code> LLM-vision + <code>ScreenDiff</code>
+pixel). Light + dark themes mandatory with explicit choice + system
+default.</p>
+<p><strong>Localization.</strong> The portal UI is fully localized in
+<strong>English, Russian, and Serbian Cyrillic</strong>
+(<code>en</code>/<code>ru</code>/<code>sr-Cyrl</code>) via
+HelixTranslate + <code>digital.vasic.i18n</code> (Q35). A language
+switcher is available in the account/profile menu; the default is
+<code>THREADY_DEFAULT_LOCALE</code> (<a
+href="./configuration.md#15-retention-billing--localization">configuration.md
+§15</a>). Post content stays in its original language with on-demand
+translation; only the UI chrome is translated.</p>
+<h2 id="desktop-tauri-notes">9. Desktop (Tauri) notes</h2>
+<p>The Desktop app is a <strong>Tauri 2</strong> shell (Rust core + the
+same Angular UI) — the org standard <code>[DEFAULT — adjustable]</code>
+(Q18). It adds OS-specific features (native notifications for
+<code>post.processed</code>, file-system asset export, tray controls for
+pause/resume) but is otherwise the portal. Install per OS from releases
+(<a href="./installation.md#8-client-installs">installation.md
+§8</a>).</p>
+<h2 id="tutorials">10. Tutorials</h2>
+<p><strong>Tutorial A — First login as an Account Admin.</strong> 1.
+Open your account URL → sign in → enrol TOTP. 2. Dashboard →
+<strong>Channels</strong> → <em>Add channel</em> → paste a Telegram
+invite link → save. 3. Wait for auto-recognition; watch the live feed
+for <code>post.received</code>. 4. Dashboard → <strong>Members</strong>
+→ invite your team as <code>user</code>.</p>
+<p><strong>Tutorial B — Investigate and re-run a failed post.</strong>
+1. <strong>Threads</strong> → filter status <code>failed</code> → open
+the post. 2. Read the status reply’s error; click <strong>Retry
+step</strong> → choose the failed step, or <strong>Reprocess</strong>
+for a full refresh. 3. Confirm via the live event feed that it reaches
+<code>post.processed</code>.</p>
+<p><strong>Tutorial C — Brand your account.</strong> 1.
+<strong>Administration → White-label branding</strong> (if enabled by
+Root). 2. Set primary color, upload light+dark logos, set slogan → save.
+3. Reload — header, generated-doc headers/footers, and status replies
+pick up the brand; the Helix Development footer attribution remains.</p>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: web-1]</code> Screen names/routes are
+<code>[DEFAULT — adjustable]</code>; align with the <a
+href="../design/index.md">design area</a> wireframes once published.
+Tracked: <strong>ATM — reconcile portal IA with Figma</strong>.</li>
+<li><code>[OPEN: web-2]</code> <code>design_system</code> is web-only
+FOUNDATION; the Thready brand theme + npm publish are <code>P1</code>
+<code>[GAP register §8.1]</code>. Tracked: <strong>ATM — Thready theme
+on design_system</strong>.</li>
+<li><code>[OPEN: web-3]</code> Angular product version (19 vs 22) for
+Thready’s product client is a <code>[DEFAULT — adjustable]</code>
+recommendation (Q17); confirm before build.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

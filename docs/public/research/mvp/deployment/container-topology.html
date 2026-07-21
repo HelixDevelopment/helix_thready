@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Container Topology</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Container Topology</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#design-constraints" id="toc-design-constraints">1. Design
+constraints</a></li>
+<li><a href="#per-environment-topology-diagram"
+id="toc-per-environment-topology-diagram">2. Per-environment topology
+diagram</a></li>
+<li><a href="#service-inventory" id="toc-service-inventory">3. Service
+inventory</a></li>
+<li><a href="#container-images-pinned"
+id="toc-container-images-pinned">4. Container images (pinned)</a></li>
+<li><a href="#networks" id="toc-networks">5. Networks</a></li>
+<li><a href="#volumes-persistence" id="toc-volumes-persistence">6.
+Volumes &amp; persistence</a></li>
+<li><a href="#resource-limits" id="toc-resource-limits">7. Resource
+limits</a></li>
+<li><a href="#build-new-placeholders-no-bluff"
+id="toc-build-new-placeholders-no-bluff">8. BUILD-NEW placeholders (no
+bluff)</a></li>
+<li><a href="#helixllm-as-an-external-endpoint"
+id="toc-helixllm-as-an-external-endpoint">9. HelixLLM as an external
+endpoint</a></li>
+<li><a href="#modelling-the-stack-with-the-containers-api"
+id="toc-modelling-the-stack-with-the-containers-api">10. Modelling the
+stack with the containers API</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Container Topology
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/container-topology.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./podman-compose.md, ./service-discovery-ports.md,
+                    ../architecture/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial per-environment service inventory, images, networks,
+volumes, limits</td>
+</tr>
+</tbody>
+</table>
+<p>This document is the authoritative inventory of <strong>what
+containers make up one Helix Thready environment</strong>, the images
+they run, how they are networked and volumed, their resource limits, and
+which of them are <strong>BUILD-NEW placeholders</strong> that do not
+yet run real code. The same stack is instantiated three times (dev / sta
+/ prod), each in its own Podman Compose project and its own <a
+href="./service-discovery-ports.md">host-port band</a>.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-design-constraints">Design constraints</a></li>
+<li><a href="#2-per-environment-topology-diagram">Per-environment
+topology diagram</a></li>
+<li><a href="#3-service-inventory">Service inventory</a></li>
+<li><a href="#4-container-images-pinned">Container images
+(pinned)</a></li>
+<li><a href="#5-networks">Networks</a></li>
+<li><a href="#6-volumes--persistence">Volumes &amp; persistence</a></li>
+<li><a href="#7-resource-limits">Resource limits</a></li>
+<li><a href="#8-build-new-placeholders-no-bluff">BUILD-NEW placeholders
+(no bluff)</a></li>
+<li><a href="#9-helixllm-as-an-external-endpoint">HelixLLM as an
+external endpoint</a></li>
+<li><a href="#10-modelling-the-stack-with-the-containers-api">Modelling
+the stack with the containers API</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="design-constraints">1. Design constraints</h2>
+<ul>
+<li><strong>Rootless Podman only</strong> — every container runs under
+the unprivileged <code>thready</code> user; no Docker daemon, no root,
+no <code>sudo</code> <code>[CONSTITUTION §11.4.76/161]</code>.</li>
+<li><strong>Full environment separation</strong> — no container,
+network, volume or port is shared between <code>dev</code>,
+<code>sta</code> and <code>prod</code> (<code>§8.2</code>). The only
+host-wide shared component is the single edge reverse proxy that fans
+out by subdomain (see <a
+href="./environments.md">environments.md</a>).</li>
+<li><strong>In-house first</strong> — the data/infra containers are the
+standard images the <code>containers</code> module’s
+<code>DefaultHelixServices()</code> already uses (Postgres, Redis, NATS,
+Prometheus, Grafana, Jaeger), plus MinIO and ClickHouse for Thready’s
+asset and analytics needs <code>[IN-HOUSE: containers]</code>.</li>
+<li><strong>Large-scale posture</strong> — assets on a MinIO/S3 object
+tier (50 TB+), Postgres partitioned for 10k+ posts/day, JetStream as the
+primary event transport <code>[OPERATOR: scale]</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Anti-bluff note.</strong>
+<code>vasic-digital/containers</code> ships a
+<code>DefaultHelixServices()</code> helper that hardcodes
+<strong>dev-only</strong> credentials
+(<code>POSTGRES_PASSWORD=helix</code>,
+<code>GF_SECURITY_ADMIN_PASSWORD=admin</code>, a Vault dev root token)
+as <em>documented fallback defaults for local bring-up only</em>.
+Thready <strong>does not</strong> use that 20-service dev stack
+verbatim; it constructs its own <code>[]HelixService</code> and injects
+every credential from the environment (see <a
+href="./secrets-and-config.md">secrets-and-config.md</a>).
+<code>[GAP: #12 anti-bluff]</code></p>
+</blockquote>
+<h2 id="per-environment-topology-diagram">2. Per-environment topology
+diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 3451px; background-color: white;" viewBox="0 0 3451 1239.0751953125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1644.301,1095.475L1643.418,1101.392C1642.534,1107.309,1640.767,1119.142,1647.432,1130.975C1654.097,1142.809,1669.194,1154.642,1676.743,1160.559L1684.291,1166.475" id="my-svg-L_PROC_LLM_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_LLM_0" data-points="W3sieCI6MTY0NC4zMDEzNjUwMTQ0Nzk2LCJ5IjoxMDk1LjQ3NTIxOTcyNjU2MjV9LHsieCI6MTYzOSwieSI6MTEzMC45NzUyMTk3MjY1NjI1fSx7IngiOjE2ODQuMjkxMjk4NDQ0NzU2OSwieSI6MTE2Ni40NzUyMTk3MjY1NjI1fV0=" data-look="classic"/><path d="M1806.699,1095.475L1807.582,1101.392C1808.466,1107.309,1810.233,1119.142,1803.568,1130.975C1796.903,1142.809,1781.806,1154.642,1774.257,1160.559L1766.709,1166.475" id="my-svg-L_SEM_LLM_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEM_LLM_0" data-points="W3sieCI6MTgwNi42OTg2MzQ5ODU1MjA0LCJ5IjoxMDk1LjQ3NTIxOTcyNjU2MjV9LHsieCI6MTgxMiwieSI6MTEzMC45NzUyMTk3MjY1NjI1fSx7IngiOjE3NjYuNzA4NzAxNTU1MjQzMSwieSI6MTE2Ni40NzUyMTk3MjY1NjI1fV0=" data-look="classic"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(1639, 1130.9752197265625)"><g class="label" data-id="L_PROC_LLM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-94.5" y="0" width="189" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/chat</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /v1/embeddings</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1812, 1130.9752197265625)"><g class="label" data-id="L_SEM_LLM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-58.5" y="0" width="117" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/embeddings</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="root" transform="translate(0, 0)"><g class="clusters"><g class="cluster" id="my-svg-EnvStack" data-look="classic"><rect style="" x="8" y="8" width="3435" height="1087.475227355957"/><g class="cluster-label" transform="translate(1539.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">One</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> environment</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (repeated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 3x:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prod)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Web" data-look="classic"><rect style="" x="28" y="419.5999984741211" width="329" height="157.1999969482422"/><g class="cluster-label" transform="translate(154.5, 419.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> client</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Obs" data-look="classic"><rect style="" x="377" y="45.5" width="314" height="784.4999923706055"/><g class="cluster-label" transform="translate(487.5, 45.5)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Observability</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-ThirdParty" data-look="classic"><rect style="" x="711" y="672.7999954223633" width="449" height="157.1999969482422"/><g class="cluster-label" transform="translate(837, 672.7999954223633)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">3rd-party</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> workers</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-DataPlane" data-look="classic"><rect style="" x="776" y="904.9999923706055" width="2647" height="152.97523498535156"/><g class="cluster-label" transform="translate(2060.5, 904.9999923706055)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Data</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> plane</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-AppPlane" data-look="classic"><rect style="" x="1180" y="419.5999984741211" width="2194.5" height="410.3999938964844"/><g class="cluster-label" transform="translate(2166.25, 419.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Application</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> plane</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (Go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> services)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Edge" data-look="classic"><rect style="" x="67.75" y="205" width="276" height="139.5999984741211"/><g class="cluster-label" transform="translate(72.25, 205)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (host-wide,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> shared</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> across</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> envs)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M233.052,307.1L238.335,313.35C243.618,319.6,254.184,332.1,628.175,344.6C1002.167,357.1,1739.583,369.6,2108.292,382.1C2477,394.6,2477,407.1,2477,420.4C2477,433.7,2477,447.8,2477,454.85L2477,461.9" id="my-svg-L_CADDY_API_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CADDY_API_0" data-points="W3sieCI6MjMzLjA1MjI5MTkxNzE0MjgsInkiOjMwNy4wOTk5OTg0NzQxMjExfSx7IngiOjI2NC43NSwieSI6MzQ0LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjQ3NywieSI6MzgyLjA5OTk5ODQ3NDEyMTF9LHsieCI6MjQ3NywieSI6NDE5LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjQ3NywieSI6NDY1Ljg5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M199.619,307.1L198.432,313.35C197.246,319.6,194.873,332.1,193.686,344.6C192.5,357.1,192.5,369.6,192.5,382.1C192.5,394.6,192.5,407.1,192.5,421.867C192.5,436.633,192.5,453.667,192.5,462.183L192.5,470.7" id="my-svg-L_CADDY_NG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CADDY_NG_0" data-points="W3sieCI6MTk5LjYxODU1MzA4NjQwNDM4LCJ5IjozMDcuMDk5OTk4NDc0MTIxMX0seyJ4IjoxOTIuNSwieSI6MzQ0LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTkyLjUsInkiOjM4Mi4wOTk5OTg0NzQxMjExfSx7IngiOjE5Mi41LCJ5Ijo0MTkuNTk5OTk4NDc0MTIxMX0seyJ4IjoxOTIuNSwieSI6NDc0LjY5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2348,506.933L2176,518.578C2004,530.222,1660,553.511,1488,573.156C1316,592.8,1316,608.8,1316,624.8C1316,640.8,1316,656.8,1316,677.9C1316,699,1316,725.2,1316,751.4C1316,777.6,1316,803.8,1239.625,823.15C1163.25,842.5,1010.5,855,934.125,867.5C857.75,880,857.75,892.5,919.051,908.937C980.351,925.375,1102.953,945.75,1164.253,955.937L1225.554,966.124" id="my-svg-L_API_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_PG_0" data-points="W3sieCI6MjM0OCwieSI6NTA2LjkzMzMzMDExMjAzMzQ1fSx7IngiOjEzMTYsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjEzMTYsInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjEzMTYsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjEzMTYsInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjEzMTYsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjg1Ny43NSwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6ODU3Ljc1LCJ5Ijo5MDQuOTk5OTkyMzcwNjA1NX0seyJ4IjoxMjI5LjUsInkiOjk2Ni43ODAwNTA2MDYxMzQ1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2442.07,530.5L2433.725,538.217C2425.38,545.933,2408.69,561.367,2400.345,577.083C2392,592.8,2392,608.8,2392,624.8C2392,640.8,2392,656.8,2392,677.9C2392,699,2392,725.2,2392,751.4C2392,777.6,2392,803.8,2392,823.15C2392,842.5,2392,855,2392,867.5C2392,880,2392,892.5,2392.958,906.086C2393.916,919.671,2395.832,934.343,2396.789,941.678L2397.747,949.014" id="my-svg-L_API_REDIS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_REDIS_0" data-points="W3sieCI6MjQ0Mi4wNjk5NzQ3MDE2NjUsInkiOjUzMC40OTk5OTYxODUzMDI3fSx7IngiOjIzOTIsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjIzOTIsInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjIzOTIsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjIzOTIsInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjIzOTIsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjIzOTIsInkiOjg2Ny40OTk5OTIzNzA2MDU1fSx7IngiOjIzOTIsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjIzOTguMjY1MjE0MDA0MjUsInkiOjk1Mi45ODAyMTQ3ODc5NjI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2578.503,530.5L2602.752,538.217C2627.002,545.933,2675.501,561.367,2699.75,577.083C2724,592.8,2724,608.8,2724,624.8C2724,640.8,2724,656.8,2724,677.9C2724,699,2724,725.2,2724,751.4C2724,777.6,2724,803.8,2724,823.15C2724,842.5,2724,855,2724,867.5C2724,880,2724,892.5,2731.073,905.276C2738.147,918.051,2752.294,931.103,2759.367,937.629L2766.441,944.154" id="my-svg-L_API_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_NATS_0" data-points="W3sieCI6MjU3OC41MDI1NDQxMDIyMjEsInkiOjUzMC40OTk5OTYxODUzMDI3fSx7IngiOjI3MjQsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjI3MjQsInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjI3MjQsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjI3MjQsInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjI3MjQsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjI3MjQsInkiOjg2Ny40OTk5OTIzNzA2MDU1fSx7IngiOjI3MjQsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjI3NjkuMzgwNTA5NzAxMTIzNiwieSI6OTQ2Ljg2NjU3NTMyNzAwNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2606,516.02L2679.333,526.15C2752.667,536.28,2899.333,556.54,2972.667,574.67C3046,592.8,3046,608.8,3046,624.8C3046,640.8,3046,656.8,3046,677.9C3046,699,3046,725.2,3046,751.4C3046,777.6,3046,803.8,3046,823.15C3046,842.5,3046,855,3046,867.5C3046,880,3046,892.5,3048.017,904.949C3050.034,917.399,3054.068,929.797,3056.085,935.996L3058.101,942.196" id="my-svg-L_API_MINIO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_MINIO_0" data-points="W3sieCI6MjYwNiwieSI6NTE2LjAxOTY4MDI1Nzg0MDh9LHsieCI6MzA0NiwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MzA0NiwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MzA0NiwieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6MzA0NiwieSI6NzUxLjM5OTk5Mzg5NjQ4NDR9LHsieCI6MzA0NiwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6MzA0NiwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6MzA0NiwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6MzA1OS4zMzkwMjUxMzQ2OTU1LCJ5Ijo5NDUuOTk5NDg4NDIzNzU4NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1925,763.244L1826.833,774.37C1728.667,785.496,1532.333,807.748,1357.792,825.124C1183.25,842.5,1030.5,855,954.125,867.5C877.75,880,877.75,892.5,935.718,908.821C993.686,925.142,1109.623,945.285,1167.591,955.356L1225.559,965.427" id="my-svg-L_HERALD_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HERALD_PG_0" data-points="W3sieCI6MTkyNSwieSI6NzYzLjI0MzgyOTI4Mjk5NTh9LHsieCI6MTMzNiwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6ODc3Ljc1LCJ5Ijo4NjcuNDk5OTkyMzcwNjA1NX0seyJ4Ijo4NzcuNzUsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjEyMjkuNSwieSI6OTY2LjExMTkwNDgxMzY0NjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2134,762.896L2235.667,774.08C2337.333,785.264,2540.667,807.632,2642.333,825.066C2744,842.5,2744,855,2744,867.5C2744,880,2744,892.5,2749.401,905.065C2754.803,917.63,2765.605,930.261,2771.007,936.576L2776.408,942.891" id="my-svg-L_HERALD_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HERALD_NATS_0" data-points="W3sieCI6MjEzNCwieSI6NzYyLjg5NTcyNDk1MzkzMTF9LHsieCI6Mjc0NCwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6Mjc0NCwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6Mjc0NCwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6Mjc3OS4wMDc4MjE3Njk0MzgsInkiOjk0NS45MzA2Mjk1OTMxNTYxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1415.995,539.3L1405.996,545.55C1395.997,551.8,1375.998,564.3,1365.999,578.55C1356,592.8,1356,608.8,1356,624.8C1356,640.8,1356,656.8,1356,677.9C1356,699,1356,725.2,1356,751.4C1356,777.6,1356,803.8,1279.625,823.15C1203.25,842.5,1050.5,855,974.125,867.5C897.75,880,897.75,892.5,952.386,908.694C1007.022,924.888,1116.293,944.776,1170.929,954.72L1225.565,964.664" id="my-svg-L_PROC_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_PG_0" data-points="W3sieCI6MTQxNS45OTUyMzAxNzIzMzQsInkiOjUzOS4yOTk5OTU0MjIzNjMzfSx7IngiOjEzNTYsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjEzNTYsInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjEzNTYsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjEzNTYsInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjEzNTYsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjg5Ny43NSwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6ODk3Ljc1LCJ5Ijo5MDQuOTk5OTkyMzcwNjA1NX0seyJ4IjoxMjI5LjUsInkiOjk2NS4zODAxNjM5NDI3NTM1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1599.25,505.403L1793.375,517.302C1987.5,529.202,2375.75,553.001,2569.875,572.9C2764,592.8,2764,608.8,2764,624.8C2764,640.8,2764,656.8,2764,677.9C2764,699,2764,725.2,2764,751.4C2764,777.6,2764,803.8,2764,823.15C2764,842.5,2764,855,2764,867.5C2764,880,2764,892.5,2767.758,904.894C2771.516,917.289,2779.032,929.578,2782.79,935.722L2786.548,941.866" id="my-svg-L_PROC_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_NATS_0" data-points="W3sieCI6MTU5OS4yNSwieSI6NTA1LjQwMjU3MDQwOTUwODl9LHsieCI6Mjc2NCwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6Mjc2NCwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6Mjc2NCwieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6Mjc2NCwieSI6NzUxLjM5OTk5Mzg5NjQ4NDR9LHsieCI6Mjc2NCwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6Mjc2NCwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6Mjc2NCwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6Mjc4OC42MzUxMzM4Mzc3NTMsInkiOjk0NS4yNzg4MDk5NjkzOTc3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1599.25,508.128L1734.708,519.573C1870.167,531.019,2141.083,553.909,2276.542,573.355C2412,592.8,2412,608.8,2412,624.8C2412,640.8,2412,656.8,2412,677.9C2412,699,2412,725.2,2412,751.4C2412,777.6,2412,803.8,2412,823.15C2412,842.5,2412,855,2412,867.5C2412,880,2412,892.5,2411.042,906.086C2410.084,919.671,2408.168,934.343,2407.211,941.678L2406.253,949.014" id="my-svg-L_PROC_REDIS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_REDIS_0" data-points="W3sieCI6MTU5OS4yNSwieSI6NTA4LjEyNzk3MzEwNTk1MTY0fSx7IngiOjI0MTIsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjI0MTIsInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjI0MTIsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjI0MTIsInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjI0MTIsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjI0MTIsInkiOjg2Ny40OTk5OTIzNzA2MDU1fSx7IngiOjI0MTIsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjI0MDUuNzM0Nzg1OTk1NzUsInkiOjk1Mi45ODAyMTQ3ODc5NjI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1599.25,507.27L1749.375,518.858C1899.5,530.447,2199.75,553.623,2349.875,573.212C2500,592.8,2500,608.8,2500,624.8C2500,640.8,2500,656.8,2504.971,670.546C2509.942,684.292,2519.884,695.783,2524.855,701.529L2529.826,707.275" id="my-svg-L_PROC_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_ASSET_0" data-points="W3sieCI6MTU5OS4yNSwieSI6NTA3LjI2OTk2OTc2NTA0NDh9LHsieCI6MjUwMCwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjUwMCwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjUwMCwieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6MjUzMi40NDI3NDg3MjE0MjEsInkiOjcxMC4yOTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1490.77,539.3L1492.142,545.55C1493.513,551.8,1496.257,564.3,1497.628,578.55C1499,592.8,1499,608.8,1499,624.8C1499,640.8,1499,656.8,1499,671.85C1499,686.9,1499,701,1499,708.05L1499,715.1" id="my-svg-L_PROC_DLM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_DLM_0" data-points="W3sieCI6MTQ5MC43NzAwMzgwMDgxNjksInkiOjUzOS4yOTk5OTU0MjIzNjMzfSx7IngiOjE0OTksInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjE0OTksInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjE0OTksInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjE0OTksInkiOjcxOS4wOTk5OTQ2NTk0MjM4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1565.806,539.3L1578.589,545.55C1591.371,551.8,1616.935,564.3,1629.718,578.55C1642.5,592.8,1642.5,608.8,1642.5,624.8C1642.5,640.8,1642.5,656.8,1651.758,670.692C1661.016,684.584,1679.531,696.368,1688.789,702.26L1698.047,708.152" id="my-svg-L_PROC_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_SEM_0" data-points="W3sieCI6MTU2NS44MDYyOTYyMjEwNTIyLCJ5Ijo1MzkuMjk5OTk1NDIyMzYzM30seyJ4IjoxNjQyLjUsInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjE2NDIuNSwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTY0Mi41LCJ5Ijo2NzIuNzk5OTk1NDIyMzYzM30seyJ4IjoxNzAxLjQyMTc1Njg2OTA1MTcsInkiOjcxMC4yOTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1374.163,539.3L1357.803,545.55C1341.442,551.8,1308.721,564.3,1292.361,578.55C1276,592.8,1276,608.8,1276,624.8C1276,640.8,1276,656.8,1215.49,675.404C1154.98,694.009,1033.96,715.218,973.45,725.822L912.94,736.427" id="my-svg-L_PROC_BOBA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_BOBA_0" data-points="W3sieCI6MTM3NC4xNjMxNjk4NDQ1OTQyLCJ5Ijo1MzkuMjk5OTk1NDIyMzYzM30seyJ4IjoxMjc2LCJ5Ijo1NzYuNzk5OTk1NDIyMzYzM30seyJ4IjoxMjc2LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4IjoxMjc2LCJ5Ijo2NzIuNzk5OTk1NDIyMzYzM30seyJ4Ijo5MDksInkiOjczNy4xMTcwNTEwMjk5NDk2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1384.621,539.3L1369.851,545.55C1355.081,551.8,1325.54,564.3,1310.77,578.55C1296,592.8,1296,608.8,1296,624.8C1296,640.8,1296,656.8,1266.96,673.786C1237.921,690.773,1179.842,708.745,1150.802,717.731L1121.763,726.718" id="my-svg-L_PROC_METUBE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_METUBE_0" data-points="W3sieCI6MTM4NC42MjExODQ5MjY1MjkyLCJ5Ijo1MzkuMjk5OTk1NDIyMzYzM30seyJ4IjoxMjk2LCJ5Ijo1NzYuNzk5OTk1NDIyMzYzM30seyJ4IjoxMjk2LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4IjoxMjk2LCJ5Ijo2NzIuNzk5OTk1NDIyMzYzM30seyJ4IjoxMTE3Ljk0MTQ3NzMwMTI0MDQsInkiOjcyNy44OTk5OTM4OTY0ODQ0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2689,767.198L2769.167,777.665C2849.333,788.132,3009.667,809.066,3089.833,825.783C3170,842.5,3170,855,3170,867.5C3170,880,3170,892.5,3161.708,905.686C3153.415,918.872,3136.83,932.743,3128.538,939.679L3120.246,946.615" id="my-svg-L_ASSET_MINIO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_MINIO_0" data-points="W3sieCI6MjY4OSwieSI6NzY3LjE5ODMzMjQ2MDIxOTd9LHsieCI6MzE3MCwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6MzE3MCwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6MzE3MCwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6MzExNy4xNzc0NjA0NjY2MDU3LCJ5Ijo5NDkuMTgxNDcwNjcxOTY2NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2447,760.844L2299.333,772.37C2151.667,783.896,1856.333,806.948,1601.458,824.724C1346.583,842.5,1132.167,855,1024.958,867.5C917.75,880,917.75,892.5,969.054,908.554C1020.357,924.608,1122.964,944.216,1174.268,954.02L1225.571,963.824" id="my-svg-L_ASSET_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_PG_0" data-points="W3sieCI6MjQ0NywieSI6NzYwLjg0NDQ4MjI5MzA3Njl9LHsieCI6MTU2MSwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6OTE3Ljc1LCJ5Ijo4NjcuNDk5OTkyMzcwNjA1NX0seyJ4Ijo5MTcuNzUsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjEyMjkuNSwieSI6OTY0LjU3NTI5NDY5MDAxMDF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1766,792.5L1766,798.75C1766,805,1766,817.5,1658.792,830C1551.583,842.5,1337.167,855,1229.958,867.5C1122.75,880,1122.75,892.5,1139.952,907.85C1157.155,923.2,1191.559,941.4,1208.762,950.5L1225.964,959.6" id="my-svg-L_SEM_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEM_PG_0" data-points="W3sieCI6MTc2NiwieSI6NzkyLjQ5OTk5MjM3MDYwNTV9LHsieCI6MTc2NiwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6MTEyMi43NSwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6MTEyMi43NSwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6MTIyOS41LCJ5Ijo5NjEuNDcwNzY0MzczNTE2Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2270.5,783.7L2270.5,791.417C2270.5,799.133,2270.5,814.567,2122.917,828.533C1975.333,842.5,1680.167,855,1532.583,867.5C1385,880,1385,892.5,1379.81,904.84C1374.621,917.18,1364.241,929.36,1359.052,935.449L1353.862,941.539" id="my-svg-L_USER_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_USER_PG_0" data-points="W3sieCI6MjI3MC41LCJ5Ijo3ODMuNjk5OTkzMTMzNTQ0OX0seyJ4IjoyMjcwLjUsInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjEzODUsInkiOjg2Ny40OTk5OTIzNzA2MDU1fSx7IngiOjEzODUsInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjEzNTEuMjY3NTgwNzQ2Mjc1NiwieSI6OTQ0LjU4Mzc1ODg3MzY4ODV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2905,783.7L2905,791.417C2905,799.133,2905,814.567,2905,828.533C2905,842.5,2905,855,2905,867.5C2905,880,2905,892.5,2897.421,905.348C2889.842,918.195,2874.683,931.391,2867.104,937.989L2859.525,944.586" id="my-svg-L_EVT_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EVT_NATS_0" data-points="W3sieCI6MjkwNSwieSI6NzgzLjY5OTk5MzEzMzU0NDl9LHsieCI6MjkwNSwieSI6ODI5Ljk5OTk5MjM3MDYwNTV9LHsieCI6MjkwNSwieSI6ODY3LjQ5OTk5MjM3MDYwNTV9LHsieCI6MjkwNSwieSI6OTA0Ljk5OTk5MjM3MDYwNTV9LHsieCI6Mjg1Ni41MDc2ODM5MTkzNzA3LCJ5Ijo5NDcuMjEyNzIyMDQ4NTkxNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2392.141,530.5L2371.867,538.217C2351.594,545.933,2311.047,561.367,2290.773,577.083C2270.5,592.8,2270.5,608.8,2270.5,624.8C2270.5,640.8,2270.5,656.8,2270.5,671.85C2270.5,686.9,2270.5,701,2270.5,708.05L2270.5,715.1" id="my-svg-L_API_USER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_USER_0" data-points="W3sieCI6MjM5Mi4xNDA1ODU1OTg3NTEsInkiOjUzMC40OTk5OTYxODUzMDI3fSx7IngiOjIyNzAuNSwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjI3MC41LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4IjoyMjcwLjUsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjIyNzAuNSwieSI6NzE5LjA5OTk5NDY1OTQyMzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2606,521.89L2655.833,531.042C2705.667,540.193,2805.333,558.497,2855.167,575.648C2905,592.8,2905,608.8,2905,624.8C2905,640.8,2905,656.8,2905,671.85C2905,686.9,2905,701,2905,708.05L2905,715.1" id="my-svg-L_API_EVT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_EVT_0" data-points="W3sieCI6MjYwNiwieSI6NTIxLjg5MDE4MzQwNDIyNzN9LHsieCI6MjkwNSwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjkwNSwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjkwNSwieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6MjkwNSwieSI6NzE5LjA5OTk5NDY1OTQyMzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2348,519.831L2291.375,529.326C2234.75,538.82,2121.5,557.81,2064.875,575.305C2008.25,592.8,2008.25,608.8,2008.25,624.8C2008.25,640.8,2008.25,656.8,1986.676,671.8C1965.102,686.8,1921.953,700.8,1900.379,707.8L1878.805,714.8" id="my-svg-L_API_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_SEM_0" data-points="W3sieCI6MjM0OCwieSI6NTE5LjgzMDcxNjUyODMyMDN9LHsieCI6MjAwOC4yNSwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjAwOC4yNSwieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MjAwOC4yNSwieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6MTg3NSwieSI6NzE2LjAzNDA1MDMxMDYwNTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2542.34,530.5L2557.95,538.217C2573.56,545.933,2604.78,561.367,2620.39,577.083C2636,592.8,2636,608.8,2636,624.8C2636,640.8,2636,656.8,2631.029,670.546C2626.058,684.292,2616.116,695.783,2611.145,701.529L2606.174,707.275" id="my-svg-L_API_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_ASSET_0" data-points="W3sieCI6MjU0Mi4zMzk2OTQzODE1OTE1LCJ5Ijo1MzAuNDk5OTk2MTg1MzAyN30seyJ4IjoyNjM2LCJ5Ijo1NzYuNzk5OTk1NDIyMzYzM30seyJ4IjoyNjM2LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4IjoyNjM2LCJ5Ijo2NzIuNzk5OTk1NDIyMzYzM30seyJ4IjoyNjAzLjU1NzI1MTI3ODU3OSwieSI6NzEwLjI5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M598.645,298.3L603.455,306.017C608.264,313.733,617.882,329.167,622.691,343.133C627.5,357.1,627.5,369.6,627.5,382.1C627.5,394.6,627.5,407.1,913.584,425.508C1199.668,443.916,1771.836,468.232,2057.92,480.39L2344.004,492.548" id="my-svg-L_PROM_API_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROM_API_0" data-points="W3sieCI6NTk4LjY0NTQxNTYzMjg1OTEsInkiOjI5OC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo2MjcuNSwieSI6MzQ0LjU5OTk5ODQ3NDEyMTF9LHsieCI6NjI3LjUsInkiOjM4Mi4wOTk5OTg0NzQxMjExfSx7IngiOjYyNy41LCJ5Ijo0MTkuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMzQ4LCJ5Ijo0OTIuNzE3NzU4NjExODQ3Njd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M580.633,298.3L579.528,306.017C578.422,313.733,576.211,329.167,575.106,343.133C574,357.1,574,369.6,574,382.1C574,394.6,574,407.1,574,426.45C574,445.8,574,472,574,498.2C574,524.4,574,550.6,574,571.7C574,592.8,574,608.8,574,624.8C574,640.8,574,656.8,798.501,676.924C1023.002,697.047,1472.004,721.294,1696.505,733.418L1921.006,745.541" id="my-svg-L_PROM_HERALD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROM_HERALD_0" data-points="W3sieCI6NTgwLjYzMzIzNzc4NTU0OTcsInkiOjI5OC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo1NzQsInkiOjM0NC41OTk5OTg0NzQxMjExfSx7IngiOjU3NCwieSI6MzgyLjA5OTk5ODQ3NDEyMTF9LHsieCI6NTc0LCJ5Ijo0MTkuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1NzQsInkiOjQ5OC4xOTk5OTY5NDgyNDIyfSx7IngiOjU3NCwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6NTc0LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4Ijo1NzQsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjE5MjUsInkiOjc0NS43NTY3Nzg2MTYxMzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M591.912,298.3L594.51,306.017C597.108,313.733,602.304,329.167,604.902,343.133C607.5,357.1,607.5,369.6,607.5,382.1C607.5,394.6,607.5,407.1,732.961,424.63C858.422,442.159,1109.344,464.719,1234.805,475.998L1360.266,487.278" id="my-svg-L_PROM_PROC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROM_PROC_0" data-points="W3sieCI6NTkxLjkxMTg5MTIwMzk1ODQsInkiOjI5OC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo2MDcuNSwieSI6MzQ0LjU5OTk5ODQ3NDEyMTF9LHsieCI6NjA3LjUsInkiOjM4Mi4wOTk5OTg0NzQxMjExfSx7IngiOjYwNy41LCJ5Ijo0MTkuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMzY0LjI1LCJ5Ijo0ODcuNjM2MDg1MjI4ODE1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M573.9,298.3L570.583,306.017C567.266,313.733,560.633,329.167,557.317,343.133C554,357.1,554,369.6,554,382.1C554,394.6,554,407.1,554,426.45C554,445.8,554,472,554,498.2C554,524.4,554,550.6,554,571.7C554,592.8,554,608.8,554,624.8C554,640.8,554,656.8,554,677.9C554,699,554,725.2,554,751.4C554,777.6,554,803.8,695.833,823.15C837.667,842.5,1121.333,855,1263.167,867.5C1405,880,1405,892.5,1398.19,905.027C1391.38,917.554,1377.76,930.108,1370.949,936.385L1364.139,942.662" id="my-svg-L_PROM_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROM_PG_0" data-points="W3sieCI6NTczLjg5OTcxMzM1NjY0ODksInkiOjI5OC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo1NTQsInkiOjM0NC41OTk5OTg0NzQxMjExfSx7IngiOjU1NCwieSI6MzgyLjA5OTk5ODQ3NDEyMTF9LHsieCI6NTU0LCJ5Ijo0MTkuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1NTQsInkiOjQ5OC4xOTk5OTY5NDgyNDIyfSx7IngiOjU1NCwieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6NTU0LCJ5Ijo2MjQuNzk5OTk1NDIyMzYzM30seyJ4Ijo1NTQsInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjU1NCwieSI6NzUxLjM5OTk5Mzg5NjQ4NDR9LHsieCI6NTU0LCJ5Ijo4MjkuOTk5OTkyMzcwNjA1NX0seyJ4IjoxNDA1LCJ5Ijo4NjcuNDk5OTkyMzcwNjA1NX0seyJ4IjoxNDA1LCJ5Ijo5MDQuOTk5OTkyMzcwNjA1NX0seyJ4IjoxMzYxLjE5ODIwMTg2NDU2NjcsInkiOjk0NS4zNzMyMTI0NDA2NzQ1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M584,130L584,136.25C584,142.5,584,155,584,167.5C584,180,584,192.5,584,205.8C584,219.1,584,233.2,584,240.25L584,247.3" id="my-svg-L_GRAF_PROM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GRAF_PROM_0" data-points="W3sieCI6NTg0LCJ5IjoxMzB9LHsieCI6NTg0LCJ5IjoxNjcuNX0seyJ4Ijo1ODQsInkiOjIwNX0seyJ4Ijo1ODQsInkiOjI1MS4yOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2348,506.351L2162.167,518.092C1976.333,529.834,1604.667,553.317,1418.833,573.058C1233,592.8,1233,608.8,1233,624.8C1233,640.8,1233,656.8,1114.663,676.919C996.326,697.038,759.653,721.276,641.316,733.395L522.979,745.514" id="my-svg-L_API_JAEGER_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_JAEGER_0" data-points="W3sieCI6MjM0OCwieSI6NTA2LjM1MDYzOTg3NjgyODd9LHsieCI6MTIzMywieSI6NTc2Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTIzMywieSI6NjI0Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTIzMywieSI6NjcyLjc5OTk5NTQyMjM2MzN9LHsieCI6NTE5LCJ5Ijo3NDUuOTIxMDM2MzQ4MTI1NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2606,510.687L2719.833,521.706C2833.667,532.725,3061.333,554.762,3175.167,573.781C3289,592.8,3289,608.8,3289,624.8C3289,640.8,3289,656.8,3289,677.9C3289,699,3289,725.2,3289,751.4C3289,777.6,3289,803.8,3289,823.15C3289,842.5,3289,855,3289,867.5C3289,880,3289,892.5,3289,904.333C3289,916.167,3289,927.333,3289,932.917L3289,938.5" id="my-svg-L_API_CH_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_API_CH_0" data-points="W3sieCI6MjYwNiwieSI6NTEwLjY4Njk0MjUxODYzODI2fSx7IngiOjMyODksInkiOjU3Ni43OTk5OTU0MjIzNjMzfSx7IngiOjMyODksInkiOjYyNC43OTk5OTU0MjIzNjMzfSx7IngiOjMyODksInkiOjY3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjMyODksInkiOjc1MS4zOTk5OTM4OTY0ODQ0fSx7IngiOjMyODksInkiOjgyOS45OTk5OTIzNzA2MDU1fSx7IngiOjMyODksInkiOjg2Ny40OTk5OTIzNzA2MDU1fSx7IngiOjMyODksInkiOjkwNC45OTk5OTIzNzA2MDU1fSx7IngiOjMyODksInkiOjk0Mi40OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_CADDY_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CADDY_NG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_REDIS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_MINIO_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HERALD_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HERALD_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_REDIS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_DLM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_BOBA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROC_METUBE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_MINIO_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEM_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_USER_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EVT_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_USER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_EVT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_API_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROM_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROM_HERALD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROM_PROC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PROM_PG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_GRAF_PROM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1233, 624.7999954223633)"><g class="label" data-id="L_API_JAEGER_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-23" y="0" width="46" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">OTLP</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(3289, 751.3999938964844)"><g class="label" data-id="L_API_CH_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-17" y="0" width="34" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">logs</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-NG-19" data-look="classic" transform="translate(192.5, 498.1999969482422)"><rect class="basic label-container" style="" x="-129.5" y="-23.5" width="259" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (Angular</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> static)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CADDY-0" data-look="classic" transform="translate(205.75, 274.79999923706055)"><rect class="basic label-container" style="" x="-103" y="-32.29999923706055" width="206" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">caddy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (rootless)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">:80</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> :443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> TCP+UDP</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-API-1" data-look="classic" transform="translate(2477, 498.1999969482422)"><rect class="basic label-container" style="" x="-129" y="-32.29999923706055" width="258" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-api</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">REST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /v1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> WS/SSE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (http3)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PG-9" data-look="classic" transform="translate(1318, 981.4876098632812)"><path d="M0,14.652317880794701 a88.5,14.652317880794701 0,0,0 177,0 a88.5,14.652317880794701 0,0,0 -177,0 l0,46.6523178807947 a88.5,14.652317880794701 0,0,0 177,0 l0,-46.6523178807947" class="basic label-container outer-path" style="" transform="translate(-88.5, -37.97847682119205)"/><g class="label" style="" transform="translate(-0.5, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres:17</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pgvector</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REDIS-10" data-look="classic" transform="translate(2402, 981.4876098632812)"><path d="M0,8.377659574468085 a31.5,8.377659574468085 0,0,0 63,0 a31.5,8.377659574468085 0,0,0 -63,0 l0,40.37765957446808 a31.5,8.377659574468085 0,0,0 63,0 l0,-40.37765957446808" class="basic label-container outer-path" style="" transform="translate(-31.5, -28.566489361702125)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">redis:7</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NATS-11" data-look="classic" transform="translate(2811.5, 981.4876098632812)"><path d="M0,13.87900355871886 a78,13.87900355871886 0,0,0 156,0 a78,13.87900355871886 0,0,0 -156,0 l0,45.879003558718864 a78,13.87900355871886 0,0,0 156,0 l0,-45.879003558718864" class="basic label-container outer-path" style="" transform="translate(-78, -36.818505338078296)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nats:2.10</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JetStream</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MINIO-12" data-look="classic" transform="translate(3071, 981.4876098632812)"><path d="M0,13.11787072243346 a69,13.11787072243346 0,0,0 138,0 a69,13.11787072243346 0,0,0 -138,0 l0,45.11787072243346 a69,13.11787072243346 0,0,0 138,0 l0,-45.11787072243346" class="basic label-container outer-path" style="" transform="translate(-69, -35.67680608365019)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">minio</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (S3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> assets)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-HERALD-2" data-look="classic" transform="translate(2029.5, 751.3999938964844)"><rect class="basic label-container" style="" x="-104.5" y="-41.099998474121094" width="209" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-herald</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Telegram/Max</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">readers</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROC-3" data-look="classic" transform="translate(1481.75, 498.1999969482422)"><rect class="basic label-container" style="" x="-117.5" y="-41.099998474121094" width="235" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-processing</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BackgroundTasks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Skill</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dispatch</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ASSET-4" data-look="classic" transform="translate(2568, 751.3999938964844)"><rect class="basic label-container" style="" x="-121" y="-41.099998474121094" width="242" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-assetsvc</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Catalogizer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [BUILD-NEW</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">decouple]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DLM-5" data-look="classic" transform="translate(1499, 751.3999938964844)"><rect class="basic label-container" style="" x="-108" y="-32.29999923706055" width="216" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-downloadmgr</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[BUILD-NEW]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEM-8" data-look="classic" transform="translate(1766, 751.3999938964844)"><rect class="basic label-container" style="" x="-109" y="-41.099998474121094" width="218" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-semsearch</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embeddings+vectordb</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[BUILD-NEW]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BOBA-14" data-look="classic" transform="translate(827.5, 751.3999938964844)"><rect class="basic label-container" style="" x="-81.5" y="-23.5" width="163" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">boba</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (torrents)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-METUBE-15" data-look="classic" transform="translate(1042, 751.3999938964844)"><rect class="basic label-container" style="" x="-83" y="-23.5" width="166" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">metube</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (video)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-USER-6" data-look="classic" transform="translate(2270.5, 751.3999938964844)"><rect class="basic label-container" style="" x="-86.5" y="-32.29999923706055" width="173" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-usersvc</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[BUILD-NEW]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EVT-7" data-look="classic" transform="translate(2905, 751.3999938964844)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-eventbus-svc</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[BUILD-NEW]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROM-16" data-look="classic" transform="translate(584, 274.79999923706055)"><rect class="basic label-container" style="" x="-72" y="-23.5" width="144" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prometheus</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GRAF-17" data-look="classic" transform="translate(584, 106.5)"><rect class="basic label-container" style="" x="-57" y="-23.5" width="114" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">grafana</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-JAEGER-18" data-look="classic" transform="translate(465.5, 751.3999938964844)"><rect class="basic label-container" style="" x="-53.5" y="-23.5" width="107" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">jaeger</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CH-13" data-look="classic" transform="translate(3289, 981.4876098632812)"><path d="M0,15.325077399380804 a99,15.325077399380804 0,0,0 198,0 a99,15.325077399380804 0,0,0 -198,0 l0,47.3250773993808 a99,15.325077399380804 0,0,0 198,0 l0,-47.3250773993808" class="basic label-container outer-path" style="" transform="translate(-99, -38.987616099071204)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">clickhouse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (obs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> analytics)</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-LLM-68" data-look="classic" transform="translate(1725.5, 1198.775218963623)"><rect class="basic label-container" style="" x="-116.5" y="-32.29999923706055" width="233" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixLLM</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (external</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GPU</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">endpoint)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The box labelled <em>EnvStack</em> is one complete
+environment; it is created three times, once per environment, in
+disjoint port bands. The single host-wide <strong>edge</strong> (Caddy)
+is drawn inside the box for context but is actually shared — it is the
+only component bound to the public 80/443 and it forwards to each
+environment’s <code>thready-api</code> and static
+<code>thready-web</code> by subdomain.</p>
+<p>The <strong>application plane</strong> is Thready’s own Go services.
+<code>thready-api</code> is the public surface: the REST
+<code>/v1</code> API plus the WebSocket/SSE hub, served over HTTP/3 via
+<code>vasic-digital/http3</code>. <code>thready-herald</code> is the
+extended Herald that reads Telegram (via <code>gotd/td</code> MTProto)
+and Max threads and writes raw posts to Postgres while emitting
+<code>post.received</code> onto NATS JetStream.
+<code>thready-processing</code> is the engine: it consumes those events
+through a Postgres-backed BackgroundTasks queue (idempotent single-claim
+per post), classifies by hashtag/content-type, and dispatches the
+matching Skill(s) — calling out to <code>thready-assetsvc</code>
+(Catalogizer-based asset store), <code>thready-downloadmgr</code>
+(generic downloads), <code>thready-semsearch</code> (embeddings +
+pgvector), and the 3rd-party workers <code>boba</code> (torrents) and
+<code>metube</code> (video). <code>thready-usersvc</code> (three-tier
+RBAC), <code>thready-eventbus-svc</code> (client-facing subscription),
+and <code>thready-semsearch</code> back the API.</p>
+<p>The <strong>data plane</strong> holds the stateful containers:
+PostgreSQL with the pgvector extension (both the system-of-record
+<em>and</em> the vector store live in one instance, per
+<code>§2.1.1</code>), Redis for the cache tier, NATS with JetStream for
+durable events, MinIO for the 50 TB+ asset object store, and ClickHouse
+for observability analytics. The <strong>observability</strong> trio
+(Prometheus scraping every Go service’s <code>/metrics</code>, Grafana
+for dashboards, Jaeger for OTLP traces) is deployed per environment so a
+dev incident can never perturb prod telemetry. Finally, because the GPU
+lives on the operator workstation, <strong>HelixLLM sits outside the
+compose file</strong> and is reached as an external endpoint over its
+OpenAI-compatible <code>/v1/chat/completions</code> and
+<code>/v1/embeddings</code> routes — this is why the arrows to
+<code>LLM</code> are dotted and cross the environment boundary.</p>
+<h2 id="service-inventory">3. Service inventory</h2>
+<p>Legend — <strong>Kind</strong>: <code>data</code> (stateful infra) ·
+<code>app</code> (Thready Go service) · <code>worker</code> (3rd-party)
+· <code>obs</code> (observability) · <code>edge</code> (host-wide).
+<strong>Host-exposed</strong>: whether a host port is published (all
+host ports are bound to <code>127.0.0.1</code> inside the env’s band,
+except the edge). <strong>Status</strong> per the gap register.</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 9%" />
+<col style="width: 23%" />
+<col style="width: 21%" />
+<col style="width: 12%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Kind</th>
+<th>Internal port</th>
+<th>Host-exposed</th>
+<th>Status</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>caddy</code> (edge)</td>
+<td>edge</td>
+<td>80, 443 (TCP+UDP)</td>
+<td><strong>yes, <code>0.0.0.0</code></strong></td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: lets_encrypt reload target]</code></td>
+</tr>
+<tr>
+<td><code>thready-postgres</code></td>
+<td>data</td>
+<td>5432</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: database]</code></td>
+</tr>
+<tr>
+<td><code>thready-redis</code></td>
+<td>data</td>
+<td>6379</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: cache]</code></td>
+</tr>
+<tr>
+<td><code>thready-nats</code></td>
+<td>data</td>
+<td>4222 (mon 8222)</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: eventbus]</code></td>
+</tr>
+<tr>
+<td><code>thready-minio</code></td>
+<td>data</td>
+<td>9000 (console 9001)</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: storage]</code></td>
+</tr>
+<tr>
+<td><code>thready-clickhouse</code></td>
+<td>data</td>
+<td>8123 (native 9009)</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: observability]</code></td>
+</tr>
+<tr>
+<td><code>thready-api</code></td>
+<td>app</td>
+<td>8443</td>
+<td>loopback</td>
+<td>FOUNDATION</td>
+<td><code>[IN-HOUSE: http3, auth, middleware]</code></td>
+</tr>
+<tr>
+<td><code>thready-web</code></td>
+<td>app</td>
+<td>8088</td>
+<td>loopback</td>
+<td>FOUNDATION</td>
+<td><code>[IN-HOUSE: design_system]</code></td>
+</tr>
+<tr>
+<td><code>thready-herald</code></td>
+<td>app</td>
+<td>7080</td>
+<td>loopback</td>
+<td>FOUNDATION (Telegram) / <strong>P0 gap</strong> (Max)</td>
+<td><code>[GAP: #3 herald]</code></td>
+</tr>
+<tr>
+<td><code>thready-processing</code></td>
+<td>app</td>
+<td>— (internal)</td>
+<td>no</td>
+<td><strong>P0 gap</strong> (skill dispatch engine)</td>
+<td><code>[GAP: #6 skills]</code></td>
+</tr>
+<tr>
+<td><code>thready-assetsvc</code></td>
+<td>app</td>
+<td>8081</td>
+<td>loopback</td>
+<td><strong>BUILD-NEW (decouple)</strong></td>
+<td><code>[GAP: #9/#20]</code></td>
+</tr>
+<tr>
+<td><code>thready-downloadmgr</code></td>
+<td>app</td>
+<td>8082</td>
+<td>loopback</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>[GAP: #4/#20]</code></td>
+</tr>
+<tr>
+<td><code>thready-usersvc</code></td>
+<td>app</td>
+<td>8083</td>
+<td>loopback</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>[GAP: #20]</code></td>
+</tr>
+<tr>
+<td><code>thready-eventbus-svc</code></td>
+<td>app</td>
+<td>8084</td>
+<td>loopback</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>[GAP: #20]</code></td>
+</tr>
+<tr>
+<td><code>thready-semsearch</code></td>
+<td>app</td>
+<td>8085</td>
+<td>loopback</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>[GAP: #20 + #1 embedder]</code></td>
+</tr>
+<tr>
+<td><code>boba</code></td>
+<td>worker</td>
+<td>8000</td>
+<td>loopback</td>
+<td>FOUNDATION</td>
+<td><code>[IN-HOUSE: Boba]</code></td>
+</tr>
+<tr>
+<td><code>metube</code></td>
+<td>worker</td>
+<td>8091</td>
+<td>loopback</td>
+<td>FOUNDATION / <strong>P0 gap</strong> (webhook)</td>
+<td><code>[GAP: #5 metube]</code></td>
+</tr>
+<tr>
+<td><code>thready-prometheus</code></td>
+<td>obs</td>
+<td>9090</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: observability]</code></td>
+</tr>
+<tr>
+<td><code>thready-grafana</code></td>
+<td>obs</td>
+<td>3000</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: observability]</code></td>
+</tr>
+<tr>
+<td><code>thready-jaeger</code></td>
+<td>obs</td>
+<td>16686 (OTLP 4317)</td>
+<td>loopback</td>
+<td>PRODUCTION</td>
+<td><code>[IN-HOUSE: observability]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Why loopback host-ports?</strong> Inter-container traffic
+uses the compose network and DNS names
+(<code>thready-postgres:5432</code>), so almost nothing <em>needs</em> a
+host port. Host ports are published on <code>127.0.0.1</code> only for
+(a) the edge→api hop, (b) operator debugging over an SSH tunnel, and (c)
+Prometheus scraping — never on <code>0.0.0.0</code> except the edge.
+This keeps the attack surface to ports 22/80/443 (see <a
+href="./hetzner-provisioning.md">hetzner-provisioning.md</a>
+firewall).</p>
+</blockquote>
+<h2 id="container-images-pinned">4. Container images (pinned)</h2>
+<p>Images are pinned by digest in the real compose files; tags shown
+here for readability. Thready application images are built locally from
+each submodule’s <code>Containerfile</code> and tagged
+<code>THREADY-&lt;component&gt;-&lt;version&gt;</code> (project-prefixed
+tags, <code>§11.4.151</code>).</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 43%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image (tag)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>caddy</code></td>
+<td><code>docker.io/library/caddy:2.8-alpine</code></td>
+<td>upstream (edge only; ACME disabled — certs come from
+<code>lets_encrypt</code>)</td>
+</tr>
+<tr>
+<td><code>thready-postgres</code></td>
+<td><code>docker.io/library/postgres:17-alpine</code> +
+<code>pgvector</code></td>
+<td>upstream + extension</td>
+</tr>
+<tr>
+<td><code>thready-redis</code></td>
+<td><code>docker.io/library/redis:7-alpine</code></td>
+<td>upstream</td>
+</tr>
+<tr>
+<td><code>thready-nats</code></td>
+<td><code>docker.io/library/nats:2.10-alpine</code></td>
+<td>upstream (JetStream enabled)</td>
+</tr>
+<tr>
+<td><code>thready-minio</code></td>
+<td><code>docker.io/minio/minio:latest</code> (pin digest)</td>
+<td>upstream</td>
+</tr>
+<tr>
+<td><code>thready-clickhouse</code></td>
+<td><code>docker.io/clickhouse/clickhouse-server:24-alpine</code></td>
+<td>upstream</td>
+</tr>
+<tr>
+<td><code>thready-api</code> etc.</td>
+<td><code>localhost/thready-&lt;component&gt;:THREADY-&lt;ver&gt;</code></td>
+<td>built from the submodule <code>Containerfile</code></td>
+</tr>
+<tr>
+<td><code>boba</code></td>
+<td><code>localhost/boba:&lt;ver&gt;</code></td>
+<td><code>milos85vasic/Boba-Base</code></td>
+</tr>
+<tr>
+<td><code>metube</code></td>
+<td><code>localhost/metube:&lt;ver&gt;</code></td>
+<td><code>milos85vasic/YT-DLP</code></td>
+</tr>
+<tr>
+<td><code>thready-prometheus</code></td>
+<td><code>docker.io/prom/prometheus:v2.50.0</code></td>
+<td>upstream (matches <code>containers</code> default)</td>
+</tr>
+<tr>
+<td><code>thready-grafana</code></td>
+<td><code>docker.io/grafana/grafana:10.4.0</code></td>
+<td>upstream</td>
+</tr>
+<tr>
+<td><code>thready-jaeger</code></td>
+<td><code>docker.io/jaegertracing/all-in-one:1.55</code></td>
+<td>upstream (<code>COLLECTOR_OTLP_ENABLED=true</code>)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>VERIFIED:</strong> the
+Prometheus/Grafana/Jaeger/Postgres/Redis/NATS image choices mirror the
+pinned images in <code>vasic-digital/containers</code>
+<code>pkg/compose/helix_project.go::DefaultHelixServices()</code> (read
+at source). MinIO and ClickHouse are Thready additions for the asset
+tier and log analytics.</p>
+</blockquote>
+<h2 id="networks">5. Networks</h2>
+<p>Each environment declares <strong>one internal bridge
+network</strong>, isolated per Compose project:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fragment of compose.thready.&lt;env&gt;.yml</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">thready-&lt;env&gt;-net</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> bridge</span><span class="co">        # rootless: netavark/aardvark-dns provides in-network DNS</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">internal</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="co">       # egress allowed (ACME, image pulls, messenger APIs); ingress only via edge</span></span></code></pre></div>
+<ul>
+<li><strong>In-network DNS</strong> resolves service names
+(<code>thready-postgres</code>) automatically under rootless Podman via
+<code>aardvark-dns</code>.</li>
+<li>Networks are <strong>not</strong> shared across environments:
+<code>thready-dev-net</code>, <code>thready-sta-net</code>,
+<code>thready-prod-net</code> are three separate bridges. A container in
+<code>dev</code> cannot reach a container in <code>prod</code> even by
+IP.</li>
+<li>The edge proxy joins <strong>all three</strong> networks (plus its
+own) so it can forward to each env’s API, or — the default — reaches
+them via the loopback host-ports in each band, which avoids
+cross-joining and keeps the edge decoupled.
+<code>[DEFAULT — adjustable]</code></li>
+</ul>
+<h2 id="volumes-persistence">6. Volumes &amp; persistence</h2>
+<p>Named volumes per environment (Podman rootless volumes live under
+<code>/home/thready/.local/share/containers/storage/volumes/</code>):</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 27%" />
+<col style="width: 22%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Volume</th>
+<th>Mounted by</th>
+<th>Contents</th>
+<th>Backup class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thready-&lt;env&gt;-pgdata</code></td>
+<td><code>thready-postgres</code></td>
+<td>Postgres cluster incl. pgvector</td>
+<td><strong>daily full + hourly WAL</strong></td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-pgwal</code></td>
+<td><code>thready-postgres</code></td>
+<td>archived WAL segments (PITR)</td>
+<td><strong>continuous → secondary</strong></td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-minio</code></td>
+<td><code>thready-minio</code></td>
+<td>asset objects (raw + <code>…-web</code> renditions)</td>
+<td><strong>daily snapshot/dedup</strong></td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-redis</code></td>
+<td><code>thready-redis</code></td>
+<td>cache (ephemeral, RDB optional)</td>
+<td>none (rebuildable)</td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-nats</code></td>
+<td><code>thready-nats</code></td>
+<td>JetStream streams/consumers</td>
+<td>daily</td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-clickhouse</code></td>
+<td><code>thready-clickhouse</code></td>
+<td>logs/metrics analytics</td>
+<td>daily (or drop; rebuildable)</td>
+</tr>
+<tr>
+<td><code>thready-&lt;env&gt;-grafana</code></td>
+<td><code>thready-grafana</code></td>
+<td>dashboards/config</td>
+<td>daily</td>
+</tr>
+<tr>
+<td><code>certs</code> (bind)</td>
+<td><code>caddy</code></td>
+<td>live TLS certs from <code>lets_encrypt</code></td>
+<td>included in config backup</td>
+</tr>
+</tbody>
+</table>
+<p>Backup classes are defined in <a
+href="./backup-dr.md">backup-dr.md</a>. Postgres WAL archiving to
+<code>thready-&lt;env&gt;-pgwal</code> (and onward to the secondary
+store) is what delivers the RPO ≈ 1 h target.</p>
+<blockquote>
+<p><code>[GAP: #3.2]</code> <strong>MinIO signed-URL parity.</strong>
+The gap register flags that <code>storage</code>’s CloudFront-style
+signing is AWS-specific; Thready runs self-hosted MinIO, so the deploy
+checklist includes a <strong>signed-URL round-trip test against the
+deployed MinIO</strong> before assets go live (tracked in <a
+href="./backup-dr.md">backup-dr.md §6</a>).</p>
+</blockquote>
+<h2 id="resource-limits">7. Resource limits</h2>
+<p>Resource limits use the <code>containers</code>
+<code>HelixResourceLimits</code> shape (<code>CPUs</code>,
+<code>Memory</code>, <code>Pids</code>), which maps to Podman
+<code>--cpus</code> / <code>--memory</code> / <code>--pids-limit</code>.
+Production baseline <code>[DEFAULT — adjustable]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>CPUs</th>
+<th>Memory</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thready-postgres</code> (prod)</td>
+<td>6.0</td>
+<td>24 GiB</td>
+<td>NVMe-backed; <code>shared_buffers</code> ≈ 25 % RAM; pgvector HNSW
+cache</td>
+</tr>
+<tr>
+<td><code>thready-minio</code> (prod)</td>
+<td>2.0</td>
+<td>4 GiB</td>
+<td>I/O bound; disk is the constraint</td>
+</tr>
+<tr>
+<td><code>thready-processing</code> (prod)</td>
+<td>4.0</td>
+<td>8 GiB</td>
+<td>32 BackgroundTasks workers (Q4)</td>
+</tr>
+<tr>
+<td><code>thready-api</code> (prod)</td>
+<td>2.0</td>
+<td>2 GiB</td>
+<td>stateless; scale out if p95 &gt; 150 ms</td>
+</tr>
+<tr>
+<td><code>thready-clickhouse</code></td>
+<td>2.0</td>
+<td>4 GiB</td>
+<td>analytics only</td>
+</tr>
+<tr>
+<td>dev / sta each service</td>
+<td>≈ ⅓ of prod</td>
+<td>≈ ⅓ of prod</td>
+<td>smaller footprint; three stacks co-reside</td>
+</tr>
+</tbody>
+</table>
+<p>Because all three stacks co-reside on one host, the sum of prod + sta
++ dev limits must fit the host (see <a
+href="./hetzner-provisioning.md">hetzner-provisioning.md §2</a> for the
+≥ 16 vCPU / ≥ 64 GB baseline). <code>dev</code>/<code>sta</code> are
+intentionally throttled so <code>prod</code> keeps headroom.</p>
+<h2 id="build-new-placeholders-no-bluff">8. BUILD-NEW placeholders (no
+bluff)</h2>
+<p>The following containers are <strong>declared in the compose files
+but their images are placeholders</strong> — they do not yet run
+production code. They correspond to confirmed <code>[BUILD-NEW]</code>
+gaps (<code>§4.2.1</code>, gap-register §11). Until built, the compose
+file marks them with <code>profiles: [buildnew]</code> so a default
+<code>up</code> <strong>does not</strong> start a non-working container
+and pretend the stack is complete.</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 9%" />
+<col style="width: 21%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Placeholder service</th>
+<th>Gap</th>
+<th>Blocking?</th>
+<th>Plan to close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thready-downloadmgr</code></td>
+<td><code>[GAP: #4 filesystem/Download Manager, P0]</code></td>
+<td>Yes (media pipeline)</td>
+<td>New Go submodule: HTTP/2+3 source +
+queue/resume/segment/progress/callback reusing
+<code>filesystem</code></td>
+</tr>
+<tr>
+<td><code>thready-usersvc</code></td>
+<td><code>[GAP: #20, P0]</code></td>
+<td>Yes (multi-tenant auth)</td>
+<td>Build on <code>auth</code> + <code>security/pkg/policy</code> +
+Catalogizer RBAC; RS256/EdDSA + TOTP</td>
+</tr>
+<tr>
+<td><code>thready-semsearch</code></td>
+<td><code>[GAP: #20 + #1, P0]</code></td>
+<td>Yes (search SLO)</td>
+<td><code>embeddings</code>+<code>vectordb</code>(pgvector)+<code>MCP_Module</code>
+over HelixLLM; <strong>must</strong> set
+<code>HELIX_EMBEDDING_PROVIDER=llama</code></td>
+</tr>
+<tr>
+<td><code>thready-assetsvc</code></td>
+<td><code>[GAP: #9 decouple, P1]</code></td>
+<td>Partial</td>
+<td>Decouple Asset Service from Catalogizer; add HLS/DASH +
+<code>…-web</code> renditions</td>
+</tr>
+<tr>
+<td><code>thready-eventbus-svc</code></td>
+<td><code>[GAP: #20, P1]</code></td>
+<td>No (API can read JetStream directly first)</td>
+<td>Thin service wrapping <code>eventbus</code>/JetStream for client
+subscription</td>
+</tr>
+<tr>
+<td><code>thready-herald</code> (Max path)</td>
+<td><code>[GAP: #3 herald, P0]</code></td>
+<td>Yes (Max ingest)</td>
+<td>Promote MTProto reader to first-class channel; build Max Bot API +
+OneMe WebSocket Go client</td>
+</tr>
+<tr>
+<td><code>metube</code> (webhook)</td>
+<td><code>[GAP: #5 metube, P0]</code></td>
+<td>Yes (async completion)</td>
+<td>Add outbound completion webhook (shared callback schema)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>This is the “no bluff” contract in practice:</strong> the
+deployment never green-lights a stack whose <code>buildnew</code>
+profile services are empty shells. The <a
+href="./deploy-and-rollback.md#7-post-deploy-verification-anti-bluff-gate">deploy
+verification</a> asserts each <em>enabled</em> service passes a
+<strong>real</strong> health check, not a stub that always returns
+200.</p>
+</blockquote>
+<h2 id="helixllm-as-an-external-endpoint">9. HelixLLM as an external
+endpoint</h2>
+<p>HelixLLM is not in the per-environment compose file because the GPU
+lives on the operator workstation (Q5). It is registered as a
+<code>ServiceEndpoint</code> (from <code>containers/pkg/endpoint</code>)
+that the processing/semsearch services resolve at runtime:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// thready processing/semsearch config → containers ServiceEndpoint</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>llm <span class="op">:=</span> endpoint<span class="op">.</span>ServiceEndpoint<span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Host<span class="op">:</span>            <span class="st">&quot;http://gpu-node.helix.lan&quot;</span><span class="op">,</span> <span class="co">// or the workstation tunnel</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Port<span class="op">:</span>            <span class="st">&quot;8080&quot;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    URL<span class="op">:</span>             <span class="st">&quot;http://gpu-node.helix.lan:8080&quot;</span><span class="op">,</span> <span class="co">// OpenAI-compatible base</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Enabled<span class="op">:</span>         <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Required<span class="op">:</span>        <span class="ot">true</span><span class="op">,</span>          <span class="co">// semsearch cannot work without it</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    Remote<span class="op">:</span>          <span class="ot">true</span><span class="op">,</span>          <span class="co">// NOT managed by the local runtime</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    HealthType<span class="op">:</span>      <span class="st">&quot;http&quot;</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    HealthPath<span class="op">:</span>      <span class="st">&quot;/health&quot;</span><span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Timeout<span class="op">:</span>         <span class="dv">10</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    RetryCount<span class="op">:</span>      <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    DiscoveryEnabled<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    DiscoveryMethod<span class="op">:</span>  <span class="st">&quot;dns&quot;</span><span class="op">,</span>        <span class="co">// or mDNS on the LAN</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Remote: true</code> tells the <code>BootManager</code> this
+endpoint is <em>discovered/health-checked</em> but never
+<code>compose up</code>’d locally. If HelixLLM is unreachable at boot,
+the semantic-search service (which is <code>Required</code>) fails the
+boot gate loudly rather than silently degrading — consistent with the
+<code>[GAP: #1]</code> rule that a missing real embedder must
+<strong>fail, not warn</strong>.</p>
+<h2 id="modelling-the-stack-with-the-containers-api">10. Modelling the
+stack with the containers API</h2>
+<p>Thready’s stack is expressed as a <code>[]compose.HelixService</code>
+and driven through the <code>containers</code> orchestrator. The types
+below are <strong>verified</strong> from
+<code>vasic-digital/containers/pkg/compose/helix_project.go</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.containers/pkg/compose&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// One environment&#39;s Thready data-plane fragment (credentials injected from env — never literals).</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> threadyDataPlane<span class="op">(</span>env <span class="dt">string</span><span class="op">)</span> <span class="op">[]</span>compose<span class="op">.</span>HelixService <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">[]</span>compose<span class="op">.</span>HelixService<span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            Name<span class="op">:</span>  <span class="st">&quot;thready-postgres&quot;</span><span class="op">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            Image<span class="op">:</span> <span class="st">&quot;docker.io/library/postgres:17-alpine&quot;</span><span class="op">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            Ports<span class="op">:</span> <span class="op">[]</span>compose<span class="op">.</span>PortMapping<span class="op">{{</span>HostPort<span class="op">:</span> <span class="dv">0</span><span class="op">,</span> ContainerPort<span class="op">:</span> <span class="dv">5432</span><span class="op">,</span> Protocol<span class="op">:</span> <span class="st">&quot;tcp&quot;</span><span class="op">}},</span> <span class="co">// HostPort resolved by port_prefix</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            Env<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;POSTGRES_USER&quot;</span><span class="op">:</span>     mustEnv<span class="op">(</span><span class="st">&quot;THREADY_&quot;</span> <span class="op">+</span> env <span class="op">+</span> <span class="st">&quot;_PG_USER&quot;</span><span class="op">),</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;POSTGRES_PASSWORD&quot;</span><span class="op">:</span> mustEnv<span class="op">(</span><span class="st">&quot;THREADY_&quot;</span> <span class="op">+</span> env <span class="op">+</span> <span class="st">&quot;_PG_PASSWORD&quot;</span><span class="op">),</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;POSTGRES_DB&quot;</span><span class="op">:</span>       <span class="st">&quot;thready&quot;</span><span class="op">,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            Volumes<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;thready-&quot;</span> <span class="op">+</span> env <span class="op">+</span> <span class="st">&quot;-pgdata:/var/lib/postgresql/data&quot;</span><span class="op">},</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            HealthCheck<span class="op">:</span> <span class="op">&amp;</span>compose<span class="op">.</span>HelixHealthCheck<span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                Test<span class="op">:</span>     <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="op">,</span> <span class="st">&quot;pg_isready -U $POSTGRES_USER -d thready&quot;</span><span class="op">},</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                Interval<span class="op">:</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span> Timeout<span class="op">:</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span> Retries<span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            ResourceLimits<span class="op">:</span> <span class="op">&amp;</span>compose<span class="op">.</span>HelixResourceLimits<span class="op">{</span>CPUs<span class="op">:</span> <span class="st">&quot;6.0&quot;</span><span class="op">,</span> Memory<span class="op">:</span> <span class="st">&quot;24g&quot;</span><span class="op">,</span> Pids<span class="op">:</span> <span class="dv">512</span><span class="op">},</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="co">// … redis, nats, minio, clickhouse …</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>HelixService</code>, <code>PortMapping</code>,
+<code>HelixHealthCheck</code>, <code>HelixResourceLimits</code> are the
+exact structs the module exposes.</li>
+<li><code>NewHelixComposeProject("thready-"+env, services)</code> builds
+the project; <a href="./podman-compose.md">podman-compose.md</a> shows
+how it is rendered and brought up rootlessly.</li>
+<li><code>mustEnv</code> (a Thready helper, not a module function) fails
+fast if a secret env var is unset — the no-hardcoding rule
+<code>[CONSTITUTION §11.4.10]</code>.</li>
+</ul>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: buildnew-images]</code> — the placeholder services in
+<a href="#8-build-new-placeholders-no-bluff">§8</a> have no real images
+yet; the compose <code>buildnew</code> profile keeps them out of a
+default <code>up</code>. Tracked as ATM workable items in <a
+href="../development/index.md">development</a>.</li>
+<li><code>[OPEN: pgvector-image]</code> — whether to use
+<code>pgvector/pgvector:pg17</code> directly or add the extension to the
+base <code>postgres:17-alpine</code> at build time is a build decision
+for the database area; both satisfy this topology.</li>
+<li><code>[GAP: #3.2]</code> MinIO signed-URL parity test — tracked in
+<a href="./backup-dr.md">backup-dr.md</a>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

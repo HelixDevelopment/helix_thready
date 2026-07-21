@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Retention &amp; Archive Strategy</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Retention &amp; Archive Strategy</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#policy-operator-decision"
+id="toc-policy-operator-decision">1. Policy (operator decision)</a></li>
+<li><a href="#retention-resolution-model"
+id="toc-retention-resolution-model">2. Retention resolution
+model</a></li>
+<li><a href="#lifecycle-diagram" id="toc-lifecycle-diagram">3. Lifecycle
+diagram</a></li>
+<li><a href="#archive-pipeline-detach-cold-drop"
+id="toc-archive-pipeline-detach-cold-drop">4. Archive pipeline (detach →
+cold → drop)</a></li>
+<li><a href="#vector-asset-retention" id="toc-vector-asset-retention">5.
+Vector &amp; asset retention</a></li>
+<li><a href="#gdpr-aware-erasure-export"
+id="toc-gdpr-aware-erasure-export">6. GDPR-aware erasure &amp;
+export</a></li>
+<li><a href="#backupdr-interaction" id="toc-backupdr-interaction">7.
+Backup/DR interaction</a></li>
+<li><a href="#verification-open-items"
+id="toc-verification-open-items">8. Verification &amp; open
+items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Retention & Archive Strategy
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/database/retention-archive.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (database)
+  Related         : ./schema-relational.sql ./partitioning.md ./indexing.md
+                    ./erd.md ../deployment/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (database)</td>
+<td>Initial: keep-indefinitely default, per-account overrides, archive
+lifecycle, GDPR-aware erasure</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>reviewer (database)</td>
+<td>Tracked MinIO signed-URL parity (<code>ATM-DB-033</code>) to fully
+close gap <code>database-3.2</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-policy-operator-decision">Policy (operator
+decision)</a></li>
+<li><a href="#2-retention-resolution-model">Retention resolution
+model</a></li>
+<li><a href="#3-lifecycle-diagram">Lifecycle diagram</a></li>
+<li><a href="#4-archive-pipeline-detach--cold--drop">Archive pipeline
+(detach → cold → drop)</a></li>
+<li><a href="#5-vector--asset-retention">Vector &amp; asset
+retention</a></li>
+<li><a href="#6-gdpr-aware-erasure--export">GDPR-aware erasure &amp;
+export</a></li>
+<li><a href="#7-backupdr-interaction">Backup/DR interaction</a></li>
+<li><a href="#8-verification--open-items">Verification &amp; open
+items</a></li>
+</ol>
+<hr />
+<h2 id="policy-operator-decision">1. Policy (operator decision)</h2>
+<p>The operator’s retention decision is <strong>keep indefinitely, with
+per-account overrides</strong> (final request §0.1, Q12): <em>Root sets
+the global default; each Account may shorten it.</em> This document
+specifies exactly how that resolves to physical data lifecycle actions,
+so the default is genuinely “nothing is ever deleted unless a shorter
+window is explicitly set”.</p>
+<p>Consequences encoded in the schema:</p>
+<ul>
+<li><code>accounts.default_retention_days</code> — <code>NULL</code> =
+keep indefinitely (system default); a positive integer <em>shortens</em>
+retention for that account only.</li>
+<li><code>channels.retention_days</code> — optional per-channel override
+(more specific still).</li>
+<li>The <strong>global default</strong> is a configuration value owned
+by Root Admin (stored in system config, not a per-row column) and is
+<code>NULL</code>/indefinite for MVP.</li>
+</ul>
+<p><code>[OPERATOR]</code> <code>[final request §0.1, Q12]</code></p>
+<hr />
+<h2 id="retention-resolution-model">2. Retention resolution model</h2>
+<p>The <strong>effective retention</strong> for a post/reply is the
+<em>most specific non-null</em> window:</p>
+<pre><code>effective_retention(post) =
+    coalesce(channel.retention_days,
+             account.default_retention_days,
+             global_default /* NULL = indefinite */)</code></pre>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Effective retention per channel (used by the archive job to pick aged partitions).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> c.<span class="kw">id</span> <span class="kw">AS</span> channel_id,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>       <span class="fu">COALESCE</span>(c.retention_days, a.default_retention_days) <span class="kw">AS</span> effective_days</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span>   channels c</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span>   accounts a <span class="kw">ON</span> a.<span class="kw">id</span> <span class="op">=</span> c.account_id;</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- NULL effective_days =&gt; keep indefinitely (row/partition never ages out).</span></span></code></pre></div>
+<p>Because retention can differ per account/channel while data is
+co-mingled in monthly partitions, the archive job does
+<strong>not</strong> blindly drop whole partitions on age. It drops a
+partition only when <strong>every</strong> row in it is past its
+effective retention; otherwise it performs row-level deletes for the
+aged tenants/channels and leaves the partition in place until fully
+drainable. In practice, since the default is indefinite, most partitions
+are kept forever and only tenants who opted into a short window are
+pruned. <code>[DEFAULT — adjustable]</code></p>
+<hr />
+<h2 id="lifecycle-diagram">3. Lifecycle diagram</h2>
+<p>Source: <a
+href="./diagrams/retention-archive.mmd"><code>diagrams/retention-archive.mmd</code></a>.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1297px; background-color: white;" viewBox="0 0 1297 860.2000122070312" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M96.5,90.2L96.5,94.367C96.5,98.533,96.5,106.867,127.735,127.564C158.971,148.26,221.442,181.321,252.677,197.851L283.912,214.381" id="my-svg-L_GLOBAL_RESOLVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GLOBAL_RESOLVE_0" data-points="W3sieCI6OTYuNSwieSI6OTAuMTk5OTk2OTQ4MjQyMTl9LHsieCI6OTYuNSwieSI6MTE1LjE5OTk5Njk0ODI0MjE5fSx7IngiOjI4Ny40NDc4MzEwNDg5MTg2NiwieSI6MjE2LjI1MjE2NTg5OTMyMzYxfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M363.5,90.2L363.5,94.367C363.5,98.533,363.5,106.867,363.5,114.533C363.5,122.2,363.5,129.2,363.5,132.7L363.5,136.2" id="my-svg-L_ACCT_RESOLVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACCT_RESOLVE_0" data-points="W3sieCI6MzYzLjUsInkiOjkwLjE5OTk5Njk0ODI0MjE5fSx7IngiOjM2My41LCJ5IjoxMTUuMTk5OTk2OTQ4MjQyMTl9LHsieCI6MzYzLjUsInkiOjE0MC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M659,81.9L659,87.45C659,93,659,104.1,623.464,126.642C587.929,149.184,516.858,183.168,481.322,200.161L445.787,217.153" id="my-svg-L_CHAN_RESOLVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CHAN_RESOLVE_0" data-points="W3sieCI6NjU5LCJ5Ijo4MS44OTk5OTc3MTExODE2NH0seyJ4Ijo2NTksInkiOjExNS4xOTk5OTY5NDgyNDIxOX0seyJ4Ijo0NDIuMTc4MjI5NTM2ODMwNDMsInkiOjIxOC44NzgyMjY0ODUwNzI2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M311.679,320.979L299.982,335.532C288.286,350.086,264.893,379.193,253.196,398.996C241.5,418.8,241.5,429.3,241.5,434.55L241.5,439.8" id="my-svg-L_RESOLVE_KEEP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RESOLVE_KEEP_0" data-points="W3sieCI6MzExLjY3ODk2MTk2NDMyLCJ5IjozMjAuOTc4OTY1MDE2MDc3OH0seyJ4IjoyNDEuNSwieSI6NDA4LjMwMDAwMzA1MTc1Nzh9LHsieCI6MjQxLjUsInkiOjQ0My44MDAwMDMwNTE3NTc4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M415.321,320.979L427.018,335.532C438.714,350.086,462.107,379.193,473.804,400.463C485.5,421.733,485.5,435.167,485.5,441.883L485.5,448.6" id="my-svg-L_RESOLVE_AGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RESOLVE_AGE_0" data-points="W3sieCI6NDE1LjMyMTAzODAzNTY4MDAzLCJ5IjozMjAuOTc4OTY1MDE2MDc3OH0seyJ4Ijo0ODUuNSwieSI6NDA4LjMwMDAwMzA1MTc1Nzh9LHsieCI6NDg1LjUsInkiOjQ1Mi42MDAwMDIyODg4MTgzNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M485.5,499.6L485.5,505.233C485.5,510.867,485.5,522.133,485.5,531.267C485.5,540.4,485.5,547.4,485.5,550.9L485.5,554.4" id="my-svg-L_AGE_DETACH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AGE_DETACH_0" data-points="W3sieCI6NDg1LjUsInkiOjQ5OS42MDAwMDIyODg4MTgzNn0seyJ4Ijo0ODUuNSwieSI6NTMzLjQwMDAwMTUyNTg3ODl9LHsieCI6NDg1LjUsInkiOjU1OC40MDAwMDE1MjU4Nzg5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M485.5,623L485.5,627.167C485.5,631.333,485.5,639.667,485.5,647.333C485.5,655,485.5,662,485.5,665.5L485.5,669" id="my-svg-L_DETACH_ARCHIVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DETACH_ARCHIVE_0" data-points="W3sieCI6NDg1LjUsInkiOjYyM30seyJ4Ijo0ODUuNSwieSI6NjQ4fSx7IngiOjQ4NS41LCJ5Ijo2NzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M409.598,737.6L399.807,741.767C390.015,745.933,370.433,754.267,360.641,761.933C350.85,769.6,350.85,776.6,350.85,780.1L350.85,783.6" id="my-svg-L_ARCHIVE_CATALOG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ARCHIVE_CATALOG_0" data-points="W3sieCI6NDA5LjU5NzgxODQyMTIwNjYsInkiOjczNy41OTk5OTg0NzQxMjExfSx7IngiOjM1MC44NDk5OTg0NzQxMjExLCJ5Ijo3NjIuNTk5OTk4NDc0MTIxMX0seyJ4IjozNTAuODQ5OTk4NDc0MTIxMSwieSI6Nzg3LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M575.607,737.6L587.231,741.767C598.855,745.933,622.102,754.267,633.726,763.4C645.35,772.533,645.35,782.467,645.35,787.433L645.35,792.4" id="my-svg-L_ARCHIVE_DROP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ARCHIVE_DROP_0" data-points="W3sieCI6NTc1LjYwNzQxNTMxNDIxODksInkiOjczNy41OTk5OTg0NzQxMjExfSx7IngiOjY0NS4zNDk5OTg0NzQxMjExLCJ5Ijo3NjIuNTk5OTk4NDc0MTIxMX0seyJ4Ijo2NDUuMzQ5OTk4NDc0MTIxMSwieSI6Nzk2LjM5OTk5NzcxMTE4MTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M937.5,72.6L937.5,79.7C937.5,86.8,937.5,101,937.5,125.6C937.5,150.2,937.5,185.2,937.5,202.7L937.5,220.2" id="my-svg-L_ERASE_PURGE_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ERASE_PURGE_0" data-points="W3sieCI6OTM3LjUsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6OTM3LjUsInkiOjExNS4xOTk5OTY5NDgyNDIxOX0seyJ4Ijo5MzcuNSwieSI6MjI0LjIwMDAwMDc2MjkzOTQ1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1194,72.6L1194,79.7C1194,86.8,1194,101,1194,125.508C1194,150.017,1194,184.833,1194,202.241L1194,219.65" id="my-svg-L_ASSETGC_Cold_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSETGC_Cold_0" data-points="W3sieCI6MTE5NCwieSI6NzIuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMTk0LCJ5IjoxMTUuMTk5OTk2OTQ4MjQyMTl9LHsieCI6MTE5NCwieSI6MjIzLjY0OTc4MDI3MzQzNzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_GLOBAL_RESOLVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ACCT_RESOLVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CHAN_RESOLVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(241.5, 408.3000030517578)"><g class="label" data-id="L_RESOLVE_KEEP_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-34.5" y="0" width="69" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">indefinite</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(485.5, 408.3000030517578)"><g class="label" data-id="L_RESOLVE_AGE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">N</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> days</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> elapsed</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_AGE_DETACH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DETACH_ARCHIVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ARCHIVE_CATALOG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ARCHIVE_DROP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ERASE_PURGE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSETGC_Cold_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-GLOBAL-0" data-look="classic" transform="translate(96.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-88.5" y="-41.099998474121094" width="177" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Global</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">keep-indefinitely</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ACCT-1" data-look="classic" transform="translate(363.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-128.5" y="-41.099998474121094" width="257" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Per-account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> override</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">accounts.default_retention_</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">days</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CHAN-2" data-look="classic" transform="translate(659, 49.099998474121094)"><rect class="basic label-container" style="" x="-117" y="-32.79999923706055" width="234" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Per-channel</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> override</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">channels.retention_days</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RESOLVE-3" data-look="classic" transform="translate(363.5, 256.5)"><polygon points="116.29999923706055,0 232.5999984741211,-116.29999923706055 116.29999923706055,-232.5999984741211 0,-116.29999923706055" class="label-container" transform="translate(-115.79999923706055, 116.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Effective</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retention</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">=</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> most-specific</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> non-null</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-KEEP-11" data-look="classic" transform="translate(241.5, 476.10000228881836)"><rect class="basic label-container" style="" x="-99" y="-32.29999923706055" width="198" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Keep</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> primary</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">partitions</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AGE-13" data-look="classic" transform="translate(485.5, 476.10000228881836)"><rect class="basic label-container" style="" x="-95" y="-23.5" width="190" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Age-out</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> candidate</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DETACH-15" data-look="classic" transform="translate(485.5, 590.7000007629395)"><rect class="basic label-container" style="" x="-117.5" y="-32.29999923706055" width="235" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DETACH</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PARTITION</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> or</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">row-delete</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> aged</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tenants</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ARCHIVE-17" data-look="classic" transform="translate(485.5, 705.2999992370605)"><rect class="basic label-container" style="" x="-109.5" y="-32.29999923706055" width="219" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">COPY</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Parquet/SQL</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dump</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MinIO/S3</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CATALOG-19" data-look="classic" transform="translate(350.8499984741211, 819.8999977111816)"><rect class="basic label-container" style="" x="-125.5" y="-32.29999923706055" width="251" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">archived_partitions</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> catalog</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">row</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DROP-21" data-look="classic" transform="translate(645.3499984741211, 819.8999977111816)"><rect class="basic label-container" style="" x="-119" y="-23.5" width="238" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DROP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> detached</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> partition</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ERASE-22" data-look="classic" transform="translate(937.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-111.5" y="-23.5" width="223" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GDPR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> erasure</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> request</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PURGE-23" data-look="classic" transform="translate(937.5, 256.5)"><rect class="basic label-container" style="" x="-115.5" y="-32.29999923706055" width="231" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Targeted</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> delete</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> vector</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">delete</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gc</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ASSETGC-24" data-look="classic" transform="translate(1194, 49.099998474121094)"><rect class="basic label-container" style="" x="-95" y="-23.5" width="190" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dedup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GC</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Cold-25" data-look="classic" transform="translate(1194, 256.5)"><path d="M0,11.233480176211454 a51,11.233480176211454 0,0,0 102,0 a51,11.233480176211454 0,0,0 -102,0 l0,43.23348017621146 a51,11.233480176211454 0,0,0 102,0 l0,-43.23348017621146" class="basic label-container outer-path" style="" transform="translate(-51, -32.85022026431719)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">cold</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> storage</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Retention resolves top to bottom through the three
+source nodes: the global default (keep-indefinitely, owned by Root) is
+overridden by an optional per-account window
+(<code>accounts.default_retention_days</code>), which is in turn
+overridden by an optional per-channel window
+(<code>channels.retention_days</code>). The <code>RESOLVE</code>
+decision node applies the <em>most specific non-null</em> rule — the
+narrowest explicitly-set window wins, and if none is set the effective
+retention is indefinite.</p>
+<p>The two outcomes of <code>RESOLVE</code> are the crux. If the result
+is indefinite, the data stays hot in the primary’s partitions forever
+(the <code>KEEP</code> branch) — which, given the operator’s default, is
+what happens to most data. If a finite window <code>N</code> has
+elapsed, the row/partition becomes an age-out candidate (the
+<code>AGE</code> branch). From there the archive step either
+<strong>detaches</strong> a fully-drainable monthly partition or
+row-deletes just the aged tenants within a still-live partition (because
+retention differs per tenant/channel while data is co-mingled in one
+monthly partition).</p>
+<p>Either path funnels through the same safety invariant: the data is
+first <strong>copied</strong> to the MinIO/S3 cold tier as a Parquet or
+SQL dump, a bookkeeping row is written to
+<code>archived_partitions</code>, and only then is the live partition
+dropped — the <code>DETACH → ARCHIVE → CATALOG → DROP</code> chain.
+“Archive before drop” guarantees no irreversible loss. Two side flows
+sit outside the age timer (drawn with dotted edges): a <strong>GDPR
+erasure request</strong> triggers a targeted purge (relational rows +
+their vector rows + asset unlink/garbage-collection) regardless of
+retention, and <strong>asset dedup/GC</strong> reclaims cold-tier space
+for orphaned blobs. Together these close the retention/archive half of
+<code>[GAP: database-3.2]</code> at the schema+job layer.</p>
+<hr />
+<h2 id="archive-pipeline-detach-cold-drop">4. Archive pipeline (detach →
+cold → drop)</h2>
+<p>The archive job runs via <code>digital.vasic.background</code>
+(retry/observability) and uses <code>digital.vasic.storage</code> for
+the cold tier. Steps, per aged monthly partition:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 1) Detach the partition (metadata-only; the data becomes a standalone table).</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> posts DETACH <span class="kw">PARTITION</span> posts_2025_01;</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2) Export to cold storage. Parquet (analytics-friendly) or COPY ... TO (SQL restore).</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> posts_2025_01 <span class="kw">TO</span> PROGRAM</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;zstd | mc pipe minio/thready-archive/posts/2025-01.sql.zst&#39;</span> (FORMAT text);</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- 3) Record the archive (see schema-relational.sql: archived_partitions).</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> archived_partitions</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  (source_table, partition_name, range_start, range_end, row_count,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>   storage_backend, storage_key, checksum, archived_at)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  (<span class="st">&#39;posts&#39;</span>,<span class="st">&#39;posts_2025_01&#39;</span>,<span class="st">&#39;2025-01-01&#39;</span>,<span class="st">&#39;2025-02-01&#39;</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> posts_2025_01), <span class="st">&#39;minio&#39;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>   <span class="st">&#39;posts/2025-01.sql.zst&#39;</span>, $checksum, now());</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- 4) Drop the detached, now-archived partition; stamp dropped_at.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> posts_2025_01;</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> archived_partitions <span class="kw">SET</span> dropped_at <span class="op">=</span> now()</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> source_table<span class="op">=</span><span class="st">&#39;posts&#39;</span> <span class="kw">AND</span> partition_name<span class="op">=</span><span class="st">&#39;posts_2025_01&#39;</span>;</span></code></pre></div>
+<p>Guarantees:</p>
+<ul>
+<li><strong>Archive before drop</strong> — the <code>DROP</code> only
+runs after the cold copy is verified (checksum matches) and cataloged.
+Chaos test asserts a mid-archive crash never drops un-copied data.</li>
+<li><strong>Restorable</strong> — <code>archived_partitions</code>
+records the exact cold-storage key + checksum so a partition can be
+re-attached
+(<code>CREATE TABLE … ; COPY … FROM ; ALTER TABLE … ATTACH PARTITION</code>)
+on demand for audits or legal hold.</li>
+<li><strong>Idempotent</strong> — steps are guarded by the catalog so a
+re-run skips completed partitions.</li>
+<li><strong>Indefinite default</strong> — with the system default, step
+1 never triggers; the pipeline only acts on tenants/channels that set a
+finite window.</li>
+</ul>
+<hr />
+<h2 id="vector-asset-retention">5. Vector &amp; asset retention</h2>
+<ul>
+<li><strong>Vectors follow their source.</strong> When a
+post/reply/asset/artifact row is purged or archived-and-dropped, its
+corresponding <code>vectordb_*</code> rows are deleted in the same unit
+of work (the <code>id</code>/<code>metadata.source_id</code>
+back-reference makes this a targeted delete). Archived content is
+removed from the live ANN index so search never returns cold/erased
+results; if archived content must remain searchable, its vectors are
+retained while the relational detail moves cold (a per-account policy
+flag, <code>ATM-DB-031</code>).</li>
+<li><strong>Assets</strong> are content-hash-deduped
+(<code>assets.UNIQUE(account_id, content_hash)</code>); GC only removes
+a blob from the cold tier when <strong>no</strong>
+<code>asset_links</code> reference it and no retention hold applies. Raw
+originals are preserved per §7.3 unless the account’s retention window
+explicitly covers assets.</li>
+<li><strong>Signed-URL parity <code>[GAP: database-3.2]</code>.</strong>
+The <code>assets.storage_backend</code> column allows
+<code>minio</code>, <code>s3</code>, or <code>local</code>. The gap
+register flags that <code>digital.vasic.storage</code>’s signed-URL
+helper is CloudFront/AWS-specific and MinIO parity is unverified.
+Because the schema is storage-backend-agnostic (it stores only an opaque
+<code>storage_key</code>, never a signed URL), this is an
+<strong>Asset-Service/deployment concern, not a schema concern</strong>
+— tracked as <code>ATM-DB-033</code> and validated against a self-hosted
+MinIO (Hetzner) in the deployment pack (<a
+href="../deployment/index.md"><code>../deployment/index.md</code></a>).
+The database layer is unaffected either way.</li>
+<li><strong>Audit log</strong> retains for the Q40 default (1 year,
+adjustable) independently of content retention — audit is a compliance
+record, not user content, and ages out on its own timer.</li>
+</ul>
+<hr />
+<h2 id="gdpr-aware-erasure-export">6. GDPR-aware erasure &amp;
+export</h2>
+<p>Compliance posture is <strong>minimal/internal</strong> (Q7), but the
+design is <strong>GDPR-aware</strong> (erasure/export hooks designed,
+not certified — final request §19.13):</p>
+<ul>
+<li><strong>Erasure (right to be forgotten).</strong> A targeted erase
+for a user or an account cascades: relational rows via
+<code>ON DELETE CASCADE</code> from
+<code>accounts</code>/<code>users</code>, their vector rows via the
+<code>source_id</code> back-reference, and asset blobs via
+<code>asset_links</code> GC. Because erasure must reach cold storage
+too, the job also removes/anonymises matching archived dumps (or records
+a tombstone if legal hold applies). Erasure bypasses the retention
+timer.</li>
+<li><strong>Export (portability).</strong> A per-account export
+assembles the tenant’s posts/threads/replies
+<ul>
+<li>generated artifacts + asset manifest into a signed archive via
+<code>digital.vasic.storage</code>.</li>
+</ul></li>
+<li><strong>Encrypted sensitive data.</strong>
+Credentials/QR/screenshots/contracts stored encrypted (§3.6) are erased
+by destroying the row + its sealed bytes; the AES-256-GCM key material
+is managed by <code>security</code> (never in the DB).</li>
+</ul>
+<p><code>[OPEN: gdpr-cold-erasure]</code> (<code>ATM-DB-032</code>) —
+cold-tier erasure/anonymisation tooling is specified here but its
+implementation depends on the archive format choice; tracked.</p>
+<hr />
+<h2 id="backupdr-interaction">7. Backup/DR interaction</h2>
+<p>Retention/archive is <strong>orthogonal</strong> to backup/DR
+(Q41/Q45): daily full + hourly DB incrementals, RPO ≈ 1 h, RTO ≈ 4
+h.</p>
+<ul>
+<li>Backups capture the <strong>live</strong> database (hot partitions);
+archived-and-dropped partitions are protected by their cold-tier copies
++ the <code>archived_partitions</code> catalog, not by DB backups — so
+DR restore + catalog re-attach together reconstruct full history.</li>
+<li>PITR from incrementals covers accidental deletes within the backup
+window; the archive catalog covers intentional age-out beyond it.</li>
+<li>The restore runbook (deployment pack) includes “re-attach archived
+partition” as a step so an operator can rehydrate cold history during an
+audit.</li>
+</ul>
+<hr />
+<h2 id="verification-open-items">8. Verification &amp; open items</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[GAP: database-3.2]</code> retention/archive helpers</td>
+<td>Addressed: resolution model §2, archive job §4,
+<code>pkg/partition.DetachAged</code> (partitioning.md §5)</td>
+</tr>
+<tr>
+<td><code>[GAP: database-3.2]</code> MinIO signed-URL parity</td>
+<td>Storage/deployment concern (schema stores opaque
+<code>storage_key</code> only); tracked <code>ATM-DB-033</code>
+(§5)</td>
+</tr>
+<tr>
+<td>Archive-before-drop safety</td>
+<td>Chaos test asserts no un-copied drop (§4)</td>
+</tr>
+<tr>
+<td><code>[OPEN: gdpr-cold-erasure]</code> cold-tier erasure
+tooling</td>
+<td>Tracked <code>ATM-DB-032</code></td>
+</tr>
+<tr>
+<td><code>[OPEN]</code> keep-archived-vectors-searchable flag</td>
+<td>Tracked <code>ATM-DB-031</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification.</strong> Covered by chaos (crash mid-archive),
+scaling (archive of a full month under load), and security (erasure
+reaches vectors + cold tier) test types per §11.4.27, each with runtime
+evidence (anti-bluff).</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

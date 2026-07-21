@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — REST /v1 Endpoint Reference</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — REST /v1 Endpoint Reference</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#conventions" id="toc-conventions">1. Conventions</a></li>
+<li><a href="#resource-groups" id="toc-resource-groups">2. Resource
+groups</a>
+<ul>
+<li><a href="#auth" id="toc-auth">2.1 Auth</a></li>
+<li><a href="#accounts" id="toc-accounts">2.2 Accounts</a></li>
+<li><a href="#users" id="toc-users">2.3 Users</a></li>
+<li><a href="#messengers-channels" id="toc-messengers-channels">2.4
+Messengers &amp; Channels</a></li>
+<li><a href="#posts-threads" id="toc-posts-threads">2.5 Posts &amp;
+Threads</a></li>
+<li><a href="#processing" id="toc-processing">2.6 Processing</a></li>
+<li><a href="#assets-downloads" id="toc-assets-downloads">2.7 Assets
+&amp; Downloads</a></li>
+<li><a href="#search" id="toc-search">2.8 Search</a></li>
+<li><a href="#skills" id="toc-skills">2.9 Skills</a></li>
+<li><a href="#billing" id="toc-billing">2.10 Billing</a></li>
+<li><a href="#events" id="toc-events">2.11 Events</a></li>
+<li><a href="#ops" id="toc-ops">2.12 Ops</a></li>
+<li><a href="#event-sinks" id="toc-event-sinks">2.13 Event
+sinks</a></li>
+<li><a href="#version" id="toc-version">2.14 Version</a></li>
+</ul></li>
+<li><a href="#backing-service-maturity-no-bluff"
+id="toc-backing-service-maturity-no-bluff">3. Backing-service maturity
+(no-bluff)</a></li>
+<li><a href="#gaps-addressed-open-items"
+id="toc-gaps-addressed-open-items">4. Gaps addressed &amp; open
+items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — REST /v1 Endpoint Reference
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/rest-endpoints.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./openapi.yaml, ./authn-authz.md, ./event-bus-contract.md,
+                    ./error-model.md, ./versioning.md, ./sdk-strategy.md, ../database/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial draft: resource groups, conventions, maturity</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Added p95 SLO; documented <code>x-thready-maturity</code> values
+(now real in <code>openapi.yaml</code>); expanded idempotency scope;
+fixed shell-quoting in the example; linked contract-tests.md</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Completeness-critic pass: addressed the
+<code>[GAP: #8 VectorDB]</code> pgvector-only/Qdrant-swap-by-config seam
+honestly at §2.8 and in the §3 maturity table (Search row now
+<code>#1, #8, New</code>).</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Added the <strong>Event Sinks</strong> (§2.13) and
+<strong>Version</strong> (§2.14) groups (now in
+<code>openapi.yaml</code>, closing evt-2/ver-2); updated the maturity
+count to 20; resolved rest-1 (per-op request/response examples now live
+in <code>openapi.yaml</code> + <a
+href="./sdk-examples.md">sdk-examples.md</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>The authoritative machine contract is <a
+href="./openapi.yaml">openapi.yaml</a>. This document explains
+<strong>behaviour</strong> the OpenAPI cannot fully express:
+resource-group semantics, pagination, idempotency, filtering, rate
+limits, and — critically — the <strong>maturity of the backing
+subsystem</strong> behind each group (so no group is presented as GA
+when the gap register says its backing module is a stub/scaffold).</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-conventions">Conventions</a></li>
+<li><a href="#2-resource-groups">Resource groups</a>
+<ul>
+<li><a href="#21-auth">2.1 Auth</a> · <a href="#22-accounts">2.2
+Accounts</a> · <a href="#23-users">2.3 Users</a></li>
+<li><a href="#24-messengers--channels">2.4 Messengers &amp; Channels</a>
+· <a href="#25-posts--threads">2.5 Posts &amp; Threads</a></li>
+<li><a href="#26-processing">2.6 Processing</a> · <a
+href="#27-assets--downloads">2.7 Assets &amp; Downloads</a></li>
+<li><a href="#28-search">2.8 Search</a> · <a href="#29-skills">2.9
+Skills</a> · <a href="#210-billing">2.10 Billing</a></li>
+<li><a href="#211-events">2.11 Events</a> · <a href="#212-ops">2.12
+Ops</a></li>
+<li><a href="#213-event-sinks">2.13 Event sinks</a> · <a
+href="#214-version">2.14 Version</a></li>
+</ul></li>
+<li><a href="#3-backing-service-maturity-no-bluff">Backing-service
+maturity (no-bluff)</a></li>
+<li><a href="#4-gaps-addressed--open-items">Gaps addressed &amp; open
+items</a></li>
+</ol>
+<p>The surface topology (edge → middleware → services) is diagrammed in
+the <a href="./index.md#surface-at-a-glance">area index</a> — see <a
+href="./diagrams/api-surface.mmd">diagrams/api-surface.mmd</a>.</p>
+<h2 id="conventions">1. Conventions</h2>
+<ul>
+<li><strong>Base URL</strong> —
+<code>https://{env}.thready.hxd3v.com/v1</code> (prod host has no env
+prefix).</li>
+<li><strong>Transport</strong> — HTTP/3 (QUIC) + HTTP/2 fallback
+(<code>vasic-digital/http3</code>); Brotli/gzip.</li>
+<li><strong>AuthN/AuthZ</strong> — every route (except
+<code>security: []</code> ones) needs a JWT or scoped API key; role
+floor via <code>x-required-roles</code>; see <a
+href="./authn-authz.md">authn-authz.md</a>.</li>
+<li><strong>Content type</strong> — <code>application/json</code>
+(UTF-8) except asset content streams.</li>
+<li><strong>Timestamps</strong> — RFC 3339 UTC; <strong>ids</strong> —
+UUIDv4 strings unless noted.</li>
+<li><strong>Pagination</strong> — cursor-based. List responses are
+<code>{ "data": [...], "meta": { "next_cursor": "…"|null, "total_estimate": N|null } }</code>.
+Pass <code>?cursor=&amp;limit=</code> (limit 1–200, default 50). Exact
+totals are avoided at Large scale (10k+ posts/day) — only an estimate is
+returned.</li>
+<li><strong>Filtering</strong> — documented per group via query params
+(e.g. <code>channel_id</code>, <code>hashtag</code>,
+<code>status</code>). <code>root</code> may pass <code>account_id</code>
+to cross tenants; other roles are implicitly scoped to their
+account.</li>
+<li><strong>Idempotency</strong> — unsafe POSTs accept
+<code>Idempotency-Key: &lt;uuid&gt;</code> (24 h window); see <a
+href="./error-model.md">error-model.md</a> §5. In
+<code>openapi.yaml</code> the header is wired on every unsafe/async
+POST: <code>createApiKey</code>, <code>registerChannel</code>,
+<code>syncChannel</code>, <code>triggerProcessing</code>,
+<code>triggerReprocessing</code>, <code>redownloadAsset</code>,
+<code>registerSkill</code>, and <code>ingestCallback</code>.</li>
+<li><strong>Rate limits</strong> — <code>RateLimit-*</code> headers on
+every response; 429 + <code>Retry-After</code> on breach.</li>
+<li><strong>SLO</strong> — Aggressive posture (Q14): REST <strong>p95
+&lt; 150 ms</strong> for synchronous operations (excluding
+<code>202</code> async triggers and asset content streaming);
+<strong>semantic search &lt; 500 ms p95</strong>. These are asserted by
+the performance tests in <a
+href="./contract-tests.md">contract-tests.md</a> §performance.</li>
+<li><strong>Maturity</strong> — operations whose backing subsystem is
+not yet GA carry an <code>x-thready-maturity</code> vendor extension in
+<code>openapi.yaml</code> — one of <code>ga</code> |
+<code>foundation</code> | <code>build_new</code> | <code>design</code> —
+mirroring §3 below. A non-<code>ga</code> value means the contract is
+stable but the implementation may <code>503</code> until the referenced
+gap closes.</li>
+<li><strong>Errors</strong> — the single envelope from <a
+href="./error-model.md">error-model.md</a>. Per that doc,
+<code>401</code>, <code>429</code> and <code>500</code> may be returned
+by any authenticated operation (middleware chain) and are not re-listed
+per operation.</li>
+<li><strong>Async</strong> — long operations return
+<code>202 Accepted</code> with a job resource and emit events; clients
+watch the event stream (<a
+href="./event-bus-contract.md">event-bus-contract.md</a>) rather than
+blocking.</li>
+</ul>
+<p>Example — an authenticated, paginated, filtered list (URL quoted so
+the shell does not split on <code>&amp;</code> or background the
+command):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&quot;https://thready.hxd3v.com/v1/posts?channel_id=</span><span class="va">${CID}</span><span class="st">&amp;status=failed&amp;limit=100&quot;</span> <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">${ACCESS}</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.data[].id, .meta.next_cursor&#39;</span></span></code></pre></div>
+<h2 id="resource-groups">2. Resource groups</h2>
+<h3 id="auth">2.1 Auth</h3>
+<p><code>/auth/login</code>, <code>/auth/refresh</code>,
+<code>/auth/logout</code>, <code>/auth/me</code>,
+<code>/auth/mfa/totp/{enroll,verify}</code>,
+<code>/auth/oauth2/authorize</code>, <code>/api-keys</code>
+(list/create), <code>/api-keys/{keyId}</code> (revoke),
+<code>/.well-known/jwks.json</code>. Fully specified in <a
+href="./authn-authz.md">authn-authz.md</a>. <code>login</code>,
+<code>refresh</code>, and <code>jwks.json</code> are unauthenticated;
+everything else needs at least <code>user</code>. API-key creation
+requires the key’s scopes to be a subset of the caller’s (403
+otherwise).</p>
+<h3 id="accounts">2.2 Accounts</h3>
+<p><code>GET/POST /accounts</code>,
+<code>GET/PATCH/DELETE /accounts/{accountId}</code>,
+<code>PUT /accounts/{accountId}/branding</code>.</p>
+<ul>
+<li><code>POST /accounts</code> — any authenticated user may create an
+account and becomes its <code>account_admin</code> (final request §6.1).
+<code>GET /accounts</code> returns all accounts for <code>root</code>,
+else the caller’s memberships.</li>
+<li><code>PATCH</code> — <code>account_admin</code>+; may set
+<code>retention_days</code> (per-account override; null = inherit global
+“keep indefinitely”). <code>DELETE</code> — <code>root</code> only.</li>
+<li><strong>Branding</strong> — <code>PUT …/branding</code> sets
+white-label colors/logo/slogan; defaults to Thready/Helix Development
+(§8.3). Helix Development attribution persists in footers.</li>
+</ul>
+<h3 id="users">2.3 Users</h3>
+<p><code>GET/POST /accounts/{accountId}/users</code> (list/invite),
+<code>GET/PATCH /users/{userId}</code>.</p>
+<ul>
+<li>Invite is <code>account_admin</code>+; a duplicate invite is
+<code>409 already_exists</code>. A user may belong to multiple accounts
+with different roles (<code>Membership[]</code>).</li>
+<li><code>GET /users/{id}</code> — self, or an admin within the same
+tenant; cross-tenant reads are <code>403</code> (unless
+<code>root</code>). <code>PATCH</code> — <code>account_admin</code>+
+within the tenant (e.g. change a user’s role, disable).</li>
+</ul>
+<h3 id="messengers-channels">2.4 Messengers &amp; Channels</h3>
+<p><code>GET /messengers</code>; <code>GET/POST /channels</code>,
+<code>GET/DELETE /channels/{channelId}</code>,
+<code>POST /channels/{channelId}/sync</code>.</p>
+<ul>
+<li><code>GET /messengers</code> returns each platform’s capabilities
+<strong>and maturity</strong> (see §3): Telegram
+(<code>foundation</code> — MTProto user-client reader promotion
+pending), Max (<code>build_new</code>).</li>
+<li><code>POST /channels</code> registers a channel/group by invite link
+or handle (<code>account_admin</code>+); the fixtures in the final
+request Appendix A are valid <code>external_ref</code>s.</li>
+<li><code>POST /channels/{id}/sync</code> triggers an incremental poll
+or a full <code>backfill</code>. <strong>Backfill depends on the MTProto
+reader (Telegram) / the Max adapter (both BUILD/BUILD-NEW)</strong> —
+until those land it returns <code>x-thready-maturity: build_new</code>
+semantics and may <code>503 unavailable</code>. Sync is async →
+<code>202</code>; watch <code>channel.synced</code> (sticky).</li>
+</ul>
+<h3 id="posts-threads">2.5 Posts &amp; Threads</h3>
+<p><code>GET /posts</code> (filter: <code>channel_id</code>,
+<code>hashtag</code>, <code>status</code>, <code>account_id</code>),
+<code>GET /posts/{id}</code>, <code>GET /posts/{id}/thread</code>.</p>
+<ul>
+<li>A <strong>post</strong> carries body, hashtags, derived
+<code>categories</code> (<code>ContentType[]</code>), extracted
+<code>links</code>, <code>asset_links</code>, and its
+<code>processing</code> state.</li>
+<li><code>GET /posts/{id}/thread</code> returns the <strong>complete
+post</strong> = root + the full organic reply chain, <strong>excluding
+Thready’s own system replies</strong>
+(<code>author.is_system == true</code> are never returned as
+processable). This is the core “assemble full thread context”
+requirement (§3.2.1) — tags are frequently added as a reply to a
+link-only root.</li>
+<li>Content categories are the 17 <code>ContentType</code> enum values
+(video, torrent, series, movie, research, documentary, concert, game,
+software, channel, playlist, music, book, comic, netflix, training,
+technology) — all built in parallel (Q31).</li>
+</ul>
+<h3 id="processing">2.6 Processing</h3>
+<p><code>POST /posts/{id}/process</code>,
+<code>POST /posts/{id}/reprocess</code>,
+<code>GET /posts/{id}/processing</code>,
+<code>GET /processing/jobs</code>,
+<code>POST /processing/callbacks/{provider}</code>.</p>
+<ul>
+<li><code>POST /posts/{id}/process</code> enqueues onto the
+BackgroundTasks queue with an <strong>idempotent single-claim</strong>
+(Postgres row/advisory lock), so a post is processed <strong>exactly
+once</strong> under a <code>post.received</code> event storm (§3.3).
+Returns <code>202</code> + <code>ProcessingJob</code>; a concurrent
+claim returns <code>409 conflict</code>.</li>
+<li><code>reprocess</code> (<code>account_admin</code>+) forces a fresh
+run even if already <code>succeeded</code> — the “client → REST API →
+System” refresh trigger (§3.2.3).</li>
+<li><strong>Precedence</strong> — a post runs <strong>every</strong>
+matching Skill, ordered deterministically:
+<code>download &gt; convert &gt; analyze &gt; research &gt; reply</code>
+(§3.3). Exposed as <code>ProcessingJob.precedence</code>.</li>
+<li><code>POST /processing/callbacks/{provider}</code> — inbound
+3rd-party completion callbacks (HMAC auth, not JWT); specified in <a
+href="./event-bus-contract.md">event-bus-contract.md</a> §9.</li>
+<li><strong>Maturity</strong> — the <strong>Skill-dispatch engine is
+BUILD-NEW</strong> atop <code>helix_skills</code> (which is a knowledge
+DAG, not a run engine — <code>[GAP: 4.1/#6]</code>). The endpoints are
+the target contract; they are backed by the new engine, not by
+<code>helix_skills</code> alone.</li>
+</ul>
+<h3 id="assets-downloads">2.7 Assets &amp; Downloads</h3>
+<p><code>GET /assets</code>, <code>GET /assets/{id}</code>,
+<code>GET /assets/{id}/content</code>,
+<code>POST /assets/{id}/redownload</code>,
+<code>GET /posts/{id}/assets</code>, <code>GET /downloads</code>.</p>
+<ul>
+<li>Client links are <strong>never raw file paths</strong> —
+<code>GET /assets/{id}/content</code> resolves through the Asset Service
+to a <strong>signed, Range-capable</strong> URL
+(<code>OpenSeekable</code>), returning <code>200</code>/<code>206</code>
+(Range) or <code>302</code> to a short-lived signed URL (§7.1).
+Sensitive assets are gated + encrypted.</li>
+<li>Assets keep the <strong>raw original</strong> plus web renditions
+(<code>…-web</code> suffix; HLS/DASH ladders, §7.3/Q36);
+<code>renditions[]</code> lists them. Dedup + integrity via
+<code>content_hash</code>.</li>
+<li><code>POST /assets/{id}/redownload</code>
+(<code>account_admin</code>+) re-fetches a <code>broken</code> physical
+asset via the Download Manager → <code>202</code> +
+<code>DownloadJob</code>.</li>
+<li><code>GET /posts/{id}/assets</code> returns <code>AssetLink[]</code>
+with <code>order_index</code> preserving series/playlist watch order
+(numeric prefixes).</li>
+<li><strong>Maturity</strong> — Asset Service is decoupled <strong>from
+Catalogizer</strong> (<code>P1</code>, mature base); the
+<strong>Download Manager is BUILD-NEW</strong> (<code>P0</code>); Boba
+(torrents) + MeTube (video) are FOUNDATION and integrate via the
+standardized callback (§2.6). <code>filesystem</code> lacks an HTTP
+source today (<code>[GAP: 6.2]</code>).</li>
+</ul>
+<h3 id="search">2.8 Search</h3>
+<p><code>POST /search</code>.</p>
+<ul>
+<li>Semantic / keyword / <strong>hybrid</strong> search over
+<strong>posts and generated materials</strong> (and optionally assets).
+Returns ranked <code>{source_id, kind, score, span, snippet}</code>;
+<code>source_id</code> is the <strong>relational PK</strong> the vector
+references (vectors store reference-only metadata; §2.1.1). SLO
+<strong>&lt; 500 ms p95</strong> (Aggressive).</li>
+<li>Backed by the in-house “Lumen-style” <strong>Semantic-search
+service</strong> (<code>embeddings</code> +
+<code>vectordb</code>/pgvector cosine) —
+<code>[GAP: New#Semantic-search service]</code> (<code>P0</code>
+BUILD-NEW).</li>
+<li><strong>Danger zone, called out</strong> —
+<code>[GAP: #1 HelixLLM]</code> HelixLLM’s <strong>default local
+embedder is a non-semantic <code>HashEmbedder</code> stub</strong>;
+semantic search built on it silently returns garbage. The service
+<strong>must</strong> run with
+<code>HELIX_EMBEDDING_PROVIDER=llama</code> (real llama.cpp embeddings)
+and <strong>fail loudly</strong> (<code>503 unavailable</code>) if the
+hash embedder is active in a search context.
+<code>SearchResult.embedder</code> echoes the active provider so callers
+can verify.</li>
+<li><strong>Vector backend maturity</strong> —
+<code>[GAP: #8 VectorDB]</code> <code>vectordb</code> is PRODUCTION on
+<strong>pgvector only</strong> (<code>VERIFIED</code>); the Qdrant /
+Pinecone / Milvus adapters are “constructor + config” maturity
+(<code>FLAGGED</code>, not integration-tested end-to-end). Thready ships
+on <strong>pgvector</strong> (co-located with the relational store, one
+datastore) and treats the vector backend as a <strong>config-swappable
+seam</strong>: hardening the Qdrant backend to full pgvector parity
+(with ANN index tuning against the <code>&lt; 500 ms p95</code> SLO) is
+a <code>P1</code> tracked item, so a Large-scale deployment can switch
+backends without a contract change. The <code>/search</code> response
+shape and the <code>SearchResult.embedder</code> / <code>score</code> /
+<code>source_id</code> contract are identical across backends.</li>
+</ul>
+<h3 id="skills">2.9 Skills</h3>
+<p><code>GET/POST /skills</code>, <code>GET /skills/{id}</code>.</p>
+<ul>
+<li>Skills are <strong>knowledge units</strong> in the Skill-Graph DAG
+(<code>atomic → composite → umbrella</code>) with typed edges
+(<code>requires</code>/<code>extends</code>/<code>composes</code>/<code>recommends</code>/<code>related_to</code>/
+<code>alternative_to</code>) and a <code>sort_order</code> for dispatch
+precedence; <code>binds_content_types</code> wires a Skill to the
+<code>ContentType</code>s that trigger it.</li>
+<li><code>POST /skills</code> (<code>account_admin</code>+, scope
+<code>skills:write</code>) registers a Skill + edges.</li>
+<li><strong>Maturity</strong> — <code>helix_skills</code> is
+FOUNDATION/MVP with an inconsistent file format and an open findings
+backlog (<code>[GAP: 4.1]</code>); these endpoints expose the graph,
+while <strong>execution</strong> is the separate BUILD-NEW dispatch
+engine (§2.6).</li>
+</ul>
+<h3 id="billing">2.10 Billing</h3>
+<p><code>GET /plans</code>,
+<code>GET/PUT /accounts/{id}/subscription</code>,
+<code>GET /accounts/{id}/usage</code>.</p>
+<ul>
+<li><strong>Subscription + metered</strong> from day one
+(Q11/<code>[OPERATOR]</code>). <code>PUT …/subscription</code>
+(<code>account_admin</code>+) changes plan; <code>GET …/usage</code>
+returns metered <code>UsageRecord[]</code>
+(<code>posts_processed</code>, <code>assets_bytes</code>,
+<code>search_queries</code>, <code>llm_tokens</code>,
+<code>storage_bytes</code>).</li>
+<li>Per-plan rate-limit tiers feed the edge limiter
+(<code>[OPEN: api-2]</code>).</li>
+</ul>
+<h3 id="events">2.11 Events</h3>
+<p><code>GET /events</code> (catalog),
+<code>GET /events/{entityType}/{entityId}/sticky</code> (last-value
+snapshot). The live streams (<code>/v1/events/ws</code>,
+<code>/v1/events/stream</code>) and outbound/inbound callbacks are
+specified in <a
+href="./event-bus-contract.md">event-bus-contract.md</a>.</p>
+<h3 id="ops">2.12 Ops</h3>
+<p><code>GET /healthz</code>, <code>GET /readyz</code> (unauthenticated,
+unversioned in spirit — see <a href="./versioning.md">versioning.md</a>
+§2; <code>/metrics</code> is Prometheus-scraped, not in the product
+contract). Backed by <code>observability/pkg/health</code>.</p>
+<h3 id="event-sinks">2.13 Event sinks</h3>
+<p><code>GET/POST /event-sinks</code>,
+<code>GET/PATCH/DELETE /event-sinks/{sinkId}</code>
+(<code>account_admin</code>+, scope <code>events:read</code> +
+<code>accounts:admin</code>). Registers <strong>outbound-webhook
+sinks</strong> for server-to-server subscribers that prefer HTTP push
+over a persistent socket. The generated HMAC <code>secret</code> is
+returned <strong>once</strong> at creation and never again (Thready
+signs each delivery with it via <code>X-Thready-Signature</code>).
+Backed by the API-plane-owned <code>event_sink</code> /
+<code>event_sink_delivery</code> tables and the retry/back-off contract
+in <a href="./event-bus-contract.md">event-bus-contract.md</a> §9;
+modelled as the <code>eventDelivery</code> channel in <a
+href="./asyncapi.yaml">asyncapi.yaml</a>. <strong>Maturity</strong> —
+<code>build_new</code> (the Event Bus service is new). Closes
+<code>[OPEN: evt-2]</code>.</p>
+<h3 id="version">2.14 Version</h3>
+<p><code>GET /version</code> (<code>user</code>+) returns build +
+contract identity — <code>api_version</code> (semver),
+<code>contract_hash</code> (sha256 of the canonical OpenAPI + proto
+set), <code>proto_package</code>, <code>build_commit</code>,
+<code>built_at</code>, and any active <code>deprecations</code> with
+<code>Sunset</code> dates. It exists for support diagnosability
+(correlate a client bug to the exact deployed contract) and is the
+machine complement to the deprecation policy in <a
+href="./versioning.md">versioning.md</a> §6. Closes
+<code>[OPEN: ver-2]</code>.</p>
+<h2 id="backing-service-maturity-no-bluff">3. Backing-service maturity
+(no-bluff)</h2>
+<p>Per the gap register — <strong>do not present a group as GA when its
+backing module is a stub/scaffold</strong>.
+<code>x-thready-maturity</code> (one of <code>ga</code> |
+<code>foundation</code> | <code>build_new</code> | <code>design</code>)
+is annotated on every affected operation in <code>openapi.yaml</code> —
+20 operations carry it (verify with
+<code>grep -cE '^\s+x-thready-maturity:' openapi.yaml</code>). The
+negative-control test in <a
+href="./contract-tests.md">contract-tests.md</a> §security fails the
+build if any operation whose backing row below is non-GA is missing the
+annotation, so the two cannot drift.</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 31%" />
+<col style="width: 13%" />
+<col style="width: 8%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Group</th>
+<th>Backing module(s)</th>
+<th>Status</th>
+<th>Gap</th>
+<th>Contract implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auth / Users</td>
+<td><code>digital.vasic.auth</code> (+ User Service)</td>
+<td>PRODUCTION + BUILD-NEW</td>
+<td><code>#10, 7.2, New</code></td>
+<td>Contract GA; needs RS256/JWKS + RBAC layer built (see
+authn-authz).</td>
+</tr>
+<tr>
+<td>Channels (Telegram)</td>
+<td>Herald MTProto reader</td>
+<td>FOUNDATION</td>
+<td><code>#3, 5.1</code></td>
+<td>Live read OK; <strong>backfill pending</strong> reader
+promotion.</td>
+</tr>
+<tr>
+<td>Channels (Max)</td>
+<td>Max adapter</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>#3, 5.1</code></td>
+<td>Endpoints exist; <strong>503 until adapter built</strong> (Bot API +
+OneMe WS port).</td>
+</tr>
+<tr>
+<td>Processing</td>
+<td>Skill-dispatch engine</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>#6, 4.1</code></td>
+<td><code>helix_skills</code> is a knowledge DAG; execution engine is
+new.</td>
+</tr>
+<tr>
+<td>Assets (serve)</td>
+<td>Catalogizer → Asset Service</td>
+<td>PRODUCTION (decouple P1)</td>
+<td><code>#9, 6.1</code></td>
+<td>Serve GA; decouple + HLS/DASH transcoder pending.</td>
+</tr>
+<tr>
+<td>Downloads</td>
+<td>Download Manager</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>#4, 6.3</code></td>
+<td>Generic multi-protocol manager is new (P0).</td>
+</tr>
+<tr>
+<td>Downloads (video)</td>
+<td>MeTube</td>
+<td>FOUNDATION</td>
+<td><code>#5, 6.5</code></td>
+<td>Poll-only today; internal bridge until webhook lands.</td>
+</tr>
+<tr>
+<td>Search</td>
+<td>Semantic-search svc + embeddings + vectordb</td>
+<td><strong>BUILD-NEW</strong> + trap</td>
+<td><code>#1, #8, New</code></td>
+<td><strong>Must use real llama.cpp embedder</strong>; fail loudly on
+hash stub. pgvector GA; Qdrant swap-by-config is <code>P1</code>.</td>
+</tr>
+<tr>
+<td>Skills (read)</td>
+<td><code>helix_skills</code></td>
+<td>FOUNDATION</td>
+<td><code>#6, 4.1</code></td>
+<td>Graph read OK; format/backlog caveats.</td>
+</tr>
+<tr>
+<td>Events</td>
+<td>Event Bus service</td>
+<td><strong>BUILD-NEW</strong></td>
+<td><code>#5, New</code></td>
+<td>Client-facing wrapper over eventbus/JetStream is new.</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>metering/subscription</td>
+<td>design</td>
+<td><code>#12</code></td>
+<td>Schema fixed; provider integration in deployment pack.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gaps-addressed-open-items">4. Gaps addressed &amp; open
+items</h2>
+<ul>
+<li><code>[GAP: #3/5.1]</code> Herald Telegram backfill + Max adapter
+maturity surfaced honestly — §2.4, §3.</li>
+<li><code>[GAP: #6/4.1]</code> processing endpoints backed by a
+BUILD-NEW Skill-dispatch engine — §2.6, §3.</li>
+<li><code>[GAP: #1]</code> search embedder trap (fail loudly on
+HashEmbedder) — §2.8.</li>
+<li><code>[GAP: New]</code> Semantic-search, Download Manager, Event
+Bus, User Service as BUILD-NEW — §3.</li>
+<li><code>[GAP: #4/6.2/6.3/6.5]</code> download/callback contract +
+maturity — §2.6, §2.7.</li>
+<li><strong>TDD</strong> — reproduce-first RED skeletons for every
+behaviour in this doc (pagination, idempotency single-claim, tenant
+isolation, maturity annotation, search fail-loud) are in <a
+href="./contract-tests.md">contract-tests.md</a>, mapped to the 15
+mandated test types <code>[CONSTITUTION §11.4.27]</code>.</li>
+<li><code>[RESOLVED: rest-1]</code> Per-endpoint request/response
+<strong>examples</strong> now live in <code>openapi.yaml</code> (login,
+listPosts, triggerProcessing, search incl. the fail-loud 503,
+ingestCallback, getStickyEvent, event-sink create, version) and
+end-to-end <strong>usage</strong> recipes per language are in <a
+href="./sdk-examples.md">sdk-examples.md</a>. Runnable per-language
+quickstart repos still ship via Docs Chain once the servers exist
+(<code>[OPEN: sdkx-2]</code> there).</li>
+<li><code>[OPEN: rest-2]</code> <code>/metrics</code> exposure format
+(Prometheus text vs OTLP) is set in the deployment pack; it is out of
+the product <code>/v1</code> contract.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Reused Submodule Map &amp; Maturity</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Reused Submodule Map &amp;
+Maturity</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#how-to-read-this-map" id="toc-how-to-read-this-map">1. How
+to read this map</a></li>
+<li><a href="#data-infrastructure" id="toc-data-infrastructure">2. Data
+&amp; infrastructure</a></li>
+<li><a href="#ai-llm" id="toc-ai-llm">3. AI / LLM</a></li>
+<li><a href="#skills-processing" id="toc-skills-processing">4. Skills
+&amp; processing</a></li>
+<li><a href="#messenger-assets" id="toc-messenger-assets">5. Messenger
+&amp; assets</a></li>
+<li><a href="#security-auth" id="toc-security-auth">6. Security &amp;
+auth</a></li>
+<li><a href="#frontend-design-mobile" id="toc-frontend-design-mobile">7.
+Frontend / design / mobile</a></li>
+<li><a href="#testing-qa-docs-process"
+id="toc-testing-qa-docs-process">8. Testing / QA / docs /
+process</a></li>
+<li><a href="#dependency-maturity-diagram"
+id="toc-dependency-maturity-diagram">9. Dependency &amp; maturity
+diagram</a></li>
+<li><a href="#decoupling-constraints-11.4.28"
+id="toc-decoupling-constraints-11.4.28">10. Decoupling constraints
+<code>[§11.4.28]</code></a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Reused Submodule Map & Maturity
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/development/submodule-map.md
+  Status          : Review — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (development)
+  Related         : ./index.md, ./build-new-subsystems.md, ./workable-items.md,
+                    ./workable-items-detail.md,
+                    ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (development)</td>
+<td>Initial map — every reused module, role, import path, maturity</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (development, pass 3)</td>
+<td>Pass-3 source verification — <code>session_orchestrator</code>
+upgraded DESIGN-ONLY → <strong>FOUNDATION</strong> (real
+<code>claim</code> registry read at source);
+<code>LLMOrchestrator</code> <code>AgentPool</code> contract confirmed;
+<code>Agentic</code> confirmed to exist; herald
+<code>channels.Channel</code> seam pinned to
+<code>commons_messaging/channels/channel.go</code></td>
+</tr>
+</tbody>
+</table>
+<p>This document maps <strong>every</strong> <code>vasic-digital</code>
+/ <code>HelixDevelopment</code> / <code>milos85vasic</code> submodule
+Helix Thready reuses or extends, its role, its import path (where
+confirmed), and its <strong>maturity</strong> as recorded in the private
+gap register. It is the “in-house first” ledger: the decision matrix
+(final request §0.2) chose an owned module for almost every concern, and
+this map records the honest build-readiness of each so no scaffold is
+mistaken for production.</p>
+<blockquote>
+<p><strong>Maturity legend <code>[gap register §0]</code>.</strong>
+<code>PRODUCTION</code> (build on directly) · <code>FOUNDATION</code>
+(real but early) · <code>SCAFFOLD</code> (skeleton/stub) ·
+<code>DESIGN-ONLY</code> (no working code) · <code>BUILD-NEW</code>
+(does not exist — see <a
+href="./build-new-subsystems.md">build-new-subsystems.md</a>).
+<strong>Confidence:</strong> <code>VERIFIED</code> (read at source) ·
+<code>FLAGGED</code> (metadata/README only — re-verify before
+reliance).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-how-to-read-this-map">1. How to read this map</a></li>
+<li><a href="#2-data--infrastructure">2. Data &amp;
+infrastructure</a></li>
+<li><a href="#3-ai--llm">3. AI / LLM</a></li>
+<li><a href="#4-skills--processing">4. Skills &amp; processing</a></li>
+<li><a href="#5-messenger--assets">5. Messenger &amp; assets</a></li>
+<li><a href="#6-security--auth">6. Security &amp; auth</a></li>
+<li><a href="#7-frontend--design--mobile">7. Frontend / design /
+mobile</a></li>
+<li><a href="#8-testing--qa--docs--process">8. Testing / QA / docs /
+process</a></li>
+<li><a href="#9-dependency--maturity-diagram">9. Dependency &amp;
+maturity diagram</a></li>
+<li><a href="#10-decoupling-constraints-114-28">10. Decoupling
+constraints <code>[§11.4.28]</code></a></li>
+</ul>
+<h2 id="how-to-read-this-map">1. How to read this map</h2>
+<ul>
+<li><strong>Role</strong> — what Thready uses it for.</li>
+<li><strong>Import / repo</strong> — the confirmed import path
+(<code>digital.vasic.*</code> convention) or repo slug.</li>
+<li><strong>Maturity / Conf.</strong> — from the gap register.</li>
+<li><strong>Thready action</strong> — <code>WIRE</code> (config-inject
+as-is) · <code>EXTEND</code> · <code>HARDEN</code> (raise a scaffold) ·
+<code>BUILD-NEW</code>. Cross-referenced to the <code>ATM-NNN</code>
+item(s) and <code>[GAP: …]</code>.</li>
+</ul>
+<h2 id="data-infrastructure">2. Data &amp; infrastructure</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>database</td>
+<td>Relational store (SQLite dev / Postgres prod;
+<code>migration.Runner</code>)</td>
+<td><code>digital.vasic.database</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE + add partitioning/retention helpers</td>
+<td>ATM-003, ATM-043 · [GAP 3.2]</td>
+</tr>
+<tr>
+<td>vectordb</td>
+<td>Semantic store (pgvector cosine; Qdrant/Pinecone/Milvus behind
+<code>VectorStore</code>)</td>
+<td><code>digital.vasic.vectordb</code></td>
+<td>PRODUCTION (pgvector) / VERIFIED; others FLAGGED</td>
+<td>WIRE pgvector; HARDEN Qdrant</td>
+<td>ATM-004, ATM-042 · [GAP 3.1]</td>
+</tr>
+<tr>
+<td>embeddings</td>
+<td>Embedding generation (OpenAI-compat providers)</td>
+<td><code>digital.vasic.embeddings</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>EXTEND: add native llama.cpp/HelixLLM provider</td>
+<td>ATM-041 · [GAP 2.7]</td>
+</tr>
+<tr>
+<td>rag</td>
+<td>Retrieval-augmented generation</td>
+<td><code>digital.vasic.rag</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>ATM-039</td>
+</tr>
+<tr>
+<td>eventbus</td>
+<td>In-proc channel bus + <strong>NATS JetStream</strong> durable
+adapter</td>
+<td><code>digital.vasic.eventbus</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (JetStream primary)</td>
+<td>ATM-011</td>
+</tr>
+<tr>
+<td>background</td>
+<td>Postgres task queue, DLQ, retry/back-off, worker pool</td>
+<td><code>digital.vasic.background</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (idempotent single-claim)</td>
+<td>ATM-023, ATM-027</td>
+</tr>
+<tr>
+<td>messaging</td>
+<td>Kafka/RabbitMQ for firehose streams</td>
+<td><code>digital.vasic.messaging</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (optional, high-throughput)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>cache</td>
+<td>L1/L2 in-mem + Redis + Postgres; consistent hashing</td>
+<td><code>digital.vasic.cache</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>—</td>
+</tr>
+<tr>
+<td>storage</td>
+<td>MinIO/S3 object store + local FS + signed URLs</td>
+<td><code>digital.vasic.storage</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE; validate MinIO signed-URL parity</td>
+<td>ATM-034, ATM-043 · [GAP 3.2]</td>
+</tr>
+<tr>
+<td>filesystem</td>
+<td>SMB/FTP/NFS/WebDAV/local; <code>OpenSeekable</code> for Range</td>
+<td><code>digital.vasic.filesystem</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>EXTEND: <strong>add HTTP(S) source</strong>; fix NFS listing</td>
+<td>ATM-029 · [GAP 6.2]</td>
+</tr>
+<tr>
+<td>observability</td>
+<td>OTel + Prometheus + logrus + ClickHouse +
+<code>pkg/health</code></td>
+<td><code>digital.vasic.observability</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>ATM-005</td>
+</tr>
+<tr>
+<td>containers</td>
+<td>Rootless Podman orchestration
+(<code>pkg/boot</code>/<code>compose</code>/<code>health</code>)</td>
+<td><code>vasic-digital/containers</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (sole orchestration §11.4.76)</td>
+<td>ATM-002</td>
+</tr>
+<tr>
+<td>lets_encrypt</td>
+<td>ACME TLS (HTTP-01/DNS-01, atomic deploy-hook + rollback)</td>
+<td><code>vasic-digital/lets_encrypt</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE per subdomain</td>
+<td>ATM-006</td>
+</tr>
+<tr>
+<td>discovery / mdns / port_prefix</td>
+<td>Service discovery + deterministic dynamic ports</td>
+<td><code>digital.vasic.discovery</code> · <code>mdns</code> ·
+<code>port_prefix</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>ATM-007</td>
+</tr>
+<tr>
+<td>http3</td>
+<td>quic-go/http3 transport wrapper</td>
+<td><code>vasic-digital/http3</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (REST + Download Manager)</td>
+<td>ATM-020, ATM-028</td>
+</tr>
+<tr>
+<td>middleware / ratelimiter</td>
+<td>CORS/request-id/recovery; rate limiting</td>
+<td><code>digital.vasic.middleware</code> ·
+<code>digital.vasic.ratelimiter</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>ATM-020</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ai-llm">3. AI / LLM</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixLLM</td>
+<td>Local llama.cpp serving (OpenAI+Anthropic APIs); embeddings
+endpoint</td>
+<td><code>HelixDevelopment/HelixLLM</code></td>
+<td>PRODUCTION <strong>with traps</strong> / VERIFIED</td>
+<td>HARDEN: enforce <code>llama</code> embedder, kill
+<code>HashEmbedder</code> default; remove 768 hardcode</td>
+<td>ATM-040, ATM-041 · <strong>[GAP 2.1]</strong></td>
+</tr>
+<tr>
+<td>LLMProvider</td>
+<td>40+ provider adapters; retry/circuit-breaker/health</td>
+<td><code>digital.vasic.llmprovider</code></td>
+<td>PRODUCTION / FLAGGED (adapters unaudited)</td>
+<td>WIRE + per-adapter contract tests</td>
+<td>ATM-064 · [GAP 2.3]</td>
+</tr>
+<tr>
+<td>LLMOrchestrator</td>
+<td>Dev-time headless-agent pool orchestration
+(<code>AgentPool</code>)</td>
+<td><code>vasic-digital/LLMOrchestrator</code>
+(<code>pkg/agent</code>)</td>
+<td>PRODUCTION / <strong>VERIFIED</strong> (<code>AgentPool</code>
+contract read at source:
+<code>Acquire(ctx, AgentRequirements)(Agent,error)</code>/<code>Release</code>)</td>
+<td>WIRE for dev fleet</td>
+<td>ATM-067 (<strong>closed</strong>) · [GAP 2.4]</td>
+</tr>
+<tr>
+<td>HelixAgent</td>
+<td>Ensemble/debate agent hub</td>
+<td><code>dev.helix.agent</code></td>
+<td>FOUNDATION / FLAGGED (identity blur)</td>
+<td>HARDEN: resolve identity split; pin only needed pkgs</td>
+<td>ATM-063 · [GAP 2.2]</td>
+</tr>
+<tr>
+<td>LLMsVerifier</td>
+<td>Model scoring/selection for the fallback chain</td>
+<td><code>digital.vasic.llmsverifier</code></td>
+<td>PRODUCTION core / VERIFIED</td>
+<td>HARDEN: reconcile <code>:7061</code>/<code>:8080</code>; stable
+scoring API</td>
+<td>ATM-065 · [GAP 2.5]</td>
+</tr>
+<tr>
+<td>VisionEngine</td>
+<td>LLM-vision adapters; CV analyzer (<code>StubAnalyzer</code> behind
+<code>-tags vision</code>)</td>
+<td><code>digital.vasic.visionengine</code></td>
+<td>FOUNDATION / VERIFIED (<strong>no OCR</strong>)</td>
+<td>EXTEND: add <code>OCRProvider</code> seam</td>
+<td>ATM-033 · <strong>[GAP 2.6]</strong></td>
+</tr>
+<tr>
+<td>Memory / HelixMemory</td>
+<td>Semantic/cognitive memory</td>
+<td><code>digital.vasic.memory</code> · HelixMemory</td>
+<td>PRODUCTION / VERIFIED</td>
+<td>DEFER or back <code>Memory</code> with <code>vectordb</code></td>
+<td>— · [GAP 2.8]</td>
+</tr>
+<tr>
+<td>token_optimizer</td>
+<td>Prompt token optimization pipeline</td>
+<td><code>digital.vasic.token_optimizer</code></td>
+<td><strong>partial/WIP</strong> / VERIFIED</td>
+<td>HARDEN or scope-out</td>
+<td>ATM-061 · [GAP 2.9]</td>
+</tr>
+<tr>
+<td>TOON</td>
+<td>Token-Oriented Object Notation encoder</td>
+<td><code>digital.vasic.TOON</code></td>
+<td><strong>SCAFFOLD (not implemented)</strong> / VERIFIED</td>
+<td>HARDEN or scope-out; use toolkit <code>toon.mjs</code>
+meanwhile</td>
+<td>ATM-061 · [GAP 2.9]</td>
+</tr>
+<tr>
+<td>session_orchestrator</td>
+<td>Atomic track-claim registry (exactly-once claim + deadlock-free
+device-lock)</td>
+<td><code>vasic-digital/session_orchestrator</code>
+(<code>claim/</code>, <code>alias/</code>, <code>scheduler/</code>,
+<code>supervisor/</code>)</td>
+<td><del>DESIGN-ONLY</del> <strong>FOUNDATION</strong> /
+<strong>VERIFIED</strong> (Pass 3 — real
+<code>Registry.TryClaim</code>/<code>Release</code> at source)</td>
+<td><del>BUILD</del> <strong>WIRE + verify + integrate</strong> the
+shipped registry (realizes §11.4.176(A); reused by runtime single-claim
+ATM-023)</td>
+<td>ATM-062 · [GAP 2.9]</td>
+</tr>
+<tr>
+<td>Normalize / conversation / SkillRegistry / ToolSchema / MCP_Module /
+Agentic / Planning / AgentWrapper</td>
+<td>Agent-support modules</td>
+<td><code>vasic-digital/Agentic</code> <strong>confirmed</strong>
+(“graph-based agentic workflow orchestration”); other seven paths still
+unconfirmed</td>
+<td>Agentic VERIFIED; rest FLAGGED (docs-only)</td>
+<td><strong>Source-verify + pin</strong> the residual seven before
+reliance</td>
+<td>ATM-068 · [GAP 2.9]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff, do not misread.</strong> HelixLLM is production
+<strong>with a trap</strong> — its default local embedder is a
+non-semantic <code>HashEmbedder</code> stub (VERIFIED at
+<code>HelixLLM/internal/knowledge/embedding_providers.go</code>:
+<code>NewEmbedder</code> maps <code>"hash"/"local"</code> <strong>and
+any unrecognised provider name</strong> to
+<code>NewHashEmbedder</code>); <code>TOON</code> has <strong>no working
+code</strong> (<code>ErrTOONEncodingNotImplemented</code>).
+<strong>Correction (Pass 3):</strong> <code>session_orchestrator</code>
+— previously listed here as “no working code” — <strong>now ships a real
+exactly-once claim <code>Registry</code></strong> at source, so it is
+upgraded to FOUNDATION and is <strong>no longer</strong> cited as a
+no-code gap. The honest rule stands: a claim is only made when it has
+been read at source.</p>
+</blockquote>
+<h2 id="skills-processing">4. Skills &amp; processing</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>helix_skills</td>
+<td>Skill-Graph DAG (atomic→composite→umbrella); knowledge units</td>
+<td><code>HelixDevelopment/helix_skills</code></td>
+<td>FOUNDATION/MVP / VERIFIED (<strong>no execution
+engine</strong>)</td>
+<td>BUILD-NEW dispatch engine on top; standardize
+<code>SKILL.md</code></td>
+<td>ATM-025, ATM-037, ATM-038 · <strong>[GAP 4.1]</strong></td>
+</tr>
+<tr>
+<td>SkillRegistry / MCP_Module</td>
+<td>Runtime skill registration + tool exposure</td>
+<td>(paths unconfirmed)</td>
+<td>FLAGGED</td>
+<td>Source-verify</td>
+<td>ATM-068 · [GAP 2.9]</td>
+</tr>
+<tr>
+<td>helix_proto</td>
+<td>Protobuf/OpenAPI codegen pattern</td>
+<td><code>HelixDevelopment/helix_proto</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE for SDK codegen</td>
+<td>ATM-060</td>
+</tr>
+</tbody>
+</table>
+<h2 id="messenger-assets">5. Messenger &amp; assets</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>herald</td>
+<td>Messengers/posts/replies + fan-out; <code>gotd/td</code> MTProto in
+<code>qaherald</code></td>
+<td><code>vasic-digital/herald</code> (seam:
+<code>commons_messaging/channels/channel.go</code>)</td>
+<td>FOUNDATION / VERIFIED (<strong>MTProto trapped in QA; Max
+stub</strong> — no <code>channels/max</code> or
+<code>channels/mtproto</code> pkg, only
+<code>docs/guides/messengers/MAX.md</code>)</td>
+<td>EXTEND: promote MTProto reader; add Max; ThreadReader — all
+implement <code>channels.Channel</code>
+(<code>SendReplyGeneric</code>/<code>BotSelfIdentity</code>/<code>DownloadAttachment</code>
++ <code>commons.Channel</code>)</td>
+<td>ATM-016, ATM-017, ATM-018 · <strong>[GAP 5.1]</strong></td>
+</tr>
+<tr>
+<td>Catalogizer</td>
+<td>Multi-protocol asset store (SQLCipher, JWT+RBAC, WS)</td>
+<td><code>vasic-digital/Catalogizer</code></td>
+<td>PRODUCTION / VERIFIED (not decoupled)</td>
+<td>BUILD-NEW: decouple as Asset Service</td>
+<td>ATM-012 · [GAP 6.1]</td>
+</tr>
+<tr>
+<td>Boba-Base</td>
+<td>Torrent search/download (SSE + <code>POST /api/v1/hooks</code>)</td>
+<td><code>milos85vasic/Boba-Base</code></td>
+<td>FOUNDATION / VERIFIED</td>
+<td>EXTEND: standardize callback</td>
+<td>ATM-032 · [GAP 6.4]</td>
+</tr>
+<tr>
+<td>YT-DLP (MeTube)</td>
+<td>Video/streaming download (poll-only API)</td>
+<td><code>milos85vasic/YT-DLP</code></td>
+<td>FOUNDATION / VERIFIED (<strong>no outbound webhook</strong>)</td>
+<td>EXTEND: add completion webhook</td>
+<td>ATM-031 · [GAP 6.5]</td>
+</tr>
+<tr>
+<td>streaming</td>
+<td>WebSocket hub (<strong>not</strong> media byte streaming)</td>
+<td><code>digital.vasic.streaming</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE for real-time surface</td>
+<td>ATM-021</td>
+</tr>
+</tbody>
+</table>
+<h2 id="security-auth">6. Security &amp; auth</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>security</td>
+<td>AES-256-GCM + Argon2id;
+<code>pkg/securestorage</code>/<code>pii</code>/<code>policy</code>/<code>headers</code>;
+SSRF</td>
+<td><code>digital.vasic.security</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE; add searchable-sealed creds; wire scanner adapters</td>
+<td>ATM-014, ATM-055 · [GAP 7.1]</td>
+</tr>
+<tr>
+<td>auth</td>
+<td>JWT + API keys + OAuth2 (default HMAC-SHA256)</td>
+<td><code>digital.vasic.auth</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>EXTEND: RS256/EdDSA + JWKS; RBAC into User Service</td>
+<td>ATM-013, ATM-010 · [GAP 7.2]</td>
+</tr>
+<tr>
+<td>Security-KMP</td>
+<td>Mobile secure storage</td>
+<td><code>vasic-digital/Security-KMP</code></td>
+<td><strong>SCAFFOLD (in-memory stub)</strong> / VERIFIED</td>
+<td>HARDEN: real Keychain/KeyStore before mobile release</td>
+<td>ATM-015 · <strong>[GAP 7.3]</strong></td>
+</tr>
+<tr>
+<td>Auth-KMP</td>
+<td>Mobile OAuth2 flows</td>
+<td><code>vasic-digital/Auth-KMP</code></td>
+<td>FOUNDATION / VERIFIED</td>
+<td>EXTEND: consume fixed Security-KMP</td>
+<td>ATM-046 · [GAP 7.4]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="frontend-design-mobile">7. Frontend / design / mobile</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>design_system</td>
+<td>Web/CSS + Angular tokens/components (helix-green base)</td>
+<td><code>vasic-digital/design_system</code></td>
+<td>FOUNDATION / VERIFIED</td>
+<td>HARDEN + Thready brand theme; publish npm</td>
+<td>ATM-050 · [GAP 8.1]</td>
+</tr>
+<tr>
+<td>open-design</td>
+<td>Design-system source of truth (§11.4.162)</td>
+<td><code>nexu-io/open-design</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE (source, never fork)</td>
+<td>ATM-050</td>
+</tr>
+<tr>
+<td>helix_design</td>
+<td>Non-web design arm (Flutter/Qt/CSS token pkgs)</td>
+<td><code>vasic-digital/helix_design</code></td>
+<td><strong>SCAFFOLD</strong> / VERIFIED</td>
+<td>HARDEN: implement per-platform pkgs</td>
+<td>ATM-051 · [GAP 8.2]</td>
+</tr>
+<tr>
+<td>helix_ui</td>
+<td>Flutter UI (alt family)</td>
+<td><code>vasic-digital/helix_ui</code></td>
+<td><strong>SCAFFOLD</strong> / VERIFIED</td>
+<td>Only if Flutter chosen; cannot target HarmonyOS/Aurora</td>
+<td>— · [GAP 8.3]</td>
+</tr>
+<tr>
+<td>KMP fleet
+(Auth/Security/Storage/Database/Concurrency/Formatters/Document/Config/RateLimiter/UI-Components-KMP)</td>
+<td>Shared mobile logic</td>
+<td><code>vasic-digital/*-KMP</code></td>
+<td><strong>SCAFFOLD (no CI/publish; Database-KMP
+interfaces-only)</strong> / VERIFIED</td>
+<td>HARDEN: CI + Maven + SQLDelight</td>
+<td>ATM-047 · [GAP 8.4]</td>
+</tr>
+<tr>
+<td>helix_shims + HarmonyOS/Aurora clients</td>
+<td>Native platform reach</td>
+<td><code>vasic-digital/helix_shims</code> + native clients</td>
+<td><strong>SCAFFOLD</strong> / VERIFIED/FLAGGED</td>
+<td>BUILD-NEW: ArkTS + Qt clients</td>
+<td>ATM-046 · [GAP 8.5]</td>
+</tr>
+<tr>
+<td>helix_track_cli</td>
+<td>TUI reference (Bubble Tea/Cobra/Lipgloss)</td>
+<td><code>vasic-digital/helix_track_cli</code></td>
+<td>FOUNDATION / FLAGGED</td>
+<td>Confirm impl before adopting wholesale</td>
+<td>ATM-049 · [GAP 8.6]</td>
+</tr>
+<tr>
+<td>TS client libs (6) + UI-Components-React</td>
+<td>React/TS surfaces</td>
+<td>(various)</td>
+<td>SCAFFOLD/FOUNDATION / FLAGGED</td>
+<td>Re-audit + CI</td>
+<td>ATM-049 · [GAP 8.6]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testing-qa-docs-process">8. Testing / QA / docs / process</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+<th>Import / repo</th>
+<th>Maturity / Conf.</th>
+<th>Thready action</th>
+<th>Item / Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>challenges</td>
+<td>Per-feature real-use-case scenario bank</td>
+<td><code>vasic-digital/challenges</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE: author Thready scenario banks</td>
+<td>ATM-054 · [GAP 9.3]</td>
+</tr>
+<tr>
+<td>HelixQA / helix_qa</td>
+<td>AI-driven multi-platform QA (runtime evidence)</td>
+<td><code>HelixDevelopment/helix_qa</code> (+
+<code>vasic-digital/HelixQA</code>)</td>
+<td>PRODUCTION / VERIFIED/FLAGGED (mirror)</td>
+<td>WIRE: YAML banks; confirm canonical vs mirror</td>
+<td>ATM-054 · [GAP 9.1]</td>
+</tr>
+<tr>
+<td>Panoptic / VisualRegression / ScreenDiff / ReplayBuffer</td>
+<td>Visual regression (LLM-vision + pixel)</td>
+<td><code>vasic-digital/*</code></td>
+<td>Panoptic PRODUCTION; VR family no-CI / VERIFIED/FLAGGED</td>
+<td>WIRE + add CI to VR family</td>
+<td>ATM-054 · [GAP 9.3]</td>
+</tr>
+<tr>
+<td>DocProcessor</td>
+<td>Feature-map → coverage tracking</td>
+<td><code>HelixDevelopment/DocProcessor</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE docs↔︎tests coverage</td>
+<td>ATM-054 · [GAP 9.4]</td>
+</tr>
+<tr>
+<td>docs_chain</td>
+<td>md↔︎HTML/PDF/DOCX↔︎SQLite sync (§11.4.65/106)</td>
+<td><code>vasic-digital/docs_chain</code></td>
+<td>PRODUCTION (ph 1–5) / VERIFIED</td>
+<td>WIRE; provision pandoc/weasyprint</td>
+<td>ATM-009, ATM-069 · [GAP 10.1]</td>
+</tr>
+<tr>
+<td>claude_toolkit</td>
+<td>Multi-account aliases; provider aliases; TOON utils; OpenCode
+sync</td>
+<td><code>vasic-digital/claude_toolkit</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE for dev fleet (alias-first, token opt)</td>
+<td>orchestration</td>
+</tr>
+<tr>
+<td>HelixTranslate + i18n</td>
+<td>Localization (en/ru/sr-Cyrl)</td>
+<td><code>HelixDevelopment/helix_translate</code> ·
+<code>digital.vasic.i18n</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE</td>
+<td>ATM-044</td>
+</tr>
+<tr>
+<td>codegraph</td>
+<td>Code intelligence (§11.4.78–80)</td>
+<td><code>colbymchenry/codegraph</code></td>
+<td>PRODUCTION / VERIFIED</td>
+<td>WIRE: index own-org submodules</td>
+<td>ATM-008</td>
+</tr>
+</tbody>
+</table>
+<h2 id="dependency-maturity-diagram">9. Dependency &amp; maturity
+diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2411.25px; background-color: white;" viewBox="0 0 2411.25 629.087646484375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .prod rect{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 111, 47)!important;color:rgb(18, 48, 15)!important;}#my-svg .prod polygon{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 111, 47)!important;color:rgb(18, 48, 15)!important;}#my-svg .prod ellipse{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 111, 47)!important;color:rgb(18, 48, 15)!important;}#my-svg .prod circle{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 111, 47)!important;color:rgb(18, 48, 15)!important;}#my-svg .prod path{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 111, 47)!important;color:rgb(18, 48, 15)!important;}#my-svg .prod tspan{fill:rgb(18, 48, 15)!important;}#my-svg .found rect{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .found polygon{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .found ellipse{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .found circle{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .found path{fill:rgb(255, 224, 138)!important;stroke:rgb(138, 109, 0)!important;color:rgb(58, 46, 0)!important;}#my-svg .found tspan{fill:rgb(58, 46, 0)!important;}#my-svg .scaf rect{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .scaf polygon{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .scaf ellipse{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .scaf circle{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .scaf path{fill:rgb(255, 179, 179)!important;stroke:rgb(138, 0, 0)!important;color:rgb(58, 0, 0)!important;}#my-svg .scaf tspan{fill:rgb(58, 0, 0)!important;}#my-svg .newm rect{fill:rgb(188, 212, 255)!important;stroke:rgb(0, 58, 138)!important;color:rgb(0, 32, 74)!important;}#my-svg .newm polygon{fill:rgb(188, 212, 255)!important;stroke:rgb(0, 58, 138)!important;color:rgb(0, 32, 74)!important;}#my-svg .newm ellipse{fill:rgb(188, 212, 255)!important;stroke:rgb(0, 58, 138)!important;color:rgb(0, 32, 74)!important;}#my-svg .newm circle{fill:rgb(188, 212, 255)!important;stroke:rgb(0, 58, 138)!important;color:rgb(0, 32, 74)!important;}#my-svg .newm path{fill:rgb(188, 212, 255)!important;stroke:rgb(0, 58, 138)!important;color:rgb(0, 32, 74)!important;}#my-svg .newm tspan{fill:rgb(0, 32, 74)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M48.5,185.645L48.5,190.071C48.5,194.497,48.5,203.348,72.275,214.436C96.049,225.523,143.599,238.847,167.374,245.509L191.148,252.17" id="my-svg-L_DB_VEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DB_VEC_0" data-points="W3sieCI6NDguNSwieSI6MTg1LjY0NTE0MzUwODkxMTEzfSx7IngiOjQ4LjUsInkiOjIxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjE5NSwieSI6MjUzLjI0OTUxMDU2MTE4Njd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M234.736,178.4L239.947,184.033C245.158,189.667,255.579,200.933,260.789,210.067C266,219.2,266,226.2,266,229.7L266,233.2" id="my-svg-L_EMB_VEC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EMB_VEC_0" data-points="W3sieCI6MjM0LjczNjQ3NDk4NDAwNzIzLCJ5IjoxNzguMzk5OTk3NzExMTgxNjR9LHsieCI6MjY2LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoyNjYsInkiOjIzNy4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M213,72.6L213,76.767C213,80.933,213,89.267,213,98.4C213,107.533,213,117.467,213,122.433L213,127.4" id="my-svg-L_HLLM_EMB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HLLM_EMB_0" data-points="W3sieCI6MjEzLCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjIxMywieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMTMsInkiOjEzMS4zOTk5OTc3MTExODE2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M824.75,63.8L824.75,69.433C824.75,75.067,824.75,86.333,824.75,96.933C824.75,107.533,824.75,117.467,824.75,122.433L824.75,127.4" id="my-svg-L_EB_BG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EB_BG_0" data-points="W3sieCI6ODI0Ljc1LCJ5Ijo2My43OTk5OTkyMzcwNjA1NX0seyJ4Ijo4MjQuNzUsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6ODI0Ljc1LCJ5IjoxMzEuMzk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M824.75,178.4L824.75,184.033C824.75,189.667,824.75,200.933,845.001,212.616C865.252,224.3,905.753,236.399,926.004,242.449L946.255,248.499" id="my-svg-L_BG_DISP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BG_DISP_0" data-points="W3sieCI6ODI0Ljc1LCJ5IjoxNzguMzk5OTk3NzExMTgxNjR9LHsieCI6ODI0Ljc1LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo5NTAuMDg3Mzg1Mzk3MjQ3LCJ5IjoyNDkuNjQzODE0MDg2OTE0MDZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1154.25,187.2L1154.25,191.367C1154.25,195.533,1154.25,203.867,1141.999,213.983C1129.747,224.099,1105.244,235.998,1092.993,241.947L1080.741,247.897" id="my-svg-L_SKILLS_DISP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SKILLS_DISP_0" data-points="W3sieCI6MTE1NC4yNSwieSI6MTg3LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTE1NC4yNSwieSI6MjEyLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTA3Ny4xNDI5MzIwMjI3NzIxLCJ5IjoyNDkuNjQzODE0MDg2OTE0MDZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1032.039,296.644L1033.158,304.634C1034.276,312.625,1036.513,328.606,1024.231,342.254C1011.949,355.902,985.149,367.217,971.748,372.874L958.348,378.532" id="my-svg-L_DISP_DLM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISP_DLM_0" data-points="W3sieCI6MTAzMi4wMzkyOTc5MzI0NDIsInkiOjI5Ni42NDM4MTQwODY5MTQwNn0seyJ4IjoxMDM4Ljc1LCJ5IjozNDQuNTg3NjMxMjI1NTg1OTR9LHsieCI6OTU0LjY2MzEzNTU5MzIyMDMsInkiOjM4MC4wODc2MzEyMjU1ODU5NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M669,305.444L669,311.968C669,318.492,669,331.54,691.419,343.815C713.838,356.09,758.677,367.592,781.096,373.343L803.515,379.094" id="my-svg-L_FS_DLM_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FS_DLM_0" data-points="W3sieCI6NjY5LCJ5IjozMDUuNDQzODEzMzIzOTc0Nn0seyJ4Ijo2NjksInkiOjM0NC41ODc2MzEyMjU1ODU5NH0seyJ4Ijo4MDcuMzg5ODMwNTA4NDc0NiwieSI6MzgwLjA4NzYzMTIyNTU4NTk0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M899,427.088L899,431.254C899,435.421,899,443.754,879.733,452.424C860.465,461.095,821.93,470.102,802.663,474.605L783.395,479.109" id="my-svg-L_DLM_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DLM_CB_0" data-points="W3sieCI6ODk5LCJ5Ijo0MjcuMDg3NjMxMjI1NTg1OTR9LHsieCI6ODk5LCJ5Ijo0NTIuMDg3NjMxMjI1NTg1OTR9LHsieCI6Nzc5LjUsInkiOjQ4MC4wMTg5NTY1MjY3OTA3Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M429.5,427.088L429.5,431.254C429.5,435.421,429.5,443.754,457.844,453.168C486.189,462.582,542.878,473.076,571.222,478.322L599.567,483.569" id="my-svg-L_BOBA_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BOBA_CB_0" data-points="W3sieCI6NDI5LjUsInkiOjQyNy4wODc2MzEyMjU1ODU5NH0seyJ4Ijo0MjkuNSwieSI6NDUyLjA4NzYzMTIyNTU4NTk0fSx7IngiOjYwMy41LCJ5Ijo0ODQuMjk3NTU0ODg5NzA4MDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M638.5,427.088L638.5,431.254C638.5,435.421,638.5,443.754,642.561,451.638C646.623,459.521,654.746,466.954,658.807,470.671L662.869,474.387" id="my-svg-L_METUBE_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_METUBE_CB_0" data-points="W3sieCI6NjM4LjUsInkiOjQyNy4wODc2MzEyMjU1ODU5NH0seyJ4Ijo2MzguNSwieSI6NDUyLjA4NzYzMTIyNTU4NTk0fSx7IngiOjY2NS44MTk1ODc2Mjg4NjYsInkiOjQ3Ny4wODc2MzEyMjU1ODU5NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M691.5,524.088L691.5,528.254C691.5,532.421,691.5,540.754,699.894,548.808C708.288,556.861,725.077,564.634,733.471,568.52L741.865,572.407" id="my-svg-L_CB_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CB_ASSET_0" data-points="W3sieCI6NjkxLjUsInkiOjUyNC4wODc2MzEyMjU1ODU5fSx7IngiOjY5MS41LCJ5Ijo1NDkuMDg3NjMxMjI1NTg1OX0seyJ4Ijo3NDUuNDk0ODQ1MzYwODI0NywieSI6NTc0LjA4NzYzMTIyNTU4NTl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M901,524.088L901,528.254C901,532.421,901,540.754,892.606,548.808C884.212,556.861,867.423,564.634,859.029,568.52L850.635,572.407" id="my-svg-L_CAT_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CAT_ASSET_0" data-points="W3sieCI6OTAxLCJ5Ijo1MjQuMDg3NjMxMjI1NTg1OX0seyJ4Ijo5MDEsInkiOjU0OS4wODc2MzEyMjU1ODU5fSx7IngiOjg0Ny4wMDUxNTQ2MzkxNzUzLCJ5Ijo1NzQuMDg3NjMxMjI1NTg1OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1386.25,63.8L1386.25,69.433C1386.25,75.067,1386.25,86.333,1386.25,96.933C1386.25,107.533,1386.25,117.467,1386.25,122.433L1386.25,127.4" id="my-svg-L_VIS_OCR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VIS_OCR_0" data-points="W3sieCI6MTM4Ni4yNSwieSI6NjMuNzk5OTk5MjM3MDYwNTV9LHsieCI6MTM4Ni4yNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMzg2LjI1LCJ5IjoxMzEuMzk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1669.25,63.8L1669.25,69.433C1669.25,75.067,1669.25,86.333,1669.25,96.933C1669.25,107.533,1669.25,117.467,1669.25,122.433L1669.25,127.4" id="my-svg-L_HERALD_TR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HERALD_TR_0" data-points="W3sieCI6MTY2OS4yNSwieSI6NjMuNzk5OTk5MjM3MDYwNTV9LHsieCI6MTY2OS4yNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNjY5LjI1LCJ5IjoxMzEuMzk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1669.25,178.4L1669.25,184.033C1669.25,189.667,1669.25,200.933,1669.25,212.141C1669.25,223.348,1669.25,234.496,1669.25,240.07L1669.25,245.644" id="my-svg-L_TR_MAX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TR_MAX_0" data-points="W3sieCI6MTY2OS4yNSwieSI6MTc4LjM5OTk5NzcxMTE4MTY0fSx7IngiOjE2NjkuMjUsInkiOjIxMi4xOTk5OTY5NDgyNDIyfSx7IngiOjE2NjkuMjUsInkiOjI0OS42NDM4MTQwODY5MTQwNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2357.75,63.8L2357.75,69.433C2357.75,75.067,2357.75,86.333,2338.556,97.607C2319.363,108.88,2280.975,120.16,2261.781,125.8L2242.588,131.44" id="my-svg-L_AUTH_USER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTH_USER_0" data-points="W3sieCI6MjM1Ny43NSwieSI6NjMuNzk5OTk5MjM3MDYwNTV9LHsieCI6MjM1Ny43NSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMjM4Ljc1LCJ5IjoxMzIuNTY3NjkwMzE2MjI0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2204.75,63.8L2204.75,69.433C2204.75,75.067,2204.75,86.333,2201.015,97.062C2197.28,107.791,2189.81,117.983,2186.075,123.078L2182.34,128.174" id="my-svg-L_SEC_USER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEC_USER_0" data-points="W3sieCI6MjIwNC43NSwieSI6NjMuNzk5OTk5MjM3MDYwNTV9LHsieCI6MjIwNC43NSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMTc5Ljk3NTEzMTExOTQwMiwieSI6MTMxLjM5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1967.75,63.8L1967.75,69.433C1967.75,75.067,1967.75,86.333,1986.944,97.607C2006.137,108.88,2044.525,120.16,2063.719,125.8L2082.912,131.44" id="my-svg-L_SKMP_USER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SKMP_USER_0" data-points="W3sieCI6MTk2Ny43NSwieSI6NjMuNzk5OTk5MjM3MDYwNTV9LHsieCI6MTk2Ny43NSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjoyMDg2Ljc1LCJ5IjoxMzIuNTY3NjkwMzE2MjI0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M960.004,296.644L936.628,304.634C913.252,312.625,866.501,328.606,762.247,344.462C657.994,360.317,496.237,376.046,415.359,383.91L334.481,391.775" id="my-svg-L_DISP_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISP_SEM_0" data-points="W3sieCI6OTYwLjAwMzY3MzIxMTk2MTUsInkiOjI5Ni42NDM4MTQwODY5MTQwNn0seyJ4Ijo4MTkuNzUsInkiOjM0NC41ODc2MzEyMjU1ODU5NH0seyJ4IjozMzAuNSwieSI6MzkyLjE2MjAwMjg3NzgzMTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M183.369,178.4L176.266,184.033C169.162,189.667,154.956,200.933,147.853,216.724C140.75,232.515,140.75,252.829,140.75,274.894C140.75,296.958,140.75,320.773,147.479,338.175C154.208,355.578,167.666,366.568,174.395,372.063L181.124,377.558" id="my-svg-L_EMB_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EMB_SEM_0" data-points="W3sieCI6MTgzLjM2ODY3MzI1MjkzMzU1LCJ5IjoxNzguMzk5OTk3NzExMTgxNjR9LHsieCI6MTQwLjc1LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNDAuNzUsInkiOjI3My4xNDM4MTQwODY5MTQwNn0seyJ4IjoxNDAuNzUsInkiOjM0NC41ODc2MzEyMjU1ODU5NH0seyJ4IjoxODQuMjIyNDU3NjI3MTE4NjQsInkiOjM4MC4wODc2MzEyMjU1ODU5NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M266,309.088L266,315.004C266,320.921,266,332.754,261.131,344.092C256.261,355.429,246.522,366.271,241.653,371.691L236.783,377.112" id="my-svg-L_VEC_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VEC_SEM_0" data-points="W3sieCI6MjY2LCJ5IjozMDkuMDg3NjMxMjI1NTg1OTR9LHsieCI6MjY2LCJ5IjozNDQuNTg3NjMxMjI1NTg1OTR9LHsieCI6MjM0LjExMDE2OTQ5MTUyNTQzLCJ5IjozODAuMDg3NjMxMjI1NTg1OTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_DB_VEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EMB_VEC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HLLM_EMB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EB_BG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_BG_DISP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SKILLS_DISP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DISP_DLM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(669, 344.58763122558594)"><g class="label" data-id="L_FS_DLM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-22" y="0" width="44" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reuse</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_DLM_CB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_BOBA_CB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_METUBE_CB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CB_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CAT_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VIS_OCR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HERALD_TR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TR_MAX_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_AUTH_USER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEC_USER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SKMP_USER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DISP_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EMB_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_VEC_SEM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default prod" id="my-svg-flowchart-DB-0" data-look="classic" transform="translate(48.5, 154.89999771118164)"><path d="M0,9.83009708737864 a40.5,9.83009708737864 0,0,0 81,0 a40.5,9.83009708737864 0,0,0 -81,0 l0,41.83009708737864 a40.5,9.83009708737864 0,0,0 81,0 l0,-41.83009708737864" class="basic label-container outer-path" style="fill:#B6E376 !important;stroke:#2f6f2f !important" transform="translate(-40.5, -30.74514563106796)"/><g class="label" style="color:#12300f !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">database</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-VEC-1" data-look="classic" transform="translate(266, 273.14381408691406)"><path d="M0,13.295880149812735 a71,13.295880149812735 0,0,0 142,0 a71,13.295880149812735 0,0,0 -142,0 l0,45.29588014981273 a71,13.295880149812735 0,0,0 142,0 l0,-45.29588014981273" class="basic label-container outer-path" style="fill:#B6E376 !important;stroke:#2f6f2f !important" transform="translate(-71, -35.943820224719104)"/><g class="label" style="color:#12300f !important" transform="translate(-0.5, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">vectordb</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pgvector</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-EMB-2" data-look="classic" transform="translate(213, 154.89999771118164)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-74" y="-23.5" width="148" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embeddings</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-HLLM-4" data-look="classic" transform="translate(213, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixLLM</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HashEmbedder</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">trap</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-EB-6" data-look="classic" transform="translate(824.75, 40.29999923706055)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-100.5" y="-23.5" width="201" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">eventbus</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JetStream</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-BG-7" data-look="classic" transform="translate(824.75, 154.89999771118164)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-96.5" y="-23.5" width="193" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">background</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> queue</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-DISP-9" data-look="classic" transform="translate(1028.75, 273.14381408691406)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-104.5" y="-23.5" width="209" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skill-dispatch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> engine</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-SKILLS-10" data-look="classic" transform="translate(1154.25, 154.89999771118164)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-104.5" y="-32.29999923706055" width="209" height="64.5999984741211"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">helix_skills</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> exec</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">engine</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-DLM-13" data-look="classic" transform="translate(899, 403.58763122558594)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-100.5" y="-23.5" width="201" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Manager</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-FS-14" data-look="classic" transform="translate(669, 273.14381408691406)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-105" y="-32.29999923706055" width="210" height="64.5999984741211"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">filesystem</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTTP</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">source</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-CB-17" data-look="classic" transform="translate(691.5, 500.58763122558594)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-88" y="-23.5" width="176" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">callback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> module</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-BOBA-18" data-look="classic" transform="translate(429.5, 403.58763122558594)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-49" y="-23.5" width="98" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Boba</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-METUBE-20" data-look="classic" transform="translate(638.5, 403.58763122558594)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-110" y="-23.5" width="220" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MeTube</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> webhook</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-ASSET-23" data-look="classic" transform="translate(796.25, 597.5876312255859)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-79" y="-23.5" width="158" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-CAT-24" data-look="classic" transform="translate(901, 500.58763122558594)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-71.5" y="-23.5" width="143" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Catalogizer</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-VIS-26" data-look="classic" transform="translate(1386.25, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-114" y="-23.5" width="228" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">VisionEngine</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> OCR</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-OCR-27" data-look="classic" transform="translate(1386.25, 154.89999771118164)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-77.5" y="-23.5" width="155" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">OCR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> adapter</tspan></tspan></text></g></g></g><g class="node default found" id="my-svg-flowchart-HERALD-28" data-look="classic" transform="translate(1669.25, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffe08a !important;stroke:#8a6d00 !important" x="-119" y="-23.5" width="238" height="47"/><g class="label" style="color:#3a2e00 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a2e00 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">herald</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MTProto</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> trapped</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-TR-29" data-look="classic" transform="translate(1669.25, 154.89999771118164)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-82.5" y="-23.5" width="165" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ThreadReader</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-MAX-31" data-look="classic" transform="translate(1669.25, 273.14381408691406)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-74.5" y="-23.5" width="149" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Max</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> adapter</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-AUTH-32" data-look="classic" transform="translate(2357.75, 40.29999923706055)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-45.5" y="-23.5" width="91" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">auth</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-USER-33" data-look="classic" transform="translate(2162.75, 154.89999771118164)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-76" y="-23.5" width="152" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">User</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default prod" id="my-svg-flowchart-SEC-34" data-look="classic" transform="translate(2204.75, 40.29999923706055)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f6f2f !important" x="-57.5" y="-23.5" width="115" height="47"/><g class="label" style="color:#12300f !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12300f !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">security</tspan></tspan></text></g></g></g><g class="node default scaf" id="my-svg-flowchart-SKMP-36" data-look="classic" transform="translate(1967.75, 40.29999923706055)"><rect class="basic label-container" style="fill:#ffb3b3 !important;stroke:#8a0000 !important" x="-129.5" y="-23.5" width="259" height="47"/><g class="label" style="color:#3a0000 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#3a0000 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Security-KMP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in-mem</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stub</tspan></tspan></text></g></g></g><g class="node default newm" id="my-svg-flowchart-SEM-39" data-look="classic" transform="translate(213, 403.58763122558594)"><rect class="basic label-container" style="fill:#bcd4ff !important;stroke:#003a8a !important" x="-117.5" y="-23.5" width="235" height="47"/><g class="label" style="color:#00204a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#00204a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic-search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Colour encodes maturity: green = PRODUCTION, amber =
+FOUNDATION (real but early, with the specific trap noted inline), red =
+SCAFFOLD/stub, blue = BUILD-NEW. Reading the colours before the arrows
+is the point of the diagram — it shows at a glance where Thready builds
+on solid ground and where it must first harden or build.</p>
+<p>The <strong>data spine</strong> is mostly green and wired directly:
+<code>database</code> → <code>vectordb</code> (pgvector) with
+<code>embeddings</code>. The one amber node in it is
+<code>HelixLLM</code>, which feeds <code>embeddings</code> but carries
+the <code>HashEmbedder</code>-default trap (<code>ATM-040</code>) —
+production code with a stub embedder behind it, which is why it is not
+drawn green. The <strong>processing spine</strong> then flows
+<code>eventbus</code> → <code>background</code> → the
+<strong>new</strong> (blue) Skill-dispatch engine, which reads the amber
+<code>helix_skills</code> Skill-Graph (knowledge/ordering only — no
+execution engine of its own).</p>
+<p>From the dispatch engine the <strong>asset/download river</strong>
+runs: it drives the <strong>new</strong> Download Manager (reusing the
+amber <code>filesystem</code>, which lacks an HTTP source), which emits
+the <strong>new</strong> standardized callback that <code>Boba</code>
+and the amber <code>MeTube</code> (no webhook today) also emit, all
+landing in the <strong>new</strong> Asset Service decoupled from the
+green <code>Catalogizer</code>. Two more amber modules gain blue
+extensions on the side: <code>VisionEngine</code> (no OCR) gains a
+<strong>new</strong> OCR adapter, and <code>herald</code> (MTProto
+trapped in a QA harness, Max an empty stub) gains a <strong>new</strong>
+ThreadReader and Max adapter.</p>
+<p>The <strong>service backing</strong> completes the picture: the green
+<code>auth</code> + <code>security</code> plus the <strong>red</strong>
+<code>Security-KMP</code> stub back the <strong>new</strong> User
+Service (the red node is why mobile token storage is a release blocker,
+<code>ATM-015</code>), and the dispatch engine together with the green
+<code>embeddings</code>/<code>vectordb</code> feed the
+<strong>new</strong> Semantic-search service. The invariant the diagram
+enforces: every blue node has a design plan in <a
+href="./build-new-subsystems.md">build-new-subsystems.md</a>, and every
+amber/red trap carries a <code>[GAP]</code> and a hardening item — no
+node is relied on for more than its colour honestly permits.</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/submodule-maturity.mmd">diagrams/submodule-maturity.mmd</a>.</p>
+</blockquote>
+<h2 id="decoupling-constraints-11.4.28">10. Decoupling constraints
+<code>[§11.4.28]</code></h2>
+<p>VERIFIED at source (Constitution §11.4.28 / CONST-051): every owned
+submodule Thready reuses MUST be <strong>project-not-aware</strong>,
+fully reusable and <strong>config-injected</strong>, laid out at
+<code>&lt;root&gt;/&lt;name&gt;/</code> or
+<code>&lt;root&gt;/submodules/&lt;name&gt;/</code>. <strong>Nested
+own-org submodule chains are forbidden</strong> (depth-1 exception only
+for constitution-anchored reusable engines carrying
+<code>helix-deps.yaml</code>). Consequences for this map: (1) Thready
+never forks a module — it consumes it as a dependency and extends
+<strong>upstream</strong>; (2) each <code>BUILD-NEW</code> submodule
+(Asset Service, Download Manager, Max adapter, OCR adapter, User
+Service, callback module) gets its <strong>own</strong> repo under
+<code>vasic-digital</code>/<code>HelixDevelopment</code> with an
+<code>upstreams/</code> recipe, not a vendored copy inside
+<code>helix_thready</code>; (3) <code>ATM-059</code> audits every reused
+module for project-not-awareness before wiring.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

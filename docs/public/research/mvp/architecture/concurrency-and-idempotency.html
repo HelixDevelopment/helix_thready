@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Concurrency, Idempotency, Retry &amp; Circuit Breaking</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Concurrency, Idempotency, Retry &amp;
+Circuit Breaking</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#the-core-invariant-process-each-post-exactly-once"
+id="toc-the-core-invariant-process-each-post-exactly-once">1. The core
+invariant: process each post exactly once</a></li>
+<li><a href="#backgroundtasks-interfaces-verified"
+id="toc-backgroundtasks-interfaces-verified">2. BackgroundTasks
+interfaces (verified)</a></li>
+<li><a href="#single-claim-per-post" id="toc-single-claim-per-post">3.
+Single-claim per post</a></li>
+<li><a href="#single-claim-diagram" id="toc-single-claim-diagram">4.
+Single-claim diagram</a></li>
+<li><a href="#retry-back-off-dead-letter"
+id="toc-retry-back-off-dead-letter">5. Retry, back-off &amp;
+dead-letter</a>
+<ul>
+<li><a href="#retryback-off-state-machine"
+id="toc-retryback-off-state-machine">5.1 Retry/back-off state
+machine</a></li>
+</ul></li>
+<li><a href="#circuit-breaker-for-external-systems"
+id="toc-circuit-breaker-for-external-systems">6. Circuit breaker for
+external systems</a></li>
+<li><a href="#multi-hashtag-concurrency-precedence"
+id="toc-multi-hashtag-concurrency-precedence">7. Multi-hashtag
+concurrency &amp; precedence</a></li>
+<li><a href="#concurrency-caps-worker-pool"
+id="toc-concurrency-caps-worker-pool">8. Concurrency caps &amp; worker
+pool</a></li>
+<li><a href="#ddl-idempotent-claim-table"
+id="toc-ddl-idempotent-claim-table">9. DDL: idempotent claim
+table</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">10.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">12. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Concurrency, Idempotency, Retry & Circuit Breaking
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/concurrency-and-idempotency.md
+  Status          : Draft — v0.1
+  Revision        : 5 (2026-07-22)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./event-model.md, ./processing-pipeline.md, ./system-overview.md,
+                    ./data-flow.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — single-claim, backoff, breaker, precedence</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Close CONC-1 (real <code>models.BackgroundTask</code> — no
+<code>DedupeKey</code>; real 9-value <code>TaskStatus</code>) &amp;
+CONC-2
+(<code>discovery/pkg/resilience.Manager</code>+<code>ConnectionState</code>);
+add retry/back-off state machine (§5.1); deepen single-claim
+explanation</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 consistency)</td>
+<td>Fix residual <code>retrying</code>-as-status in the §4 single-claim
+diagram + <code>single-claim.mmd</code> sibling + §9 partial-index
+(retry returns to <code>pending</code>; <code>retrying</code> is the
+<code>task.retrying</code> event, not a status — aligns with
+§2/§5.1)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 consistency, cont.)</td>
+<td>Fix residual <code>reprocessing</code>-as-status in §5 (reprocess
+re-enters as a fresh <code>pending → running</code> cycle;
+<code>reprocessing</code> is the sticky <code>post.state</code>
+<em>display</em> value, not a <code>TaskStatus</code> — aligns with
+§2/§5.1, data-flow §7, post-lifecycle §6)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-the-core-invariant-process-each-post-exactly-once">The
+core invariant: process each post exactly once</a></li>
+<li><a href="#2-backgroundtasks-interfaces-verified">BackgroundTasks
+interfaces (verified)</a></li>
+<li><a href="#3-single-claim-per-post">Single-claim per post</a></li>
+<li><a href="#4-single-claim-diagram">Single-claim diagram</a></li>
+<li><a href="#5-retry-back-off--dead-letter">Retry, back-off &amp;
+dead-letter</a> 5.1. <a
+href="#51-retryback-off-state-machine">Retry/back-off state
+machine</a></li>
+<li><a href="#6-circuit-breaker-for-external-systems">Circuit breaker
+for external systems</a></li>
+<li><a href="#7-multi-hashtag-concurrency--precedence">Multi-hashtag
+concurrency &amp; precedence</a></li>
+<li><a href="#8-concurrency-caps--worker-pool">Concurrency caps &amp;
+worker pool</a></li>
+<li><a href="#9-ddl-idempotent-claim-table">DDL: idempotent claim
+table</a></li>
+<li><a href="#10-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#11-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#12-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="the-core-invariant-process-each-post-exactly-once">1. The core
+invariant: process each post exactly once</h2>
+<p>The original request is emphatic: <em>“We MUST prevent race
+conditions or multiple same operations performing in the same time on
+the exactly the same posts.”</em> Because the event bus is
+<strong>at-least-once</strong> (<a
+href="./event-model.md">event-model.md</a>), the same
+<code>post.received</code> can be delivered more than once, and a “new
+post” event storm can arrive while a scheduled poll also picks the post
+up. The invariant is therefore enforced <strong>at the work layer, not
+the event layer</strong>: a post has a stable id and a single
+processing-state row, and work is claimed with a Postgres row lock so a
+given post is processed exactly once
+<code>[research_request_final §3.3]</code>.</p>
+<p>This is the in-house analogue of an exactly-once claim registry
+<code>[CONSTITUTION §11.4.176]</code>. The gap register notes
+<code>session_orchestrator</code> (the generic atomic claim registry) is
+DESIGN-ONLY <code>[GAP: 2.9]</code>; Thready does <strong>not</strong>
+wait on it — it reuses the <strong>VERIFIED</strong> Postgres claim
+inside <code>digital.vasic.background</code>.</p>
+<h2 id="backgroundtasks-interfaces-verified">2. BackgroundTasks
+interfaces (verified)</h2>
+<p>Read at source from
+<code>vasic-digital/BackgroundTasks/interfaces.go</code> — reproduced
+verbatim (the surface Thready builds on):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// digital.vasic.background</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TaskQueue <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Enqueue<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Dequeue<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> workerID <span class="dt">string</span><span class="op">,</span> requirements ResourceRequirements<span class="op">)</span> <span class="op">(*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Peek<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> count <span class="dt">int</span><span class="op">)</span> <span class="op">([]*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Requeue<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> taskID <span class="dt">string</span><span class="op">,</span> delay time<span class="op">.</span>Duration<span class="op">)</span> <span class="dt">error</span>       <span class="co">// ← backoff</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    MoveToDeadLetter<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> taskID <span class="dt">string</span><span class="op">,</span> reason <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span>     <span class="co">// ← DLQ</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    GetPendingCount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(</span><span class="dt">int64</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    GetRunningCount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(</span><span class="dt">int64</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    GetQueueDepth<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(</span><span class="kw">map</span><span class="op">[</span>models<span class="op">.</span>TaskPriority<span class="op">]</span><span class="dt">int64</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TaskRepository <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    Create<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    UpdateStatus<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> id <span class="dt">string</span><span class="op">,</span> status models<span class="op">.</span>TaskStatus<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    UpdateHeartbeat<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    SaveCheckpoint<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> id <span class="dt">string</span><span class="op">,</span> checkpoint <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    GetStaleTasks<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> threshold time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">([]*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// ← stuck recovery</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    Dequeue<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> workerID <span class="dt">string</span><span class="op">,</span> maxCPUCores<span class="op">,</span> maxMemoryMB <span class="dt">int</span><span class="op">)</span> <span class="op">(*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// ← the claim</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    MoveToDeadLetter<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> taskID<span class="op">,</span> reason <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// …LogEvent, GetTaskHistory, resource snapshots</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TaskExecutor <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> reporter ProgressReporter<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    CanPause<span class="op">()</span> <span class="dt">bool</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    Pause<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">)</span> <span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span>   <span class="co">// checkpoint</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    Resume<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> checkpoint <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    Cancel<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    GetResourceRequirements<span class="op">()</span> ResourceRequirements</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> StuckDetector <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    IsStuck<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>models<span class="op">.</span>BackgroundTask<span class="op">,</span> snapshots <span class="op">[]*</span>models<span class="op">.</span>ResourceSnapshot<span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    GetStuckThreshold<span class="op">(</span>taskType <span class="dt">string</span><span class="op">)</span> time<span class="op">.</span>Duration</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <code>TaskStatus</code> enum was <strong>re-read field-by-field
+at source</strong> this pass (<code>models/background_task.go</code>,
+VERIFIED) and is <strong>exactly nine</strong> values —
+<code>pending, queued, running, paused, completed, failed, stuck, cancelled, dead_letter</code>
+— with <code>IsTerminal()</code>
+(completed/failed/cancelled/dead_letter) and <code>IsActive()</code>
+(queued/running) helpers. <strong>Anti-bluff correction:</strong> an
+earlier draft listed
+<code>retrying / backoff / timeout / reprocessing / refreshing</code> as
+statuses; those are <strong>not</strong> in the enum. Retry is
+<em>not</em> a status — it is tracked by the <code>RetryCount</code> /
+<code>MaxRetries</code> / <code>RetryDelaySeconds</code> /
+<code>LastError</code> / <code>ErrorHistory</code> fields plus the
+<code>task.retrying</code> execution-history <strong>event</strong>
+(<code>models.TaskEventRetrying</code>); a retrying task physically
+returns to <code>pending</code>/<code>queued</code>. Thready therefore
+maps its post lifecycle onto the real nine states and models
+“reprocessing” as a fresh <code>pending → running</code> cycle (not a
+distinct status). The module default retry ceiling is
+<code>MaxRetries = 3</code> (<code>NewBackgroundTask</code>); Thready
+overrides it to 5 as a <code>[DEFAULT — adjustable]</code> (see §5).</p>
+<p><code>models.BackgroundTask</code> itself (VERIFIED) carries no
+dedicated dedup column — its identity/link fields are <code>ID</code>,
+<code>TaskType</code>, <code>TaskName</code>,
+<code>CorrelationID *string</code>, <code>ParentTaskID *string</code>,
+plus free-form <code>Tags</code>/<code>Metadata</code>
+(<code>json.RawMessage</code>) and <code>Payload json.RawMessage</code>.
+This is the crux of <code>[OPEN: CONC-1]</code>, now
+<strong>closed</strong>: there is <strong>no <code>DedupeKey</code>
+field and no <code>ErrDuplicateTask</code></strong> in the module — so
+enqueue-dedup cannot lean on the queue model and MUST be enforced
+Thready-side (the <code>post_processing_state</code> UNIQUE +
+<code>ON CONFLICT</code> in §3/§9), carrying <code>post_id</code> in
+<code>CorrelationID</code>.</p>
+<h2 id="single-claim-per-post">3. Single-claim per post</h2>
+<p>The Thready post-processing task uses <code>post_id</code> as the
+<strong>idempotency key</strong>. Two mechanisms combine:</p>
+<ol type="1">
+<li><strong>Enqueue dedup</strong> — the task is inserted with a
+<code>UNIQUE</code> constraint on <code>(post_id, task_kind)</code> and
+<code>INSERT … ON CONFLICT DO NOTHING</code>. Duplicate
+<code>post.received</code> deliveries collapse to a single row; the
+losers are acked without creating work.</li>
+<li><strong>Claim dedup</strong> — workers pull via
+<code>Dequeue</code>, which under the hood runs
+<code>SELECT … FOR UPDATE SKIP LOCKED</code> (Postgres) so exactly one
+worker transitions the row <code>pending → running</code>. Any
+concurrent worker skips the locked row. This is the same primitive the
+VERIFIED
+<code>TaskRepository.Dequeue(ctx, workerID, maxCPUCores, maxMemoryMB)</code>
+provides.</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Thready processing enqueue — idempotent on post_id.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Uses ONLY real models.BackgroundTask fields (VERIFIED: models/background_task.go).</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// There is no DedupeKey/ErrDuplicateTask in the module — the dedup gate is the</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Thready-owned post_processing_state UNIQUE(post_id, task_kind) + ON CONFLICT (§9),</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// and post_id rides in CorrelationID (the module&#39;s natural correlation field).</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>corr <span class="op">:=</span> p<span class="op">.</span>ID</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>task <span class="op">:=</span> models<span class="op">.</span>NewBackgroundTask<span class="op">(</span><span class="st">&quot;thready.post.process&quot;</span><span class="op">,</span> <span class="st">&quot;post &quot;</span><span class="op">+</span>p<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    mustJSON<span class="op">(</span>PostJob<span class="op">{</span>PostID<span class="op">:</span> p<span class="op">.</span>ID<span class="op">,</span> AccountID<span class="op">:</span> p<span class="op">.</span>AccountID<span class="op">}))</span> <span class="co">// sets sane defaults</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>task<span class="op">.</span>CorrelationID <span class="op">=</span> <span class="op">&amp;</span>corr                                   <span class="co">// = post_id (dedup + tracing key)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>task<span class="op">.</span>Priority <span class="op">=</span> models<span class="op">.</span>TaskPriorityNormal</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>task<span class="op">.</span>MaxRetries <span class="op">=</span> <span class="dv">5</span>                                          <span class="co">// Thready override (module default 3)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 1) Thready-side dedup FIRST: claim the single processing-state row for this post.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> firstWriter<span class="op">,</span> err <span class="op">:=</span> claims<span class="op">.</span>InsertIfAbsent<span class="op">(</span>ctx<span class="op">,</span> p<span class="op">.</span>ID<span class="op">,</span> <span class="st">&quot;thready.post.process&quot;</span><span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">!</span>firstWriter <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span> <span class="co">// duplicate post.received storm → storm-safe no-op (row already exists)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// 2) Only the first writer enqueues the background task.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> queue<span class="op">.</span>Enqueue<span class="op">(</span>ctx<span class="op">,</span> task<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> err <span class="op">}</span></span></code></pre></div>
+<h2 id="single-claim-diagram">4. Single-claim diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 862.25px; background-color: white;" viewBox="0 0 862.25 1489.35009765625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .ev rect{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev polygon{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev ellipse{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev circle{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev path{fill:rgb(122, 78, 160)!important;stroke:rgb(60, 35, 82)!important;color:rgb(243, 233, 255)!important;}#my-svg .ev tspan{fill:rgb(243, 233, 255)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M173.75,55L173.75,59.167C173.75,63.333,173.75,71.667,195.349,80.607C216.948,89.548,260.146,99.096,281.745,103.87L303.344,108.645" id="my-svg-L_E1_Q_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E1_Q_0" data-points="W3sieCI6MTczLjc1LCJ5Ijo1NX0seyJ4IjoxNzMuNzUsInkiOjgwfSx7IngiOjMwNy4yNSwieSI6MTA5LjUwNzgzODk5ODY1MjMyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M435.25,55L435.25,59.167C435.25,63.333,435.25,71.667,435.25,79.333C435.25,87,435.25,94,435.25,97.5L435.25,101" id="my-svg-L_E2_Q_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E2_Q_0" data-points="W3sieCI6NDM1LjI1LCJ5Ijo1NX0seyJ4Ijo0MzUuMjUsInkiOjgwfSx7IngiOjQzNS4yNSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M731.25,55L731.25,59.167C731.25,63.333,731.25,71.667,703.904,81.173C676.559,90.68,621.867,101.359,594.522,106.699L567.176,112.039" id="my-svg-L_E3_Q_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E3_Q_0" data-points="W3sieCI6NzMxLjI1LCJ5Ijo1NX0seyJ4Ijo3MzEuMjUsInkiOjgwfSx7IngiOjU2My4yNSwieSI6MTEyLjgwNTQwNDk3MjM4NTcyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M435.25,170.6L435.25,174.767C435.25,178.933,435.25,187.267,435.25,194.933C435.25,202.6,435.25,209.6,435.25,213.1L435.25,216.6" id="my-svg-L_Q_DEDUP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q_DEDUP_0" data-points="W3sieCI6NDM1LjI1LCJ5IjoxNzAuNTk5OTk4NDc0MTIxMX0seyJ4Ijo0MzUuMjUsInkiOjE5NS41OTk5OTg0NzQxMjExfSx7IngiOjQzNS4yNSwieSI6MjIwLjU5OTk5ODQ3NDEyMTA0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M384.141,440.691L375.409,455.126C366.677,469.561,349.214,498.43,340.482,518.115C331.75,537.8,331.75,548.3,331.75,553.55L331.75,558.8" id="my-svg-L_DEDUP_ROW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEDUP_ROW_0" data-points="W3sieCI6Mzg0LjE0MDc0OTAxNzU5NzQsInkiOjQ0MC42OTA3NTk2OTg3NDk3M30seyJ4IjozMzEuNzUsInkiOjUyNy4zMDAwMTA2ODExNTIzfSx7IngiOjMzMS43NSwieSI6NTYyLjgwMDAxMDY4MTE1MjN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M486.359,440.691L495.091,455.126C503.823,469.561,521.286,498.43,530.018,521.978C538.75,545.525,538.75,563.75,538.75,572.863L538.75,581.975" id="my-svg-L_DEDUP_DROP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DEDUP_DROP_0" data-points="W3sieCI6NDg2LjM1OTI1MDk4MjQwMjU2LCJ5Ijo0NDAuNjkwNzU5Njk4NzQ5N30seyJ4Ijo1MzguNzUsInkiOjUyNy4zMDAwMTA2ODExNTIzfSx7IngiOjUzOC43NSwieSI6NTg1Ljk3NTAxMzczMjkxMDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271.839,652.195L266.491,657.021C261.143,661.847,250.446,671.498,245.098,679.824C239.75,688.15,239.75,695.15,239.75,698.65L239.75,702.15" id="my-svg-L_ROW_CLAIM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROW_CLAIM_0" data-points="W3sieCI6MjcxLjgzOTI5MDU3NjUwODYzLCJ5Ijo2NTIuMTk1NDY2MzAyNTk2NH0seyJ4IjoyMzkuNzUsInkiOjY4MS4xNTAwMTY3ODQ2Njh9LHsieCI6MjM5Ljc1LCJ5Ijo3MDYuMTUwMDE2Nzg0NjY4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M239.75,788.35L239.75,792.517C239.75,796.683,239.75,805.017,239.75,812.683C239.75,820.35,239.75,827.35,239.75,830.85L239.75,834.35" id="my-svg-L_CLAIM_RUN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CLAIM_RUN_0" data-points="W3sieCI6MjM5Ljc1LCJ5Ijo3ODguMzUwMDEzNzMyOTEwMn0seyJ4IjoyMzkuNzUsInkiOjgxMy4zNTAwMTM3MzI5MTAyfSx7IngiOjIzOS43NSwieSI6ODM4LjM1MDAxMzczMjkxMDJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M239.75,902.95L239.75,907.117C239.75,911.283,239.75,919.617,239.75,927.283C239.75,934.95,239.75,941.95,239.75,945.45L239.75,948.95" id="my-svg-L_RUN_OK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RUN_OK_0" data-points="W3sieCI6MjM5Ljc1LCJ5Ijo5MDIuOTUwMDEyMjA3MDMxMn0seyJ4IjoyMzkuNzUsInkiOjkyNy45NTAwMTIyMDcwMzEyfSx7IngiOjIzOS43NSwieSI6OTUyLjk1MDAxMjIwNzAzMTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M207.591,1034.791L192.992,1046.068C178.394,1057.344,149.197,1079.897,134.598,1103.957C120,1128.017,120,1153.583,120,1166.367L120,1179.15" id="my-svg-L_OK_DONE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OK_DONE_0" data-points="W3sieCI6MjA3LjU5MDk4OTM5OTI5MzI4LCJ5IjoxMDM0Ljc5MTAwMTYwNjMyNDV9LHsieCI6MTIwLCJ5IjoxMTAyLjQ1MDAxMjIwNzAzMTJ9LHsieCI6MTIwLCJ5IjoxMTgzLjE1MDAxMjk2OTk3MDd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271.909,1034.791L286.508,1046.068C301.106,1057.344,330.303,1079.897,344.902,1096.424C359.5,1112.95,359.5,1123.45,359.5,1128.7L359.5,1133.95" id="my-svg-L_OK_RETRY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OK_RETRY_0" data-points="W3sieCI6MjcxLjkwOTAxMDYwMDcwNjcsInkiOjEwMzQuNzkxMDAxNjA2MzI0NX0seyJ4IjozNTkuNSwieSI6MTEwMi40NTAwMTIyMDcwMzEyfSx7IngiOjM1OS41LCJ5IjoxMTM3Ljk1MDAxMjIwNzAzMTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M359.5,1292.95L359.5,1298.867C359.5,1304.783,359.5,1316.617,364.063,1327.941C368.627,1339.264,377.754,1350.079,382.317,1355.486L386.88,1360.893" id="my-svg-L_RETRY_BACKOFF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RETRY_BACKOFF_0" data-points="W3sieCI6MzU5LjUsInkiOjEyOTIuOTUwMDEyMjA3MDMxMn0seyJ4IjozNTkuNSwieSI6MTMyOC40NTAwMTIyMDcwMzEyfSx7IngiOjM4OS40NjAxOTA4NDAxNTA2MywieSI6MTM2My45NTAwMTIyMDcwMzEyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M512.375,1363.95L519.771,1358.033C527.167,1352.117,541.958,1340.283,549.354,1315.533C556.75,1290.783,556.75,1253.117,556.75,1215.45C556.75,1177.783,556.75,1140.117,556.75,1105.867C556.75,1071.617,556.75,1040.783,556.75,1011.7C556.75,982.617,556.75,955.283,556.75,932.067C556.75,908.85,556.75,889.75,556.75,870.65C556.75,851.55,556.75,832.45,556.75,811.883C556.75,791.317,556.75,769.283,556.75,747.25C556.75,725.217,556.75,703.183,534.469,685.069C512.187,666.954,467.624,652.758,445.343,645.661L423.061,638.563" id="my-svg-L_BACKOFF_ROW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BACKOFF_ROW_0" data-points="W3sieCI6NTEyLjM3NTAwMDM1OTM5OTYsInkiOjEzNjMuOTUwMDEyMjA3MDMxMn0seyJ4Ijo1NTYuNzUsInkiOjEzMjguNDUwMDEyMjA3MDMxMn0seyJ4Ijo1NTYuNzUsInkiOjEyMTUuNDUwMDEyMjA3MDMxMn0seyJ4Ijo1NTYuNzUsInkiOjExMDIuNDUwMDEyMjA3MDMxMn0seyJ4Ijo1NTYuNzUsInkiOjEwMDkuOTUwMDEyMjA3MDMxMn0seyJ4Ijo1NTYuNzUsInkiOjkyNy45NTAwMTIyMDcwMzEyfSx7IngiOjU1Ni43NSwieSI6ODcwLjY1MDAxMjk2OTk3MDd9LHsieCI6NTU2Ljc1LCJ5Ijo4MTMuMzUwMDEzNzMyOTEwMn0seyJ4Ijo1NTYuNzUsInkiOjc0Ny4yNTAwMTUyNTg3ODkxfSx7IngiOjU1Ni43NSwieSI6NjgxLjE1MDAxNjc4NDY2OH0seyJ4Ijo0MTkuMjUsInkiOjYzNy4zNDg2MjYwMzA4MTU5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M417.92,1234.53L465.85,1250.183C513.78,1265.836,609.64,1297.143,657.57,1320.98C705.5,1344.817,705.5,1361.183,705.5,1369.367L705.5,1377.55" id="my-svg-L_RETRY_DLQ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RETRY_DLQ_0" data-points="W3sieCI6NDE3LjkyMDQ3OTMwMjgzMjIzLCJ5IjoxMjM0LjUyOTUzMjkwNDE5OX0seyJ4Ijo3MDUuNSwieSI6MTMyOC40NTAwMTIyMDcwMzEyfSx7IngiOjcwNS41LCJ5IjoxMzgxLjU1MDAxNDQ5NTg0OTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_E1_Q_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E2_Q_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_E3_Q_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q_DEDUP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(331.75, 527.3000106811523)"><g class="label" data-id="L_DEDUP_ROW_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-33" y="0" width="66" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">first</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> wins</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(538.75, 527.3000106811523)"><g class="label" data-id="L_DEDUP_DROP_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-38.5" y="0" width="77" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">duplicates</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_ROW_CLAIM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CLAIM_RUN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RUN_OK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(120, 1102.4500122070312)"><g class="label" data-id="L_OK_DONE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(359.5, 1102.4500122070312)"><g class="label" data-id="L_OK_RETRY_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(359.5, 1328.4500122070312)"><g class="label" data-id="L_RETRY_BACKOFF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_BACKOFF_ROW_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(705.5, 1328.4500122070312)"><g class="label" data-id="L_RETRY_DLQ_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default ev" id="my-svg-flowchart-E1-0" data-look="classic" transform="translate(173.75, 31.5)"><rect class="basic label-container" style="fill:#7a4ea0 !important;stroke:#3c2352 !important" x="-88.5" y="-23.5" width="177" height="47"/><g class="label" style="color:#f3e9ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#f3e9ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #1</tspan></tspan></text></g></g></g><g class="node default ev" id="my-svg-flowchart-E2-1" data-look="classic" transform="translate(435.25, 31.5)"><rect class="basic label-container" style="fill:#7a4ea0 !important;stroke:#3c2352 !important" x="-123" y="-23.5" width="246" height="47"/><g class="label" style="color:#f3e9ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#f3e9ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> duplicate</tspan></tspan></text></g></g></g><g class="node default ev" id="my-svg-flowchart-E3-2" data-look="classic" transform="translate(731.25, 31.5)"><rect class="basic label-container" style="fill:#7a4ea0 !important;stroke:#3c2352 !important" x="-123" y="-23.5" width="246" height="47"/><g class="label" style="color:#f3e9ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#f3e9ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> duplicate</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q-6" data-look="classic" transform="translate(435.25, 137.79999923706055)"><rect class="basic label-container" style="" x="-128" y="-32.79999923706055" width="256" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BackgroundTasks.Enqueue</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idempotency_key</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post_id</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DEDUP-8" data-look="classic" transform="translate(435.25, 356.2000045776367)"><polygon points="135.5999984741211,0 271.1999969482422,-135.5999984741211 135.5999984741211,-271.1999969482422 0,-135.5999984741211" class="label-container" transform="translate(-135.0999984741211, 135.5999984741211)"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">unique</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> task</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post_id?</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">INSERT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ...</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ON</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CONFLICT</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> NOTHING</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ROW-10" data-look="classic" transform="translate(331.75, 609.4750137329102)"><path d="M0,14.583333333333334 a87.5,14.583333333333334 0,0,0 175,0 a87.5,14.583333333333334 0,0,0 -175,0 l0,64.18333180745442 a87.5,14.583333333333334 0,0,0 175,0 l0,-64.18333180745442" class="basic label-container outer-path" style="" transform="translate(-87.5, -46.67499923706055)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">background_tasks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> row</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status=pending</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DROP-12" data-look="classic" transform="translate(538.75, 609.4750137329102)"><rect class="basic label-container" style="" x="-69.5" y="-23.5" width="139" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no-op</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ack</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CLAIM-14" data-look="classic" transform="translate(239.75, 747.2500152587891)"><rect class="basic label-container" style="" x="-124" y="-41.099998474121094" width="248" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Worker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Dequeue</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SELECT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ...</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> FOR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UPDATE</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SKIP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> LOCKED</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RUN-16" data-look="classic" transform="translate(239.75, 870.6500129699707)"><rect class="basic label-container" style="" x="-103" y="-32.29999923706055" width="206" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status=running</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">heartbeat</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> progress</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-OK-18" data-look="classic" transform="translate(239.75, 1009.9500122070312)"><polygon points="57,0 114,-57 57,-114 0,-57" class="label-container" transform="translate(-56.5, 57)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">success?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DONE-20" data-look="classic" transform="translate(120, 1215.4500122070312)"><rect class="basic label-container" style="" x="-112" y="-32.29999923706055" width="224" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status=completed</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">publish</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post.processed</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RETRY-22" data-look="classic" transform="translate(359.5, 1215.4500122070312)"><polygon points="77.5,0 155,-77.5 77.5,-155 0,-77.5" class="label-container" transform="translate(-77, 77.5)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">attempt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &lt;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> max?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BACKOFF-24" data-look="classic" transform="translate(439, 1422.6500129699707)"><rect class="basic label-container" style="" x="-118.5" y="-58.70000076293945" width="237" height="117.4000015258789"/><g class="label" style="" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Requeue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> delay=exp</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">backoff+jitter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">→</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> status=pending</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(task.retrying</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> event,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> not</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> a</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DLQ-28" data-look="classic" transform="translate(705.5, 1422.6500129699707)"><rect class="basic label-container" style="" x="-98" y="-41.099998474121094" width="196" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MoveToDeadLetter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">status=dead_letter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">publish</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post.failed</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/single-claim.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram traces one post through two independent
+deduplication layers so that a redelivery storm can never fan out into
+duplicate work. On the left, three copies of the same logical event —
+<code>post.received #1</code> and two duplicates (<code>#2</code>,
+<code>#3</code>) — arrive together. In production this is exactly what
+happens: NATS JetStream is at-least-once so a consumer restart
+redelivers the unacknowledged message, and a scheduled channel poll can
+independently rediscover the same root post while the push-triggered
+event is still in flight. All three carry the same
+<code>idempotency_key = post_id</code>, which is what lets the system
+collapse them.</p>
+<p>The <strong>first</strong> dedup layer is the enqueue gate. Every
+arrival attempts to create the single <code>post_processing_state</code>
+row for its <code>post_id</code> via
+<code>INSERT … ON CONFLICT (post_id, task_kind) DO NOTHING</code>.
+Postgres admits exactly one writer; the losers get zero affected rows
+and are turned into acknowledged no-ops (they are <em>acked</em> to
+JetStream so they are not redelivered forever, but they create no work).
+The outcome is a single <code>pending</code> row regardless of how many
+duplicates raced. This layer is Thready-owned precisely because — as
+<code>[OPEN: CONC-1]</code> established at source — the
+<code>models.BackgroundTask</code> queue model has no dedup column of
+its own.</p>
+<p>The <strong>second</strong> dedup layer is the claim gate, and it
+defends against a different failure: two <em>workers</em> polling the
+queue at the same instant. <code>Dequeue</code> runs
+<code>SELECT … FOR UPDATE SKIP LOCKED</code> (VERIFIED in
+<code>background_tasks/docs/ARCHITECTURE.md</code> — “Atomic dequeue
+with <code>SELECT … FOR UPDATE SKIP LOCKED</code>”), so the row is
+row-locked by whichever worker reaches it first and every concurrent
+worker <em>skips</em> the locked row rather than blocking on it. Exactly
+one worker transitions <code>pending → running</code>, stamping
+<code>claimed_by</code> and <code>claimed_at</code>. From there the
+happy path flips the row to <code>completed</code> and publishes
+<code>post.processed</code>; the failure path consults the attempt
+counter (§5). Having two orthogonal gates — enqueue-time and claim-time
+— means the exactly-once invariant survives even if one gate is bypassed
+by a bug, a manual re-insert, or a schema regression: the constraint and
+the row-lock are belt-and-braces for the single most load-bearing
+correctness requirement in the system.</p>
+<h2 id="retry-back-off-dead-letter">5. Retry, back-off &amp;
+dead-letter</h2>
+<p><code>[research_request_final §3.3]</code>
+<code>[DEFAULT — adjustable]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 33%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Max retries (whole post)</td>
+<td>5</td>
+<td>then <code>MoveToDeadLetter</code></td>
+</tr>
+<tr>
+<td>Base delay</td>
+<td>2 s</td>
+<td>exponential</td>
+</tr>
+<tr>
+<td>Factor</td>
+<td>2.0</td>
+<td>2s, 4s, 8s, 16s, 32s</td>
+</tr>
+<tr>
+<td>Jitter</td>
+<td>±20% full-jitter</td>
+<td>avoids thundering herd on a flapping dependency</td>
+</tr>
+<tr>
+<td>Cap</td>
+<td>5 min</td>
+<td>delay never exceeds</td>
+</tr>
+<tr>
+<td>Per-step retry</td>
+<td>independent</td>
+<td>a failed <em>step</em> (e.g. download) retries without re-running
+succeeded steps</td>
+</tr>
+</tbody>
+</table>
+<p>Retries are <strong>per step and per whole post</strong>: because
+Skills run in an ordered pipeline
+(download→convert→analyze→research→reply), a transient download failure
+retries only the download step (checkpointed via
+<code>TaskExecutor.Pause/Resume</code>), not the whole post. Manual
+retry (operator/user via REST) and full refresh (reprocess) reuse the
+same machinery — reprocess re-enters the machine as a fresh
+<code>pending → running</code> cycle — there is <strong>no</strong>
+<code>reprocessing</code> task <em>status</em> (§2/§5.1); the sticky
+<code>post.state</code> <em>display</em> value shows
+<code>reprocessing</code>, and the prior sticky value is invalidated
+(see <a href="./event-model.md">event-model.md</a>).</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> nextBackoff<span class="op">(</span>attempt <span class="dt">int</span><span class="op">)</span> time<span class="op">.</span>Duration <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    base <span class="op">:=</span> <span class="dv">2</span> <span class="op">*</span> time<span class="op">.</span>Second</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    d <span class="op">:=</span> time<span class="op">.</span>Duration<span class="op">(</span><span class="dt">float64</span><span class="op">(</span>base<span class="op">)</span> <span class="op">*</span> math<span class="op">.</span>Pow<span class="op">(</span><span class="fl">2.0</span><span class="op">,</span> <span class="dt">float64</span><span class="op">(</span>attempt<span class="op">)))</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> d <span class="op">&gt;</span> <span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Minute <span class="op">{</span> d <span class="op">=</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Minute <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    jitter <span class="op">:=</span> time<span class="op">.</span>Duration<span class="op">(</span>rand<span class="op">.</span>Int63n<span class="op">(</span><span class="dt">int64</span><span class="op">(</span>d<span class="op">)</span> <span class="op">/</span> <span class="dv">5</span><span class="op">))</span> <span class="co">// ±20%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> d <span class="op">-</span> <span class="op">(</span>d <span class="op">/</span> <span class="dv">10</span><span class="op">)</span> <span class="op">+</span> jitter</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// on step failure:</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> queue<span class="op">.</span>Requeue<span class="op">(</span>ctx<span class="op">,</span> task<span class="op">.</span>ID<span class="op">,</span> nextBackoff<span class="op">(</span>task<span class="op">.</span>Attempt<span class="op">))</span></span></code></pre></div>
+<p><strong>Stuck recovery</strong> —
+<code>StuckDetector.IsStuck(...)</code> +
+<code>TaskRepository.GetStaleTasks(threshold)</code> reclaim tasks whose
+worker died mid-run (stale <code>LastHeartbeat</code>, updated via
+<code>UpdateHeartbeat</code>/<code>ReportHeartbeat</code> — VERIFIED).
+The row is returned to <code>pending</code>, honoring the same
+idempotency (the dead worker’s partial side-effects are safe because
+each Skill step is itself idempotent — see <a
+href="./processing-pipeline.md">processing-pipeline.md</a>). The stale
+threshold is per task-type via
+<code>StuckDetector.GetStuckThreshold(taskType)</code>; the module
+default heartbeat interval is 10 s and stuck threshold 300 s
+(<code>DefaultTaskConfig</code>, VERIFIED).</p>
+<h3 id="retryback-off-state-machine">5.1 Retry/back-off state
+machine</h3>
+<p>The post-processing task walks a fixed state machine grounded in the
+<strong>real nine-value</strong> <code>models.TaskStatus</code> enum
+(§2). Retry, stuck-recovery and reprocess are all expressed as
+transitions <em>between those states</em> — there is no separate
+<code>retrying</code>/<code>backoff</code> status.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="statediagram" style="max-width: 1449.16px; background-color: white;" viewBox="129.09017944335938 0 1449.1597900390625 785" role="graphics-document document" aria-roledescription="stateDiagram"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg defs [id$="-barbEnd"]{fill:#000;stroke:#000;}#my-svg g.stateGroup text{fill:#999;stroke:none;font-size:10px;}#my-svg g.stateGroup text{fill:#000000;stroke:none;font-size:10px;}#my-svg g.stateGroup .state-title{font-weight:bolder;fill:#111111;}#my-svg g.stateGroup rect{fill:#eee;stroke:#999;}#my-svg g.stateGroup line{stroke:#666;stroke-width:1;}#my-svg .transition{stroke:#000;stroke-width:1;fill:none;}#my-svg .stateGroup .composit{fill:#ffffff;border-bottom:1px;}#my-svg .stateGroup .alt-composit{fill:#e0e0e0;border-bottom:1px;}#my-svg .state-note{stroke:#999;fill:#666;}#my-svg .state-note text{fill:#fff;stroke:none;font-size:10px;}#my-svg .stateLabel .box{stroke:none;stroke-width:0;fill:#eee;opacity:0.5;}#my-svg .edgeLabel .label rect{fill:#eee;opacity:0.5;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .edgeLabel .label text{fill:#000000;}#my-svg .label div .edgeLabel{color:#000000;}#my-svg .stateLabel text{fill:#111111;font-size:10px;font-weight:bold;}#my-svg .node circle.state-start{fill:#222;stroke:#222;}#my-svg .node .fork-join{fill:#222;stroke:#222;}#my-svg .node circle.state-end{fill:hsl(0, 0%, 83.3333333333%);stroke:#ffffff;stroke-width:1.5;}#my-svg .end-state-inner{fill:#ffffff;stroke-width:1.5;}#my-svg .node rect{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg .node polygon{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg [id$="-barbEnd"]{fill:#666;}#my-svg .statediagram-cluster rect{fill:#eee;stroke:#000;stroke-width:1px;}#my-svg .cluster-label,#my-svg .nodeLabel{color:#111111;}#my-svg .statediagram-cluster rect.outer{rx:5px;ry:5px;}#my-svg .statediagram-state .divider{stroke:#000;}#my-svg .statediagram-state .title-state{rx:5px;ry:5px;}#my-svg .statediagram-cluster.statediagram-cluster .inner{fill:#ffffff;}#my-svg .statediagram-cluster.statediagram-cluster-alt .inner{fill:#f4f4f4;}#my-svg .statediagram-cluster .inner{rx:0;ry:0;}#my-svg .statediagram-state rect.basic{rx:5px;ry:5px;}#my-svg .statediagram-state rect.divider{stroke-dasharray:10,10;fill:#f4f4f4;}#my-svg .note-edge{stroke-dasharray:5;}#my-svg .statediagram-note rect{fill:#666;stroke:#999;stroke-width:1px;rx:0;ry:0;}#my-svg .statediagram-note rect{fill:#666;stroke:#999;stroke-width:1px;rx:0;ry:0;}#my-svg .statediagram-note text{fill:#fff;}#my-svg .statediagram-note .nodeLabel{color:#fff;}#my-svg .statediagram .edgeLabel{color:red;}#my-svg [id$="-dependencyStart"],#my-svg [id$="-dependencyEnd"]{fill:#666;stroke:#666;stroke-width:1;}#my-svg .statediagramTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg [data-look="neo"].statediagram-cluster rect{fill:#eee;stroke:url(#my-svg-gradient);stroke-width:1;}#my-svg [data-look="neo"].statediagram-cluster rect.outer{rx:5px;ry:5px;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><defs><marker id="my-svg_stateDiagram-barbEnd" refX="19" refY="7" markerWidth="20" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M 19,7 L9,13 L14,7 L9,1 Z"/></marker></defs><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M976.25,22L976.25,33.783C976.25,45.567,976.25,69.133,976.25,92.7C976.25,116.267,976.25,139.833,976.25,151.617L976.25,163.4" id="my-svg-edge0" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge0" data-points="W3sieCI6OTc2LjI1LCJ5IjoyMn0seyJ4Ijo5NzYuMjUsInkiOjkyLjcwMDAwMDc2MjkzOTQ1fSx7IngiOjk3Ni4yNSwieSI6MTYzLjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M939.25,186.026L884.208,195.138C829.167,204.25,719.083,222.475,664.042,243.838C609,265.2,609,289.7,609,301.95L609,314.2" id="my-svg-edge1" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge1" data-points="W3sieCI6OTM5LjI1LCJ5IjoxODYuMDI1NTI5MDE4Nzg5MDN9LHsieCI6NjA5LCJ5IjoyNDAuNzAwMDAwNzYyOTM5NDV9LHsieCI6NjA5LCJ5IjozMTQuMjAwMDAwNzYyOTM5NDV9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M609,347.2L609,362.467C609,377.733,609,408.267,620.204,433.933C631.408,459.6,653.816,480.4,665.02,490.8L676.224,501.2" id="my-svg-edge2" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge2" data-points="W3sieCI6NjA5LCJ5IjozNDcuMjAwMDAwNzYyOTM5NDV9LHsieCI6NjA5LCJ5Ijo0MzguODAwMDAzMDUxNzU3OH0seyJ4Ijo2NzYuMjI0MzM0OTQ0NTMxMiwieSI6NTAxLjIwMDAwNDU3NzYzNjd9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M659,522.224L563.75,534.537C468.5,546.85,278,571.475,195.437,594.187C112.874,616.9,138.248,637.7,150.935,648.1L163.622,658.5" id="my-svg-edge3" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge3" data-points="W3sieCI6NjU5LCJ5Ijo1MjIuMjI0MzI0NTMzNzg4fSx7IngiOjg3LjUsInkiOjU5Ni4xMDAwMDYxMDM1MTU2fSx7IngiOjE2My42MjE2NzMzOTMwNzIxMSwieSI6NjU4LjUwMDAwNzYyOTM5NDV9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M659,530.736L629.75,541.63C600.5,552.524,542,574.312,526.59,595.606C511.181,616.9,538.861,637.7,552.702,648.1L566.542,658.5" id="my-svg-edge4" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge4" data-points="W3sieCI6NjU5LCJ5Ijo1MzAuNzM1NjM0Mjg1MDI3NX0seyJ4Ijo0ODMuNSwieSI6NTk2LjEwMDAwNjEwMzUxNTZ9LHsieCI6NTY2LjU0MTgyNTUxOTcxNTEsInkiOjY1OC41MDAwMDc2MjkzOTQ1fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M610.563,658.5L624.469,648.1C638.375,637.7,666.188,616.9,680.094,596.183C694,575.467,694,554.833,694,544.517L694,534.2" id="my-svg-edge5" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge5" data-points="W3sieCI6NjEwLjU2MjczNzIxNTkwNTQsInkiOjY1OC41MDAwMDc2MjkzOTQ1fSx7IngiOjY5NCwieSI6NTk2LjEwMDAwNjEwMzUxNTZ9LHsieCI6Njk0LCJ5Ijo1MzQuMjAwMDA0NTc3NjM2N31d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M729,530.06L760.167,541.067C791.333,552.074,853.667,574.087,892.808,595.493C931.949,616.9,947.899,637.7,955.873,648.1L963.848,658.5" id="my-svg-edge6" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge6" data-points="W3sieCI6NzI5LCJ5Ijo1MzAuMDYwMzY1MTc4NTYzNX0seyJ4Ijo5MTYsInkiOjU5Ni4xMDAwMDYxMDM1MTU2fSx7IngiOjk2My44NDc5MDg5ODk5MzEsInkiOjY1OC41MDAwMDc2MjkzOTQ1fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M989.152,658.5L997.127,648.1C1005.101,637.7,1021.051,616.9,1029.025,593.433C1037,569.967,1037,543.833,1037,517.617C1037,491.4,1037,465.1,1037,433.933C1037,402.767,1037,366.733,1037,333.717C1037,300.7,1037,270.7,1029.623,248.317C1022.245,225.933,1007.491,211.167,1000.114,203.783L992.736,196.4" id="my-svg-edge7" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge7" data-points="W3sieCI6OTg5LjE1MjA5MTAxMDA2OSwieSI6NjU4LjUwMDAwNzYyOTM5NDV9LHsieCI6MTAzNywieSI6NTk2LjEwMDAwNjEwMzUxNTZ9LHsieCI6MTAzNywieSI6NTE3LjcwMDAwNDU3NzYzNjd9LHsieCI6MTAzNywieSI6NDM4LjgwMDAwMzA1MTc1Nzh9LHsieCI6MTAzNywieSI6MzMwLjcwMDAwMDc2MjkzOTQ1fSx7IngiOjEwMzcsInkiOjI0MC43MDAwMDA3NjI5Mzk0NX0seyJ4Ijo5OTIuNzM2NDMxMTI3OTMwMSwieSI6MTk2LjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M729,505.233L760.083,494.161C791.167,483.088,853.333,460.944,884.417,431.855C915.5,402.767,915.5,366.733,915.5,333.717C915.5,300.7,915.5,270.7,922.877,248.317C930.255,225.933,945.009,211.167,952.386,203.783L959.764,196.4" id="my-svg-edge8" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge8" data-points="W3sieCI6NzI5LCJ5Ijo1MDUuMjMyNzM1NzEzNTAyMzR9LHsieCI6OTE1LjUsInkiOjQzOC44MDAwMDMwNTE3NTc4fSx7IngiOjkxNS41LCJ5IjozMzAuNzAwMDAwNzYyOTM5NDV9LHsieCI6OTE1LjUsInkiOjI0MC43MDAwMDA3NjI5Mzk0NX0seyJ4Ijo5NTkuNzYzNTY4ODcyMDY5OSwieSI6MTk2LjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M729,521.878L832.625,534.248C936.25,546.619,1143.5,571.359,1255.036,594.046C1366.572,616.733,1382.393,637.367,1390.304,647.683L1398.215,658" id="my-svg-edge9" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge9" data-points="W3sieCI6NzI5LCJ5Ijo1MjEuODc4MTU0NjM5OTIxOH0seyJ4IjoxMzUwLjc1LCJ5Ijo1OTYuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMzk4LjIxNDUxMjI5MjY1NjMsInkiOjY1OC4wMDAwMDc2MjkzOTQ1fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M729,523.747L798.792,535.806C868.583,547.865,1008.167,571.982,1077.958,594.441C1147.75,616.9,1147.75,637.7,1147.75,648.1L1147.75,658.5" id="my-svg-edge10" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge10" data-points="W3sieCI6NzI5LCJ5Ijo1MjMuNzQ3Mzg3NjE1NDQ1NX0seyJ4IjoxMTQ3Ljc1LCJ5Ijo1OTYuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxMTQ3Ljc1LCJ5Ijo2NTguNTAwMDA3NjI5Mzk0NX1d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M1424.285,658L1432.196,647.683C1440.107,637.367,1455.928,616.733,1463.839,593.35C1471.75,569.967,1471.75,543.833,1471.75,517.617C1471.75,491.4,1471.75,465.1,1471.75,433.933C1471.75,402.767,1471.75,366.733,1471.75,333.717C1471.75,300.7,1471.75,270.7,1395.333,246.323C1318.917,221.947,1166.083,203.193,1089.667,193.817L1013.25,184.44" id="my-svg-edge11" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge11" data-points="W3sieCI6MTQyNC4yODU0ODc3MDczNDM3LCJ5Ijo2NTguMDAwMDA3NjI5Mzk0NX0seyJ4IjoxNDcxLjc1LCJ5Ijo1OTYuMTAwMDA2MTAzNTE1Nn0seyJ4IjoxNDcxLjc1LCJ5Ijo1MTcuNzAwMDA0NTc3NjM2N30seyJ4IjoxNDcxLjc1LCJ5Ijo0MzguODAwMDAzMDUxNzU3OH0seyJ4IjoxNDcxLjc1LCJ5IjozMzAuNzAwMDAwNzYyOTM5NDV9LHsieCI6MTQ3MS43NSwieSI6MjQwLjcwMDAwMDc2MjkzOTQ1fSx7IngiOjEwMTMuMjUsInkiOjE4NC40NDAwNjIwMTM4MTI4fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M203.983,658.5L216.736,648.1C229.489,637.7,254.994,616.9,330.83,594.539C406.667,572.179,532.833,548.257,595.917,536.297L659,524.336" id="my-svg-edge12" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge12" data-points="W3sieCI6MjAzLjk4Mjg4OTM0MjU0ODMsInkiOjY1OC41MDAwMDc2MjkzOTQ1fSx7IngiOjI4MC41LCJ5Ijo1OTYuMTAwMDA2MTAzNTE1Nn0seyJ4Ijo2NTksInkiOjUyNC4zMzYwMzg1NjQxMDc4fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M183.75,691.5L183.75,697.5C183.75,703.5,183.75,715.5,343.25,728.532C502.75,741.564,821.75,755.628,981.25,762.66L1140.75,769.691" id="my-svg-edge13" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge13" data-points="W3sieCI6MTgzLjc1LCJ5Ijo2OTEuNTAwMDA3NjI5Mzk0NX0seyJ4IjoxODMuNzUsInkiOjcyNy41MDAwMDc2MjkzOTQ1fSx7IngiOjExNDAuNzUwMTUyNzgwNzYzLCJ5Ijo3NjkuNjkxNDA0NDA2NTU0N31d" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M1147.75,691.5L1147.75,697.5C1147.75,703.5,1147.75,715.5,1147.75,727.416C1147.75,739.331,1147.75,751.162,1147.75,757.078L1147.75,762.993" id="my-svg-edge14" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge14" data-points="W3sieCI6MTE0Ny43NSwieSI6NjkxLjUwMDAwNzYyOTM5NDV9LHsieCI6MTE0Ny43NSwieSI6NzI3LjUwMDAwNzYyOTM5NDV9LHsieCI6MTE0Ny43NSwieSI6NzYyLjk5MzM2MDk5NjI0NjN9XQ==" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/><path d="M1411.25,692L1411.25,697.917C1411.25,703.833,1411.25,715.667,1368.486,728.481C1325.722,741.295,1240.195,755.09,1197.431,761.987L1154.667,768.884" id="my-svg-edge15" class="edge-thickness-normal edge-pattern-solid transition" style="fill:none;;;fill:none" data-edge="true" data-et="edge" data-id="edge15" data-points="W3sieCI6MTQxMS4yNSwieSI6NjkyLjAwMDAwNzYyOTM5NDV9LHsieCI6MTQxMS4yNSwieSI6NzI3LjUwMDAwNzYyOTM5NDV9LHsieCI6MTE1NC42NjcyNDk2NzQ1NDY2LCJ5Ijo3NjguODg0MzIyMTk4MDE2fV0=" data-look="classic" marker-end="url(#my-svg_stateDiagram-barbEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(976.25, 92.70000076293945)"><g class="label" data-id="edge0" transform="translate(0, -45.70000076293945)"><g><rect class="background" style="" x="-100.5" y="0" width="201" height="91.4000015258789"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Enqueue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (INSERT</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post_processing_state\nON</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">CONFLICT</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(post_id,task_kind)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DO</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">NOTHING)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(609, 240.70000076293945)"><g class="label" data-id="edge1" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-85" y="0" width="171" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">scheduled_at</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reached</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">priority-ordered</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(609, 438.8000030517578)"><g class="label" data-id="edge2" transform="translate(0, -37.400001525878906)"><g><rect class="background" style="" x="-100.5" y="0" width="201" height="74.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Dequeue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SELECT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ...</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">FOR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UPDATE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SKIP</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">LOCKED\n(claimed_by=wo</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">rker_id,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> claimed_at=now)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(324.4416, 565.47145)"><g class="label" data-id="edge3" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-79.5" y="0" width="159" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Execute</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ok</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> publish</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.processed</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(483.5, 596.1000061035156)"><g class="label" data-id="edge4" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-89.5" y="0" width="179" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TaskExecutor.Pause()</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">checkpoint</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> BYTEA</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(694, 596.1000061035156)"><g class="label" data-id="edge5" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-101" y="0" width="202" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TaskExecutor.Resume(chec</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">kpoint)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(859.57271, 576.17253)"><g class="label" data-id="edge6" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-101" y="0" width="202" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">StuckDetector.IsStuck</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (stale</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">LastHeartbeat)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1037, 438.8000030517578)"><g class="label" data-id="edge7" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-101.5" y="0" width="203" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GetStaleTasks(threshold)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Requeue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (reclaim)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(915.5, 330.70000076293945)"><g class="label" data-id="edge8" transform="translate(0, -45.70000076293945)"><g><rect class="background" style="" x="-100" y="0" width="200" height="91.4000015258789"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">failure</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RetryCount</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &lt;</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MaxRetries\nRequeue(dela</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">y</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> exp</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> backoff+jitter)\nemit</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">task.retrying</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">skill.step.retried</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1078.60161, 563.6121)"><g class="label" data-id="edge9" transform="translate(0, -36.900001525878906)"><g><rect class="background" style="" x="-101" y="0" width="202" height="73.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">failure</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &amp;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RetryCount</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> &gt;=</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MaxRetries\nMoveToDeadL</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">etter(reason)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> publish</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.failed</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1147.75, 596.1000061035156)"><g class="label" data-id="edge10" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-82" y="0" width="164" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TaskExecutor.Cancel()</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(operator/user)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1471.75, 438.8000030517578)"><g class="label" data-id="edge11" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-98.5" y="0" width="197" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DeadLetterTask.Reprocess</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">After\n(manual</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reprocess,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RBAC-gated)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(280.5, 596.1000061035156)"><g class="label" data-id="edge12" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-93.5" y="0" width="187" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reprocess</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> trigger</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">→\npost.state.invalidate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">new</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> claim</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="edge13" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="edge14" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1411.25, 727.5000076293945)"><g class="label" data-id="edge15" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-80.5" y="0" width="161" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">abandoned</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (retention)</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-state-root_start-0" data-look="classic" transform="translate(976.25, 15)"><circle class="state-start" r="7" width="14" height="14"/></g><g class="node  statediagram-state" id="my-svg-state-pending-11" data-look="classic" transform="translate(976.25, 179.9000015258789)"><rect class="basic label-container" style="" rx="5" ry="5" x="-37" y="-16.5" width="74" height="33"/><g class="label" style="" transform="translate(-29, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pending</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-queued-2" data-look="classic" transform="translate(609, 330.70000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-35" y="-16.5" width="70" height="33"/><g class="label" style="" transform="translate(-27, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">queued</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-running-12" data-look="classic" transform="translate(694, 517.7000045776367)"><rect class="basic label-container" style="" rx="5" ry="5" x="-35" y="-16.5" width="70" height="33"/><g class="label" style="" transform="translate(-27, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">running</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-completed-13" data-look="classic" transform="translate(183.75, 675.0000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-45" y="-16.5" width="90" height="33"/><g class="label" style="" transform="translate(-37, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">completed</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-paused-5" data-look="classic" transform="translate(588.5, 675.0000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-34.5" y="-16.5" width="69" height="33"/><g class="label" style="" transform="translate(-26.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">paused</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-stuck-7" data-look="classic" transform="translate(976.5, 675.0000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-27" y="-16.5" width="54" height="33"/><g class="label" style="" transform="translate(-19, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stuck</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-dead_letter-15" data-look="classic" transform="translate(1411.25, 675.0000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-48.5" y="-17" width="97" height="34"/><g class="label" style="" transform="translate(-40.5, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dead_letter</tspan></tspan></text></g></g></g><g class="node  statediagram-state" id="my-svg-state-cancelled-14" data-look="classic" transform="translate(1147.75, 675.0000076293945)"><rect class="basic label-container" style="" rx="5" ry="5" x="-42.5" y="-16.5" width="85" height="33"/><g class="label" style="" transform="translate(-34.5, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">cancelled</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-state-root_end-15" data-look="classic" transform="translate(1147.75, 770.0000076293945)"><g class="outer-path"><path d="M7 0 C7 0.40517908122283747, 6.964012880168563 0.816513743121899, 6.893654271085456 1.2155372436685123 C6.823295662002349 1.6145607442151257, 6.716427752933756 2.013397210557766, 6.5778483455013586 2.394141003279681 C6.439268938068961 2.7748847960015954, 6.26476736710249 3.149104622578984, 6.062177826491071 3.4999999999999996 C5.859588285879653 3.8508953774210153, 5.622755194947063 4.189128084166967, 5.362311101832846 4.499513267805774 C5.10186700871863 4.809898451444582, 4.809898451444583 5.10186700871863, 4.499513267805775 5.362311101832846 C4.189128084166968 5.622755194947063, 3.8508953774210166 5.859588285879652, 3.500000000000001 6.06217782649107 C3.149104622578985 6.264767367102489, 2.7748847960015963 6.439268938068961, 2.3941410032796817 6.5778483455013586 C2.013397210557767 6.716427752933756, 1.6145607442151264 6.823295662002349, 1.2155372436685128 6.893654271085456 C0.8165137431218992 6.964012880168563, 0.4051790812228379 7, 4.286263797015736e-16 7 C-0.405179081222837 7, -0.8165137431218985 6.964012880168563, -1.2155372436685121 6.893654271085456 C-1.6145607442151257 6.823295662002349, -2.0133972105577667 6.716427752933756, -2.394141003279681 6.5778483455013586 C-2.774884796001595 6.439268938068961, -3.149104622578983 6.26476736710249, -3.4999999999999982 6.062177826491071 C-3.8508953774210135 5.859588285879653, -4.189128084166966 5.6227551949470636, -4.499513267805773 5.362311101832848 C-4.809898451444581 5.101867008718632, -5.101867008718628 4.809898451444586, -5.3623111018328435 4.499513267805779 C-5.622755194947059 4.189128084166971, -5.859588285879649 3.8508953774210206, -6.062177826491068 3.5000000000000053 C-6.264767367102486 3.14910462257899, -6.439268938068958 2.774884796001602, -6.577848345501356 2.394141003279688 C-6.716427752933754 2.0133972105577738, -6.823295662002347 1.614560744215134, -6.893654271085454 1.215537243668521 C-6.9640128801685615 0.816513743121908, -6.999999999999999 0.4051790812228472, -7 1.0183126166254463e-14 C-7.000000000000001 -0.40517908122282686, -6.964012880168565 -0.8165137431218878, -6.893654271085459 -1.215537243668501 C-6.823295662002352 -1.6145607442151142, -6.716427752933759 -2.0133972105577542, -6.577848345501363 -2.394141003279669 C-6.439268938068967 -2.7748847960015834, -6.264767367102496 -3.149104622578972, -6.062177826491078 -3.4999999999999876 C-5.859588285879661 -3.8508953774210033, -5.6227551949470715 -4.1891280841669545, -5.362311101832856 -4.499513267805763 C-5.10186700871864 -4.809898451444571, -4.809898451444594 -5.10186700871862, -4.499513267805787 -5.362311101832836 C-4.189128084166979 -5.622755194947053, -3.850895377421028 -5.859588285879643, -3.5000000000000133 -6.062177826491062 C-3.1491046225789985 -6.264767367102482, -2.774884796001611 -6.439268938068954, -2.3941410032796973 -6.577848345501353 C-2.0133972105577835 -6.716427752933752, -1.6145607442151435 -6.823295662002345, -1.2155372436685306 -6.893654271085453 C-0.8165137431219176 -6.9640128801685615, -0.40517908122285695 -6.999999999999999, -1.9937625952807352e-14 -7 C0.4051790812228171 -7.000000000000001, 0.8165137431218781 -6.964012880168565, 1.2155372436684913 -6.89365427108546 C1.6145607442151044 -6.823295662002354, 2.013397210557745 -6.716427752933763, 2.3941410032796595 -6.5778483455013665 C2.774884796001574 -6.43926893806897, 3.149104622578963 -6.2647673671025, 3.499999999999979 -6.062177826491083 C3.8508953774209953 -5.859588285879665, 4.189128084166947 -5.622755194947077, 4.499513267805756 -5.362311101832862 C4.809898451444564 -5.1018670087186475, 5.101867008718613 -4.809898451444602, 5.362311101832829 -4.499513267805796 C5.622755194947046 -4.189128084166989, 5.859588285879637 -3.8508953774210393, 6.062177826491056 -3.500000000000025 C6.2647673671024755 -3.1491046225790105, 6.439268938068949 -2.774884796001623, 6.577848345501348 -2.3941410032797092 C6.716427752933747 -2.0133972105577955, 6.823295662002342 -1.6145607442151562, 6.893654271085451 -1.2155372436685434 C6.96401288016856 -0.8165137431219307, 6.982275711847575 -0.2025895406114567, 7 -3.2800750208310675e-14 C7.017724288152425 0.2025895406113911, 7.017724288152424 -0.2025895406114242, 7 0" stroke="none" stroke-width="0" fill="#eee" style=""/><path d="M7 0 C7 0.40517908122283747, 6.964012880168563 0.816513743121899, 6.893654271085456 1.2155372436685123 C6.823295662002349 1.6145607442151257, 6.716427752933756 2.013397210557766, 6.5778483455013586 2.394141003279681 C6.439268938068961 2.7748847960015954, 6.26476736710249 3.149104622578984, 6.062177826491071 3.4999999999999996 C5.859588285879653 3.8508953774210153, 5.622755194947063 4.189128084166967, 5.362311101832846 4.499513267805774 C5.10186700871863 4.809898451444582, 4.809898451444583 5.10186700871863, 4.499513267805775 5.362311101832846 C4.189128084166968 5.622755194947063, 3.8508953774210166 5.859588285879652, 3.500000000000001 6.06217782649107 C3.149104622578985 6.264767367102489, 2.7748847960015963 6.439268938068961, 2.3941410032796817 6.5778483455013586 C2.013397210557767 6.716427752933756, 1.6145607442151264 6.823295662002349, 1.2155372436685128 6.893654271085456 C0.8165137431218992 6.964012880168563, 0.4051790812228379 7, 4.286263797015736e-16 7 C-0.405179081222837 7, -0.8165137431218985 6.964012880168563, -1.2155372436685121 6.893654271085456 C-1.6145607442151257 6.823295662002349, -2.0133972105577667 6.716427752933756, -2.394141003279681 6.5778483455013586 C-2.774884796001595 6.439268938068961, -3.149104622578983 6.26476736710249, -3.4999999999999982 6.062177826491071 C-3.8508953774210135 5.859588285879653, -4.189128084166966 5.6227551949470636, -4.499513267805773 5.362311101832848 C-4.809898451444581 5.101867008718632, -5.101867008718628 4.809898451444586, -5.3623111018328435 4.499513267805779 C-5.622755194947059 4.189128084166971, -5.859588285879649 3.8508953774210206, -6.062177826491068 3.5000000000000053 C-6.264767367102486 3.14910462257899, -6.439268938068958 2.774884796001602, -6.577848345501356 2.394141003279688 C-6.716427752933754 2.0133972105577738, -6.823295662002347 1.614560744215134, -6.893654271085454 1.215537243668521 C-6.9640128801685615 0.816513743121908, -6.999999999999999 0.4051790812228472, -7 1.0183126166254463e-14 C-7.000000000000001 -0.40517908122282686, -6.964012880168565 -0.8165137431218878, -6.893654271085459 -1.215537243668501 C-6.823295662002352 -1.6145607442151142, -6.716427752933759 -2.0133972105577542, -6.577848345501363 -2.394141003279669 C-6.439268938068967 -2.7748847960015834, -6.264767367102496 -3.149104622578972, -6.062177826491078 -3.4999999999999876 C-5.859588285879661 -3.8508953774210033, -5.6227551949470715 -4.1891280841669545, -5.362311101832856 -4.499513267805763 C-5.10186700871864 -4.809898451444571, -4.809898451444594 -5.10186700871862, -4.499513267805787 -5.362311101832836 C-4.189128084166979 -5.622755194947053, -3.850895377421028 -5.859588285879643, -3.5000000000000133 -6.062177826491062 C-3.1491046225789985 -6.264767367102482, -2.774884796001611 -6.439268938068954, -2.3941410032796973 -6.577848345501353 C-2.0133972105577835 -6.716427752933752, -1.6145607442151435 -6.823295662002345, -1.2155372436685306 -6.893654271085453 C-0.8165137431219176 -6.9640128801685615, -0.40517908122285695 -6.999999999999999, -1.9937625952807352e-14 -7 C0.4051790812228171 -7.000000000000001, 0.8165137431218781 -6.964012880168565, 1.2155372436684913 -6.89365427108546 C1.6145607442151044 -6.823295662002354, 2.013397210557745 -6.716427752933763, 2.3941410032796595 -6.5778483455013665 C2.774884796001574 -6.43926893806897, 3.149104622578963 -6.2647673671025, 3.499999999999979 -6.062177826491083 C3.8508953774209953 -5.859588285879665, 4.189128084166947 -5.622755194947077, 4.499513267805756 -5.362311101832862 C4.809898451444564 -5.1018670087186475, 5.101867008718613 -4.809898451444602, 5.362311101832829 -4.499513267805796 C5.622755194947046 -4.189128084166989, 5.859588285879637 -3.8508953774210393, 6.062177826491056 -3.500000000000025 C6.2647673671024755 -3.1491046225790105, 6.439268938068949 -2.774884796001623, 6.577848345501348 -2.3941410032797092 C6.716427752933747 -2.0133972105577955, 6.823295662002342 -1.6145607442151562, 6.893654271085451 -1.2155372436685434 C6.96401288016856 -0.8165137431219307, 6.982275711847575 -0.2025895406114567, 7 -3.2800750208310675e-14 C7.017724288152425 0.2025895406113911, 7.017724288152424 -0.2025895406114242, 7 0" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="0 0" style=""/><g><path d="M2.5 0 C2.5 0.14470681472244193, 2.487147457203058 0.29161205111496386, 2.46201938253052 0.4341204441673258 C2.436891307857982 0.5766288372196877, 2.3987241974763416 0.7190704323420595, 2.3492315519647713 0.8550503583141718 C2.299738906453201 0.991030284286284, 2.2374169168223177 1.124680222349637, 2.165063509461097 1.2499999999999998 C2.092710102099876 1.3753197776503625, 2.0081268553382365 1.496117172916774, 1.915111107797445 1.6069690242163481 C1.8220953602566536 1.7178208755159223, 1.7178208755159226 1.8220953602566536, 1.6069690242163484 1.915111107797445 C1.4961171729167742 2.0081268553382365, 1.375319777650363 2.0927101020998755, 1.2500000000000002 2.1650635094610964 C1.1246802223496375 2.2374169168223172, 0.9910302842862845 2.2997389064532, 0.8550503583141721 2.349231551964771 C0.7190704323420597 2.3987241974763416, 0.576628837219688 2.436891307857982, 0.43412044416732604 2.46201938253052 C0.291612051114964 2.487147457203058, 0.14470681472244212 2.5, 1.5308084989341916e-16 2.5 C-0.1447068147224418 2.5, -0.2916120511149638 2.487147457203058, -0.43412044416732576 2.46201938253052 C-0.5766288372196877 2.436891307857982, -0.7190704323420595 2.3987241974763416, -0.8550503583141718 2.3492315519647713 C-0.991030284286284 2.299738906453201, -1.124680222349637 2.2374169168223177, -1.2499999999999996 2.165063509461097 C-1.375319777650362 2.092710102099876, -1.4961171729167733 2.008126855338237, -1.6069690242163475 1.9151111077974459 C-1.7178208755159217 1.8220953602566548, -1.822095360256653 1.7178208755159234, -1.9151111077974443 1.6069690242163495 C-2.0081268553382357 1.4961171729167755, -2.0927101020998746 1.3753197776503645, -2.1650635094610955 1.250000000000002 C-2.2374169168223164 1.1246802223496395, -2.2997389064531992 0.9910302842862865, -2.34923155196477 0.8550503583141743 C-2.3987241974763407 0.7190704323420621, -2.436891307857981 0.5766288372196907, -2.4620193825305194 0.434120444167329 C-2.487147457203058 0.29161205111496724, -2.5 0.14470681472244545, -2.5 3.636830773662308e-15 C-2.5 -0.14470681472243818, -2.4871474572030587 -0.2916120511149599, -2.4620193825305208 -0.4341204441673218 C-2.436891307857983 -0.5766288372196837, -2.398724197476343 -0.7190704323420553, -2.3492315519647726 -0.8550503583141675 C-2.2997389064532023 -0.9910302842862798, -2.23741691682232 -1.1246802223496328, -2.165063509461099 -1.2499999999999956 C-2.092710102099878 -1.3753197776503583, -2.00812685533824 -1.4961171729167695, -1.9151111077974488 -1.606969024216344 C-1.8220953602566576 -1.7178208755159183, -1.7178208755159263 -1.82209536025665, -1.6069690242163523 -1.9151111077974416 C-1.4961171729167784 -2.0081268553382334, -1.3753197776503672 -2.0927101020998724, -1.2500000000000047 -2.1650635094610937 C-1.1246802223496422 -2.237416916822315, -0.9910302842862897 -2.299738906453198, -0.8550503583141776 -2.3492315519647686 C-0.7190704323420656 -2.3987241974763394, -0.5766288372196942 -2.4368913078579806, -0.43412044416733236 -2.462019382530519 C-0.29161205111497057 -2.4871474572030574, -0.1447068147224489 -2.4999999999999996, -7.120580697431198e-15 -2.5 C0.14470681472243463 -2.5000000000000004, 0.29161205111495647 -2.487147457203059, 0.4341204441673183 -2.4620193825305217 C0.5766288372196802 -2.436891307857984, 0.7190704323420518 -2.3987241974763442, 0.8550503583141642 -2.349231551964774 C0.9910302842862766 -2.2997389064532037, 1.1246802223496295 -2.2374169168223212, 1.2499999999999925 -2.165063509461101 C1.3753197776503554 -2.0927101020998804, 1.4961171729167668 -2.008126855338242, 1.6069690242163412 -1.915111107797451 C1.7178208755159157 -1.82209536025666, 1.8220953602566472 -1.7178208755159294, 1.915111107797439 -1.6069690242163557 C2.0081268553382308 -1.496117172916782, 2.09271010209987 -1.3753197776503712, 2.1650635094610915 -1.2500000000000089 C2.237416916822313 -1.1246802223496466, 2.299738906453196 -0.9910302842862939, 2.3492315519647673 -0.855050358314182 C2.3987241974763385 -0.71907043234207, 2.4368913078579792 -0.5766288372196986, 2.462019382530518 -0.4341204441673369 C2.487147457203057 -0.29161205111497523, 2.4936698970884197 -0.07235340736123454, 2.5 -1.1714553645825241e-14 C2.5063301029115803 0.07235340736121111, 2.50633010291158 -0.07235340736122292, 2.5 0" stroke="none" stroke-width="0" fill="#000" style=""/><path d="M2.5 0 C2.5 0.14470681472244193, 2.487147457203058 0.29161205111496386, 2.46201938253052 0.4341204441673258 C2.436891307857982 0.5766288372196877, 2.3987241974763416 0.7190704323420595, 2.3492315519647713 0.8550503583141718 C2.299738906453201 0.991030284286284, 2.2374169168223177 1.124680222349637, 2.165063509461097 1.2499999999999998 C2.092710102099876 1.3753197776503625, 2.0081268553382365 1.496117172916774, 1.915111107797445 1.6069690242163481 C1.8220953602566536 1.7178208755159223, 1.7178208755159226 1.8220953602566536, 1.6069690242163484 1.915111107797445 C1.4961171729167742 2.0081268553382365, 1.375319777650363 2.0927101020998755, 1.2500000000000002 2.1650635094610964 C1.1246802223496375 2.2374169168223172, 0.9910302842862845 2.2997389064532, 0.8550503583141721 2.349231551964771 C0.7190704323420597 2.3987241974763416, 0.576628837219688 2.436891307857982, 0.43412044416732604 2.46201938253052 C0.291612051114964 2.487147457203058, 0.14470681472244212 2.5, 1.5308084989341916e-16 2.5 C-0.1447068147224418 2.5, -0.2916120511149638 2.487147457203058, -0.43412044416732576 2.46201938253052 C-0.5766288372196877 2.436891307857982, -0.7190704323420595 2.3987241974763416, -0.8550503583141718 2.3492315519647713 C-0.991030284286284 2.299738906453201, -1.124680222349637 2.2374169168223177, -1.2499999999999996 2.165063509461097 C-1.375319777650362 2.092710102099876, -1.4961171729167733 2.008126855338237, -1.6069690242163475 1.9151111077974459 C-1.7178208755159217 1.8220953602566548, -1.822095360256653 1.7178208755159234, -1.9151111077974443 1.6069690242163495 C-2.0081268553382357 1.4961171729167755, -2.0927101020998746 1.3753197776503645, -2.1650635094610955 1.250000000000002 C-2.2374169168223164 1.1246802223496395, -2.2997389064531992 0.9910302842862865, -2.34923155196477 0.8550503583141743 C-2.3987241974763407 0.7190704323420621, -2.436891307857981 0.5766288372196907, -2.4620193825305194 0.434120444167329 C-2.487147457203058 0.29161205111496724, -2.5 0.14470681472244545, -2.5 3.636830773662308e-15 C-2.5 -0.14470681472243818, -2.4871474572030587 -0.2916120511149599, -2.4620193825305208 -0.4341204441673218 C-2.436891307857983 -0.5766288372196837, -2.398724197476343 -0.7190704323420553, -2.3492315519647726 -0.8550503583141675 C-2.2997389064532023 -0.9910302842862798, -2.23741691682232 -1.1246802223496328, -2.165063509461099 -1.2499999999999956 C-2.092710102099878 -1.3753197776503583, -2.00812685533824 -1.4961171729167695, -1.9151111077974488 -1.606969024216344 C-1.8220953602566576 -1.7178208755159183, -1.7178208755159263 -1.82209536025665, -1.6069690242163523 -1.9151111077974416 C-1.4961171729167784 -2.0081268553382334, -1.3753197776503672 -2.0927101020998724, -1.2500000000000047 -2.1650635094610937 C-1.1246802223496422 -2.237416916822315, -0.9910302842862897 -2.299738906453198, -0.8550503583141776 -2.3492315519647686 C-0.7190704323420656 -2.3987241974763394, -0.5766288372196942 -2.4368913078579806, -0.43412044416733236 -2.462019382530519 C-0.29161205111497057 -2.4871474572030574, -0.1447068147224489 -2.4999999999999996, -7.120580697431198e-15 -2.5 C0.14470681472243463 -2.5000000000000004, 0.29161205111495647 -2.487147457203059, 0.4341204441673183 -2.4620193825305217 C0.5766288372196802 -2.436891307857984, 0.7190704323420518 -2.3987241974763442, 0.8550503583141642 -2.349231551964774 C0.9910302842862766 -2.2997389064532037, 1.1246802223496295 -2.2374169168223212, 1.2499999999999925 -2.165063509461101 C1.3753197776503554 -2.0927101020998804, 1.4961171729167668 -2.008126855338242, 1.6069690242163412 -1.915111107797451 C1.7178208755159157 -1.82209536025666, 1.8220953602566472 -1.7178208755159294, 1.915111107797439 -1.6069690242163557 C2.0081268553382308 -1.496117172916782, 2.09271010209987 -1.3753197776503712, 2.1650635094610915 -1.2500000000000089 C2.237416916822313 -1.1246802223496466, 2.299738906453196 -0.9910302842862939, 2.3492315519647673 -0.855050358314182 C2.3987241974763385 -0.71907043234207, 2.4368913078579792 -0.5766288372196986, 2.462019382530518 -0.4341204441673369 C2.487147457203057 -0.29161205111497523, 2.4936698970884197 -0.07235340736123454, 2.5 -1.1714553645825241e-14 C2.5063301029115803 0.07235340736121111, 2.50633010291158 -0.07235340736122292, 2.5 0" stroke="#000" stroke-width="2" fill="none" stroke-dasharray="0 0" style=""/></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/retry-state-machine.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The machine begins when a <code>post.received</code>
+is admitted by the enqueue dedup gate, creating the
+<code>post_processing_state</code> row in <code>pending</code>. Once the
+row’s <code>scheduled_at</code> is reached and it wins priority
+ordering, it becomes <code>queued</code>; a worker’s
+<code>Dequeue</code> (the <code>FOR UPDATE SKIP LOCKED</code> claim) is
+the only transition into <code>running</code>, which is why exactly one
+worker ever executes a given post. <code>running</code> is the hub of
+the machine — five distinct edges leave it, and understanding them is
+understanding the whole resilience design.</p>
+<p>The <strong>success</strong> edge (<code>running → completed</code>)
+publishes <code>post.processed</code> and the sticky
+<code>post.state=done</code>, then terminates. The
+<strong>pause/resume</strong> pair (<code>running ⇄ paused</code>)
+exists so a long, checkpointable Skill step can yield its worker without
+losing progress: <code>TaskExecutor.Pause</code> returns a checkpoint
+blob that is persisted (<code>SaveCheckpoint</code>), and
+<code>Resume</code> restores it — this is how a 30-minute research step
+survives a graceful worker drain. The <strong>stuck</strong> edge
+(<code>running → stuck → pending</code>) is the crash-safety net: if a
+worker dies mid-run its heartbeat goes stale, <code>StuckDetector</code>
+flags the task, and <code>GetStaleTasks</code> returns it to
+<code>pending</code> for another worker.</p>
+<p>The two <strong>failure</strong> edges are the retry/back-off core.
+On a transient failure with attempts remaining
+(<code>RetryCount &lt; MaxRetries</code>), the task is
+<code>Requeue</code>d with an exponential-backoff-plus- full-jitter
+delay (§5) and returns to <code>pending</code>; the retry is recorded as
+the <code>task.retrying</code> execution-history event (and, per step,
+<code>skill.step.retried</code>) — crucially it is <em>not</em> a
+distinct status, so the machine has no illegal states to reconcile. On a
+failure with the ceiling reached
+(<code>RetryCount &gt;= MaxRetries</code>), the task is moved to
+<code>dead_letter</code> via <code>MoveToDeadLetter(reason)</code> and
+<code>post.failed</code> is published. Two edges re-enter the machine
+from terminal-ish states: <code>dead_letter → pending</code> is an
+operator/user-driven manual reprocess (a <code>DeadLetterTask</code>
+carries <code>ReprocessAfter</code>/<code>Reprocessed</code> fields,
+VERIFIED), and <code>completed → running</code> is the ordinary
+reprocess trigger, which first invalidates the sticky
+<code>post.state</code> (<a href="./event-model.md">event-model.md</a>)
+and then claims a fresh run. Every terminal state
+(<code>completed</code>, <code>cancelled</code>, and eventually an
+abandoned <code>dead_letter</code>) is reachable exactly once per claim,
+which keeps the post’s audit trail linear and its sticky state
+coherent.</p>
+<h2 id="circuit-breaker-for-external-systems">6. Circuit breaker for
+external systems</h2>
+<p>Every flapping external dependency is wrapped in a circuit breaker.
+The pattern already exists in <code>LLMProvider</code>,
+<code>filesystem</code>, and <code>lets_encrypt</code>
+<code>[research_request_final §3.3]</code>; Thready reuses it and adds
+breakers around messenger APIs and the delegated download systems.</p>
+<p><strong>Verified shared home (<code>[OPEN: CONC-2]</code>, now
+narrowed).</strong> A shared resilience package was <strong>read at
+source</strong> this pass:
+<code>digital.vasic.discovery/pkg/resilience</code> exposes a
+<code>Manager</code>
+(<code>NewManager(logger Logger, metrics MetricsReporter) *Manager</code>)
+driving a <strong>four-state connection state machine</strong> —
+<code>Connected → Disconnected → Reconnecting → Offline</code> — with
+health metrics (<code>Healthy = 1.0</code>, <code>Degraded = 0.5</code>,
+<code>OfflineHealth = 0.0</code>) surfaced via
+<code>ConnectionState.HealthMetric()</code> and
+<code>Source</code>/<code>Event</code>/<code>EventType</code> types
+(VERIFIED). This is a <strong>connection-availability/failover</strong>
+breaker keyed on a <code>Source</code> endpoint (ideal for wrapping a
+messenger session, HelixLLM, or a download backend as a monitored
+source), <em>not</em> a generic per-call <code>Do(fn)</code> wrapper.
+The remaining ambiguity is therefore narrower than before: a
+<strong>call-level</strong> breaker (open after N consecutive failures
+on one function call) is provided internally by
+<code>LLMProvider</code>; whether Thready adopts
+<code>discovery/pkg/resilience.Manager</code> for source-level failover
+and <code>LLMProvider</code>’s internal breaker for call-level, or
+unifies them, is the residual decision tracked in §12. The illustrative
+<code>circuitbreaker.New(...).Do(...)</code> below is the
+<em>call-level</em> shape and is representative, not the
+<code>resilience.Manager</code> API.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Illustrative breaker config per dependency (reusing the LLMProvider breaker pattern).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>breaker <span class="op">:=</span> circuitbreaker<span class="op">.</span>New<span class="op">(</span>circuitbreaker<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    FailureThreshold<span class="op">:</span> <span class="dv">5</span><span class="op">,</span>          <span class="co">// consecutive failures → open</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    OpenDuration<span class="op">:</span>     <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span> <span class="co">// stay open, fail fast</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    HalfOpenProbes<span class="op">:</span>   <span class="dv">2</span><span class="op">,</span>          <span class="co">// trial calls before closing</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>res<span class="op">,</span> err <span class="op">:=</span> breaker<span class="op">.</span>Do<span class="op">(</span>ctx<span class="op">,</span> <span class="kw">func</span><span class="op">()</span> <span class="op">(</span><span class="dt">any</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> helixLLM<span class="op">.</span>Research<span class="op">(</span>ctx<span class="op">,</span> q<span class="op">)</span> <span class="op">})</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> circuitbreaker<span class="op">.</span>ErrOpen<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// fall back: LLMProvider cloud fallback, or requeue with backoff</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 45%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Breaker opens on</th>
+<th>Fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixLLM (local)</td>
+<td>5 consecutive 5xx/timeouts</td>
+<td><code>LLMProvider</code> cloud fallback chain (claude-sonnet-4,
+gemini-2.5-pro, deepseek-v3)</td>
+</tr>
+<tr>
+<td>Telegram/Max API</td>
+<td>rate-limit / auth errors</td>
+<td>back off, honor FLOOD_WAIT, requeue</td>
+</tr>
+<tr>
+<td>Boba / MeTube / Download Mgr</td>
+<td>callback-timeout / 5xx</td>
+<td>requeue delegated job with backoff; surface <code>post.failed</code>
+if exhausted</td>
+</tr>
+<tr>
+<td>pgvector search</td>
+<td>connection errors</td>
+<td>serve from cache; degrade to relational filter</td>
+</tr>
+</tbody>
+</table>
+<h2 id="multi-hashtag-concurrency-precedence">7. Multi-hashtag
+concurrency &amp; precedence</h2>
+<p>A post may match <strong>multiple</strong> categories simultaneously
+(e.g. <code>#Research #Video #TODO #ToDownload</code>). Categories are
+<strong>additive, not exclusive</strong> — the post runs <em>every</em>
+matching Skill <code>[research_request_final §3.3]</code>. Ordering is
+deterministic by a Skill <code>SortOrder</code>, and conflicting
+instructions resolve through a fixed precedence:</p>
+<blockquote>
+<p><strong>download &gt; convert &gt; analyze &gt; research &gt;
+reply</strong></p>
+</blockquote>
+<p>This ordering exists so later stages can consume earlier outputs:
+research can analyze downloaded media, and the status reply is always
+last so it reports the full result. Within a stage, independent Skills
+may run concurrently (bounded by per-Skill caps); across stages the
+order is strict. Full recipe/dispatch detail is in <a
+href="./processing-pipeline.md">processing-pipeline.md</a>.</p>
+<h2 id="concurrency-caps-worker-pool">8. Concurrency caps &amp; worker
+pool</h2>
+<p><code>[research_request_final Q4]</code>
+<code>[DEFAULT — adjustable]</code>:</p>
+<ul>
+<li><strong>Global worker pool</strong> — 32 workers (BackgroundTasks
+worker pool), tuned to the Hetzner host.</li>
+<li><strong>Per-Skill concurrency caps</strong> — e.g. LLM-research
+Skills capped low (GPU-bound: 4), download Skills delegated to external
+pools (Boba/MeTube/Download-Manager have their own concurrency).</li>
+<li><strong>Resource-aware dequeue</strong> —
+<code>Dequeue(workerID, maxCPUCores, maxMemoryMB)</code> (VERIFIED) only
+hands a worker a task whose <code>ResourceRequirements</code> fit; a
+70B-model research task will not be claimed by a resource-starved
+worker.</li>
+</ul>
+<h2 id="ddl-idempotent-claim-table">9. DDL: idempotent claim table</h2>
+<p>The Thready processing-state row that backs the invariant
+(PostgreSQL). Actual queue columns are owned by
+<code>digital.vasic.background</code>; this is the Thready-side
+processing state that the task references.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> post_processing_state (</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    post_id        UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> posts(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    account_id     UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> accounts(<span class="kw">id</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    task_kind      TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;thready.post.process&#39;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    status         TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;pending&#39;</span>,   <span class="co">-- mirrors models.TaskStatus</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    claimed_by     TEXT,                              <span class="co">-- worker_id, NULL until claimed</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    claimed_at     TIMESTAMPTZ,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    attempt        <span class="dt">INT</span>  <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    last_error     TEXT,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">checkpoint</span>     BYTEA,                             <span class="co">-- TaskExecutor.Pause() blob</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    updated_at     TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> uq_post_task <span class="kw">UNIQUE</span> (post_id, task_kind)  <span class="co">-- ← enqueue dedup</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- Claim query (conceptual; background owns the queue table):</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">--   UPDATE post_processing_state SET status=&#39;running&#39;, claimed_by=$1, claimed_at=now()</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">--   WHERE post_id = (SELECT post_id FROM post_processing_state</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">--                    WHERE status=&#39;pending&#39; ORDER BY updated_at</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">--                    FOR UPDATE SKIP LOCKED LIMIT 1)</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">--   RETURNING post_id;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">-- Partial claim index: a retried task returns to &#39;pending&#39; (retrying is NOT a status — §2),</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- so the claim hot path filters on &#39;pending&#39; only.</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_pps_status <span class="kw">ON</span> post_processing_state (status, updated_at)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> status <span class="op">=</span> <span class="st">&#39;pending&#39;</span>;</span></code></pre></div>
+<p>Forward/rollback migration is delivered via
+<code>database/pkg/migration.Runner</code> (up/down); the DB pack
+carries the full migration script
+<code>[research_request_final Q30]</code>.</p>
+<h2 id="gap-register-coverage">10. Gap-register coverage</h2>
+<ul>
+<li><code>[GAP: 2.9]</code> <code>session_orchestrator</code>
+DESIGN-ONLY — <strong>closed by design</strong>: Thready’s single-claim
+reuses the VERIFIED BackgroundTasks Postgres claim, not the
+unimplemented registry. If/when <code>session_orchestrator</code> lands,
+it can adopt the same <code>(post_id, task_kind)</code> unique +
+row-lock pattern documented here (the request explicitly notes
+“Thready’s idempotent single-claim-per-post reuses the same
+concept”).</li>
+<li><code>[GAP: 3.2]</code> database has no partition helpers — the
+<code>post_processing_state</code> and <code>posts</code> tables are
+time-partitioned in <a href="./data-flow.md">data-flow.md</a>; the claim
+query is partition-pruning-friendly (filters on <code>status</code> +
+recent <code>updated_at</code>).</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">11. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: event storm must yield exactly one claim.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSingleClaim_UnderStorm<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    q <span class="op">:=</span> newPostgresQueue<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> wg sync<span class="op">.</span>WaitGroup</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="op">:=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">50</span><span class="op">;</span> i<span class="op">++</span> <span class="op">{</span> <span class="co">// 50 concurrent duplicate enqueues</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        wg<span class="op">.</span>Add<span class="op">(</span><span class="dv">1</span><span class="op">);</span> <span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span> <span class="cf">defer</span> wg<span class="op">.</span>Done<span class="op">();</span> _ <span class="op">=</span> enqueuePost<span class="op">(</span>q<span class="op">,</span> <span class="st">&quot;p1&quot;</span><span class="op">)</span> <span class="op">}()</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    wg<span class="op">.</span>Wait<span class="op">()</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dt">int64</span><span class="op">(</span><span class="dv">1</span><span class="op">),</span> q<span class="op">.</span>CountTasksFor<span class="op">(</span><span class="st">&quot;p1&quot;</span><span class="op">))</span> <span class="co">// FAILS w/o UNIQUE+ON CONFLICT</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: two workers must not both claim the same pending task.</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestClaim_MutualExclusion<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    q <span class="op">:=</span> newPostgresQueue<span class="op">(</span>t<span class="op">);</span> enqueuePost<span class="op">(</span>q<span class="op">,</span> <span class="st">&quot;p2&quot;</span><span class="op">)</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    a<span class="op">,</span> _ <span class="op">:=</span> q<span class="op">.</span>Dequeue<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;worker-a&quot;</span><span class="op">,</span> anyResources<span class="op">)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    b<span class="op">,</span> _ <span class="op">:=</span> q<span class="op">.</span>Dequeue<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;worker-b&quot;</span><span class="op">,</span> anyResources<span class="op">)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>True<span class="op">(</span>t<span class="op">,</span> <span class="op">(</span>a <span class="op">==</span> <span class="ot">nil</span><span class="op">)</span> <span class="op">!=</span> <span class="op">(</span>b <span class="op">==</span> <span class="ot">nil</span><span class="op">))</span> <span class="co">// exactly one non-nil</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: exhausted retries move to dead-letter and emit post.failed.</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestRetryExhaustion_DeadLetters<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    task <span class="op">:=</span> failingTask<span class="op">(</span>maxRetries<span class="op">=</span><span class="dv">5</span><span class="op">)</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    runToExhaustion<span class="op">(</span>t<span class="op">,</span> task<span class="op">)</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> models<span class="op">.</span>TaskStatusDeadLetter<span class="op">,</span> task<span class="op">.</span>Status<span class="op">)</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>True<span class="op">(</span>t<span class="op">,</span> sawEvent<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;post.failed&quot;</span><span class="op">))</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">12. Open items</h2>
+<ul>
+<li><code>[CLOSED: CONC-1]</code> (was: exact
+<code>models.BackgroundTask</code> dedup field). <strong>Source-verified
+this pass</strong> (<code>models/background_task.go</code>): the model
+has <strong>no <code>DedupeKey</code> and no
+<code>ErrDuplicateTask</code></strong>; its correlation field is
+<code>CorrelationID *string</code>, retry state is
+<code>RetryCount</code>/<code>MaxRetries</code>/<code>RetryDelaySeconds</code>/<code>LastError</code>/<code>ErrorHistory</code>,
+and <code>TaskStatus</code> is the nine-value enum in §2. Enqueue-dedup
+is therefore Thready-side via <code>post_processing_state</code>
+<code>UNIQUE(post_id, task_kind)</code> + <code>ON CONFLICT</code>
+(§3/§9), with <code>post_id</code> carried in
+<code>CorrelationID</code>. No residual verification needed.</li>
+<li><code>[OPEN: CONC-2]</code> (narrowed).
+<strong>Source-verified</strong> that a shared resilience package
+exists: <code>discovery/pkg/resilience.Manager</code> + the
+<code>Connected/Disconnected/Reconnecting/Offline</code>
+<code>ConnectionState</code> machine (§6). Residual decision (not a
+verification gap): whether Thready standardizes source-level failover on
+<code>resilience.Manager</code> and keeps <code>LLMProvider</code>’s
+internal call-level breaker, or unifies both behind one seam. Tracked as
+a design workable item.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

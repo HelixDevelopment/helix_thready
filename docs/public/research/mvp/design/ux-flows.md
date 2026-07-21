@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/ux-flows.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (design)
   Related         : ./index.md, ./wireframes.md, ../api/index.md,
                     ../architecture/index.md, ../CONVENTIONS.md
@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: add channel, process post, search, manage account — with states, errors, event hooks |
 | 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: new **messenger sign-in** state machine (§2.1, interactive vs. non-interactive, +`.mmd`); new **reprocess** sequence (§3.1, idempotent single-claim + `409`, +`.mmd`); per-flow error/status‑code tables mapped to the shared [error model](../api/error-model.md); expanded cross-flow principles |
+| 3 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of contents
 
@@ -243,7 +244,7 @@ sequenceDiagram
     EVT-->>W: final state + generated assets
     API-->>W: 202 accepted (subscription active)
   end
-  W-->>U: pipeline animates live; retry-step on failure
+  W-->>U: pipeline animates live#59; retry-step on failure
 ```
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/flow-reprocess.mmd`.

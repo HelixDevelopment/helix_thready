@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/architecture/semantic-search.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (System Architecture)
   Related         : ./system-overview.md, ./processing-pipeline.md, ./data-flow.md,
                     ./security-model.md, ./component-catalog.md
@@ -16,6 +16,7 @@
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — Lumen-style in-house search, embeddings, pgvector, rag |
 | 2 | 2026-07-21 | swarm (review pass) | Add OpenAPI 3.1 /v1/search contract (§8) per CONVENTIONS §6 |
 | 3 | 2026-07-22 | swarm (Pass 3 depth) | Close SEM-1 — real `vectordb` `VectorStore`/`Vector`/`SearchQuery`/`SearchResult`/`DistanceMetric` and `embeddings` `EmbeddingProvider` read at source; confirm no `llama`/`hash` provider in `embeddings` (GAP 2.7); deepen search diagram explanation |
+| 4 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -309,7 +310,7 @@ flowchart TB
   EMB -. FAIL LOUD if HashEmbedder .-> GUARD[startup guard\nrefuse hash embedder in search ctx]:::warn
 
   subgraph Query["Query path (read)"]
-    Q[/v1/search query]:::c --> QEMB[Embed query same model]:::c
+    Q["/v1/search query"]:::c --> QEMB[Embed query same model]:::c
     QEMB --> ANN[ANN search top-k\npgvector index]:::c
     ANN --> RR[Rerank bge-small-en-v1.5]:::c
     RR --> HYD[Hydrate ids from relational SoR]:::c

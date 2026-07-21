@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Agent-Fleet Orchestration Plan</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Agent-Fleet Orchestration Plan</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#principles" id="toc-principles">1. Principles</a></li>
+<li><a href="#orchestration-topology" id="toc-orchestration-topology">2.
+Orchestration topology</a></li>
+<li><a href="#native-alias-first-model-selection-11.4.196198"
+id="toc-native-alias-first-model-selection-11.4.196198">3.
+Native-alias-first model selection <code>[§11.4.196/198]</code></a></li>
+<li><a href="#subagent-driven-by-default-11.4.2070"
+id="toc-subagent-driven-by-default-11.4.2070">4.
+Subagent-driven-by-default <code>[§11.4.20/70]</code></a></li>
+<li><a href="#automatic-multi-track-ruler-11.4.187"
+id="toc-automatic-multi-track-ruler-11.4.187">5. Automatic multi-track
+ruler <code>[§11.4.187]</code></a></li>
+<li><a href="#exactly-once-claim-registry-11.4.176"
+id="toc-exactly-once-claim-registry-11.4.176">6. Exactly-once claim
+registry <code>[§11.4.176]</code></a></li>
+<li><a href="#multi-track-git-worktree-isolation"
+id="toc-multi-track-git-worktree-isolation">7. Multi-track git-worktree
+isolation</a></li>
+<li><a href="#independent-ai-review-fable-xhigh-11.4.209"
+id="toc-independent-ai-review-fable-xhigh-11.4.209">8. Independent AI
+review — Fable @ xhigh <code>[§11.4.209]</code></a></li>
+<li><a href="#token-optimization-11.4.198"
+id="toc-token-optimization-11.4.198">9. Token optimization
+<code>[§11.4.198]</code></a></li>
+<li><a href="#the-local-helix-llm-dev-provider-and-runtime-engine"
+id="toc-the-local-helix-llm-dev-provider-and-runtime-engine">10. The
+local Helix LLM: dev provider AND runtime engine</a></li>
+<li><a href="#gaps-this-plan-depends-on"
+id="toc-gaps-this-plan-depends-on">11. Gaps this plan depends
+on</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Agent-Fleet Orchestration Plan
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/development/agent-orchestration.md
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
+  Author          : Helix Thready documentation swarm (development)
+  Related         : ./index.md, ./workable-items.md, ./workable-items-detail.md,
+                    ./contribution-guidelines.md, ./git-workflow-internals.md,
+                    ../../../../private/research/mvp/helix_thready_research_request_final.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (development)</td>
+<td>Initial draft — alias-first, multi-track, claim registry, Fable
+review</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (development, review)</td>
+<td>Review pass — corrected the <code>track_claim</code> DDL to a
+partial unique index (<code>WHERE released_at IS NULL</code>) so a
+released key can be re-claimed; added a TTL-expiry recovery index</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (development, pass 3)</td>
+<td>Depth pass — added the VERIFIED <code>AgentPool</code>
+capability-match contract to §3 (closes
+<code>[OPEN: agentpool-contract]</code>); updated §6 + §11 after reading
+<code>vasic-digital/session_orchestrator</code> at source (the
+exactly-once claim <code>Registry</code> now ships — no longer
+DESIGN-ONLY)</td>
+</tr>
+</tbody>
+</table>
+<p>This document defines how the Helix Thready codebase is <strong>built
+by an autonomous agent fleet</strong>. It is the development-time
+process, reconciling the original request’s “fine-granulated workable
+items implementable by a local model” with the Constitution’s
+orchestration mandates (final request §5.1.2 dev-orchestration
+reconciliation). It is <em>not</em> the runtime AI of the delivered
+product — though, as noted below, the same local Helix LLM plays both
+roles.</p>
+<blockquote>
+<p><strong>Anchor-verification caveat
+<code>[OPEN: constitution-anchor-verify]</code>.</strong> The exact
+normative text of <strong>§11.4.196 / §11.4.198 / §11.4.209</strong> was
+not available in the local Constitution copy (which tops out at
+§11.4.192). Their descriptions here are taken from the final request’s
+decision matrix and §5.1.2 and are tracked for re-verification
+(<code>ATM-066</code>). §11.4.20/70/176/187/151/156/28
+<strong>were</strong> read at source.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-principles">1. Principles</a></li>
+<li><a href="#2-orchestration-topology">2. Orchestration
+topology</a></li>
+<li><a href="#3-native-alias-first-model-selection-1141961198">3.
+Native-alias-first model selection <code>[§11.4.196/198]</code></a></li>
+<li><a href="#4-subagent-driven-by-default-11142070">4.
+Subagent-driven-by-default <code>[§11.4.20/70]</code></a></li>
+<li><a href="#5-automatic-multi-track-ruler-114187">5. Automatic
+multi-track ruler <code>[§11.4.187]</code></a></li>
+<li><a href="#6-exactly-once-claim-registry-114176">6. Exactly-once
+claim registry <code>[§11.4.176]</code></a></li>
+<li><a href="#7-multi-track-git-worktree-isolation">7. Multi-track
+git-worktree isolation</a></li>
+<li><a href="#8-independent-ai-review--fable--xhigh-114209">8.
+Independent AI review — Fable @ xhigh <code>[§11.4.209]</code></a></li>
+<li><a href="#9-token-optimization-114198">9. Token optimization
+<code>[§11.4.198]</code></a></li>
+<li><a
+href="#10-the-local-helix-llm-dev-provider-and-runtime-engine">10. The
+local Helix LLM: dev provider AND runtime engine</a></li>
+<li><a href="#11-gaps-this-plan-depends-on">11. Gaps this plan depends
+on</a></li>
+</ul>
+<h2 id="principles">1. Principles</h2>
+<ul>
+<li><strong>Autonomous, zero-idle</strong>
+<code>[§11.4.94/97/192]</code> — a track is idle only when its domain
+genuinely has zero actionable items or all remaining work is externally
+blocked; “nothing visible right now” is never a valid stop. A freed
+track is immediately backfilled with its next-highest-priority
+item.</li>
+<li><strong>Decoupled items</strong> <code>[§11.4.20]</code> — every
+<code>ATM-NNN</code> is scoped so a worker needs minimal cross-scope
+awareness (see <a
+href="./workable-items.md">workable-items.md</a>).</li>
+<li><strong>Conflict-free by construction</strong>
+<code>[§11.4.176]</code> — two tracks can never claim the same item or
+its hidden-coupling logical group.</li>
+<li><strong>Reproduce-first + reviewed</strong> — every item is
+RED→GREEN TDD <code>[§11.4.43]</code> and passes an independent AI
+review before merge <code>[§11.4.209]</code>.</li>
+<li><strong>In-house first</strong> — the fleet is driven by
+<code>vasic-digital</code>/<code>HelixDevelopment</code> tooling
+(<code>claude_toolkit</code> aliases, <code>llmorchestrator</code>,
+<code>challenges</code>, <code>HelixQA</code>), not bespoke
+scripts.</li>
+</ul>
+<h2 id="orchestration-topology">2. Orchestration topology</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1925.75px; background-color: white;" viewBox="0 0 1925.75 950.390869140625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1022.75,55L1022.75,59.167C1022.75,63.333,1022.75,71.667,1022.75,79.333C1022.75,87,1022.75,94,1022.75,97.5L1022.75,101" id="my-svg-L_OP_COND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OP_COND_0" data-points="W3sieCI6MTAyMi43NSwieSI6NTV9LHsieCI6MTAyMi43NSwieSI6ODB9LHsieCI6MTAyMi43NSwieSI6MTA1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M916.25,152.192L832.208,163.943C748.167,175.694,580.083,199.197,496.042,219.132C412,239.067,412,255.433,412,263.617L412,271.8" id="my-svg-L_COND_REG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_REG_0" data-points="W3sieCI6OTE2LjI1LCJ5IjoxNTIuMTkxNjg5MzgyMzU4N30seyJ4Ijo0MTIsInkiOjIyMi42OTk5OTY5NDgyNDIyfSx7IngiOjQxMiwieSI6Mjc1Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M916.25,162.442L873.708,172.485C831.167,182.528,746.083,202.614,703.542,222.396C661,242.179,661,261.657,661,271.397L661,281.136" id="my-svg-L_COND_WIDB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_WIDB_0" data-points="W3sieCI6OTE2LjI1LCJ5IjoxNjIuNDQxOTQ3NDIyOTM3MTJ9LHsieCI6NjYxLCJ5IjoyMjIuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo2NjEsInkiOjI4NS4xMzYwMDkyMTYzMDg2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1129.25,152.023L1214.458,163.802C1299.667,175.582,1470.083,199.141,1555.292,224.67C1640.5,250.198,1640.5,277.697,1640.5,291.446L1640.5,305.195" id="my-svg-L_COND_T1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_T1_0" data-points="W3sieCI6MTEyOS4yNSwieSI6MTUyLjAyMjk0NTAxODEwNjAxfSx7IngiOjE2NDAuNSwieSI6MjIyLjY5OTk5Njk0ODI0MjJ9LHsieCI6MTY0MC41LCJ5IjozMDkuMTk1NDQ2MDE0NDA0M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1129.25,162.167L1172.458,172.256C1215.667,182.345,1302.083,202.522,1345.292,226.36C1388.5,250.198,1388.5,277.697,1388.5,291.446L1388.5,305.195" id="my-svg-L_COND_T2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_T2_0" data-points="W3sieCI6MTEyOS4yNSwieSI6MTYyLjE2Njk4NDIxNjUyOTd9LHsieCI6MTM4OC41LCJ5IjoyMjIuNjk5OTk2OTQ4MjQyMn0seyJ4IjoxMzg4LjUsInkiOjMwOS4xOTU0NDYwMTQ0MDQzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1065.773,169.6L1077.56,178.45C1089.348,187.3,1112.924,205,1124.712,227.599C1136.5,250.198,1136.5,277.697,1136.5,291.446L1136.5,305.195" id="my-svg-L_COND_T3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_T3_0" data-points="W3sieCI6MTA2NS43NzI1NDExMjA0NSwieSI6MTY5LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTEzNi41LCJ5IjoyMjIuNjk5OTk2OTQ4MjQyMn0seyJ4IjoxMTM2LjUsInkiOjMwOS4xOTU0NDYwMTQ0MDQzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M970.461,169.6L956.134,178.45C941.807,187.3,913.154,205,898.827,227.599C884.5,250.198,884.5,277.697,884.5,291.446L884.5,305.195" id="my-svg-L_COND_T4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_COND_T4_0" data-points="W3sieCI6OTcwLjQ2MTA2NTQwNzQ1MzIsInkiOjE2OS41OTk5OTg0NzQxMjExfSx7IngiOjg4NC41LCJ5IjoyMjIuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo4ODQuNSwieSI6MzA5LjE5NTQ0NjAxNDQwNDN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1640.5,356.195L1640.5,365.928C1640.5,375.661,1640.5,395.126,1640.5,408.358C1640.5,421.591,1640.5,428.591,1640.5,432.091L1640.5,435.591" id="my-svg-L_T1_W1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T1_W1_0" data-points="W3sieCI6MTY0MC41LCJ5IjozNTYuMTk1NDQ2MDE0NDA0M30seyJ4IjoxNjQwLjUsInkiOjQxNC41OTA4OTY2MDY0NDUzfSx7IngiOjE2NDAuNSwieSI6NDM5LjU5MDg5NjYwNjQ0NTN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1388.5,356.195L1388.5,365.928C1388.5,375.661,1388.5,395.126,1388.5,409.825C1388.5,424.524,1388.5,434.458,1388.5,439.424L1388.5,444.391" id="my-svg-L_T2_W2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T2_W2_0" data-points="W3sieCI6MTM4OC41LCJ5IjozNTYuMTk1NDQ2MDE0NDA0M30seyJ4IjoxMzg4LjUsInkiOjQxNC41OTA4OTY2MDY0NDUzfSx7IngiOjEzODguNSwieSI6NDQ4LjM5MDg5NTg0MzUwNTg2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1136.5,356.195L1136.5,365.928C1136.5,375.661,1136.5,395.126,1136.5,409.825C1136.5,424.524,1136.5,434.458,1136.5,439.424L1136.5,444.391" id="my-svg-L_T3_W3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T3_W3_0" data-points="W3sieCI6MTEzNi41LCJ5IjozNTYuMTk1NDQ2MDE0NDA0M30seyJ4IjoxMTM2LjUsInkiOjQxNC41OTA4OTY2MDY0NDUzfSx7IngiOjExMzYuNSwieSI6NDQ4LjM5MDg5NTg0MzUwNTg2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M884.5,356.195L884.5,365.928C884.5,375.661,884.5,395.126,884.5,409.825C884.5,424.524,884.5,434.458,884.5,439.424L884.5,444.391" id="my-svg-L_T4_W4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T4_W4_0" data-points="W3sieCI6ODg0LjUsInkiOjM1Ni4xOTU0NDYwMTQ0MDQzfSx7IngiOjg4NC41LCJ5Ijo0MTQuNTkwODk2NjA2NDQ1M30seyJ4Ijo4ODQuNSwieSI6NDQ4LjM5MDg5NTg0MzUwNTg2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1618.466,504.191L1614.43,510.108C1610.394,516.024,1602.322,527.858,1551.683,545.363C1501.044,562.869,1407.838,586.047,1361.235,597.636L1314.632,609.226" id="my-svg-L_W1_WT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W1_WT_0" data-points="W3sieCI6MTYxOC40NjY0NDU3MDAyMzE0LCJ5Ijo1MDQuMTkwODk1MDgwNTY2NH0seyJ4IjoxNTk0LjI1LCJ5Ijo1MzkuNjkwODk1MDgwNTY2NH0seyJ4IjoxMzEwLjc1LCJ5Ijo2MTAuMTkwODk1MDgwNTY2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1392.746,495.391L1394.08,502.774C1395.414,510.158,1398.082,524.924,1376.948,543.755C1355.813,562.586,1310.876,585.48,1288.408,596.928L1265.939,608.375" id="my-svg-L_W2_WT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W2_WT_0" data-points="W3sieCI6MTM5Mi43NDU5NDQwMDA1ODEyLCJ5Ijo0OTUuMzkwODk1ODQzNTA1ODZ9LHsieCI6MTQwMC43NSwieSI6NTM5LjY5MDg5NTA4MDU2NjR9LHsieCI6MTI2Mi4zNzUsInkiOjYxMC4xOTA4OTUwODA1NjY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1140.746,495.391L1142.08,502.774C1143.414,510.158,1146.082,524.924,1155.465,543.516C1164.847,562.108,1180.945,584.525,1188.993,595.733L1197.042,606.942" id="my-svg-L_W3_WT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W3_WT_0" data-points="W3sieCI6MTE0MC43NDU5NDQwMDA1ODEyLCJ5Ijo0OTUuMzkwODk1ODQzNTA1ODZ9LHsieCI6MTE0OC43NSwieSI6NTM5LjY5MDg5NTA4MDU2NjR9LHsieCI6MTE5OS4zNzUsInkiOjYxMC4xOTA4OTUwODA1NjY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M888.746,495.391L890.08,502.774C891.414,510.158,894.082,524.924,934.714,543.869C975.346,562.815,1053.942,585.938,1093.24,597.5L1132.538,609.062" id="my-svg-L_W4_WT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W4_WT_0" data-points="W3sieCI6ODg4Ljc0NTk0NDAwMDU4MTEsInkiOjQ5NS4zOTA4OTU4NDM1MDU4Nn0seyJ4Ijo4OTYuNzUsInkiOjUzOS42OTA4OTUwODA1NjY0fSx7IngiOjExMzYuMzc1LCJ5Ijo2MTAuMTkwODk1MDgwNTY2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1736.971,504.191L1754.643,510.108C1772.314,516.024,1807.657,527.858,1820.573,542.013C1833.49,556.169,1823.98,572.648,1819.224,580.887L1814.469,589.126" id="my-svg-L_W1_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W1_REV_0" data-points="W3sieCI6MTczNi45NzEyMzc3NDQ5MzMyLCJ5Ijo1MDQuMTkwODk1MDgwNTY2NH0seyJ4IjoxODQzLCJ5Ijo1MzkuNjkwODk1MDgwNTY2NH0seyJ4IjoxODEyLjQ2OTk0NTkyNzg4MzgsInkiOjU5Mi41OTA4OTY2MDY0NDUzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1489.5,488.768L1540.292,497.255C1591.083,505.742,1692.667,522.717,1742.981,539.355C1793.296,555.993,1792.342,572.295,1791.865,580.447L1791.388,588.598" id="my-svg-L_W2_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W2_REV_0" data-points="W3sieCI6MTQ4OS41LCJ5Ijo0ODguNzY3NzkwMjkzMTUwMDN9LHsieCI6MTc5NC4yNSwieSI6NTM5LjY5MDg5NTA4MDU2NjR9LHsieCI6MTc5MS4xNTQ3ODcxNDQ3NjI0LCJ5Ijo1OTIuNTkwODk2NjA2NDQ1M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1237.5,482.628L1326.958,492.139C1416.417,501.649,1595.333,520.67,1686.05,538.338C1776.767,556.006,1779.284,572.322,1780.542,580.48L1781.8,588.638" id="my-svg-L_W3_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W3_REV_0" data-points="W3sieCI6MTIzNy41LCJ5Ijo0ODIuNjI4MzMyMDIyMTcwMDd9LHsieCI6MTc3NC4yNSwieSI6NTM5LjY5MDg5NTA4MDU2NjR9LHsieCI6MTc4Mi40MTAxMDY2MTgzNTM3LCJ5Ijo1OTIuNTkwODk2NjA2NDQ1M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M985.5,479.764L1113.625,489.752C1241.75,499.74,1498,519.715,1629.131,537.894C1760.262,556.073,1766.275,572.454,1769.281,580.645L1772.287,588.836" id="my-svg-L_W4_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W4_REV_0" data-points="W3sieCI6OTg1LjUsInkiOjQ3OS43NjQxOTI2NzkzMTI4fSx7IngiOjE3NTQuMjUsInkiOjUzOS42OTA4OTUwODA1NjY0fSx7IngiOjE3NzMuNjY1NDI2MDkxOTQ1LCJ5Ijo1OTIuNTkwODk2NjA2NDQ1M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1788.75,674.791L1788.75,683.608C1788.75,692.424,1788.75,710.058,1788.75,724.124C1788.75,738.191,1788.75,748.691,1788.75,753.941L1788.75,759.191" id="my-svg-L_REV_MERGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REV_MERGE_0" data-points="W3sieCI6MTc4OC43NSwieSI6Njc0Ljc5MDg5MzU1NDY4NzV9LHsieCI6MTc4OC43NSwieSI6NzI3LjY5MDg5NTA4MDU2NjR9LHsieCI6MTc4OC43NSwieSI6NzYzLjE5MDg5NTA4MDU2NjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1752.46,592.591L1744.675,583.774C1736.89,574.958,1721.32,557.324,1708.303,543.071C1695.286,528.818,1684.823,517.946,1679.591,512.509L1674.359,507.073" id="my-svg-L_REV_W1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REV_W1_0" data-points="W3sieCI6MTc1Mi40NTk1NzU4MTU0MDM3LCJ5Ijo1OTIuNTkwODk2NjA2NDQ1M30seyJ4IjoxNzA1Ljc1LCJ5Ijo1MzkuNjkwODk1MDgwNTY2NH0seyJ4IjoxNjcxLjU4NTE3NjYwNjcwMDgsInkiOjUwNC4xOTA4OTUwODA1NjY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1788.75,827.791L1788.75,831.958C1788.75,836.124,1788.75,844.458,1788.75,852.124C1788.75,859.791,1788.75,866.791,1788.75,870.291L1788.75,873.791" id="my-svg-L_MERGE_PUSH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MERGE_PUSH_0" data-points="W3sieCI6MTc4OC43NSwieSI6ODI3Ljc5MDg5MzU1NDY4NzV9LHsieCI6MTc4OC43NSwieSI6ODUyLjc5MDg5MzU1NDY4NzV9LHsieCI6MTc4OC43NSwieSI6ODc3Ljc5MDg5MzU1NDY4NzV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1539.5,480.041L1416.292,489.982C1293.083,499.924,1046.667,519.807,906.262,535.456C765.858,551.104,731.466,562.518,714.27,568.224L697.074,573.931" id="my-svg-L_W1_ALIAS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W1_ALIAS_0" data-points="W3sieCI6MTUzOS41LCJ5Ijo0ODAuMDQwNjEzMDk3ODI2NzR9LHsieCI6ODAwLjI1LCJ5Ijo1MzkuNjkwODk1MDgwNTY2NH0seyJ4Ijo2OTMuMjc3OTI1NTMxOTE0OSwieSI6NTc1LjE5MDg5NTA4MDU2NjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1287.5,482.487L1196.625,492.021C1105.75,501.555,924,520.623,819.562,535.817C715.125,551.011,687.999,562.331,674.436,567.99L660.874,573.65" id="my-svg-L_W2_ALIAS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W2_ALIAS_0" data-points="W3sieCI6MTI4Ny41LCJ5Ijo0ODIuNDg3MTA0NjIxNzU0NH0seyJ4Ijo3NDIuMjUsInkiOjUzOS42OTA4OTUwODA1NjY0fSx7IngiOjY1Ny4xODIxODA4NTEwNjM4LCJ5Ijo1NzUuMTkwODk1MDgwNTY2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1035.5,487.033L976.958,495.809C918.417,504.585,801.333,522.138,732.846,536.505C664.358,550.871,644.466,562.051,634.52,567.641L624.573,573.231" id="my-svg-L_W3_ALIAS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W3_ALIAS_0" data-points="W3sieCI6MTAzNS41LCJ5Ijo0ODcuMDMyNTIwODgwNDE3MX0seyJ4Ijo2ODQuMjUsInkiOjUzOS42OTA4OTUwODA1NjY0fSx7IngiOjYyMS4wODY0MzYxNzAyMTI4LCJ5Ijo1NzUuMTkwODk1MDgwNTY2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M783.5,486.958L724.583,495.746C665.667,504.535,547.833,522.113,493.94,536.329C440.046,550.546,450.093,561.4,455.116,566.828L460.139,572.255" id="my-svg-L_W4_ALIAS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W4_ALIAS_0" data-points="W3sieCI6NzgzLjUsInkiOjQ4Ni45NTc1NjIzNDA2MzA0M30seyJ4Ijo0MzAsInkiOjUzOS42OTA4OTUwODA1NjY0fSx7IngiOjQ2Mi44NTYzODI5Nzg3MjM0LCJ5Ijo1NzUuMTkwODk1MDgwNTY2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_OP_COND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COND_REG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COND_WIDB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1640.5, 222.6999969482422)"><g class="label" data-id="L_COND_T1_0" transform="translate(-0.5, -28.099998474121094)"><g><rect class="background" style="" x="-88.5" y="0" width="178" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">spawn</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> headless</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">claude</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -p</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> --output-format</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">stream-json</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_COND_T2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COND_T3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_COND_T4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_T1_W1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_T2_W2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_T3_W3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_T4_W4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1473.35148, 569.75561)"><g class="label" data-id="L_W1_WT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">each</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> own</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1351.61817, 564.72283)"><g class="label" data-id="L_W2_WT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">each</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> own</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1160.93367, 556.65778)"><g class="label" data-id="L_W3_WT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">each</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> own</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(994.96903, 568.58789)"><g class="label" data-id="L_W4_WT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-57.5" y="0" width="115" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">each</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> own</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_W1_REV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_W2_REV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_W3_REV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_W4_REV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1788.75, 727.6908950805664)"><g class="label" data-id="L_REV_MERGE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-51" y="0" width="102" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §11.4.134</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1712.7994, 547.67456)"><g class="label" data-id="L_REV_W1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-28.5" y="0" width="57" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">NO-GO</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_MERGE_PUSH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(800.25, 539.6908950805664)"><g class="label" data-id="L_W1_ALIAS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">uses</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(969.03757, 515.89794)"><g class="label" data-id="L_W2_ALIAS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">uses</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(824.04733, 518.73289)"><g class="label" data-id="L_W3_ALIAS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">uses</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(582.829, 516.89264)"><g class="label" data-id="L_W4_ALIAS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">uses</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="root" transform="translate(0, 567.1908950805664)"><g class="clusters"><g class="cluster" id="my-svg-ALIAS" data-look="classic"><rect style="" x="8" y="8" width="1018" height="117"/><g class="cluster-label" transform="translate(340.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Model</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> selection</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> native-alias-first</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §11.4.196/198</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M176.5,66.5L182.75,66.5C189,66.5,201.5,66.5,213.333,66.5C225.167,66.5,236.333,66.5,241.917,66.5L247.5,66.5" id="my-svg-L_A1_A2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A1_A2_0" data-points="W3sieCI6MTc2LjUsInkiOjY2LjV9LHsieCI6MjE0LCJ5Ijo2Ni41fSx7IngiOjI1MS41LCJ5Ijo2Ni41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M358.5,66.5L364.75,66.5C371,66.5,383.5,66.5,395.333,66.5C407.167,66.5,418.333,66.5,423.917,66.5L429.5,66.5" id="my-svg-L_A2_A3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A2_A3_0" data-points="W3sieCI6MzU4LjUsInkiOjY2LjV9LHsieCI6Mzk2LCJ5Ijo2Ni41fSx7IngiOjQzMy41LCJ5Ijo2Ni41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M564.5,66.5L570.75,66.5C577,66.5,589.5,66.5,601.333,66.5C613.167,66.5,624.333,66.5,629.917,66.5L635.5,66.5" id="my-svg-L_A3_A4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A3_A4_0" data-points="W3sieCI6NTY0LjUsInkiOjY2LjV9LHsieCI6NjAyLCJ5Ijo2Ni41fSx7IngiOjYzOS41LCJ5Ijo2Ni41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M728.5,66.5L734.75,66.5C741,66.5,753.5,66.5,765.333,66.5C777.167,66.5,788.333,66.5,793.917,66.5L799.5,66.5" id="my-svg-L_A4_A5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A4_A5_0" data-points="W3sieCI6NzI4LjUsInkiOjY2LjV9LHsieCI6NzY2LCJ5Ijo2Ni41fSx7IngiOjgwMy41LCJ5Ijo2Ni41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A1_A2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A2_A3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A3_A4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A4_A5_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-A1-38" data-look="classic" transform="translate(111, 66.5)"><rect class="basic label-container" style="" x="-65.5" y="-23.5" width="131" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">deepseek</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A2-39" data-look="classic" transform="translate(305, 66.5)"><rect class="basic label-container" style="" x="-53.5" y="-23.5" width="107" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">xiaomi</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A3-40" data-look="classic" transform="translate(499, 66.5)"><rect class="basic label-container" style="" x="-65.5" y="-23.5" width="131" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">opencode</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A4-41" data-look="classic" transform="translate(684, 66.5)"><rect class="basic label-container" style="" x="-44.5" y="-23.5" width="89" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">kimi</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A5-42" data-look="classic" transform="translate(896, 66.5)"><rect class="basic label-container" style="" x="-92.5" y="-23.5" width="185" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">…</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> incl.</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Helix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> LLM</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-OP-0" data-look="classic" transform="translate(1022.75, 31.5)"><rect class="basic label-container" style="" x="-61.5" y="-23.5" width="123" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Operator</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-COND-1" data-look="classic" transform="translate(1022.75, 137.29999923706055)"><rect class="basic label-container" style="" x="-106.5" y="-32.29999923706055" width="213" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Conductor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> session</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">single</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ruler</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §11.4.187</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REG-3" data-look="classic" transform="translate(412, 332.6954460144043)"><path d="M0,15.530303030303031 a102.5,15.530303030303031 0,0,0 205,0 a102.5,15.530303030303031 0,0,0 -205,0 l0,82.73029997854522 a102.5,15.530303030303031 0,0,0 205,0 l0,-82.73029997854522" class="basic label-container outer-path" style="" transform="translate(-102.5, -56.89545301957564)"/><g class="label" style="" transform="translate(0, -18.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Exactly-once</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> claim</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> registry</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.176</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> append-only,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">lock-arbitrated</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WIDB-5" data-look="classic" transform="translate(661, 332.6954460144043)"><path d="M0,15.172955974842768 a96.5,15.172955974842768 0,0,0 193,0 a96.5,15.172955974842768 0,0,0 -193,0 l0,64.77295444896386 a96.5,15.172955974842768 0,0,0 193,0 l0,-64.77295444896386" class="basic label-container outer-path" style="" transform="translate(-96.5, -47.5594331993247)"/><g class="label" style="" transform="translate(-0.5, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">workable_items.db</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.93/95</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tracked</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> git</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-T1-7" data-look="classic" transform="translate(1640.5, 332.6954460144043)"><rect class="basic label-container" style="" x="-91" y="-23.5" width="182" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Track:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> foundation</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-T2-9" data-look="classic" transform="translate(1388.5, 332.6954460144043)"><rect class="basic label-container" style="" x="-92.5" y="-23.5" width="185" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Track:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> processing</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-T3-11" data-look="classic" transform="translate(1136.5, 332.6954460144043)"><rect class="basic label-container" style="" x="-76.5" y="-23.5" width="153" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Track:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> clients</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-T4-13" data-look="classic" transform="translate(884.5, 332.6954460144043)"><rect class="basic label-container" style="" x="-77" y="-23.5" width="154" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Track:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> testing</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-W1-15" data-look="classic" transform="translate(1640.5, 471.89089584350586)"><rect class="basic label-container" style="" x="-101" y="-32.29999923706055" width="202" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Worker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subagents</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.20/70</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-W2-17" data-look="classic" transform="translate(1388.5, 471.89089584350586)"><rect class="basic label-container" style="" x="-101" y="-23.5" width="202" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Worker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subagents</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-W3-19" data-look="classic" transform="translate(1136.5, 471.89089584350586)"><rect class="basic label-container" style="" x="-101" y="-23.5" width="202" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Worker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subagents</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-W4-21" data-look="classic" transform="translate(884.5, 471.89089584350586)"><rect class="basic label-container" style="" x="-101" y="-23.5" width="202" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Worker</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subagents</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WT-26" data-look="classic" transform="translate(1216.25, 633.6908950805664)"><rect class="basic label-container" style="" x="-104" y="-23.5" width="208" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">git</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> worktree</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> track</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REV-31" data-look="classic" transform="translate(1788.75, 633.6908950805664)"><rect class="basic label-container" style="" x="-129" y="-41.099998474121094" width="258" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Independent</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> review</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Fable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> @</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> xhigh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Opus</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> xhigh</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fallback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §11.4.209</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MERGE-33" data-look="classic" transform="translate(1788.75, 795.490894317627)"><rect class="basic label-container" style="" x="-115" y="-32.29999923706055" width="230" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">merge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> onto</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> latest</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> main</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> force-push</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §11.4.113</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PUSH-37" data-look="classic" transform="translate(1788.75, 910.090892791748)"><rect class="basic label-container" style="" x="-129" y="-32.29999923706055" width="258" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">commit_all</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> all</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> upstreams</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§2.1</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The top of the diagram is the control plane. The
+operator launches a single <strong>conductor</strong> session — the
+ruler mandated by §11.4.187. The conductor reads the tracked
+<code>workable_items.db</code> <code>[§11.4.93/95]</code> and consults
+the append-only <strong>claim registry</strong> <code>[§11.4.176]</code>
+(now realizable directly on the shipped
+<code>session_orchestrator</code> claim <code>Registry</code>, see §6)
+before it does anything, so no two tracks ever act on the same item.</p>
+<p>The middle band is the worker fleet. The conductor programmatically
+spawns one headless worker per <strong>track</strong> — native
+<code>claude -p --output-format stream-json</code>, capturing the
+<code>session_id</code> from the first <code>init</code> event and
+reading success from the <code>result</code> event, which is what lets
+it resume or monitor a track later. Each track owns a canonical domain
+(foundation, processing, clients, testing) so tracks do not contend, and
+each worker further delegates to <strong>subagents</strong>
+<code>[§11.4.20/70]</code> for sub-scopes while working inside its
+<strong>own git worktree</strong> so concurrent tracks never collide in
+one checkout.</p>
+<p>The bottom of the flow is the merge gate and the model plane. When an
+item’s tests are GREEN the worker submits it for <strong>independent AI
+review on Fable @ xhigh (Opus xhigh fallback)</strong>
+<code>[§11.4.209]</code>; a <code>GO</code> merges it onto the latest
+main with no force-push <code>[§11.4.113]</code> and pushes to all four
+upstreams via the commit-all wrapper <code>[§2.1]</code>, while a
+<code>NO-GO</code> iterates <code>[§11.4.134]</code>. Underpinning every
+worker, model access resolves through the
+<strong>native-alias-first</strong> chain <code>[§11.4.196/198]</code> —
+<code>deepseek → xiaomi → opencode → kimi → …</code> — into which the
+local Helix LLM is registered as one option, and from which the
+<code>AgentPool</code> (§3) hands out capability-matched agent
+handles.</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/orchestration-topology.mmd">diagrams/orchestration-topology.mmd</a>.</p>
+</blockquote>
+<h2 id="native-alias-first-model-selection-11.4.196198">3.
+Native-alias-first model selection <code>[§11.4.196/198]</code></h2>
+<p>Model access is <strong>alias-first</strong>: workers invoke a named
+alias, not a raw provider URL. This is the
+<code>vasic-digital/claude_toolkit</code> mechanism
+<code>[IN-HOUSE: claude_toolkit]</code> (VERIFIED at source —
+<code>README.md</code>, <code>qa-results/install_*.log</code>): each API
+key in the keys file becomes a Claude Code alias pointed at that
+provider’s strongest model, and native aliases (<code>deepseek</code>,
+<code>xiaomi</code>, …) resolve over the native or router
+(<code>ccr</code>) transport.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># claude_toolkit resolves a chain of native aliases, each an independent Claude Code alias.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Verified (qa-results/install_20260719.log):</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   [cma] provider &#39;deepseek&#39; -&gt; alias &#39;deepseek&#39; [native] model=deepseek-v4-pro (verified)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The dev-fleet preference order (from final request §5.1.2):</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">CLAUDE_ALIAS_CHAIN</span><span class="op">=</span><span class="st">&quot;deepseek xiaomi opencode kimi helixagent&quot;</span>   <span class="co"># ... local Helix LLM last-resort/offline</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># A worker requests the first healthy alias; the conductor falls through on failure.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alias <span class="kw">in</span> <span class="va">$CLAUDE_ALIAS_CHAIN</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ex">claude-alias-healthy</span> <span class="st">&quot;</span><span class="va">$alias</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exec</span> <span class="st">&quot;</span><span class="va">$alias</span><span class="st">&quot;</span> <span class="at">-p</span> <span class="at">--output-format</span> stream-json <span class="op">&lt;</span> task.json</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p><strong>Why alias-first.</strong> (1) Cost/token efficiency — cheaper
+native aliases run the bulk of items, reserving premium review capacity
+for §11.4.209. (2) Resilience — the chain degrades gracefully to the
+next alias or the offline local Helix LLM. (3) Uniformity — the same
+<code>claude -p</code> invocation and plugin/skill ecosystem apply to
+every alias (<code>claude-providers</code>,
+<code>claude-opencode-sync</code>), so an item’s implementation is
+model-agnostic. <code>[IN-HOUSE: claude_toolkit]</code></p>
+<blockquote>
+<p><strong>Verified vs assumed.</strong> The alias mechanism, transports
+and example alias names are VERIFIED in the local
+<code>claude_toolkit</code> clone. The exact <em>preference
+ordering</em> for Thready’s dev fleet is
+<code>[DEFAULT — adjustable]</code> per the final request §5.1.2
+(operator may reorder).</p>
+</blockquote>
+<p><strong>The <code>AgentPool</code> capability-match contract
+<code>[VERIFIED-SOURCE]</code> (closes
+<code>[OPEN: agentpool-contract]</code>, <code>ATM-067</code>).</strong>
+Beyond alias resolution, the dev fleet acquires concrete headless-agent
+handles from <code>digital.vasic.llmorchestrator</code>’s pool. The
+contract was read at source
+(<code>vasic-digital/LLMOrchestrator/pkg/agent/pool.go</code> +
+<code>pkg/agent/agent.go</code>):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// vasic-digital/LLMOrchestrator/pkg/agent/pool.go — VERIFIED at source (Pass 3).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AgentPool <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Acquire blocks until an agent whose Capabilities() satisfy requirements is free.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Acquire<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> requirements AgentRequirements<span class="op">)</span> <span class="op">(</span>Agent<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    Release<span class="op">(</span>agent Agent<span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewPool<span class="op">()</span> AgentPool <span class="co">// + multi_pool.go, simple_pool.go variants</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/agent/agent.go — the capability-matching types.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AgentCapabilities <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Vision<span class="op">,</span> Streaming<span class="op">,</span> ToolUse <span class="dt">bool</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    MaxTokens<span class="op">,</span> MaxImages       <span class="dt">int</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    Providers                  <span class="op">[]</span><span class="dt">string</span> <span class="co">// which LLM providers this agent supports</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AgentRequirements <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    NeedsVision<span class="op">,</span> NeedsStreaming <span class="dt">bool</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    MinTokens                   <span class="dt">int</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    PreferredAgent              <span class="dt">string</span> <span class="co">// optional: prefer a specific agent by name</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Agent <span class="kw">interface</span> <span class="op">{</span> Capabilities<span class="op">()</span> AgentCapabilities<span class="op">;</span> ModelInfo<span class="op">()</span> ModelInfo <span class="co">/* … */</span> <span class="op">}</span></span></code></pre></div>
+<p>Concrete agents present at source: <code>claudecode_agent.go</code>,
+<code>gemini_agent.go</code>, <code>junie_agent.go</code>,
+<code>opencode_agent.go</code>, <code>qwencode_agent.go</code> —
+i.e. the pool wraps <strong>headless CLI coding agents</strong> (not
+HTTP model endpoints), which is exactly right for dev-time orchestration
+<code>[GAP 2.4]</code>. A track worker that needs vision (e.g. an OCR
+item, <code>ATM-033</code>) acquires with <code>NeedsVision:true</code>;
+the pool matches it against each agent’s
+<code>Capabilities().Vision</code>. Adding HarmonyOS/Aurora build-agent
+capabilities (if those become agent tasks) is the only residual
+follow-on, tracked under <code>ATM-067</code>.</p>
+<h2 id="subagent-driven-by-default-11.4.2070">4.
+Subagent-driven-by-default <code>[§11.4.20/70]</code></h2>
+<p>§11.4.70 makes subagent-driven execution <strong>the
+default</strong>, not an optimization; §11.4.20 mandates subagent
+delegation for non-trivial and cross-cutting work. In Thready’s
+fleet:</p>
+<ul>
+<li>A <strong>track worker</strong> decomposes its claimed
+<code>ATM-NNN</code> into disjoint sub-scopes and dispatches a
+<strong>subagent per sub-scope</strong>
+(e.g. <code>ATM-028 Download Manager</code> → subagents for the HTTP/3
+source, the segmented-transfer engine, the callback emitter, the
+queue).</li>
+<li>Subagents observe <strong>working-tree quiescence</strong>
+<code>[§11.4.84]</code> before any <code>git add</code>: grep the tree
+for mutation markers, cross-check <code>git status --porcelain</code>
+against the declared scope, abort on any unaccounted file (a real
+forensic incident: a subagent swept an <code>// always pass</code> JWT
+mutation into an unrelated commit).</li>
+<li>The cleaner isolation is <strong>one git worktree per
+subagent/track</strong> (§7), which §11.4.84 explicitly recommends to
+compose with §11.4.20/70.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subagent dispatch descriptor (conductor -&gt; worker -&gt; subagent)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">item</span><span class="kw">:</span><span class="at"> ATM-028</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">worker_track</span><span class="kw">:</span><span class="at"> processing</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">subagents</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">scope</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;http3-source&quot;</span><span class="co">       # digital.vasic.http3 wrapper as the HTTP source</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">files_glob</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;downloadmanager/pkg/source/http3/**&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">forbid_touching</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;downloadmanager/pkg/queue/**&quot;</span><span class="kw">]</span><span class="co">   # disjoint-scope guarantee (§11.4.58 L3)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">scope</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;segmented-transfer&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">files_glob</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;downloadmanager/pkg/transfer/**&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">scope</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;callback-emitter&quot;</span><span class="co">   # emits the shared callback schema (ATM-030)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">files_glob</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;downloadmanager/pkg/callback/**&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">quiescence_check</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">          # §11.4.84 pre-add mutation-marker grep + porcelain cross-check</span></span></code></pre></div>
+<h2 id="automatic-multi-track-ruler-11.4.187">5. Automatic multi-track
+ruler <code>[§11.4.187]</code></h2>
+<p>§11.4.187 (VERIFIED at source) requires multi-track orchestration to
+be a <strong>universal, automatic, inherited</strong> capability — a
+single conductor session that programmatically spawns/drives/resumes/
+monitors/controls per-track headless workers, <strong>not</strong> a
+per-project reimplementation. Mechanics:</p>
+<ul>
+<li>Workers are native headless:
+<code>claude -p --output-format stream-json</code>.</li>
+<li>The conductor captures each worker’s <code>session_id</code> from
+the first <code>init</code> event and reads success from the
+<code>result</code> event; it can resume a track by
+<code>session_id</code>.</li>
+<li>On completion, the ruler looks up the next item, <strong>claims it
+exactly-once</strong> <code>[§11.4.176]</code>, and dispatches the next
+§11.4.182-labelled stream — <strong>continuous multi-track
+auto-backfill</strong> <code>[§11.4.192]</code>: a freed track is
+immediately re-assigned its next-highest-priority domain item, never
+left idle while its domain has actionable work.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conductor dispatch loop (illustrative; the real ruler is inherited, not hand-rolled)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dispatch_track()</span> <span class="kw">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">track</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="va">item</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">claim</span> <span class="st">&quot;</span><span class="va">$item</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$track</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span>                 <span class="co"># §11.4.176 exactly-once; DENY if already claimed</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">wt</span><span class="op">=</span><span class="st">&quot;.worktrees/</span><span class="va">$track</span><span class="st">&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> worktree add <span class="at">-B</span> <span class="st">&quot;track/</span><span class="va">$track</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$wt</span><span class="st">&quot;</span> origin/main <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="fu">true</span>   <span class="co"># §7 isolation</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">(</span> <span class="bu">cd</span> <span class="st">&quot;</span><span class="va">$wt</span><span class="st">&quot;</span> <span class="kw">&amp;&amp;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">select_alias</span><span class="va">)</span><span class="st">&quot;</span> <span class="at">-p</span> <span class="at">--output-format</span> stream-json <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="op">&lt;&lt;&lt;</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">item_prompt</span> <span class="st">&quot;</span><span class="va">$item</span><span class="st">&quot;</span><span class="va">)</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">tee</span> <span class="st">&quot;logs/</span><span class="va">$track</span><span class="st">.jsonl&quot;</span> <span class="kw">)</span>               <span class="co"># capture init.session_id, result</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-backfill (§11.4.192): the instant a track&#39;s worker returns, re-dispatch its next domain item.</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">on_track_free()</span> <span class="kw">{</span> <span class="ex">dispatch_track</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">next_highest_priority_item_for_domain</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span><span class="va">)</span><span class="st">&quot;</span><span class="kw">;</span> <span class="kw">}</span></span></code></pre></div>
+<p><strong>Track → domain mapping</strong> (canonical, §11.4.191):
+<code>foundation</code> (Phase 1), <code>processing</code> (Phase 2),
+<code>clients</code> (Phase 3), <code>testing</code> (Phase 4), with a
+<code>cross-cutting</code> track for ATM-058…065. Non-contending items
+from different phases run concurrently once their dependencies are
+satisfied.</p>
+<h2 id="exactly-once-claim-registry-11.4.176">6. Exactly-once claim
+registry <code>[§11.4.176]</code></h2>
+<p>§11.4.176 (VERIFIED) mandates two conflict-free-by-construction
+arbitration layers:</p>
+<p><strong>(A) Work-item layer — exactly-once claim registry.</strong> A
+lock-arbitrated, append-only registry records
+<code>claim(item|group, track, ts, ttl)</code>. A track must
+<strong>claim-before-touch</strong>; a second claim on an
+already-claimed item is <strong>DENIED</strong> (no silent overlap).
+Items that share files / subsystem / feature / schema form one
+<strong>logical group</strong> claimed whole by one track (prevents the
+hidden-coupling race two tracks editing the same seam would create,
+§11.4.58 L3 disjoint scope).</p>
+<p><strong>(B) Device-lock layer.</strong> A dead-lock-proof pool lock
+for scarce hardware/test-devices; a track locks one or more devices
+selected by required capability, then releases. (Relevant to Thready’s
+mobile items <code>ATM-046</code>; less so to the Go services.)</p>
+<p>Thready reuses this concept <strong>twice</strong>: for the
+<strong>dev fleet</strong> (this document) and, at
+<strong>runtime</strong>, for the idempotent single-claim per post
+(<code>ATM-023</code>) — the same “at most one processor per unit of
+work” invariant. The gap register flagged
+<code>digital.vasic.session_orchestrator</code> (the atomic track-claim
+registry) as <strong>DESIGN-ONLY</strong> <code>[GAP: 2.9]</code> — but
+<strong>Pass 3 read it at source and found it now ships real code
+<code>[VERIFIED-SOURCE]</code>.</strong>
+<code>vasic-digital/session_orchestrator/claim/claim.go</code> defines a
+concurrency-safe, exactly-once <code>Registry</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// vasic-digital/session_orchestrator/claim/claim.go — VERIFIED at source (Pass 3).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Package doc: &quot;the exactly-once claim + deadlock-free device-lock&quot; (WS-D DESIGN §1.3–§1.4).</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Registry <span class="kw">struct</span> <span class="op">{</span> <span class="co">/* claims map[string]Claim; concurrency-safe */</span> <span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>cfg Config<span class="op">)</span> <span class="op">*</span>Registry</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> TryClaim<span class="op">(</span>resourceID<span class="op">,</span> holder <span class="dt">string</span><span class="op">,</span> ttl time<span class="op">.</span>Duration<span class="op">)</span> <span class="op">(</span>Outcome<span class="op">,</span> <span class="op">...)</span> <span class="co">// never errors</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> Release<span class="op">(</span>resourceID<span class="op">,</span> claimID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="co">// ErrNotClaimed | ErrClaimMismatch</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Claim <span class="kw">struct</span> <span class="op">{</span> ClaimID <span class="dt">string</span><span class="op">;</span> GrantedAt time<span class="op">.</span>Time<span class="op">;</span> TTL time<span class="op">.</span>Duration <span class="co">/* … */</span> <span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c Claim<span class="op">)</span> ExpiresAt<span class="op">()</span> time<span class="op">.</span>Time</span></code></pre></div>
+<p>Sibling packages <code>alias/</code> (shared alias pool + health),
+<code>scheduler/</code>, <code>supervisor/</code> and
+<code>claim/select.go</code> round out the module. This
+<strong>supersedes</strong> the DESIGN-ONLY status: <code>ATM-062</code>
+is therefore <strong>rescoped</strong> from build-from-scratch to
+<em>wire + verify + integrate</em> the shipped registry (realizing
+§11.4.176(A) directly, and reusable for the runtime single-claim
+<code>ATM-023</code>). Until it is wired, the interim realization on
+<code>digital.vasic.background</code>’s Postgres advisory locks — the
+<code>track_claim</code> partial-unique-index DDL above — remains valid
+and is the belt-and-braces substrate.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Claim-registry substrate (Postgres advisory-lock backed; realizes §11.4.176(A))</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- A claim is exactly-once because a PARTIAL unique index rejects a second *live* claim of the key.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> track_claim (</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span>          BIGSERIAL   <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  claim_key   TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span>,          <span class="co">-- item id OR logical-group id</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  track       TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  claimed_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  ttl_seconds <span class="dt">INTEGER</span>     <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">3600</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  released_at TIMESTAMPTZ <span class="kw">NULL</span>               <span class="co">-- set on release; a released key may be re-claimed later</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exactly-once WHILE LIVE: the partial unique index rejects a second *live* claim of the same key,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- yet allows re-claiming after release. Released rows remain as an in-table audit trail (ATM-062).</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- A plain UNIQUE(claim_key) would be wrong here — it would block ever re-claiming a completed item.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> uq_live_claim <span class="kw">ON</span> track_claim (claim_key) <span class="kw">WHERE</span> released_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- TTL-expiry (crashed-track recovery): a claim past claimed_at + ttl is treated as released so the</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- ruler can re-dispatch. A sweeper stamps released_at on expiry; until then the index still holds.</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> ix_claim_ttl <span class="kw">ON</span> track_claim ((claimed_at <span class="op">+</span> (ttl_seconds <span class="op">||</span> <span class="st">&#39; seconds&#39;</span>):<span class="ch">:interval</span>))</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> released_at <span class="kw">IS</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<h2 id="multi-track-git-worktree-isolation">7. Multi-track git-worktree
+isolation</h2>
+<p>Concurrent tracks must never share one working tree. Per §11.4.84 and
+the <code>superpowers:using-git-worktrees</code> discipline, each track
+(and, ideally, each subagent) runs in its <strong>own
+<code>git worktree</code></strong> on its own branch. This makes the
+“concurrent subagents in the same checkout must coordinate through a
+lockfile” hazard moot — disjoint worktrees cannot corrupt each
+other.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One worktree per track; branch per track; merge back onto latest main after review.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add <span class="at">-B</span> track/foundation  .worktrees/foundation  origin/main</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add <span class="at">-B</span> track/processing  .worktrees/processing  origin/main</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add <span class="at">-B</span> track/clients     .worktrees/clients     origin/main</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add <span class="at">-B</span> track/testing     .worktrees/testing     origin/main</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># UNSAFE while a long build runs (§11.4.96): checkout/reset --hard/clean on the source tree —</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># always operate in the worktree, never mutate the shared source tree from another track.</span></span></code></pre></div>
+<p><strong>Rules.</strong> (1) Never
+<code>git checkout</code>/<code>reset --hard</code>/<code>clean -df</code>
+the shared source tree from a track; mutate only inside the worktree
+<code>[§11.4.96]</code>. (2) Merge onto the <strong>latest</strong>
+main, resolve conflicts, no force-push <code>[§11.4.113]</code>. (3)
+Remove the worktree after merge (<code>git worktree remove</code>).</p>
+<h2 id="independent-ai-review-fable-xhigh-11.4.209">8. Independent AI
+review — Fable @ xhigh <code>[§11.4.209]</code></h2>
+<p>Every change is independently reviewed by AI on <strong>Fable @
+xhigh</strong>, with <strong>Opus xhigh</strong> as the fallback, and
+the item iterates until the review returns <strong>GO</strong>
+<code>[§11.4.134/142/194]</code>. The review is <em>independent</em> — a
+different model/context than the one that wrote the code — so it is a
+genuine second opinion, not self-attestation.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Review gate (runs after all mandated test types are GREEN, before merge)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">review</span><span class="kw">:</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reviewer</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Fable @ xhigh&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Opus @ xhigh&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">inputs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">diff</span><span class="kw">,</span><span class="at"> test_run_evidence</span><span class="kw">,</span><span class="at"> challenges_report</span><span class="kw">,</span><span class="at"> helixqa_evidence</span><span class="kw">]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">checks</span><span class="kw">:</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> correctness_and_root_cause</span><span class="co">      # §11.4.102 no fix without root-cause</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> anti_bluff</span><span class="co">                      # no stub passing as real (paired-mutation evidence, §11.4.27/CONST-035)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> decoupling</span><span class="co">                      # §11.4.28 project-not-aware, config-injected</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> test_type_coverage</span><span class="co">              # all applicable of the 15 types present</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> security</span><span class="co">                        # secret-leak, authz, SSRF, input validation</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">outcome</span><span class="kw">:</span><span class="at"> GO | NO_GO</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">on_no_go</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;iterate in-track (§11.4.134); re-review&quot;</span></span></code></pre></div>
+<p>The review sits <strong>inside</strong> the item lifecycle (see <a
+href="./workable-items.md#2-item-lifecycle">workable-items.md §2</a>):
+<code>REVIEW → DONE</code> requires GO;
+<code>REVIEW → IN_PROGRESS</code> on NO-GO.</p>
+<h2 id="token-optimization-11.4.198">9. Token optimization
+<code>[§11.4.198]</code></h2>
+<p>The Constitution mandates token-optimized orchestration. Thready’s
+fleet applies three levers: (1) <strong>alias-first</strong> routing
+(§3) sends routine items to cheaper native aliases; (2) <strong>TOON
+encoding</strong> for structured prompt payloads —
+<code>claude_toolkit</code> ships
+<code>toon.mjs</code>/<code>toon_encode.py</code> (~40% fewer tokens for
+structured data) <code>[IN-HOUSE: claude_toolkit]</code>; (3)
+<strong>scoped context</strong> — a subagent receives only its
+sub-scope’s files/globs, not the whole tree (§4).</p>
+<blockquote>
+<p><strong>Caveat <code>[GAP: 2.9]</code>.</strong> The standalone
+<code>digital.vasic.TOON</code> module is <strong>SCAFFOLD, not
+implemented</strong> (<code>ErrTOONEncodingNotImplemented</code>), and
+<code>digital.vasic.token_optimizer</code> is partial (only
+<code>pkg/config</code>). <code>ATM-061</code> either implements both or
+marks them out-of-scope for MVP. Until then, token optimization relies
+on the <strong>toolkit’s</strong> working
+<code>toon.mjs</code>/<code>toon_encode.py</code> utilities and
+alias-first routing — <strong>not</strong> the unfinished modules. Do
+not present TOON-the-module as working.</p>
+</blockquote>
+<h2 id="the-local-helix-llm-dev-provider-and-runtime-engine">10. The
+local Helix LLM: dev provider AND runtime engine</h2>
+<p>Per the final request §5.1.2 reconciliation, the local Helix LLM (32
+GB Nvidia workstation) plays <strong>two</strong> roles: (a) it is
+registered as <strong>one alias/provider option</strong> in the
+dev-fleet chain (§3), usable as an offline/last-resort implementer; and
+(b) it is the <strong>runtime</strong> AI engine of the delivered
+product — semantic search (<code>ATM-039</code>), research, vision/OCR
+(<code>ATM-033</code>), and content analysis. Fine-granulated
+<code>ATM-NNN</code> items remain implementable by a local model,
+satisfying the original request. <code>[DEFAULT — adjustable]</code></p>
+<p>This dual role is why <code>ATM-040</code> (enforce the real llama
+embedder, never the <code>HashEmbedder</code> stub) is
+<strong>P0</strong> <code>[GAP: 2.1]</code>: the same HelixLLM instance
+that a dev agent might use must also serve real runtime embeddings — a
+silent hash-embedder would corrupt both dev-time RAG and product
+search.</p>
+<h2 id="gaps-this-plan-depends-on">11. Gaps this plan depends on</h2>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 53%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap-register §</th>
+<th>Impact on orchestration</th>
+<th>Item</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.9 session_orchestrator (<del>DESIGN-ONLY</del> <strong>now
+shipped</strong>, Pass 3)</td>
+<td>The atomic track-claim registry §11.4.176(A) <strong>exists at
+source</strong> (<code>claim/claim.go</code>); rescoped to
+wire+verify+integrate; <code>background</code> advisory locks remain the
+interim substrate <code>[VERIFIED-SOURCE]</code></td>
+<td>ATM-062</td>
+</tr>
+<tr>
+<td>2.9 TOON (SCAFFOLD) / token_optimizer (partial)</td>
+<td>Token-optimization §11.4.198 leans on toolkit utilities, not these
+modules</td>
+<td>ATM-061</td>
+</tr>
+<tr>
+<td>2.4 LLMOrchestrator
+<del><code>[OPEN: agentpool-contract]</code></del>
+<strong>CLOSED</strong></td>
+<td><code>AgentPool</code> capability-match contract read at source (§3)
+— <code>Acquire(ctx, AgentRequirements) (Agent, error)</code> /
+<code>Release</code> <code>[VERIFIED-SOURCE]</code></td>
+<td>ATM-067</td>
+</tr>
+<tr>
+<td>2.2 HelixAgent (FOUNDATION, identity blur)</td>
+<td>Only pin the ensemble/debate packages Thready needs</td>
+<td>ATM-063</td>
+</tr>
+<tr>
+<td>— §11.4.196/198/209
+<code>[OPEN: constitution-anchor-verify]</code></td>
+<td>Precise normative text unverified locally</td>
+<td>ATM-066</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

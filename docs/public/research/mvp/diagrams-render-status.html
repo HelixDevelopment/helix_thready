@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Diagram Render Status</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Diagram Render Status</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#result-summary" id="toc-result-summary">1. Result
+summary</a></li>
+<li><a href="#per-area-breakdown" id="toc-per-area-breakdown">2.
+Per-area breakdown</a></li>
+<li><a href="#tooling-used-verified" id="toc-tooling-used-verified">3.
+Tooling used (VERIFIED)</a></li>
+<li><a href="#how-to-reproduce" id="toc-how-to-reproduce">4. How to
+reproduce</a></li>
+<li><a href="#source-change-made-during-this-render"
+id="toc-source-change-made-during-this-render">5. Source change made
+during this render</a></li>
+<li><a href="#open-items" id="toc-open-items">6. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Diagram Render Status
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/diagrams-render-status.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (diagrams)
+  Related         : ./CONVENTIONS.md · ./scripts/render-diagrams.sh · ./index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (diagrams)</td>
+<td>Initial status: 104/104 <code>.mmd</code> sources rendered to
+sibling <code>.svg</code> via mermaid-cli</td>
+</tr>
+</tbody>
+</table>
+<p>This file records the machine-verifiable state of the Mermaid diagram
+export step for the <code>docs/public/research/mvp/</code> tree. Per
+<code>[CONSTITUTION §11.4.65]</code> (md→HTML/PDF sync) the
+<code>.mmd</code> files are the <strong>source of truth</strong>;
+PNG/SVG export runs via the Docs Chain / <code>mermaid-cli</code> at
+build time. <code>scripts/render-diagrams.sh</code> <strong>is</strong>
+that export step and is safe to re-run.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-result-summary">Result summary</a></li>
+<li><a href="#2-per-area-breakdown">Per-area breakdown</a></li>
+<li><a href="#3-tooling-used-verified">Tooling used (VERIFIED)</a></li>
+<li><a href="#4-how-to-reproduce">How to reproduce</a></li>
+<li><a href="#5-source-change-made-during-this-render">Source change
+made during this render</a></li>
+<li><a href="#6-open-items">Open items</a></li>
+</ol>
+<h2 id="result-summary">1. Result summary</h2>
+<p><code>[RESEARCH]</code> <strong>VERIFIED — every <code>.mmd</code>
+rendered.</strong> All <strong>104</strong> Mermaid sources under
+<code>docs/public/research/mvp/**/diagrams/</code> have a sibling
+<code>.svg</code> that is a genuine mermaid-cli render (each contains
+the <code>aria-roledescription="…"</code> /
+<code>class="flowchart|…"</code> signature the renderer emits — none are
+hand-faked placeholders).</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.mmd</code> sources under <code>**/diagrams/</code></td>
+<td>104</td>
+</tr>
+<tr>
+<td>Sibling <code>.svg</code> that are real mermaid renders</td>
+<td>104</td>
+</tr>
+<tr>
+<td>Missing renders</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Faked / placeholder SVGs</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Deferred</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain
+(<code>[CONSTITUTION §11.4.65]</code>). SVG is the committed format
+(preferred — vector, diff-able). <code>.png</code> is available on
+demand via <code>scripts/render-diagrams.sh png</code>.</p>
+</blockquote>
+<p>Note: the seven <code>.svg</code> under <code>design/assets/</code>
+(logos, launcher icons, footer slogan) are authored brand assets,
+<strong>not</strong> diagram renders — they have no <code>.mmd</code>
+source and are out of scope for this export step.</p>
+<h2 id="per-area-breakdown">2. Per-area breakdown</h2>
+<table>
+<thead>
+<tr>
+<th>Area (<code>**/diagrams/</code>)</th>
+<th style="text-align: right;"><code>.mmd</code></th>
+<th style="text-align: right;">real <code>.svg</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>api/diagrams</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td><code>architecture/diagrams</code></td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">18</td>
+</tr>
+<tr>
+<td><code>database/diagrams</code></td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td><code>database/materials/diagrams</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td><code>deployment/diagrams</code></td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td><code>deployment/materials/diagrams</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td><code>design/diagrams</code></td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr>
+<td><code>development/diagrams</code></td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td><code>development/materials/diagrams</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td><code>testing/diagrams</code></td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr>
+<td><code>user-guides/diagrams</code></td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">13</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>104</strong></td>
+<td style="text-align: right;"><strong>104</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="tooling-used-verified">3. Tooling used (VERIFIED)</h2>
+<p><code>[RESEARCH]</code> The render was performed on the host with
+locally-installed tooling — no network fetch was required:</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version / path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mmdc</code> (<code>@mermaid-js/mermaid-cli</code>)</td>
+<td>11.16.0 (global; also on <code>PATH</code>)</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>v24.18.0</td>
+</tr>
+<tr>
+<td>Chromium (Puppeteer engine)</td>
+<td>138.0.7204.168 at <code>/usr/bin/chromium</code>, driven
+<code>--no-sandbox --disable-gpu</code></td>
+</tr>
+</tbody>
+</table>
+<p>Because a system Chromium is present, <code>render-diagrams.sh</code>
+auto-detects it and writes a Puppeteer config pointing at it; if only
+the Puppeteer-bundled Chromium is available the script falls back to
+that. Where <code>mmdc</code> is absent the script falls back to
+<code>npx -y @mermaid-js/mermaid-cli</code>.</p>
+<h2 id="how-to-reproduce">4. How to reproduce</h2>
+<p>From <code>docs/public/research/mvp/</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/render-diagrams.sh</span>            <span class="co"># render ALL to .svg (preferred, idempotent)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/render-diagrams.sh</span> png        <span class="co"># render ALL to .png instead</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/render-diagrams.sh</span> svg api    <span class="co"># only the api/ area, as .svg</span></span></code></pre></div>
+<p>The script exits non-zero and lists any file that fails to
+parse/render, so it doubles as a pre-tag diagram gate. Single file,
+matching what the swarm ran:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mmdc</span> <span class="at">-i</span> <span class="op">&lt;</span>in.mmd<span class="op">&gt;</span> -o <span class="op">&lt;</span>out.svg<span class="op">&gt;</span> -p <span class="op">&lt;</span>puppeteer-config.json<span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># puppeteer-config.json: {&quot;executablePath&quot;:&quot;/usr/bin/chromium&quot;,&quot;args&quot;:[&quot;--no-sandbox&quot;,&quot;--disable-gpu&quot;]}</span></span></code></pre></div>
+<h2 id="source-change-made-during-this-render">5. Source change made
+during this render</h2>
+<p><code>[RESEARCH]</code> One source needed a <strong>Mermaid-syntax
+fix</strong> to parse — a genuine defect, not a tooling gap:
+<code>development/materials/diagrams/sdk-publish-flow.mmd</code> used
+unquoted <code>{</code> inside two square-bracket node labels
+(<code>GENCORE[gen/{go,rust,dart} core]</code>), which the parser reads
+as a diamond-node start
+(<code>Parse error … got 'DIAMOND_START'</code>). The labels were quoted
+(<code>GENCORE["gen/{go,rust,dart} core"]</code>) — identical displayed
+text, no semantic change — after which it renders cleanly. This is the
+same quoting convention already applied to sibling sources (e.g. labels
+containing <code>\n</code> such as
+<code>PP["port_prefix\n…"]</code>).</p>
+<h2 id="open-items">6. Open items</h2>
+<ul>
+<li><code>[OPEN: mmd-md-sync]</code> The <code>.mmd</code> files are the
+export source of truth, but the same Mermaid is also embedded inline in
+the area <code>.md</code> docs (per <code>CONVENTIONS §4</code>). The
+one syntax fix in §5 was applied to the <code>.mmd</code> only (this
+task’s write scope is <code>diagrams/</code>, <code>scripts/</code>, and
+this status file). The corresponding inline
+``<code>mermaid block in the owning</code>.md<code>should be re-synced by the doc owner so on-page rendering matches the exported SVG.</code>[CONSTITUTION
+§11.4.65]`</li>
+<li><code>[OPEN: commit-artifacts]</code> The 104 <code>.svg</code>
+renders and the quoting fixes to the <code>.mmd</code> sources are
+present in the working tree; committing/pushing them to all four
+upstreams is left to the operator per <code>CONVENTIONS §8</code>
+(<code>[CONSTITUTION §2.1]</code>).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/architecture/post-lifecycle.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (System Architecture)
   Related         : ./messenger-ingestion.md, ./concurrency-and-idempotency.md,
                     ./event-model.md, ./processing-pipeline.md, ./asset-and-download.md,
@@ -17,6 +17,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (System Architecture) | New capstone — full ingestion→claim→dispatch→download→asset→semantic→reply sequence; stage/event/failure reference; latency-SLO decomposition; cross-lifecycle idempotency; homes the `post-lifecycle.mmd` sequence diagram |
 | 2 | 2026-07-22 | swarm (Pass 3 consistency) | §5 latency-table cell: clarify reprocess sets the sticky `post.state=reprocessing` *display* value, not a `TaskStatus` (aligns with §6 and concurrency §2) |
+| 3 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -89,7 +90,7 @@ sequenceDiagram
   DL-->>AS: standardized callback (job/state/progress/asset_ref)
   AS->>PG: post↔asset link + sha256 checksum (content-hash dedup)
   AS->>BUS: publish asset.stored
-  DISP->>LLM: analyze/research (breaker-wrapped; cloud fallback on open)
+  DISP->>LLM: analyze/research (breaker-wrapped#59; cloud fallback on open)
   DISP->>SEM: embed post + artifacts (redacted surrogate for secrets)
   SEM->>PG: write semantic_chunks (pgvector, co-located)
   SEM->>BUS: publish index.updated

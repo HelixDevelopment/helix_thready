@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — SDK Usage Examples (per language)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — SDK Usage Examples (per language)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#the-seven-recipes" id="toc-the-seven-recipes">1. The seven
+recipes</a></li>
+<li><a href="#sdk-request-lifecycle" id="toc-sdk-request-lifecycle">2.
+SDK request lifecycle</a></li>
+<li><a href="#go-primary" id="toc-go-primary">3. Go (primary)</a></li>
+<li><a href="#typescript-javascript" id="toc-typescript-javascript">4.
+TypeScript / JavaScript</a></li>
+<li><a href="#python" id="toc-python">5. Python</a></li>
+<li><a href="#kotlin-jvm" id="toc-kotlin-jvm">6. Kotlin (JVM)</a></li>
+<li><a href="#swift" id="toc-swift">7. Swift</a></li>
+<li><a href="#rust" id="toc-rust">8. Rust</a></li>
+<li><a href="#cross-language-parity-matrix"
+id="toc-cross-language-parity-matrix">9. Cross-language parity
+matrix</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — SDK Usage Examples (per language)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/sdk-examples.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./sdk-strategy.md, ./openapi.yaml, ./asyncapi.yaml,
+                    ./authn-authz.md, ./error-model.md, ./event-bus-contract.md,
+                    ./rest-endpoints.md, ./versioning.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial: end-to-end usage recipes for Go (primary) + TypeScript,
+Python, Kotlin, Swift, Rust; grounded on the <code>openapi.yaml</code>
+operationIds, the thin-layer semantics in <code>sdk-strategy.md</code>,
+and the verified client-side token lifecycle in
+<code>digital.vasic.auth/pkg/tokenmanager</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The <a href="./sdk-strategy.md">SDK generation strategy</a> fixes
+<em>how</em> the 11 SDKs are produced (schema-first codegen + a thin
+idiomatic layer). This companion fixes <em>how a caller uses them</em> —
+the same seven recipes in every language so a team switching stacks
+recognises the shape immediately. Every snippet targets a real <a
+href="./openapi.yaml">openapi.yaml</a> operation
+(<code>operationId</code> in parentheses) and the <a
+href="./error-model.md">canonical error model</a>; the event recipes
+target the <a href="./event-bus-contract.md">event contract</a> / <a
+href="./asyncapi.yaml">asyncapi.yaml</a>.</p>
+<blockquote>
+<p><code>[DEFAULT — adjustable]</code> The exact package/type names
+below are the <strong>proposed</strong> public surface of the thin
+idiomatic layer (<code>sdk-strategy.md §5</code>); the generated core
+underneath is deterministic from the contract. Where a name is
+illustrative it is marked. The <strong>behaviour</strong> (auth, retry
+on retryable codes, cursor iteration, event reconnect) is fixed by the
+contract and identical across languages.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-the-seven-recipes">The seven recipes</a></li>
+<li><a href="#2-sdk-request-lifecycle">SDK request lifecycle</a></li>
+<li><a href="#3-go-primary">Go (primary)</a></li>
+<li><a href="#4-typescript--javascript">TypeScript / JavaScript</a></li>
+<li><a href="#5-python">Python</a></li>
+<li><a href="#6-kotlin-jvm">Kotlin (JVM)</a></li>
+<li><a href="#7-swift">Swift</a></li>
+<li><a href="#8-rust">Rust</a></li>
+<li><a href="#9-cross-language-parity-matrix">Cross-language parity
+matrix</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<h2 id="the-seven-recipes">1. The seven recipes</h2>
+<p>Every language section demonstrates the same seven recipes, so
+behaviour is directly comparable:</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 27%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Recipe</th>
+<th>Contract surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td><strong>Construct + authenticate</strong> a client (API key or
+JWT).</td>
+<td><code>bearerAuth</code> / <code>apiKeyAuth</code> (authn-authz
+§2)</td>
+</tr>
+<tr>
+<td>R2</td>
+<td><strong>List with cursor pagination</strong> (auto-iterate
+<code>data[]</code> + <code>meta.next_cursor</code>).</td>
+<td><code>listPosts</code> (rest-endpoints §1)</td>
+</tr>
+<tr>
+<td>R3</td>
+<td><strong>Trigger async processing</strong> with an idempotency key,
+then poll state.</td>
+<td><code>triggerProcessing</code> →
+<code>getProcessingState</code></td>
+</tr>
+<tr>
+<td>R4</td>
+<td><strong>Semantic search</strong> and verify the active embedder
+(fail-loud).</td>
+<td><code>search</code> (<code>[GAP: #1 HelixLLM]</code>)</td>
+</tr>
+<tr>
+<td>R5</td>
+<td><strong>Subscribe to events</strong> (typed, auto-reconnect, sticky
+reconcile).</td>
+<td><code>/v1/events/ws</code> + <code>getStickyEvent</code></td>
+</tr>
+<tr>
+<td>R6</td>
+<td><strong>Typed error handling</strong> with retry on retryable codes
+only.</td>
+<td><code>Error</code> envelope (error-model §3)</td>
+</tr>
+<tr>
+<td>R7</td>
+<td><strong>Transparent JWT refresh</strong> (rotate before expiry;
+revoke old).</td>
+<td><code>refreshToken</code> (authn-authz §3)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sdk-request-lifecycle">2. SDK request lifecycle</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1253.15px; background-color: white;" viewBox="0 0 1253.1500244140625 1361.5999755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-THIN_LAYER" data-look="classic"><rect style="" x="335.25" y="8" width="674.9000015258789" height="650.1999969482422"/><g class="cluster-label" transform="translate(501.20000076293945, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> idiomatic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> layer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (hand-written,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> language)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M1145.15,88.8L1145.15,96.183C1145.15,103.567,1145.15,118.333,1145.15,146.383C1145.15,174.433,1145.15,215.767,1145.15,236.433L1145.15,257.1" id="my-svg-L_APP_THIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_APP_THIN_0" data-points="W3sieCI6MTE0NS4xNTAwMDE1MjU4NzksInkiOjg4Ljc5OTk5OTIzNzA2MDU1fSx7IngiOjExNDUuMTUwMDAxNTI1ODc5LCJ5IjoxMzMuMDk5OTk4NDc0MTIxMX0seyJ4IjoxMTQ1LjE1MDAwMTUyNTg3OSwieSI6MjYxLjA5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M696.538,97.6L707.49,103.517C718.442,109.433,740.346,121.267,751.298,132.433C762.25,143.6,762.25,154.1,762.25,159.35L762.25,164.6" id="my-svg-L_AUTHM_REFRESH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AUTHM_REFRESH_0" data-points="W3sieCI6Njk2LjUzODM0NzM0MzE1NjEsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6NzYyLjI1LCJ5IjoxMzMuMDk5OTk4NDc0MTIxMX0seyJ4Ijo3NjIuMjUsInkiOjE2OC41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M704.879,343.229L689.732,358.707C674.586,374.186,644.293,405.143,618.781,426.221C593.269,447.3,572.538,458.499,562.173,464.099L551.808,469.699" id="my-svg-L_REFRESH_ROT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REFRESH_ROT_0" data-points="W3sieCI6NzA0Ljg3ODg1NzM4MTE1MSwieSI6MzQzLjIyODg1NTg1NTI3MjA2fSx7IngiOjYxNCwieSI6NDM2LjA5OTk5ODQ3NDEyMTF9LHsieCI6NTQ4LjI4ODM0NzM0MzE1NjEsInkiOjQ3MS41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M457.058,471.6L451.298,465.683C445.538,459.767,434.019,447.933,428.26,416.767C422.5,385.6,422.5,335.1,422.5,284.6C422.5,234.1,422.5,183.6,440.561,152.634C458.622,121.669,494.745,110.238,512.806,104.522L530.867,98.807" id="my-svg-L_ROT_AUTHM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROT_AUTHM_0" data-points="W3sieCI6NDU3LjA1NzUyMjUxMjc2MjUsInkiOjQ3MS41OTk5OTg0NzQxMjExfSx7IngiOjQyMi41LCJ5Ijo0MzYuMDk5OTk4NDc0MTIxMX0seyJ4Ijo0MjIuNSwieSI6Mjg0LjU5OTk5ODQ3NDEyMTF9LHsieCI6NDIyLjUsInkiOjEzMy4wOTk5OTg0NzQxMjExfSx7IngiOjUzNC42ODEwNDg0NTk5OTA0LCJ5Ijo5Ny41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M777.395,385.455L778.662,393.896C779.93,402.337,782.465,419.218,783.732,434.376C785,449.533,785,462.967,785,469.683L785,476.4" id="my-svg-L_REFRESH_SEND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REFRESH_SEND_0" data-points="W3sieCI6Nzc3LjM5NDkwNjc0MzE4NTEsInkiOjM4NS40NTUwOTE3MzA5MzYwM30seyJ4Ijo3ODUsInkiOjQzNi4wOTk5OTg0NzQxMjExfSx7IngiOjc4NSwieSI6NDgwLjM5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M818.589,527.4L826.641,533.033C834.693,538.667,850.796,549.933,858.848,559.067C866.9,568.2,866.9,575.2,866.9,578.7L866.9,582.2" id="my-svg-L_SEND_HTTP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEND_HTTP_0" data-points="W3sieCI6ODE4LjU4OTAwNjMwODYzMDYsInkiOjUyNy4zOTk5OTc3MTExODE2fSx7IngiOjg2Ni45MDAwMDE1MjU4Nzg5LCJ5Ijo1NjEuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo4NjYuOTAwMDAxNTI1ODc4OSwieSI6NTg2LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M866.9,633.2L866.9,637.367C866.9,641.533,866.9,649.867,866.9,658.2C866.9,666.533,866.9,674.867,866.9,682.533C866.9,690.2,866.9,697.2,866.9,700.7L866.9,704.2" id="my-svg-L_HTTP_EDGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HTTP_EDGE_0" data-points="W3sieCI6ODY2LjkwMDAwMTUyNTg3ODksInkiOjYzMy4xOTk5OTY5NDgyNDIyfSx7IngiOjg2Ni45MDAwMDE1MjU4Nzg5LCJ5Ijo2NTguMTk5OTk2OTQ4MjQyMn0seyJ4Ijo4NjYuOTAwMDAxNTI1ODc4OSwieSI6NjgzLjE5OTk5Njk0ODI0MjJ9LHsieCI6ODY2LjkwMDAwMTUyNTg3ODksInkiOjcwOC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M741.9,754.58L662.417,763.534C582.933,772.487,423.967,790.393,344.483,804.68C265,818.967,265,829.633,265,834.967L265,840.3" id="my-svg-L_EDGE_DES_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_DES_0" data-points="W3sieCI6NzQxLjkwMDAwMTUyNTg3ODksInkiOjc1NC41ODA0MDgwMTk3Mzk2fSx7IngiOjI2NSwieSI6ODA4LjI5OTk5NTQyMjM2MzN9LHsieCI6MjY1LCJ5Ijo4NDQuMjk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M866.9,772.8L866.9,778.717C866.9,784.633,866.9,796.467,866.9,807.633C866.9,818.8,866.9,829.3,866.9,834.55L866.9,839.8" id="my-svg-L_EDGE_MAP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_MAP_0" data-points="W3sieCI6ODY2LjkwMDAwMTUyNTg3ODksInkiOjc3Mi43OTk5OTU0MjIzNjMzfSx7IngiOjg2Ni45MDAwMDE1MjU4Nzg5LCJ5Ijo4MDguMjk5OTk1NDIyMzYzM30seyJ4Ijo4NjYuOTAwMDAxNTI1ODc4OSwieSI6ODQzLjc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M866.9,909.4L866.9,913.567C866.9,917.733,866.9,926.067,866.9,933.733C866.9,941.4,866.9,948.4,866.9,951.9L866.9,955.4" id="my-svg-L_MAP_RETRY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MAP_RETRY_0" data-points="W3sieCI6ODY2LjkwMDAwMTUyNTg3ODksInkiOjkwOS4zOTk5OTM4OTY0ODQ0fSx7IngiOjg2Ni45MDAwMDE1MjU4Nzg5LCJ5Ijo5MzQuMzk5OTkzODk2NDg0NH0seyJ4Ijo4NjYuOTAwMDAxNTI1ODc4OSwieSI6OTU5LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M808.335,1158.435L795.263,1174.113C782.19,1189.79,756.045,1221.145,736.29,1242.396C716.535,1263.646,703.169,1274.792,696.486,1280.365L689.804,1285.938" id="my-svg-L_RETRY_BACKOFF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RETRY_BACKOFF_0" data-points="W3sieCI6ODA4LjMzNTExNTIzNTI1NTEsInkiOjExNTguNDM1MTEzNzA5Mzc2M30seyJ4Ijo3MjkuOTAwMDAxNTI1ODc4OSwieSI6MTI1Mi41fSx7IngiOjY4Ni43MzE2MjU0MjI0MTYzLCJ5IjoxMjg4LjV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M624.945,1288.5L620.663,1282.5C616.38,1276.5,607.815,1264.5,603.533,1231.117C599.25,1197.733,599.25,1142.967,599.25,1089.95C599.25,1036.933,599.25,985.667,599.25,950.4C599.25,915.133,599.25,895.867,599.25,874.85C599.25,853.833,599.25,831.067,599.25,808.383C599.25,785.7,599.25,763.1,599.25,742.25C599.25,721.4,599.25,702.3,599.25,688.583C599.25,674.867,599.25,666.533,599.25,654.283C599.25,642.033,599.25,625.867,599.25,609.7C599.25,593.533,599.25,577.367,616.875,563.847C634.499,550.326,669.748,539.453,687.373,534.016L704.998,528.579" id="my-svg-L_BACKOFF_SEND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BACKOFF_SEND_0" data-points="W3sieCI6NjI0Ljk0NTQ2MTQ4NzYxNDcsInkiOjEyODguNX0seyJ4Ijo1OTkuMjUsInkiOjEyNTIuNX0seyJ4Ijo1OTkuMjUsInkiOjEwODguMTk5OTk2OTQ4MjQyMn0seyJ4Ijo1OTkuMjUsInkiOjkzNC4zOTk5OTM4OTY0ODQ0fSx7IngiOjU5OS4yNSwieSI6ODc2LjU5OTk5NDY1OTQyMzh9LHsieCI6NTk5LjI1LCJ5Ijo4MDguMjk5OTk1NDIyMzYzM30seyJ4Ijo1OTkuMjUsInkiOjc0MC40OTk5OTYxODUzMDI3fSx7IngiOjU5OS4yNSwieSI6NjgzLjE5OTk5Njk0ODI0MjJ9LHsieCI6NTk5LjI1LCJ5Ijo2NTguMTk5OTk2OTQ4MjQyMn0seyJ4Ijo1OTkuMjUsInkiOjYwOS42OTk5OTY5NDgyNDIyfSx7IngiOjU5OS4yNSwieSI6NTYxLjE5OTk5Njk0ODI0MjJ9LHsieCI6NzA4LjgxOTgwNzAxMzU5NzMsInkiOjUyNy4zOTk5OTc3MTExODE2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M899.247,1184.653L903.039,1195.961C906.831,1207.269,914.416,1229.884,918.208,1247.992C922,1266.1,922,1279.7,922,1286.5L922,1293.3" id="my-svg-L_RETRY_RAISE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RETRY_RAISE_0" data-points="W3sieCI6ODk5LjI0Njc2NTA3MzEwNTIsInkiOjExODQuNjUzMjM2NDUyNzczOX0seyJ4Ijo5MjIsInkiOjEyNTIuNX0seyJ4Ijo5MjIsInkiOjEyOTcuMjk5OTk5MjM3MDYwNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M265,908.9L265,913.15C265,917.4,265,925.9,265,942.95C265,960,265,985.6,265,998.4L265,1011.2" id="my-svg-L_DES_PAGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DES_PAGE_0" data-points="W3sieCI6MjY1LCJ5Ijo5MDguODk5OTkzODk2NDg0NH0seyJ4IjoyNjUsInkiOjkzNC4zOTk5OTM4OTY0ODQ0fSx7IngiOjI2NSwieSI6MTAxNS4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M232.275,1128.475L215.479,1149.146C198.683,1169.817,165.092,1211.158,148.296,1237.079C131.5,1263,131.5,1273.5,131.5,1278.75L131.5,1284" id="my-svg-L_PAGE_ITER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PAGE_ITER_0" data-points="W3sieCI6MjMyLjI3NTAxNzEyNTE0NjgsInkiOjExMjguNDc1MDE0MDczMzg5fSx7IngiOjEzMS41LCJ5IjoxMjUyLjV9LHsieCI6MTMxLjUsInkiOjEyODh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M297.725,1128.475L314.521,1149.146C331.317,1169.817,364.908,1211.158,381.704,1238.629C398.5,1266.1,398.5,1279.7,398.5,1286.5L398.5,1293.3" id="my-svg-L_PAGE_RET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PAGE_RET_0" data-points="W3sieCI6Mjk3LjcyNDk4Mjg3NDg1MzIsInkiOjExMjguNDc1MDE0MDczMzg5fSx7IngiOjM5OC41LCJ5IjoxMjUyLjV9LHsieCI6Mzk4LjUsInkiOjEyOTcuMjk5OTk5MjM3MDYwNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(1145.150001525879, 133.0999984741211)"><g class="label" data-id="L_APP_THIN_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-87.5" y="0" width="176" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">typed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> call</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> e.g.</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Posts.List</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_AUTHM_REFRESH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(633.32113, 416.3553)"><g class="label" data-id="L_REFRESH_ROT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_ROT_AUTHM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(785, 436.0999984741211)"><g class="label" data-id="L_REFRESH_SEND_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_SEND_HTTP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HTTP_EDGE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(265, 808.2999954223633)"><g class="label" data-id="L_EDGE_DES_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">2xx</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(866.9000015258789, 808.2999954223633)"><g class="label" data-id="L_EDGE_MAP_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-85" y="0" width="170" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">non-2xx</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Error</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> envelope</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_MAP_RETRY_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(751.11887, 1227.05284)"><g class="label" data-id="L_RETRY_BACKOFF_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_BACKOFF_SEND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(922, 1252.5)"><g class="label" data-id="L_RETRY_RAISE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_DES_PAGE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(131.5, 1252.5)"><g class="label" data-id="L_PAGE_ITER_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(398.5, 1252.5)"><g class="label" data-id="L_PAGE_RET_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-APP-0" data-look="classic" transform="translate(1145.150001525879, 65.29999923706055)"><rect class="basic label-container" style="" x="-89.5" y="-23.5" width="179" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Application</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THIN-1" data-look="classic" transform="translate(1145.150001525879, 284.5999984741211)"><rect class="basic label-container" style="" x="-100" y="-23.5" width="200" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> idiomatic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> layer</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUTHM-2" data-look="classic" transform="translate(636.75, 65.29999923706055)"><rect class="basic label-container" style="" x="-119.5" y="-32.29999923706055" width="239" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Auth:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> attach</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Bearer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> jwt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> or</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sk-</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> key</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REFRESH-3" data-look="classic" transform="translate(762.25, 284.5999984741211)"><polygon points="116,0 232,-116 116,-232 0,-116" class="label-container" transform="translate(-115.5, 116)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">access</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> token</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> near</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> expiry?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ROT-5" data-look="classic" transform="translate(488.5, 503.89999771118164)"><rect class="basic label-container" style="" x="-117" y="-32.29999923706055" width="234" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">refreshToken:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rotate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pair,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">store</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> new</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEND-8" data-look="classic" transform="translate(785, 503.89999771118164)"><rect class="basic label-container" style="" x="-129.5" y="-23.5" width="259" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Serialize</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> via</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> core</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-HTTP-10" data-look="classic" transform="translate(866.9000015258789, 609.6999969482422)"><rect class="basic label-container" style="" x="-87" y="-23.5" width="174" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HTTP/3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> request</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EDGE-12" data-look="classic" transform="translate(866.9000015258789, 740.4999961853027)"><rect class="basic label-container" style="" x="-125" y="-32.29999923706055" width="250" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edge:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> middleware</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">chain</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> handler</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DES-14" data-look="classic" transform="translate(265, 876.5999946594238)"><rect class="basic label-container" style="" x="-117" y="-32.29999923706055" width="234" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Deserialize</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> generated</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">type</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MAP-16" data-look="classic" transform="translate(866.9000015258789, 876.5999946594238)"><rect class="basic label-container" style="" x="-117.5" y="-32.79999923706055" width="235" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Map</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> typed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> error:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> code,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">trace_id,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> details</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RETRY-18" data-look="classic" transform="translate(866.9000015258789, 1088.1999969482422)"><polygon points="128.79999923706055,0 257.5999984741211,-128.79999923706055 128.79999923706055,-257.5999984741211 0,-128.79999923706055" class="label-container" transform="translate(-128.29999923706055, 128.79999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">code</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> retryable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AND</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> budget</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">left?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BACKOFF-20" data-look="classic" transform="translate(648, 1320.7999992370605)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">back-off</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> jitter,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> honor</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Retry-After</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RAISE-23" data-look="classic" transform="translate(922, 1320.7999992370605)"><rect class="basic label-container" style="" x="-118" y="-23.5" width="236" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">raise</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> typed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> error</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> caller</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PAGE-25" data-look="classic" transform="translate(265, 1088.1999969482422)"><polygon points="73,0 146,-73 73,-146 0,-73" class="label-container" transform="translate(-72.5, 73)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">list</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> response?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ITER-27" data-look="classic" transform="translate(131.5, 1320.7999992370605)"><rect class="basic label-container" style="" x="-123.5" y="-32.79999923706055" width="247" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">expose</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> lazy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> cursor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> iterator</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">over</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> data</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> next_cursor</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RET-29" data-look="classic" transform="translate(398.5, 1320.7999992370605)"><rect class="basic label-container" style="" x="-93.5" y="-23.5" width="187" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">return</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> typed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> value</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/sdk-request-lifecycle.mmd">diagrams/sdk-request-lifecycle.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Application code never speaks HTTP directly; it calls
+a typed method on the thin idiomatic layer (for example
+<code>Posts.List</code>). That layer performs four jobs in a fixed order
+before, during and after the generated core touches the wire. First it
+handles <strong>authentication</strong>: it attaches an
+<code>Authorization: Bearer</code> header carrying either a JWT access
+token or a scoped <code>sk-…</code> API key. When the credential is a
+JWT, the layer checks whether the access token is near expiry using the
+locally-stored expiry (the
+<code>digital.vasic.auth/pkg/tokenmanager</code> shape —
+<code>GetAccessToken</code>/<code>StoreTokenInfo</code>/<code>IsExpired</code>
+— verified at source); if so it calls <code>refreshToken</code> to
+rotate the pair, stores the new tokens, and only then proceeds. This
+makes refresh transparent to the caller (recipe R7).</p>
+<p>Second, the generated core <strong>serializes</strong> the request
+and issues it over HTTP/3 (with the HTTP/2 fallback negotiated by the
+transport). The request reaches Thready’s edge, where the shared
+middleware chain and the handler run. On a 2xx the core
+<strong>deserializes</strong> the body into the generated type and
+returns it — unless the response is a list, in which case the thin layer
+wraps it in a <strong>lazy cursor iterator</strong> that transparently
+follows <code>meta.next_cursor</code> (recipe R2), so the caller writes
+an ordinary <code>for</code>/<code>async for</code> loop and never
+touches cursors.</p>
+<p>Third, on any non-2xx the layer parses the single <a
+href="./error-model.md">Error envelope</a> and <strong>maps it to an
+idiomatic typed error</strong> carrying the stable <code>code</code>,
+the <code>trace_id</code> and the structured <code>details[]</code>.
+Fourth, it applies the <strong>retry policy</strong>: only the retryable
+codes (<code>rate_limited</code>, <code>unavailable</code>,
+<code>deadline_exceeded</code>) are retried, with exponential back-off
+plus jitter, honouring any <code>Retry-After</code>; every other code is
+raised immediately so a <code>permission_denied</code> or
+<code>invalid_argument</code> is never silently retried. This four-part
+loop is identical in every language — only the syntax changes — which is
+exactly why the recipes below read the same across Go, TypeScript,
+Python, Kotlin, Swift and Rust.</p>
+<h2 id="go-primary">3. Go (primary)</h2>
+<p>Go is the <strong>critical-priority</strong> SDK
+(<code>sdk-strategy.md §4</code>) and the server’s own client. Its core
+is <code>buf</code>-generated (protocolbuffers/go + connectrpc/go) with
+the REST surface from the OpenAPI; the thin layer is hand-written.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> get github.com/helix-development/helix-thready-go@latest</span></code></pre></div>
+<p><strong>R1 — construct + authenticate.</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> thready <span class="st">&quot;github.com/helix-development/helix-thready-go&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// API-key client (non-interactive automation).</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>client <span class="op">:=</span> thready<span class="op">.</span>New<span class="op">(</span>thready<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    BaseURL<span class="op">:</span> <span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Auth<span class="op">:</span>    thready<span class="op">.</span>APIKey<span class="op">(</span><span class="st">&quot;sk-…&quot;</span><span class="op">),</span>          <span class="co">// Authorization: Bearer sk-…</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Retry<span class="op">:</span>   thready<span class="op">.</span>DefaultRetry<span class="op">,</span>            <span class="co">// retries ONLY retryable codes</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// …or an interactive JWT client with transparent refresh (recipe R7).</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>client <span class="op">:=</span> thready<span class="op">.</span>New<span class="op">(</span>thready<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    BaseURL<span class="op">:</span> <span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span><span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    Auth<span class="op">:</span>    thready<span class="op">.</span>JWT<span class="op">(</span>accessToken<span class="op">,</span> refreshToken<span class="op">),</span> <span class="co">// refreshes before expiry</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>R2 — list with cursor pagination.</strong> The iterator hides
+<code>meta.next_cursor</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>it <span class="op">:=</span> client<span class="op">.</span>Posts<span class="op">.</span>List<span class="op">(</span>ctx<span class="op">,</span> thready<span class="op">.</span>PostFilter<span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ChannelID<span class="op">:</span> chID<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Status<span class="op">:</span>    <span class="st">&quot;failed&quot;</span><span class="op">,</span>          <span class="co">// enum: pending|running|succeeded|failed|skipped</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Limit<span class="op">:</span>     <span class="dv">100</span><span class="op">,</span>               <span class="co">// 1..200</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> it<span class="op">.</span>Next<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    p <span class="op">:=</span> it<span class="op">.</span>Post<span class="op">()</span>                <span class="co">// *thready.Post</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span>p<span class="op">.</span>ID<span class="op">,</span> p<span class="op">.</span>Hashtags<span class="op">,</span> p<span class="op">.</span>Categories<span class="op">)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> it<span class="op">.</span>Err<span class="op">();</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span></span></code></pre></div>
+<p><strong>R3 — trigger async processing (idempotent), then
+poll.</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>job<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Posts<span class="op">.</span>Process<span class="op">(</span>ctx<span class="op">,</span> postID<span class="op">,</span> thready<span class="op">.</span>ProcessRequest<span class="op">{},</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    thready<span class="op">.</span>WithIdempotencyKey<span class="op">(</span>uuid<span class="op">.</span>NewString<span class="op">()))</span> <span class="co">// 24 h idempotency (error-model §5)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span>                  <span class="co">// 202 → ProcessingJob</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;precedence:&quot;</span><span class="op">,</span> job<span class="op">.</span>Precedence<span class="op">)</span>        <span class="co">// download&gt;convert&gt;analyze&gt;research&gt;reply</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Poll the projection (or prefer the event stream, recipe R5).</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    st<span class="op">,</span> _ <span class="op">:=</span> client<span class="op">.</span>Posts<span class="op">.</span>ProcessingState<span class="op">(</span>ctx<span class="op">,</span> postID<span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> st<span class="op">.</span>Status <span class="op">==</span> <span class="st">&quot;succeeded&quot;</span> <span class="op">||</span> st<span class="op">.</span>Status <span class="op">==</span> <span class="st">&quot;failed&quot;</span> <span class="op">{</span> <span class="cf">break</span> <span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    time<span class="op">.</span>Sleep<span class="op">(</span><span class="dv">2</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A <strong>concurrent</strong> second <code>Process</code> on the same
+post while one is in-flight returns <code>409 conflict</code> (the
+single-claim guarantee, <code>rest-endpoints §2.6</code>), surfaced as
+<code>thready.CodeConflict</code>.</p>
+<p><strong>R4 — semantic search, verify the embedder.</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Search<span class="op">.</span>Query<span class="op">(</span>ctx<span class="op">,</span> thready<span class="op">.</span>SearchRequest<span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Query<span class="op">:</span>   <span class="st">&quot;self-hosted vector database benchmarks&quot;</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Mode<span class="op">:</span>    thready<span class="op">.</span>SearchHybrid<span class="op">,</span>               <span class="co">// semantic|keyword|hybrid</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Sources<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;posts&quot;</span><span class="op">,</span> <span class="st">&quot;generated&quot;</span><span class="op">},</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    TopK<span class="op">:</span>    <span class="dv">20</span><span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Rerank<span class="op">:</span>  <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> te <span class="op">*</span>thready<span class="op">.</span>Error</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> errors<span class="op">.</span>As<span class="op">(</span>err<span class="op">,</span> <span class="op">&amp;</span>te<span class="op">)</span> <span class="op">&amp;&amp;</span> te<span class="op">.</span>Code <span class="op">==</span> thready<span class="op">.</span>CodeUnavailable <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// [GAP: #1] search fails LOUD (503) if the HashEmbedder stub is active.</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Fatal<span class="op">(</span><span class="st">&quot;search unavailable — real embedder not configured:&quot;</span><span class="op">,</span> te<span class="op">.</span>TraceID<span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> res<span class="op">.</span>Embedder <span class="op">==</span> <span class="st">&quot;hash&quot;</span> <span class="op">{</span>                       <span class="co">// defensive: must be a real provider</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span><span class="st">&quot;refusing hash-embedder results&quot;</span><span class="op">)</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> r <span class="op">:=</span> <span class="kw">range</span> res<span class="op">.</span>Results <span class="op">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%s %.3f %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> r<span class="op">.</span>SourceID<span class="op">,</span> r<span class="op">.</span>Score<span class="op">,</span> r<span class="op">.</span>Snippet<span class="op">)</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>R5 — subscribe to events (typed, reconnecting, sticky
+reconcile).</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sub<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Events<span class="op">.</span>Subscribe<span class="op">(</span>ctx<span class="op">,</span> thready<span class="op">.</span>EventFilter<span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Types<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;processing.*&quot;</span><span class="op">,</span> <span class="st">&quot;asset.ready&quot;</span><span class="op">},</span> <span class="co">// glob (filter.ByGlob, verified)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ReplaySticky<span class="op">:</span> <span class="ot">true</span><span class="op">,</span>                              <span class="co">// emit last sticky value on connect</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span> <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> sub<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ev <span class="op">:=</span> <span class="kw">range</span> sub<span class="op">.</span>C <span class="op">{</span>                              <span class="co">// typed EventEnvelope</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> ev<span class="op">.</span>Type <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;processing.completed&quot;</span><span class="op">:</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;done:&quot;</span><span class="op">,</span> ev<span class="op">.</span>Payload<span class="op">[</span><span class="st">&quot;post_id&quot;</span><span class="op">],</span> ev<span class="op">.</span>Payload<span class="op">[</span><span class="st">&quot;status&quot;</span><span class="op">])</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;asset.ready&quot;</span><span class="op">:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;asset:&quot;</span><span class="op">,</span> ev<span class="op">.</span>Payload<span class="op">[</span><span class="st">&quot;asset_id&quot;</span><span class="op">])</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    sub<span class="op">.</span>Ack<span class="op">(</span>ev<span class="op">.</span>ID<span class="op">)</span>                                   <span class="co">// advance the durable cursor</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">// On a dropped socket the layer reconnects from the last Ack&#39;d id and, for long</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">// outages, reconciles via getStickyEvent (event-bus-contract §7).</span></span></code></pre></div>
+<p><strong>R6 — typed error handling.</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Accounts<span class="op">.</span>Update<span class="op">(</span>ctx<span class="op">,</span> accountID<span class="op">,</span> patch<span class="op">)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> te <span class="op">*</span>thready<span class="op">.</span>Error</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> errors<span class="op">.</span>As<span class="op">(</span>err<span class="op">,</span> <span class="op">&amp;</span>te<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> te<span class="op">.</span>Code <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> thready<span class="op">.</span>CodePermissionDenied<span class="op">:</span>               <span class="co">// 403 — do NOT retry</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;denied (trace %s): %v&quot;</span><span class="op">,</span> te<span class="op">.</span>TraceID<span class="op">,</span> te<span class="op">.</span>Details<span class="op">)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> thready<span class="op">.</span>CodeRateLimited<span class="op">:</span>                     <span class="co">// 429 — retried by the layer already;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        time<span class="op">.</span>Sleep<span class="op">(</span>time<span class="op">.</span>Duration<span class="op">(</span>te<span class="op">.</span>RetryAfter<span class="op">)</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">)</span> <span class="co">// manual back-off if exhausted</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%s: %s&quot;</span><span class="op">,</span> te<span class="op">.</span>Code<span class="op">,</span> te<span class="op">.</span>Message<span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>R7 — transparent JWT refresh.</strong> With
+<code>thready.JWT(access, refresh)</code> the layer calls
+<code>refreshToken</code> automatically when the access token is within
+its refresh threshold, stores the rotated pair, and retries the original
+call once; the old refresh token is revoked server-side
+(<code>pkg/token</code> store, verified). Applications never call
+refresh directly, but may subscribe to a rotation hook to persist the
+new tokens:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>client<span class="op">.</span>OnTokenRotated<span class="op">(</span><span class="kw">func</span><span class="op">(</span>pair thready<span class="op">.</span>TokenPair<span class="op">)</span> <span class="op">{</span> saveToKeyring<span class="op">(</span>pair<span class="op">)</span> <span class="op">})</span></span></code></pre></div>
+<h2 id="typescript-javascript">4. TypeScript / JavaScript</h2>
+<p>Generated with <code>openapi-generator typescript-fetch</code> (the
+same generator <code>helix_proto</code> uses); the thin layer adds
+auth/retry/iteration/events.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> i @helix-thready/sdk</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { ThreadyClient<span class="op">,</span> ThreadyError<span class="op">,</span> Code } <span class="im">from</span> <span class="st">&quot;@helix-thready/sdk&quot;</span><span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// R1</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> client <span class="op">=</span> <span class="kw">new</span> <span class="fu">ThreadyClient</span>({</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  baseUrl<span class="op">:</span> <span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span><span class="op">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  auth<span class="op">:</span> { apiKey<span class="op">:</span> <span class="st">&quot;sk-…&quot;</span> }<span class="op">,</span>                 <span class="co">// or { accessToken, refreshToken }</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">// R2 — async iterator hides the cursor</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="cf">await</span> (<span class="kw">const</span> post <span class="kw">of</span> client<span class="op">.</span><span class="at">posts</span><span class="op">.</span><span class="fu">list</span>({ channelId<span class="op">,</span> status<span class="op">:</span> <span class="st">&quot;failed&quot;</span><span class="op">,</span> limit<span class="op">:</span> <span class="dv">100</span> })) {</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(post<span class="op">.</span><span class="at">id</span><span class="op">,</span> post<span class="op">.</span><span class="at">categories</span>)<span class="op">;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">// R3 — idempotent async trigger, then poll</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> job <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="at">posts</span><span class="op">.</span><span class="fu">process</span>(postId<span class="op">,</span> {}<span class="op">,</span> { idempotencyKey<span class="op">:</span> crypto<span class="op">.</span><span class="fu">randomUUID</span>() })<span class="op">;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;precedence&quot;</span><span class="op">,</span> job<span class="op">.</span><span class="at">precedence</span>)<span class="op">;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> st <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="at">posts</span><span class="op">.</span><span class="fu">processingState</span>(postId)<span class="op">;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> (st<span class="op">.</span><span class="at">status</span> <span class="op">!==</span> <span class="st">&quot;succeeded&quot;</span> <span class="op">&amp;&amp;</span> st<span class="op">.</span><span class="at">status</span> <span class="op">!==</span> <span class="st">&quot;failed&quot;</span>) {</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">await</span> <span class="kw">new</span> <span class="bu">Promise</span>(r <span class="kw">=&gt;</span> <span class="pp">setTimeout</span>(r<span class="op">,</span> <span class="dv">2000</span>))<span class="op">;</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  st <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="at">posts</span><span class="op">.</span><span class="fu">processingState</span>(postId)<span class="op">;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="co">// R4 — search + fail-loud embedder check</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> res <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="at">search</span><span class="op">.</span><span class="fu">query</span>({ query<span class="op">:</span> <span class="st">&quot;…&quot;</span><span class="op">,</span> mode<span class="op">:</span> <span class="st">&quot;hybrid&quot;</span><span class="op">,</span> topK<span class="op">:</span> <span class="dv">20</span> })<span class="op">;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (res<span class="op">.</span><span class="at">embedder</span> <span class="op">===</span> <span class="st">&quot;hash&quot;</span>) <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;refusing hash-embedder results&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="co">// R5 — events over SSE (browser) or WS (node); auto-reconnect + sticky reconcile</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sub <span class="op">=</span> client<span class="op">.</span><span class="at">events</span><span class="op">.</span><span class="fu">subscribe</span>({ types<span class="op">:</span> [<span class="st">&quot;processing.*&quot;</span><span class="op">,</span> <span class="st">&quot;asset.ready&quot;</span>]<span class="op">,</span> replaySticky<span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>sub<span class="op">.</span><span class="fu">on</span>(<span class="st">&quot;processing.completed&quot;</span><span class="op">,</span> ev <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;done&quot;</span><span class="op">,</span> ev<span class="op">.</span><span class="at">payload</span><span class="op">.</span><span class="at">post_id</span>))<span class="op">;</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>sub<span class="op">.</span><span class="fu">on</span>(<span class="st">&quot;asset.ready&quot;</span><span class="op">,</span> ev <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;asset&quot;</span><span class="op">,</span> ev<span class="op">.</span><span class="at">payload</span><span class="op">.</span><span class="at">asset_id</span>))<span class="op">;</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">// R6 — typed errors</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">await</span> client<span class="op">.</span><span class="at">accounts</span><span class="op">.</span><span class="fu">update</span>(accountId<span class="op">,</span> patch)<span class="op">;</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (e) {</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (e <span class="kw">instanceof</span> ThreadyError) {</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (e<span class="op">.</span><span class="at">code</span> <span class="op">===</span> Code<span class="op">.</span><span class="at">PermissionDenied</span>) <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&quot;denied&quot;</span><span class="op">,</span> e<span class="op">.</span><span class="at">traceId</span><span class="op">,</span> e<span class="op">.</span><span class="at">details</span>)<span class="op">;</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (e<span class="op">.</span><span class="at">code</span> <span class="op">===</span> Code<span class="op">.</span><span class="at">RateLimited</span>) <span class="cf">await</span> <span class="fu">sleep</span>(e<span class="op">.</span><span class="at">retryAfter</span><span class="op">!</span> <span class="op">*</span> <span class="dv">1000</span>)<span class="op">;</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>R7 is automatic: pass <code>{ accessToken, refreshToken }</code> and
+the client rotates before expiry, emitting
+<code>client.on("tokenRotated", pair =&gt; …)</code> so a caller can
+persist the new pair.</p>
+<h2 id="python">5. Python</h2>
+<p>Generated with <code>openapi-generator python</code>; ships
+<strong>sync and async</strong> clients.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install helix-thready</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> helix_thready <span class="im">import</span> ThreadyClient, ThreadyError, Code   <span class="co"># sync</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> helix_thready.aio <span class="im">import</span> ThreadyClient <span class="im">as</span> AsyncClient     <span class="co"># async</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># R1</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> ThreadyClient(base_url<span class="op">=</span><span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span>, api_key<span class="op">=</span><span class="st">&quot;sk-…&quot;</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># or: ThreadyClient(base_url=..., access_token=..., refresh_token=...)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># R2 — generator hides the cursor</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> post <span class="kw">in</span> client.posts.<span class="bu">list</span>(channel_id<span class="op">=</span>chid, status<span class="op">=</span><span class="st">&quot;failed&quot;</span>, limit<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(post.<span class="bu">id</span>, post.categories)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># R3 — idempotent trigger, poll</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>job <span class="op">=</span> client.posts.process(post_id, idempotency_key<span class="op">=</span><span class="bu">str</span>(uuid.uuid4()))</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;precedence&quot;</span>, job.precedence)              <span class="co"># 202 -&gt; ProcessingJob</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> (st <span class="op">:=</span> client.posts.processing_state(post_id)).status <span class="kw">not</span> <span class="kw">in</span> (<span class="st">&quot;succeeded&quot;</span>, <span class="st">&quot;failed&quot;</span>):</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">2</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co"># R4 — search + fail-loud embedder</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> client.search.query(query<span class="op">=</span><span class="st">&quot;…&quot;</span>, mode<span class="op">=</span><span class="st">&quot;hybrid&quot;</span>, top_k<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> res.embedder <span class="op">==</span> <span class="st">&quot;hash&quot;</span>:</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">&quot;refusing hash-embedder results&quot;</span>)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># R5 — events (async)</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> watch():</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="cf">with</span> AsyncClient(base_url<span class="op">=</span>..., api_key<span class="op">=</span><span class="st">&quot;sk-…&quot;</span>) <span class="im">as</span> ac:</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">async</span> <span class="cf">for</span> ev <span class="kw">in</span> ac.events.subscribe(types<span class="op">=</span>[<span class="st">&quot;processing.*&quot;</span>, <span class="st">&quot;asset.ready&quot;</span>], replay_sticky<span class="op">=</span><span class="va">True</span>):</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ev.<span class="bu">type</span> <span class="op">==</span> <span class="st">&quot;processing.completed&quot;</span>:</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>                <span class="bu">print</span>(<span class="st">&quot;done&quot;</span>, ev.payload[<span class="st">&quot;post_id&quot;</span>])</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="co"># R6 — typed errors + retryable classification</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    client.accounts.update(account_id, patch)</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ThreadyError <span class="im">as</span> e:</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> e.code <span class="op">==</span> Code.PERMISSION_DENIED:         <span class="co"># never retried</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;denied&quot;</span>, e.trace_id, e.details)</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> e.code <span class="op">==</span> Code.RATE_LIMITED:            <span class="co"># honor Retry-After</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>        time.sleep(e.retry_after <span class="kw">or</span> <span class="dv">1</span>)</span></code></pre></div>
+<h2 id="kotlin-jvm">6. Kotlin (JVM)</h2>
+<p>One JVM artifact serves Java/Kotlin/Groovy/Scala
+(<code>[OPEN: sdk-2]</code>, Kotlin-first). Generated with
+<code>openapi-generator kotlin</code>; coroutine-based thin layer.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// build.gradle.kts: implementation(&quot;com.helix.thready:sdk:1.0.0&quot;)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">com</span><span class="op">.</span><span class="im">helix</span><span class="op">.</span><span class="im">thready</span><span class="op">.*</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// R1</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">client</span> <span class="op">=</span> ThreadyClient<span class="op">(</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    baseUrl <span class="op">=</span> <span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span><span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    auth <span class="op">=</span> Auth<span class="op">.</span>ApiKey<span class="op">(</span><span class="st">&quot;sk-…&quot;</span><span class="op">),</span>                       <span class="co">// or Auth.Jwt(access, refresh)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">// R2 — Flow hides the cursor</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>client<span class="op">.</span>posts<span class="op">.</span>list<span class="op">(</span>channelId <span class="op">=</span> chId<span class="op">,</span> status <span class="op">=</span> <span class="st">&quot;failed&quot;</span><span class="op">,</span> limit <span class="op">=</span> <span class="dv">100</span><span class="op">)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>collect <span class="op">{</span> post <span class="op">-&gt;</span> println<span class="op">(</span><span class="st">&quot;</span><span class="ss">${</span>post<span class="op">.</span>id<span class="ss">}</span><span class="st"> </span><span class="ss">${</span>post<span class="op">.</span>categories<span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">// R3 — idempotent trigger, poll</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">job</span> <span class="op">=</span> client<span class="op">.</span>posts<span class="op">.</span>process<span class="op">(</span>postId<span class="op">,</span> idempotencyKey <span class="op">=</span> UUID<span class="op">.</span>randomUUID<span class="op">().</span>toString<span class="op">())</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>println<span class="op">(</span><span class="st">&quot;precedence </span><span class="ss">${</span>job<span class="op">.</span>precedence<span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span>               <span class="co">// 202 -&gt; ProcessingJob</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="va">st</span> <span class="op">=</span> client<span class="op">.</span>posts<span class="op">.</span>processingState<span class="op">(</span>postId<span class="op">)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>st<span class="op">.</span>status <span class="op">!=</span> <span class="st">&quot;succeeded&quot;</span> <span class="op">&amp;&amp;</span> st<span class="op">.</span>status <span class="op">!=</span> <span class="st">&quot;failed&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    delay<span class="op">(</span><span class="dv">2000</span><span class="op">);</span> st <span class="op">=</span> client<span class="op">.</span>posts<span class="op">.</span>processingState<span class="op">(</span>postId<span class="op">)</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="co">// R4 — search + fail-loud embedder</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">res</span> <span class="op">=</span> client<span class="op">.</span>search<span class="op">.</span>query<span class="op">(</span>SearchRequest<span class="op">(</span>query <span class="op">=</span> <span class="st">&quot;…&quot;</span><span class="op">,</span> mode <span class="op">=</span> <span class="st">&quot;hybrid&quot;</span><span class="op">,</span> topK <span class="op">=</span> <span class="dv">20</span><span class="op">))</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>require<span class="op">(</span>res<span class="op">.</span>embedder <span class="op">!=</span> <span class="st">&quot;hash&quot;</span><span class="op">)</span> <span class="op">{</span> <span class="st">&quot;refusing hash-embedder results&quot;</span> <span class="op">}</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">// R5 — events</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>client<span class="op">.</span>events<span class="op">.</span>subscribe<span class="op">(</span>types <span class="op">=</span> listOf<span class="op">(</span><span class="st">&quot;processing.*&quot;</span><span class="op">,</span> <span class="st">&quot;asset.ready&quot;</span><span class="op">),</span> replaySticky <span class="op">=</span> <span class="kw">true</span><span class="op">)</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>collect <span class="op">{</span> ev <span class="op">-&gt;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">when</span> <span class="op">(</span>ev<span class="op">.</span>type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;processing.completed&quot;</span> <span class="op">-&gt;</span> println<span class="op">(</span><span class="st">&quot;done </span><span class="ss">${</span>ev<span class="op">.</span>payload<span class="op">[</span><span class="st">&quot;post_id&quot;</span><span class="op">]</span><span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;asset.ready&quot;</span> <span class="op">-&gt;</span> println<span class="op">(</span><span class="st">&quot;asset </span><span class="ss">${</span>ev<span class="op">.</span>payload<span class="op">[</span><span class="st">&quot;asset_id&quot;</span><span class="op">]</span><span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">// R6 — typed errors</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> <span class="op">{</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    client<span class="op">.</span>accounts<span class="op">.</span>update<span class="op">(</span>accountId<span class="op">,</span> patch<span class="op">)</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">catch</span> <span class="op">(</span>e<span class="op">:</span> ThreadyException<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">when</span> <span class="op">(</span>e<span class="op">.</span>code<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>        Code<span class="op">.</span>PERMISSION_DENIED <span class="op">-&gt;</span> println<span class="op">(</span><span class="st">&quot;denied </span><span class="ss">${</span>e<span class="op">.</span>traceId<span class="ss">}</span><span class="st"> </span><span class="ss">${</span>e<span class="op">.</span>details<span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>        Code<span class="op">.</span>RATE_LIMITED <span class="op">-&gt;</span> delay<span class="op">((</span>e<span class="op">.</span>retryAfter <span class="op">?:</span> <span class="dv">1L</span><span class="op">)</span> <span class="op">*</span> <span class="dv">1000</span><span class="op">)</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span> <span class="op">-&gt;</span> println<span class="op">(</span><span class="st">&quot;</span><span class="ss">${</span>e<span class="op">.</span>code<span class="ss">}</span><span class="st">: </span><span class="ss">${</span>e<span class="op">.</span>message<span class="ss">}</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><code>[GAP: 7.3/7.4 Security-KMP]</code> The <strong>mobile</strong>
+(Android) build MUST NOT ship until native KeyStore replaces the
+in-memory secure-storage stub — see <a
+href="./authn-authz.md">authn-authz §10</a> and <a
+href="./sdk-strategy.md">sdk-strategy §8</a>. Server-side JVM use is
+unaffected.</p>
+</blockquote>
+<h2 id="swift">7. Swift</h2>
+<p>Generated with <code>openapi-generator swift5</code>;
+<code>async/await</code> thin layer for iOS/macOS.</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode swift"><code class="sourceCode swift"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Package.swift: .package(url: &quot;https://github.com/helix-development/helix-thready-swift&quot;, from: &quot;1.0.0&quot;)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">HelixThready</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// R1</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">client</span> <span class="op">=</span> ThreadyClient<span class="op">(</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    baseURL<span class="op">:</span> URL<span class="op">(</span>string<span class="op">:</span> <span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span><span class="op">)!,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    auth<span class="op">:</span> <span class="op">.</span>apiKey<span class="op">(</span><span class="st">&quot;sk-…&quot;</span><span class="op">)</span>                              <span class="co">// or .jwt(access, refresh)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">// R2 — AsyncSequence hides the cursor</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="cf">try</span> <span class="cf">await</span> post <span class="cf">in</span> client<span class="op">.</span>posts<span class="op">.</span>list<span class="op">(</span>channelID<span class="op">:</span> chID<span class="op">,</span> status<span class="op">:</span> <span class="st">&quot;failed&quot;</span><span class="op">,</span> limit<span class="op">:</span> <span class="dv">100</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    print<span class="op">(</span>post<span class="op">.</span>id<span class="op">,</span> post<span class="op">.</span>categories<span class="op">)</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">// R3 — idempotent trigger, poll</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">job</span> <span class="op">=</span> <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>posts<span class="op">.</span>process<span class="op">(</span>postID<span class="op">,</span> idempotencyKey<span class="op">:</span> UUID<span class="op">().</span>uuidString<span class="op">)</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>print<span class="op">(</span><span class="st">&quot;precedence&quot;</span><span class="op">,</span> job<span class="op">.</span>precedence<span class="op">)</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="va">st</span> <span class="op">=</span> <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>posts<span class="op">.</span>processingState<span class="op">(</span>postID<span class="op">)</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> st<span class="op">.</span>status <span class="op">!=</span> <span class="st">&quot;succeeded&quot;</span> <span class="op">&amp;&amp;</span> st<span class="op">.</span>status <span class="op">!=</span> <span class="st">&quot;failed&quot;</span> <span class="op">{</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="cf">await</span> Task<span class="op">.</span>sleep<span class="op">(</span><span class="cf">for</span><span class="op">:</span> <span class="op">.</span>seconds<span class="op">(</span><span class="dv">2</span><span class="op">));</span> st <span class="op">=</span> <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>posts<span class="op">.</span>processingState<span class="op">(</span>postID<span class="op">)</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">// R4 — search + fail-loud embedder</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">res</span> <span class="op">=</span> <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>search<span class="op">.</span>query<span class="op">(.</span><span class="kw">init</span><span class="op">(</span>query<span class="op">:</span> <span class="st">&quot;…&quot;</span><span class="op">,</span> mode<span class="op">:</span> <span class="op">.</span>hybrid<span class="op">,</span> topK<span class="op">:</span> <span class="dv">20</span><span class="op">))</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="cf">guard</span> res<span class="op">.</span>embedder <span class="op">!=</span> <span class="st">&quot;hash&quot;</span> <span class="cf">else</span> <span class="op">{</span> <span class="cf">fatalError</span><span class="op">(</span><span class="st">&quot;refusing hash-embedder results&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">// R5 — events</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="va">sub</span> <span class="op">=</span> <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>events<span class="op">.</span>subscribe<span class="op">(</span>types<span class="op">:</span> <span class="op">[</span><span class="st">&quot;processing.*&quot;</span><span class="op">,</span> <span class="st">&quot;asset.ready&quot;</span><span class="op">],</span> replaySticky<span class="op">:</span> <span class="kw">true</span><span class="op">)</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="cf">await</span> ev <span class="cf">in</span> sub<span class="op">.</span>stream <span class="op">{</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ev<span class="op">.</span>type <span class="op">==</span> <span class="st">&quot;processing.completed&quot;</span> <span class="op">{</span> print<span class="op">(</span><span class="st">&quot;done&quot;</span><span class="op">,</span> ev<span class="op">.</span>payload<span class="op">[</span><span class="st">&quot;post_id&quot;</span><span class="op">]</span> <span class="op">??</span> <span class="st">&quot;&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="co">// R6 — typed errors</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="cf">await</span> client<span class="op">.</span>accounts<span class="op">.</span>update<span class="op">(</span>accountID<span class="op">,</span> patch<span class="op">)</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">catch</span> <span class="kw">let</span> <span class="va">e</span> <span class="kw">as</span> ThreadyError <span class="op">{</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> e<span class="op">.</span>code <span class="op">{</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">.</span>permissionDenied<span class="op">:</span> print<span class="op">(</span><span class="st">&quot;denied&quot;</span><span class="op">,</span> e<span class="op">.</span>traceID<span class="op">,</span> e<span class="op">.</span>details<span class="op">)</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">.</span>rateLimited<span class="op">:</span> <span class="cf">try</span> <span class="cf">await</span> Task<span class="op">.</span>sleep<span class="op">(</span><span class="cf">for</span><span class="op">:</span> <span class="op">.</span>seconds<span class="op">(</span>Double<span class="op">(</span>e<span class="op">.</span>retryAfter <span class="op">??</span> <span class="dv">1</span><span class="op">)))</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">default</span><span class="op">:</span> print<span class="op">(</span>e<span class="op">.</span>code<span class="op">,</span> e<span class="op">.</span>message<span class="op">)</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p>The same Security-KMP mobile secure-storage caveat as Kotlin applies
+to the iOS build: block release until the native Keychain path replaces
+the in-memory stub.</p>
+</blockquote>
+<h2 id="rust">8. Rust</h2>
+<p>Core is <code>buf</code>-generated (<code>protoc-gen-prost</code> +
+<code>protoc-gen-tonic</code>) for the event/DTO plane; REST from the
+OpenAPI. <code>async</code> (tokio) thin layer.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargo.toml</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">helix-thready</span> <span class="op">=</span> <span class="st">&quot;1.0&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">helix_thready::</span><span class="op">{</span>Client<span class="op">,</span> Auth<span class="op">,</span> Code<span class="op">,</span> SearchRequest<span class="op">,</span> Mode<span class="op">,</span> EventFilter<span class="op">};</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">// R1</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> client <span class="op">=</span> <span class="pp">Client::</span>builder()</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>base_url(<span class="st">&quot;https://thready.hxd3v.com/v1&quot;</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>auth(<span class="pp">Auth::</span>api_key(<span class="st">&quot;sk-…&quot;</span>))              <span class="co">// or Auth::jwt(access, refresh)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build()<span class="op">?;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">// R2 — Stream hides the cursor</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> posts <span class="op">=</span> client<span class="op">.</span>posts()<span class="op">.</span>list()</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>channel_id(ch_id)<span class="op">.</span>status(<span class="st">&quot;failed&quot;</span>)<span class="op">.</span>limit(<span class="dv">100</span>)<span class="op">.</span>into_stream()<span class="op">;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(post) <span class="op">=</span> posts<span class="op">.</span>try_next()<span class="op">.</span><span class="kw">await</span><span class="op">?</span> <span class="op">{</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{} {:?}&quot;</span><span class="op">,</span> post<span class="op">.</span>id<span class="op">,</span> post<span class="op">.</span>categories)<span class="op">;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">// R3 — idempotent trigger, poll</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> job <span class="op">=</span> client<span class="op">.</span>posts()<span class="op">.</span>process(<span class="op">&amp;</span>post_id)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>idempotency_key(<span class="pp">Uuid::</span>new_v4()<span class="op">.</span>to_string())<span class="op">.</span>send()<span class="op">.</span><span class="kw">await</span><span class="op">?;</span>     <span class="co">// 202 -&gt; ProcessingJob</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;precedence {:?}&quot;</span><span class="op">,</span> job<span class="op">.</span>precedence)<span class="op">;</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="cf">loop</span> <span class="op">{</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> st <span class="op">=</span> client<span class="op">.</span>posts()<span class="op">.</span>processing_state(<span class="op">&amp;</span>post_id)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="pp">matches!</span>(st<span class="op">.</span>status<span class="op">.</span>as_str()<span class="op">,</span> <span class="st">&quot;succeeded&quot;</span> <span class="op">|</span> <span class="st">&quot;failed&quot;</span>) <span class="op">{</span> <span class="cf">break</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    <span class="pp">tokio::time::</span>sleep(<span class="pp">Duration::</span>from_secs(<span class="dv">2</span>))<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="co">// R4 — search + fail-loud embedder</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> res <span class="op">=</span> client<span class="op">.</span>search()<span class="op">.</span>query(SearchRequest <span class="op">{</span> query<span class="op">:</span> <span class="st">&quot;…&quot;</span><span class="op">.</span>into()<span class="op">,</span> mode<span class="op">:</span> <span class="pp">Mode::</span>Hybrid<span class="op">,</span> top_k<span class="op">:</span> <span class="dv">20</span><span class="op">,</span> <span class="op">..</span><span class="bu">Default</span><span class="pp">::</span><span class="kw">default</span>() <span class="op">}</span>)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> res<span class="op">.</span>embedder <span class="op">==</span> <span class="st">&quot;hash&quot;</span> <span class="op">{</span> <span class="pp">anyhow::bail!</span>(<span class="st">&quot;refusing hash-embedder results&quot;</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="co">// R5 — events (tonic streaming or WS/SSE per sdk-1)</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> sub <span class="op">=</span> client<span class="op">.</span>events()<span class="op">.</span>subscribe(EventFilter <span class="op">{</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    types<span class="op">:</span> <span class="pp">vec!</span>[<span class="st">&quot;processing.*&quot;</span><span class="op">.</span>into()<span class="op">,</span> <span class="st">&quot;asset.ready&quot;</span><span class="op">.</span>into()]<span class="op">,</span> replay_sticky<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(ev) <span class="op">=</span> sub<span class="op">.</span>next()<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ev<span class="op">.</span><span class="an">r#</span>type <span class="op">==</span> <span class="st">&quot;processing.completed&quot;</span> <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;done {:?}&quot;</span><span class="op">,</span> ev<span class="op">.</span>payload[<span class="st">&quot;post_id&quot;</span>])<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    sub<span class="op">.</span>ack(<span class="op">&amp;</span>ev<span class="op">.</span>id)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a><span class="co">// R6 — typed errors</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> client<span class="op">.</span>accounts()<span class="op">.</span>update(<span class="op">&amp;</span>account_id<span class="op">,</span> patch)<span class="op">.</span><span class="kw">await</span> <span class="op">{</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(_) <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="cf">match</span> e<span class="op">.</span>code() <span class="op">{</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Code::</span>PermissionDenied <span class="op">=&gt;</span> <span class="pp">eprintln!</span>(<span class="st">&quot;denied {} {:?}&quot;</span><span class="op">,</span> e<span class="op">.</span>trace_id()<span class="op">,</span> e<span class="op">.</span>details())<span class="op">,</span></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Code::</span>RateLimited <span class="op">=&gt;</span> <span class="pp">tokio::time::</span>sleep(<span class="pp">Duration::</span>from_secs(e<span class="op">.</span>retry_after()<span class="op">.</span>unwrap_or(<span class="dv">1</span>)))<span class="op">.</span><span class="kw">await</span><span class="op">,</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> <span class="pp">eprintln!</span>(<span class="st">&quot;{}: {}&quot;</span><span class="op">,</span> e<span class="op">.</span>code()<span class="op">,</span> e<span class="op">.</span>message())<span class="op">,</span></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="cross-language-parity-matrix">9. Cross-language parity
+matrix</h2>
+<p>Every SDK MUST implement all seven recipes with identical semantics
+(asserted by the generated-client round-trip gate, <a
+href="./sdk-strategy.md">sdk-strategy §6</a> / <a
+href="./contract-tests.md">contract-tests §full-automation</a>):</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 15%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr>
+<th>Recipe</th>
+<th>Go</th>
+<th>TS</th>
+<th>Python</th>
+<th>Kotlin</th>
+<th>Swift</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1 auth (key + JWT)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R2 cursor iterator</td>
+<td><code>it.Next()</code></td>
+<td><code>for await</code></td>
+<td><code>for</code> gen</td>
+<td><code>Flow</code></td>
+<td><code>AsyncSequence</code></td>
+<td><code>Stream</code></td>
+</tr>
+<tr>
+<td>R3 idempotent async + poll</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R4 search + embedder guard</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R5 events reconnect + sticky</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R6 typed error + retry policy</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R7 transparent JWT refresh</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Event transport</td>
+<td>Connect/WS</td>
+<td>WS/SSE</td>
+<td>WS/SSE</td>
+<td>WS/SSE</td>
+<td>WS/SSE</td>
+<td>tonic/WS</td>
+</tr>
+</tbody>
+</table>
+<p>Zig (<code>[OPEN: api-3]</code>) is hand-written over the C ABI /
+REST and implements the same recipes without a generated core; its event
+path is WS/SSE only. C++/C#/Ruby/PHP follow the REST pattern of the
+Python/TS columns.</p>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: sdkx-1]</code> The illustrative package/type names
+(<code>thready.*</code>, <code>@helix-thready/sdk</code>,
+<code>helix_thready</code>, <code>com.helix.thready</code>,
+<code>HelixThready</code>, <code>helix_thready</code> crate) are
+<code>[DEFAULT — adjustable]</code> and finalised at first publish per
+registry (<a href="./sdk-strategy.md">sdk-strategy §7</a>); the
+<strong>recipe behaviour</strong> is contract-fixed.</li>
+<li><code>[OPEN: sdk-1]</code> Event transport per language (Connect
+streaming vs WS/SSE) is reconciled in <a
+href="./event-bus-contract.md">event-bus-contract §11</a> — Go/Rust may
+use Connect streaming; REST-generated languages use WS/SSE.</li>
+<li><code>[OPEN: sdkx-2]</code> Runnable quickstart repos (one per
+language, CI-gated) ship with the SDKs via Docs Chain once the servers
+exist; this doc fixes the API each quickstart demonstrates.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

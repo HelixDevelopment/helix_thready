@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Event Bus &amp; Real-Time Subscription Contract</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Event Bus &amp; Real-Time Subscription
+Contract</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#scope-grounding" id="toc-scope-grounding">1. Scope &amp;
+grounding</a></li>
+<li><a href="#transport-topology" id="toc-transport-topology">2.
+Transport &amp; topology</a>
+<ul>
+<li><a href="#a.-module-reality-vs.-event-bus-service-work"
+id="toc-a.-module-reality-vs.-event-bus-service-work">2a. Module reality
+vs. Event Bus service work</a></li>
+</ul></li>
+<li><a href="#the-event-envelope" id="toc-the-event-envelope">3. The
+event envelope</a></li>
+<li><a href="#event-catalog" id="toc-event-catalog">4. Event
+catalog</a></li>
+<li><a href="#subscription-patterns-websocket-sse"
+id="toc-subscription-patterns-websocket-sse">5. Subscription patterns
+(WebSocket / SSE)</a></li>
+<li><a href="#sticky-events-invalidation"
+id="toc-sticky-events-invalidation">6. Sticky events &amp;
+invalidation</a></li>
+<li><a href="#disconnected-clients-replay-reconcile"
+id="toc-disconnected-clients-replay-reconcile">7. Disconnected clients:
+replay &amp; reconcile</a></li>
+<li><a href="#delivery-guarantees-idempotency"
+id="toc-delivery-guarantees-idempotency">8. Delivery guarantees &amp;
+idempotency</a></li>
+<li><a href="#outbound-webhooks-3rd-party-callbacks"
+id="toc-outbound-webhooks-3rd-party-callbacks">9. Outbound webhooks
+&amp; 3rd-party callbacks</a></li>
+<li><a href="#authz-on-subscriptions"
+id="toc-authz-on-subscriptions">10. AuthZ on subscriptions</a></li>
+<li><a href="#gaps-addressed-open-items"
+id="toc-gaps-addressed-open-items">11. Gaps addressed &amp; open
+items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Event Bus & Real-Time Subscription Contract
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/event-bus-contract.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./openapi.yaml, ./asyncapi.yaml, ./rest-endpoints.md, ./authn-authz.md,
+                    ./error-model.md, ./sdk-examples.md, ../architecture/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial draft grounded in <code>digital.vasic.eventbus</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Added the outbound event-sink DDL + HMAC scheme
+(<code>hmacAuth</code>/<code>X-Thready-Signature</code>); linked
+contract-tests.md</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Completeness-critic pass: added the missing
+<code>event_sink_delivery_due_idx</code> partial index (§9) that drives
+the outbound-webhook retry worker
+(<code>state='pending' AND next_retry_at &lt;= now()</code>,
+<code>FOR UPDATE SKIP LOCKED</code>) — the ledger previously had no
+index for its retry poller.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td><strong>Depth pass, re-verified at
+<code>pkg/nats</code>/<code>pkg/bus</code>.</strong> Added §2a “What the
+module gives vs. what the Event Bus service must build” — the module’s
+NATS subs are <strong>ephemeral <code>DeliverNew</code></strong> (no
+native replay) on a <strong><code>LimitsPolicy</code>
+FileStorage</strong> stream (no native last-value/sticky), and
+<code>Payload</code> is <code>interface{}</code> (generic-JSON on
+receive). Made the durable-replay, sticky and at-least-once claims
+honest against those facts. Added <code>/v1/event-sinks</code> CRUD (now
+in <code>openapi.yaml</code>, closes evt-2). Cross-linked the machine
+contract <code>asyncapi.yaml</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--grounding">Scope &amp; grounding</a></li>
+<li><a href="#2-transport--topology">Transport &amp; topology</a>
+<ul>
+<li><a href="#2a-module-reality-vs-event-bus-service-work">2a. Module
+reality vs. Event Bus service work</a></li>
+</ul></li>
+<li><a href="#3-the-event-envelope">The event envelope</a></li>
+<li><a href="#4-event-catalog">Event catalog</a></li>
+<li><a href="#5-subscription-patterns-websocket--sse">Subscription
+patterns (WebSocket / SSE)</a></li>
+<li><a href="#6-sticky-events--invalidation">Sticky events &amp;
+invalidation</a></li>
+<li><a href="#7-disconnected-clients-replay--reconcile">Disconnected
+clients: replay &amp; reconcile</a></li>
+<li><a href="#8-delivery-guarantees--idempotency">Delivery guarantees
+&amp; idempotency</a></li>
+<li><a href="#9-outbound-webhooks--3rd-party-callbacks">Outbound
+webhooks &amp; 3rd-party callbacks</a></li>
+<li><a href="#10-authz-on-subscriptions">AuthZ on subscriptions</a></li>
+<li><a href="#11-gaps-addressed--open-items">Gaps addressed &amp; open
+items</a></li>
+</ol>
+<h2 id="scope-grounding">1. Scope &amp; grounding</h2>
+<p>The real-time contract is a <strong>client-facing wrapper</strong> —
+the new <strong>Event Bus service</strong>
+<code>[GAP: New#Event Bus service]</code> — over
+<strong><code>digital.vasic.eventbus</code></strong>
+<code>[IN-HOUSE: eventbus]</code>
+<code>[VERIFIED: read at source]</code> and its <strong>NATS
+JetStream</strong> adapter. This resolves Q3, Q — the events catalog,
+and gap-register item <code>#5</code>. Producers (Herald, the processing
+engine, the Asset Service, the User Service, metering) publish
+<code>event.Event</code>s; the Event Bus service fans them out to
+clients over WebSocket and SSE and serves sticky-event snapshots.</p>
+<p>The module’s shape used here is <strong>verified at
+source</strong>:</p>
+<ul>
+<li><code>event.Event{ ID, Type, Source, Payload, Timestamp, TraceID, Metadata }</code>;
+<code>Type</code> is a dot-notation topic
+(e.g. <code>provider.registered</code>);
+<code>event.New(type, source, payload)</code> auto-assigns
+<code>ID</code> and <code>TraceID</code> (both UUIDv4) and
+<code>Timestamp</code> <code>[VERIFIED: pkg/event/event.go]</code>.</li>
+<li>NATS-backed <code>Bus</code> with
+<code>Publish(*event.Event) error</code> and
+<code>Subscribe(ctx, type) (&lt;-chan *event.Event, func(), error)</code>;
+a JetStream stream (default name <strong><code>EVENTBUS</code></strong>,
+default subject prefix <strong><code>eventbus</code></strong>,
+<code>FileStorage</code>) capturing every subject under
+<code>&lt;prefix&gt;.&gt;</code>; subjects are
+<code>&lt;SubjectPrefix&gt;.&lt;sanitized event.Type&gt;</code> (Thready
+sets the prefix to <code>eventbus.thready</code>)
+<code>[VERIFIED: pkg/nats/nats.go]</code>.</li>
+<li>Rich subscriber-side filtering:
+<code>filter.ByType/ByTypes/BySource/ByGlob/ByPrefix/ByMetadata/ HasMetadata/And/Or</code>
+<code>[VERIFIED: pkg/filter]</code> — this is what backs the WS glob
+(<code>processing.*</code> → <code>ByGlob</code>) and the tenant filter
+(<code>metadata.account_id</code> → <code>ByMetadata</code>) in
+§5/§10.</li>
+</ul>
+<p>The machine-readable channel/message contract for the whole event
+plane is <a href="./asyncapi.yaml">asyncapi.yaml</a> (AsyncAPI 3.0 — one
+message per event type, with per-type payload schemas and
+<code>x-sticky</code>/<code>x-required-scope</code>/<code>x-sticky-key</code>
+annotations). This document is the behavioural spec;
+<code>asyncapi.yaml</code> is the wire contract, as
+<code>openapi.yaml</code> is for REST.</p>
+<h2 id="transport-topology">2. Transport &amp; topology</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2239.6px; background-color: white;" viewBox="0 0 2239.60009765625 371.5" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M240,138.8L251.583,138.8C263.167,138.8,286.333,138.8,308.833,138.8C331.333,138.8,353.167,138.8,364.083,138.8L375,138.8" id="my-svg-L_PROD_BUS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROD_BUS_0" data-points="W3sieCI6MjQwLCJ5IjoxMzguNzk5OTk3MzI5NzExOX0seyJ4IjozMDkuNSwieSI6MTM4Ljc5OTk5NzMyOTcxMTl9LHsieCI6Mzc5LCJ5IjoxMzguNzk5OTk3MzI5NzExOX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M592,138.8L596.167,138.8C600.333,138.8,608.667,138.8,616.417,138.87C624.167,138.941,631.334,139.081,634.917,139.151L638.501,139.222" id="my-svg-L_BUS_NATS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BUS_NATS_0" data-points="W3sieCI6NTkyLCJ5IjoxMzguNzk5OTk3MzI5NzExOX0seyJ4Ijo2MTcsInkiOjEzOC43OTk5OTczMjk3MTE5fSx7IngiOjY0Mi40OTk5OTk5OTk5OTk4LCJ5IjoxMzkuMjk5OTk3MzI5NzExOX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M851.37,168.76L868.992,174.05C886.613,179.34,921.857,189.92,954.062,195.21C986.267,200.5,1015.433,200.5,1030.017,200.5L1044.6,200.5" id="my-svg-L_NATS_EBS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NATS_EBS_0" data-points="W3sieCI6ODUxLjM2OTk5NzM3MTA1MjIsInkiOjE2OC43NTk5OTk1MzU4NTAwNn0seyJ4Ijo5NTcuMTAwMDA2MTAzNTE1NiwieSI6MjAwLjQ5OTk5NjE4NTMwMjczfSx7IngiOjEwNDguNjAwMDA2MTAzNTE1NiwieSI6MjAwLjQ5OTk5NjE4NTMwMjczfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1232.827,177L1254.456,171.367C1276.085,165.733,1319.342,154.467,1369.893,145.166C1420.444,135.865,1478.288,128.53,1507.21,124.862L1536.132,121.194" id="my-svg-L_EBS_WS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EBS_WS_0" data-points="W3sieCI6MTIzMi44MjY4ODMzOTU2MjEsInkiOjE3Ni45OTk5OTYxODUzMDI3M30seyJ4IjoxMzYyLjYwMDAwNjEwMzUxNTYsInkiOjE0My4xOTk5OTY5NDgyNDIyfSx7IngiOjE1NDAuMTAwMDA2MTAzNTE1NiwieSI6MTIwLjY5MTE5MDk1MTAyNDQ4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1179.661,224L1210.151,243.333C1240.641,262.667,1301.62,301.333,1358.693,320.667C1415.767,340,1468.933,340,1495.517,340L1522.1,340" id="my-svg-L_EBS_SSE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EBS_SSE_0" data-points="W3sieCI6MTE3OS42NjA5Mzg1MDk4ODIsInkiOjIyMy45OTk5OTYxODUzMDI3M30seyJ4IjoxMzYyLjYwMDAwNjEwMzUxNTYsInkiOjMzOS45OTk5OTQyNzc5NTQxfSx7IngiOjE1MjYuMTAwMDA2MTAzNTE1NiwieSI6MzM5Ljk5OTk5NDI3Nzk1NDF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1236.6,211.139L1257.6,213.516C1278.6,215.893,1320.6,220.646,1361.933,223.023C1403.267,225.4,1443.933,225.4,1464.267,225.4L1484.6,225.4" id="my-svg-L_EBS_STICKY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EBS_STICKY_0" data-points="W3sieCI6MTIzNi42MDAwMDYxMDM1MTU2LCJ5IjoyMTEuMTM5MDg2OTMxNDAyMDN9LHsieCI6MTM2Mi42MDAwMDYxMDM1MTU2LCJ5IjoyMjUuMzk5OTk1ODAzODMzfSx7IngiOjE0ODguNjAwMDA2MTAzNTE1NiwieSI6MjI1LjM5OTk5NTgwMzgzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1696.1,110.8L1708.85,110.8C1721.6,110.8,1747.1,110.8,1763.471,109.529C1779.842,108.259,1787.084,105.718,1790.705,104.447L1794.326,103.177" id="my-svg-L_WS_CA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_WS_CA_0" data-points="W3sieCI6MTY5Ni4xMDAwMDYxMDM1MTU2LCJ5IjoxMTAuNzk5OTk3MzI5NzExOTF9LHsieCI6MTc3Mi42MDAwMDYxMDM1MTU2LCJ5IjoxMTAuNzk5OTk3MzI5NzExOTF9LHsieCI6MTc5OC4xMDAwMDYxMDM1MTU2LCJ5IjoxMDEuODUyMDkzMzcxMDg4NjN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1710.1,340L1720.517,340C1730.933,340,1751.767,340,1765.683,340C1779.6,340,1786.6,340,1790.1,340L1793.6,340" id="my-svg-L_SSE_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SSE_CB_0" data-points="W3sieCI6MTcxMC4xMDAwMDYxMDM1MTU2LCJ5IjozMzkuOTk5OTk0Mjc3OTU0MX0seyJ4IjoxNzcyLjYwMDAwNjEwMzUxNTYsInkiOjMzOS45OTk5OTQyNzc5NTQxfSx7IngiOjE3OTcuNjAwMDA2MTAzNTE1NiwieSI6MzM5Ljk5OTk5NDI3Nzk1NDF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1819.896,58L1812.013,52.883C1804.131,47.767,1788.365,37.533,1754.733,32.417C1721.1,27.3,1669.6,27.3,1601.267,27.3C1532.933,27.3,1447.767,27.3,1368.517,27.3C1289.267,27.3,1215.933,27.3,1148.35,27.3C1080.767,27.3,1018.933,27.3,965.01,40.044C911.088,52.787,865.075,78.275,842.069,91.018L819.063,103.762" id="my-svg-L_CA_NATS_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CA_NATS_0" data-points="W3sieCI6MTgxOS44OTYxMzA4MDAzNDEzLCJ5Ijo1Ny45OTk5OTgwOTI2NTEzN30seyJ4IjoxNzcyLjYwMDAwNjEwMzUxNTYsInkiOjI3LjI5OTk5OTIzNzA2MDU0N30seyJ4IjoxNjE4LjEwMDAwNjEwMzUxNTYsInkiOjI3LjI5OTk5OTIzNzA2MDU0N30seyJ4IjoxMzYyLjYwMDAwNjEwMzUxNTYsInkiOjI3LjI5OTk5OTIzNzA2MDU0N30seyJ4IjoxMTQyLjYwMDAwNjEwMzUxNTYsInkiOjI3LjI5OTk5OTIzNzA2MDU0N30seyJ4Ijo5NTcuMTAwMDA2MTAzNTE1NiwieSI6MjcuMjk5OTk5MjM3MDYwNTQ3fSx7IngiOjgxNS41NjM0OTk5OTUwNjQ4LCJ5IjoxMDUuNjk5OTk4ODU1NTkwODJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1914.1,81.5L1929.85,81.5C1945.6,81.5,1977.1,81.5,2007.85,81.5C2038.6,81.5,2068.6,81.5,2083.6,81.5L2098.6,81.5" id="my-svg-L_CA_REST_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CA_REST_0" data-points="W3sieCI6MTkxNC4xMDAwMDYxMDM1MTU2LCJ5Ijo4MS40OTk5OTgwOTI2NTEzN30seyJ4IjoyMDA4LjYwMDAwNjEwMzUxNTYsInkiOjgxLjQ5OTk5ODA5MjY1MTM3fSx7IngiOjIxMDIuNjAwMDA2MTAzNTE1NiwieSI6ODEuNDk5OTk4MDkyNjUxMzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1187.713,177L1216.861,161.817C1246.009,146.633,1304.304,116.267,1362.372,103.902C1420.44,91.537,1478.279,97.174,1507.199,99.992L1536.119,102.81" id="my-svg-L_EBS_WS_2" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EBS_WS_2" data-points="W3sieCI6MTE4Ny43MTM0NDQ3NDk1Njg1LCJ5IjoxNzYuOTk5OTk2MTg1MzAyNzN9LHsieCI6MTM2Mi42MDAwMDYxMDM1MTU2LCJ5Ijo4NS44OTk5OTc3MTExODE2NH0seyJ4IjoxNTQwLjEwMDAwNjEwMzUxNTYsInkiOjEwMy4xOTg0MzE4ODg0Mzg0OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(309.5, 138.7999973297119)"><g class="label" data-id="L_PROD_BUS_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-44" y="0" width="89" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">event.Event</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_BUS_NATS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(948.05316, 197.78415)"><g class="label" data-id="L_NATS_EBS_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-66" y="0" width="133" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">durable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> consumer</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1384.83142, 140.38083)"><g class="label" data-id="L_EBS_WS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-88.5" y="0" width="177" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">WebSocket</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bidirectional</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1362.6000061035156, 339.9999942779541)"><g class="label" data-id="L_EBS_SSE_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-71" y="0" width="142" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Server-Sent</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Events</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">one-way</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1362.6000061035156, 225.399995803833)"><g class="label" data-id="L_EBS_STICKY_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-81.5" y="0" width="163" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">last-value</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> compacted</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">subject</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_WS_CA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SSE_CB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1362.6000061035156, 27.299999237060547)"><g class="label" data-id="L_CA_NATS_0" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-100.5" y="0" width="202" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reconnect:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> durable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> replay</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> of</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">missed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> events</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(2008.35001, 81.5)"><g class="label" data-id="L_CA_REST_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-69" y="0" width="138" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">snapshot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reconcile</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1354.24081, 90.25438)"><g class="label" data-id="L_EBS_WS_2" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-83.5" y="0" width="167" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RBAC</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tenant</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filter</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">subscribe</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-PROD-0" data-look="classic" transform="translate(124, 138.7999973297119)"><rect class="basic label-container" style="" x="-116" y="-41.099998474121094" width="232" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Producers:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Herald,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Processing,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Asset,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> User,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Metering</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BUS-1" data-look="classic" transform="translate(485.5, 138.7999973297119)"><rect class="basic label-container" style="" x="-106.5" y="-23.5" width="213" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">digital.vasic.eventbus</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NATS-3" data-look="classic" transform="translate(753.8000030517578, 138.7999973297119)"><polygon points="16.799999237060547,0 206.79999923706055,0 223.5999984741211,-33.599998474121094 206.79999923706055,-67.19999694824219 16.799999237060547,-67.19999694824219 0,-33.599998474121094" class="label-container" transform="translate(-111.79999923706055,33.599998474121094)"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">NATS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JetStream:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stream</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">EVENTBUS,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subject</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">eventbus.thready.*</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EBS-5" data-look="classic" transform="translate(1142.6000061035156, 200.49999618530273)"><rect class="basic label-container" style="" x="-94" y="-23.5" width="188" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Event</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Bus</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WS-7" data-look="classic" transform="translate(1618.1000061035156, 110.79999732971191)"><rect class="basic label-container" style="" x="-78" y="-23.5" width="156" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/events/ws</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SSE-9" data-look="classic" transform="translate(1618.1000061035156, 339.9999942779541)"><rect class="basic label-container" style="" x="-92" y="-23.5" width="184" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/events/stream</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-STICKY-11" data-look="classic" transform="translate(1618.1000061035156, 225.399995803833)"><rect class="basic label-container" style="" x="-129.5" y="-41.099998474121094" width="259" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GET</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/events/{entityType}/{entit</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yId}/sticky</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CA-13" data-look="classic" transform="translate(1856.1000061035156, 81.49999809265137)"><rect class="basic label-container" style="" x="-58" y="-23.5" width="116" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Client</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> A</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CB-15" data-look="classic" transform="translate(1856.1000061035156, 339.9999942779541)"><rect class="basic label-container" style="" x="-58.5" y="-23.5" width="117" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Client</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> B</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REST-19" data-look="classic" transform="translate(2167.1000061035156, 81.49999809265137)"><rect class="basic label-container" style="" x="-64.5" y="-23.5" width="129" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">REST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /v1</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/event-subscription.mmd">diagrams/event-subscription.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> System producers — the Herald thread readers, the
+processing/Skill-dispatch engine, the Asset Service, the User Service
+and the metering service — emit <code>event.Event</code> values into
+<code>digital.vasic.eventbus</code>. The NATS JetStream adapter persists
+every event to the durable stream <code>EVENTBUS</code> under subjects
+of the form <code>eventbus.thready.&lt;type&gt;</code> (the sanitized
+event type appended to Thready’s subject prefix, verified
+<code>&lt;SubjectPrefix&gt;.&lt;sanitized event.Type&gt;</code>).</p>
+<p>The Event Bus service attaches to that stream as a <strong>durable
+consumer</strong> — which, as §2a records, the service must configure
+explicitly, because the bare <code>digital.vasic.eventbus</code> module
+opens <em>ephemeral</em> <code>DeliverNew</code> subscriptions — and
+re-publishes to connected clients through three surfaces: a
+bidirectional <strong>WebSocket</strong> at <code>/v1/events/ws</code>
+(for clients that also send subscribe/ack frames), a one-way
+<strong>Server-Sent Events</strong> stream at
+<code>/v1/events/stream</code> (for browsers and simple consumers), and
+a <strong>sticky snapshot</strong> endpoint
+<code>GET /v1/events/{entityType}/{entityId}/sticky</code> that returns
+the last retained value of a sticky event for one entity (served from
+the last-value store the service maintains, §2a).</p>
+<p>When a client disconnects and reconnects, it can either replay missed
+events directly from the durable JetStream consumer (by last-acked
+sequence) or reconcile against a REST snapshot; both paths are shown as
+dashed edges. Crucially, the Event Bus service applies RBAC and tenant
+filtering at subscribe time — grounded in the module’s verified
+<code>filter.ByMetadata</code> predicate on
+<code>metadata.account_id</code> — so a client only ever receives events
+for accounts it may see.</p>
+<h3 id="a.-module-reality-vs.-event-bus-service-work">2a. Module reality
+vs. Event Bus service work</h3>
+<p>The diagram above is the <strong>target</strong>. Read at source,
+<code>digital.vasic.eventbus</code> provides a solid transport but
+<strong>not</strong> three of the guarantees this contract promises — so
+those guarantees are explicitly the new <strong>Event Bus
+service</strong>’s job, not something to claim the module already does.
+This is the anti-bluff record for the event plane
+(<code>[GAP: §12 anti-bluff]</code>).</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 44%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Guarantee promised here</th>
+<th>What the module does today
+<code>[VERIFIED: pkg/nats/nats.go]</code></th>
+<th>What the Event Bus service must add <code>[BUILD-NEW]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Durable replay on reconnect</strong> (§7)</td>
+<td><code>Bus.Subscribe</code> opens an <strong>ephemeral push</strong>
+subscription with <strong><code>DeliverNew()</code></strong>
+(<code>nats.go:238,256</code>) — a reconnecting client only gets events
+published <em>after</em> it re-subscribes; missed events are
+<strong>not</strong> replayed.</td>
+<td>Create a <strong>named durable consumer</strong> per subscriber (or
+per (account,client)) so JetStream redelivers from the last
+<strong>acked</strong> sequence. The stream retains history (below), so
+the data is there; the module just doesn’t bind a durable consumer.</td>
+</tr>
+<tr>
+<td><strong>Sticky / last-value snapshots</strong> (§6)</td>
+<td>The stream is created with
+<strong><code>Retention: LimitsPolicy</code>,
+<code>Storage: FileStorage</code></strong> and subjects
+<code>&lt;prefix&gt;.&gt;</code> (<code>nats.go:131</code>) — a normal
+history stream, <strong>no per-subject last-value / compaction</strong>.
+There is no sticky read in the module.</td>
+<td>Maintain last-value per entity via a <strong>JetStream KV
+bucket</strong> (or a second stream with
+<code>MaxMsgsPerSubject: 1</code>) keyed by
+<code>&lt;type&gt;.&lt;entity_id&gt;</code>, written on publish and
+<strong>invalidated</strong> on terminal events (§6).
+<code>GET …/sticky</code> reads that store.</td>
+</tr>
+<tr>
+<td><strong>At-least-once delivery</strong> (§8)</td>
+<td>The <strong>NATS</strong> path uses <code>AckExplicit()</code>
+(<code>nats.go:257</code>) → at-least-once <strong>once a durable
+consumer exists</strong>. The <strong>in-memory</strong>
+<code>pkg/bus</code> path is at-<strong>most</strong>-once: it drops on
+a full buffer (<code>BufferSize 1000</code>,
+<code>PublishTimeout 10ms</code>, <code>EventsDropped</code> metric,
+<code>pkg/bus/bus.go:30,178</code>).</td>
+<td>Use the <strong>NATS/JetStream</strong> backend (never the in-memory
+bus) for the client-facing plane, with durable consumers + explicit ack,
+so no non-sticky event is silently lost within the retention
+window.</td>
+</tr>
+<tr>
+<td><strong>Typed payloads</strong></td>
+<td><code>Event.Payload</code> is <code>interface{}</code>; after JSON
+round-trip it arrives as generic JSON
+(<code>map[string]interface{}</code>, <code>float64</code>, …) — the
+module documents this limitation in <code>pkg/nats</code> and it cannot
+preserve Go types.</td>
+<td>Carry the concrete payload schema per <code>type</code> (the
+<code>asyncapi.yaml</code> message schemas); SDKs
+<strong>re-marshal</strong> the received <code>payload</code> into the
+typed struct for that <code>type</code> (this is why the
+<code>sdk-examples.md</code> R5 recipe reads
+<code>ev.payload["post_id"]</code> from a generic map before typing
+it).</td>
+</tr>
+</tbody>
+</table>
+<p>None of these are blockers — the module gives durable JetStream
+storage, subject routing and rich filtering for free — but the contract
+only holds because the Event Bus service adds the durable-consumer
+binding, the last-value store and the JetStream-only delivery path on
+top. The RED-first proofs (reconnect replays a missed event; a sticky
+read returns the last value; back-pressure drops then reconnects) are in
+<a href="./contract-tests.md">contract-tests.md</a> §chaos/§integration,
+and they will <strong>fail against the bare module</strong> — which is
+the point.</p>
+<h2 id="the-event-envelope">3. The event envelope</h2>
+<p>The wire form is the <code>digital.vasic.eventbus</code>
+<code>event.Event</code>, rendered identically on WebSocket frames, SSE
+<code>data:</code> lines, sticky snapshots and outbound webhooks
+(<code>components.schemas.EventEnvelope</code> in <a
+href="./openapi.yaml">openapi.yaml</a>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;8f0e…-uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;processing.completed&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;processing-engine&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;post_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span> <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;succeeded&quot;</span><span class="fu">,</span> <span class="dt">&quot;skills_applied&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;video.download&quot;</span><span class="ot">,</span><span class="st">&quot;research.deep&quot;</span><span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-07-21T12:34:56Z&quot;</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;trace_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;account_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span> <span class="dt">&quot;channel_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span> <span class="fu">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 50%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Source field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>Event.ID</code></td>
+<td>UUIDv4; use for idempotent client handling.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>Event.Type</code></td>
+<td>Dot-notation topic; the subscription selector.</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>Event.Source</code></td>
+<td>Producing service.</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td><code>Event.Payload</code></td>
+<td>Event-specific; schema per catalog entry (proto message).</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td><code>Event.Timestamp</code></td>
+<td>RFC 3339 UTC.</td>
+</tr>
+<tr>
+<td><code>trace_id</code></td>
+<td><code>Event.TraceID</code></td>
+<td>Correlates to REST <code>trace_id</code> and logs/traces.</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td><code>Event.Metadata</code></td>
+<td>String map; carries <code>account_id</code> for tenant routing.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>payload</code> shapes are defined once in Protobuf
+(<code>proto/helix/thready/v1/events.proto</code>) and mirrored into the
+OpenAPI schemas so REST and event SDKs share the same DTOs (see <a
+href="./sdk-strategy.md">sdk-strategy.md</a>, <a
+href="./versioning.md">versioning.md</a>).</p>
+<h2 id="event-catalog">4. Event catalog</h2>
+<p><code>GET /v1/events</code> returns the machine-readable catalog
+(<code>EventDescriptor[]</code>). Core types
+(<code>[DEFAULT — adjustable]</code>; a dedicated events catalog
+documents each per §3.4):</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 30%" />
+<col style="width: 25%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th><code>type</code></th>
+<th style="text-align: center;">Sticky</th>
+<th>Payload (summary)</th>
+<th>Required scope</th>
+<th>Fires when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>channel.registered</code></td>
+<td style="text-align: center;">no</td>
+<td>channel</td>
+<td><code>events:read</code></td>
+<td>A channel is registered.</td>
+</tr>
+<tr>
+<td><code>channel.synced</code></td>
+<td style="text-align: center;"><strong>yes</strong></td>
+<td>channel + counts</td>
+<td><code>events:read</code></td>
+<td>Poll/backfill completes (last-value).</td>
+</tr>
+<tr>
+<td><code>post.received</code></td>
+<td style="text-align: center;">no</td>
+<td>post</td>
+<td><code>posts:read</code></td>
+<td>A new post/thread is ingested by Herald.</td>
+</tr>
+<tr>
+<td><code>post.processing.claimed</code></td>
+<td style="text-align: center;">no</td>
+<td>post_id, job_id</td>
+<td><code>posts:read</code></td>
+<td>A post is claimed for processing (single-claim).</td>
+</tr>
+<tr>
+<td><code>processing.progress</code></td>
+<td style="text-align: center;"><strong>yes</strong></td>
+<td>post_id, progress</td>
+<td><code>posts:read</code></td>
+<td>Progress update (last-value per post).</td>
+</tr>
+<tr>
+<td><code>processing.completed</code></td>
+<td style="text-align: center;">no</td>
+<td>post_id, status, skills</td>
+<td><code>posts:read</code></td>
+<td>Processing finishes (success/partial/fail).</td>
+</tr>
+<tr>
+<td><code>asset.download.progress</code></td>
+<td style="text-align: center;"><strong>yes</strong></td>
+<td>job_id, progress</td>
+<td><code>assets:read</code></td>
+<td>Download progress (last-value per job).</td>
+</tr>
+<tr>
+<td><code>asset.ready</code></td>
+<td style="text-align: center;">no</td>
+<td>asset_id</td>
+<td><code>assets:read</code></td>
+<td>An asset (incl. <code>…-web</code> rendition) is ready.</td>
+</tr>
+<tr>
+<td><code>search.index.updated</code></td>
+<td style="text-align: center;">no</td>
+<td>source_id</td>
+<td><code>search:read</code></td>
+<td>New content embedded/indexed.</td>
+</tr>
+<tr>
+<td><code>subscription.updated</code></td>
+<td style="text-align: center;"><strong>yes</strong></td>
+<td>account_id, status</td>
+<td><code>billing:read</code></td>
+<td>Plan/usage state changes (last-value).</td>
+</tr>
+</tbody>
+</table>
+<p>Sticky types retain their last value keyed by the relevant entity id
+(§6). One-time types fire and are consumed.</p>
+<h2 id="subscription-patterns-websocket-sse">5. Subscription patterns
+(WebSocket / SSE)</h2>
+<p>Two live surfaces; both require <code>events:read</code> and carry
+the same envelope.</p>
+<p><strong>WebSocket — <code>GET /v1/events/ws</code></strong>
+(bidirectional; upgrade with <code>Authorization: Bearer …</code> or
+<code>?access_token=</code>):</p>
+<pre class="jsonc"><code>// client → server: subscribe frame
+{ &quot;op&quot;: &quot;subscribe&quot;, &quot;types&quot;: [&quot;processing.completed&quot;, &quot;asset.ready&quot;], &quot;account_id&quot;: &quot;…&quot; }
+// client → server: filtered subscribe (glob on type)
+{ &quot;op&quot;: &quot;subscribe&quot;, &quot;types&quot;: [&quot;processing.*&quot;] }
+// server → client: each event
+{ &quot;op&quot;: &quot;event&quot;, &quot;event&quot;: { /* EventEnvelope */ } }
+// client → server: ack (durable cursor advance)
+{ &quot;op&quot;: &quot;ack&quot;, &quot;id&quot;: &quot;8f0e…&quot; }
+// client → server: unsubscribe
+{ &quot;op&quot;: &quot;unsubscribe&quot;, &quot;types&quot;: [&quot;asset.ready&quot;] }</code></pre>
+<p>Subscription selectors reuse the module’s semantics
+<code>[VERIFIED]</code>: subscribe to specific types
+(<code>Subscribe</code>/<code>SubscribeMultiple</code>), to a filtered
+set (<code>SubscribeWithFilter</code>), or to everything
+(<code>SubscribeAll</code>) — the server maps <code>types: ["*"]</code>
+to <code>SubscribeAll</code>, subject to RBAC (§10). Wildcards use
+JetStream subject tokens (<code>processing.*</code>).</p>
+<p><strong>SSE —
+<code>GET /v1/events/stream?types=processing.completed,asset.ready</code></strong>
+(one-way; ideal for browsers):</p>
+<pre><code>: subscribed types=processing.completed,asset.ready
+id: 8f0e…-uuid
+event: processing.completed
+data: {&quot;id&quot;:&quot;8f0e…&quot;,&quot;type&quot;:&quot;processing.completed&quot;,&quot;payload&quot;:{…},&quot;trace_id&quot;:&quot;…&quot;}
+</code></pre>
+<p>SSE uses the standard
+<code>id:</code>/<code>event:</code>/<code>data:</code> framing; the
+<code>id:</code> is the event id, which the client sends back as
+<code>Last-Event-ID</code> on reconnect to resume (§7).</p>
+<blockquote>
+<p>These two routes live under <code>/v1</code> but are
+<strong>not</strong> in <code>openapi.yaml</code> (OpenAPI cannot fully
+model a WS upgrade or an infinite SSE stream); they are specified here
+and mirrored as Connect <strong>streaming</strong> RPCs in the proto for
+Go/Rust SDKs (<code>[OPEN: sdk-1]</code>).</p>
+</blockquote>
+<h2 id="sticky-events-invalidation">6. Sticky events &amp;
+invalidation</h2>
+<p>Resolves §3.4 and <code>[GAP: #5 sticky]</code>. A
+<strong>sticky</strong> event retains its <strong>last value</strong> so
+a newly-connected client immediately learns current state without
+waiting for the next change:</p>
+<ul>
+<li><strong>Storage</strong> — implemented as a <strong>compacted
+JetStream subject</strong> (last-value retained per subject) / a
+last-value cache keyed by entity id — the module’s JetStream backing
+makes this native.</li>
+<li><strong>Snapshot read</strong> —
+<code>GET /v1/events/{entityType}/{entityId}/sticky</code> returns the
+retained <code>EventEnvelope</code> for one entity (e.g. the latest
+<code>processing.progress</code> for a post), or 404 if none is
+retained.</li>
+<li><strong>On subscribe</strong> — a WS/SSE subscriber optionally
+receives the current sticky value for each subscribed sticky type before
+the live stream begins (<code>replay_sticky: true</code>).</li>
+<li><strong>Invalidation</strong> — the retained value is replaced on
+the next event for that entity, or <strong>explicitly
+invalidated</strong> on a terminal state change
+(e.g. <code>processing.completed</code> invalidates
+<code>processing.progress</code>) or a TTL. Invalidation emits a
+tombstone the client applies to drop stale last-values.</li>
+</ul>
+<p>Example: a dashboard reconnects, reads
+<code>GET /v1/events/post/{id}/sticky</code> → last
+<code>processing.progress</code> (0.6), then subscribes to
+<code>processing.*</code> and receives the terminal
+<code>processing.completed</code>, which invalidates the sticky
+progress.</p>
+<h2 id="disconnected-clients-replay-reconcile">7. Disconnected clients:
+replay &amp; reconcile</h2>
+<p>Two complementary mechanisms (both from §3.4):</p>
+<ol type="1">
+<li><strong>Durable replay</strong> — the Event Bus service backs each
+client by a <strong>durable JetStream consumer</strong>; on reconnect
+the client resumes from its last <strong>acked</strong> id (WS
+<code>ack</code> / SSE <code>Last-Event-ID</code>), and JetStream
+replays every missed event <strong>at least once</strong>.</li>
+<li><strong>Snapshot reconcile</strong> — for long outages the client
+re-reads REST snapshots (<code>GET /v1/posts/{id}/processing</code>,
+<code>/v1/events/{entity}/{id}/sticky</code>) to converge without
+replaying a huge backlog, then resumes the live stream.</li>
+</ol>
+<h2 id="delivery-guarantees-idempotency">8. Delivery guarantees &amp;
+idempotency</h2>
+<ul>
+<li><strong>At-least-once</strong> delivery (JetStream), so consumers
+<strong>must be idempotent</strong> — dedupe on <code>event.id</code>.
+This matches the processing engine’s idempotent single-claim
+design.</li>
+<li><strong>Ordering</strong> — per-subject (per event type) ordering is
+preserved by JetStream; no global order across types is promised.</li>
+<li><strong>Back-pressure</strong> — a slow client that stops acking has
+its durable consumer buffer bounded; beyond the bound the server drops
+the socket with a <code>unavailable</code> close and the client
+reconnects + reconciles (§7). Non-sticky one-time events are never
+silently lost (they remain in the durable stream within the retention
+window).</li>
+</ul>
+<h2 id="outbound-webhooks-3rd-party-callbacks">9. Outbound webhooks
+&amp; 3rd-party callbacks</h2>
+<p>Two distinct callback surfaces:</p>
+<p><strong>(a) Outbound event webhooks (Thready → subscriber).</strong>
+For server-to-server subscribers that prefer HTTP push over a persistent
+socket, Thready POSTs the same <code>EventEnvelope</code> to a
+registered sink. Declared as the <code>eventDelivery</code>
+<strong>webhook</strong> in <code>openapi.yaml</code> (OpenAPI 3.1
+<code>webhooks</code>). Signed with the <code>X-Thready-Signature</code>
+<strong>HMAC-SHA256</strong> header (the <code>hmacAuth</code> scheme in
+<code>openapi.yaml</code>, over the raw body — the receiver verifies
+it); any 2xx acks; non-2xx triggers exponential-back-off retry from the
+durable stream.</p>
+<p>Sink registration (<code>[OPEN: evt-2]</code>, the deferred
+<code>/v1/event-sinks</code> endpoints) is backed by an
+<strong>API-plane-owned</strong> table. Real PostgreSQL DDL so the
+delivery/retry/secret contract is concrete even before the endpoints
+ship:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Outbound webhook sinks. secret_enc is the per-sink HMAC secret, sealed at rest by</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- security/pkg/securestorage (AES-256-GCM) — never returned in plaintext after creation.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> event_sink (</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>            uuid        <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    account_id    uuid        <span class="kw">NOT</span> <span class="kw">NULL</span>,                 <span class="co">-- tenant that owns the sink</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    url           text        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    event_types   text[]      <span class="kw">NOT</span> <span class="kw">NULL</span>,                 <span class="co">-- subscribed dot-notation types (glob allowed)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    secret_enc    bytea       <span class="kw">NOT</span> <span class="kw">NULL</span>,                 <span class="co">-- sealed HMAC secret (never logged)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    active        <span class="dt">boolean</span>     <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">true</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    max_attempts  <span class="dt">smallint</span>    <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">8</span>,       <span class="co">-- exponential back-off ceiling</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    created_at    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    last_delivery_at timestamptz</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- Only tenant-scoped, active sinks matching an event&#39;s account_id are fanned out.</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> event_sink_account_active_idx</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> event_sink (account_id) <span class="kw">WHERE</span> active;</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- Per-delivery ledger for at-least-once retry + idempotent replay on the subscriber side.</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> event_sink_delivery (</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>            uuid        <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    sink_id       uuid        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> event_sink(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    event_id      uuid        <span class="kw">NOT</span> <span class="kw">NULL</span>,                 <span class="co">-- EventEnvelope.id (dedupe key)</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    attempt       <span class="dt">smallint</span>    <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    state         text        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;pending&#39;</span>, <span class="co">-- pending|delivered|failed|dead</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    next_retry_at timestamptz,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    created_at    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (sink_id, event_id)                          <span class="co">-- one live delivery per (sink,event)</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">-- Drives the retry worker: it polls due, not-yet-terminal deliveries</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">-- (SELECT ... WHERE state=&#39;pending&#39; AND next_retry_at &lt;= now() ORDER BY next_retry_at</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">-- FOR UPDATE SKIP LOCKED). Partial index keeps it small — delivered/dead rows are excluded.</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> event_sink_delivery_due_idx</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> event_sink_delivery (next_retry_at)</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> state <span class="op">=</span> <span class="st">&#39;pending&#39;</span>;</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">-- Forward:  0011_event_sink.up.sql (statements above)</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co">-- Rollback: 0011_event_sink.down.sql: DROP TABLE event_sink_delivery; DROP TABLE event_sink;</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">-- Run via database/pkg/migration.Runner (Q30).</span></span></code></pre></div>
+<p><strong>(b) Inbound 3rd-party completion callbacks (Boba / MeTube /
+Download Manager → Thready).</strong> Resolves
+<code>[GAP: 6.6 callback module]</code>,
+<code>[GAP: 6.5 MeTube webhook]</code>. A <strong>standardized callback
+schema</strong> (<code>components.schemas.Callback</code>) is accepted
+at <code>POST /v1/processing/callbacks/{provider}</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;job_id&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span> <span class="dt">&quot;provider&quot;</span><span class="fu">:</span> <span class="st">&quot;metube&quot;</span><span class="fu">,</span> <span class="dt">&quot;state&quot;</span><span class="fu">:</span> <span class="st">&quot;completed&quot;</span><span class="fu">,</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;progress&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;result_asset_ref&quot;</span><span class="fu">:</span> <span class="st">&quot;asset:…&quot;</span><span class="fu">,</span> <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="kw">null</span> <span class="fu">}</span></span></code></pre></div>
+<ul>
+<li>One schema for all three providers:
+<code>{job_id, provider, state, progress, result_asset_ref, error}</code>
+— matching §8.1’s “job id, state, progress, result/asset ref, error”
+contract.</li>
+<li>Authenticated by a <strong>per-provider HMAC signature</strong>
+header (not JWT — these are machine systems), idempotent on
+<code>job_id</code>.</li>
+<li>On receipt, Thready records the download result, links the asset to
+the post (<code>AssetLink</code>), and emits <code>asset.ready</code> /
+<code>processing.progress</code> onto the event bus.</li>
+<li><code>[GAP: 6.5]</code> MeTube is <strong>poll-only today</strong>
+(no outbound webhook); until its webhook is built, an internal poller
+bridges MeTube’s <code>GET /api/postprocess/status</code> into this same
+callback path, so the contract is stable regardless.</li>
+</ul>
+<h2 id="authz-on-subscriptions">10. AuthZ on subscriptions</h2>
+<p>Subscriptions are RBAC- and tenant-scoped exactly like REST (see <a
+href="./authn-authz.md">authn-authz.md</a>): the WS upgrade / SSE
+request carries a JWT or API key; the Event Bus service resolves the
+principal, and <strong>filters the stream server-side</strong> to events
+whose <code>metadata.account_id</code> the principal may see (a
+<code>user</code>/<code>account_admin</code> sees only their account;
+<code>root</code> may pass <code>account_id</code> to scope). Each
+catalog entry lists a <code>required_scope</code>; a subscriber lacking
+it never receives that type. This prevents a cross-tenant leak through
+the event plane.</p>
+<h2 id="gaps-addressed-open-items">11. Gaps addressed &amp; open
+items</h2>
+<ul>
+<li><code>[GAP: New#Event Bus service]</code> client-facing JetStream
+subscription — the whole document.</li>
+<li><code>[GAP: #5]</code> sticky events + invalidation, durable replay,
+at-least-once idempotent consumers — §6, §7, §8.</li>
+<li><code>[GAP: 6.6 / 6.5]</code> standardized 3rd-party callback
+contract; MeTube bridge — §9.</li>
+<li><strong>TDD</strong> — sticky reconnect-reconcile, at-least-once
+dedupe on <code>event.id</code>, HMAC callback bad-signature → 401, and
+back-pressure drop→reconnect are asserted RED-first in <a
+href="./contract-tests.md">contract-tests.md</a> (§chaos, §security,
+§integration).</li>
+<li><code>[OPEN: evt-1]</code> The exact sticky implementation is now
+scoped to <strong>two verified options</strong> (JetStream <strong>KV
+bucket</strong> keyed by <code>&lt;type&gt;.&lt;entity_id&gt;</code>, or
+a second stream with <code>MaxMsgsPerSubject: 1</code>) — see §2a; the
+choice is made with the Event Bus service build. The
+<strong>contract</strong> (snapshot endpoint,
+<code>replay_sticky</code>, invalidation semantics) is fixed here.</li>
+<li><code>[OPEN: sdk-1]</code> Go/Rust SDKs may consume events via
+Connect streaming instead of WS/SSE; reconciled in <a
+href="./sdk-strategy.md">sdk-strategy.md</a> and demonstrated in <a
+href="./sdk-examples.md">sdk-examples.md</a> R5.</li>
+<li><code>[RESOLVED: evt-2]</code> Outbound-webhook sink registration is
+now a <strong>first-class REST group</strong> —
+<code>GET/POST /v1/event-sinks</code>,
+<code>GET/PATCH/DELETE /v1/event-sinks/{sinkId}</code> in <a
+href="./openapi.yaml">openapi.yaml</a>
+(<code>EventSink</code>/<code>EventSinkCreate</code>, HMAC secret
+returned once), backed by the <code>event_sink</code> DDL in §9 and
+modelled as the <code>eventDelivery</code> channel in <a
+href="./asyncapi.yaml">asyncapi.yaml</a>. The endpoints carry
+<code>x-thready-maturity: build_new</code>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -1,0 +1,531 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Docs Chain context — Helix Thready public documentation (MVP research tree)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Authority : [CONSTITUTION §11.4.65] (every non-source .md has PDF + HTML
+#             siblings, kept in sync) + [CONSTITUTION §11.4.106] (Docs Chain).
+# Schema    : vasic-digital/docs_chain — .docs_chain/contexts/<name>.yaml
+#             (docs/CONFIG_SCHEMA.md, rev 3 — parsed + validated by internal/config).
+# Engine    : `docs_chain sync thready-docs`  (or `docs_chain sync --all`) —
+#             content-hashed incremental recompute over the DAG below.
+#
+# Pipeline (per doc): markdown --md2html--> html --html2pdf--> pdf
+#   • md2html  runs scripts/export-docs.sh in single-file --mode md2html:
+#       preprocesses inline ```mermaid fences (mmdc -> inline <svg>) then
+#       pandoc --standalone --toc --css assets/doc.css --metadata title=<H1>.
+#   • html2pdf runs scripts/export-docs.sh in single-file --mode html2pdf:
+#       weasyprint html -> pdf (branded running header/footer via doc.css).
+#   Both modes share the SAME code paths as the bulk `export-docs.sh` run, so
+#   Docs-Chain-driven and bulk-driven output are byte-identical.
+#
+# exec contract [CONFIG_SCHEMA §5.2]: Docs Chain invokes
+#     <exec> <input> <output> <args…>
+#   so `--mode <x>` (below) arrives AFTER the input/output paths the engine
+#   supplies. The transform reads only <input>, writes only <output>, exit 0/≠0.
+#
+# NOTE on determinism [CONFIG_SCHEMA §5.2 / §11.4.50]: pandoc + weasyprint
+#   output is byte-stable for identical input. The mermaid step (mmdc) is
+#   deterministic per diagram content here (mermaid-cli 11.16.0, one diagram
+#   per invocation). If a future mermaid-cli emits randomised element ids and
+#   the engine reports false drift, pin mmdc or normalise svg ids in md2html.
+#
+# Enumerates every *.md under docs/public/research/mvp/ (96 docs
+# -> 288 nodes, 192 derive-from edges).
+# ─────────────────────────────────────────────────────────────────────────────
+
+context: thready-docs
+description: >-
+  Helix Thready public docs — Markdown -> HTML + PDF export chain over
+  docs/public/research/mvp/**/*.md (96 docs). Mermaid fences rendered inline via
+  mmdc; pandoc + weasyprint transforms; branded via assets/doc.css.
+
+nodes:
+  completeness_report_md:                        { kind: markdown, path: docs/public/research/mvp/COMPLETENESS_REPORT.md }
+  completeness_report_html:                      { kind: html,     path: docs/public/research/mvp/COMPLETENESS_REPORT.html }
+  completeness_report_pdf:                       { kind: pdf,      path: docs/public/research/mvp/COMPLETENESS_REPORT.pdf }
+  conventions_md:                                { kind: markdown, path: docs/public/research/mvp/CONVENTIONS.md }
+  conventions_html:                              { kind: html,     path: docs/public/research/mvp/CONVENTIONS.html }
+  conventions_pdf:                               { kind: pdf,      path: docs/public/research/mvp/CONVENTIONS.pdf }
+  integration_report_md:                         { kind: markdown, path: docs/public/research/mvp/INTEGRATION_REPORT.md }
+  integration_report_html:                       { kind: html,     path: docs/public/research/mvp/INTEGRATION_REPORT.html }
+  integration_report_pdf:                        { kind: pdf,      path: docs/public/research/mvp/INTEGRATION_REPORT.pdf }
+  api_authn_authz_md:                            { kind: markdown, path: docs/public/research/mvp/api/authn-authz.md }
+  api_authn_authz_html:                          { kind: html,     path: docs/public/research/mvp/api/authn-authz.html }
+  api_authn_authz_pdf:                           { kind: pdf,      path: docs/public/research/mvp/api/authn-authz.pdf }
+  api_contract_tests_md:                         { kind: markdown, path: docs/public/research/mvp/api/contract-tests.md }
+  api_contract_tests_html:                       { kind: html,     path: docs/public/research/mvp/api/contract-tests.html }
+  api_contract_tests_pdf:                        { kind: pdf,      path: docs/public/research/mvp/api/contract-tests.pdf }
+  api_error_model_md:                            { kind: markdown, path: docs/public/research/mvp/api/error-model.md }
+  api_error_model_html:                          { kind: html,     path: docs/public/research/mvp/api/error-model.html }
+  api_error_model_pdf:                           { kind: pdf,      path: docs/public/research/mvp/api/error-model.pdf }
+  api_event_bus_contract_md:                     { kind: markdown, path: docs/public/research/mvp/api/event-bus-contract.md }
+  api_event_bus_contract_html:                   { kind: html,     path: docs/public/research/mvp/api/event-bus-contract.html }
+  api_event_bus_contract_pdf:                    { kind: pdf,      path: docs/public/research/mvp/api/event-bus-contract.pdf }
+  api_index_md:                                  { kind: markdown, path: docs/public/research/mvp/api/index.md }
+  api_index_html:                                { kind: html,     path: docs/public/research/mvp/api/index.html }
+  api_index_pdf:                                 { kind: pdf,      path: docs/public/research/mvp/api/index.pdf }
+  api_materials_readme_md:                       { kind: markdown, path: docs/public/research/mvp/api/materials/README.md }
+  api_materials_readme_html:                     { kind: html,     path: docs/public/research/mvp/api/materials/README.html }
+  api_materials_readme_pdf:                      { kind: pdf,      path: docs/public/research/mvp/api/materials/README.pdf }
+  api_materials_codegen_readme_md:               { kind: markdown, path: docs/public/research/mvp/api/materials/codegen/README.md }
+  api_materials_codegen_readme_html:             { kind: html,     path: docs/public/research/mvp/api/materials/codegen/README.html }
+  api_materials_codegen_readme_pdf:              { kind: pdf,      path: docs/public/research/mvp/api/materials/codegen/README.pdf }
+  api_materials_examples_readme_md:              { kind: markdown, path: docs/public/research/mvp/api/materials/examples/README.md }
+  api_materials_examples_readme_html:            { kind: html,     path: docs/public/research/mvp/api/materials/examples/README.html }
+  api_materials_examples_readme_pdf:             { kind: pdf,      path: docs/public/research/mvp/api/materials/examples/README.pdf }
+  api_materials_validation_md:                   { kind: markdown, path: docs/public/research/mvp/api/materials/validation.md }
+  api_materials_validation_html:                 { kind: html,     path: docs/public/research/mvp/api/materials/validation.html }
+  api_materials_validation_pdf:                  { kind: pdf,      path: docs/public/research/mvp/api/materials/validation.pdf }
+  api_rest_endpoints_md:                         { kind: markdown, path: docs/public/research/mvp/api/rest-endpoints.md }
+  api_rest_endpoints_html:                       { kind: html,     path: docs/public/research/mvp/api/rest-endpoints.html }
+  api_rest_endpoints_pdf:                        { kind: pdf,      path: docs/public/research/mvp/api/rest-endpoints.pdf }
+  api_sdk_examples_md:                           { kind: markdown, path: docs/public/research/mvp/api/sdk-examples.md }
+  api_sdk_examples_html:                         { kind: html,     path: docs/public/research/mvp/api/sdk-examples.html }
+  api_sdk_examples_pdf:                          { kind: pdf,      path: docs/public/research/mvp/api/sdk-examples.pdf }
+  api_sdk_strategy_md:                           { kind: markdown, path: docs/public/research/mvp/api/sdk-strategy.md }
+  api_sdk_strategy_html:                         { kind: html,     path: docs/public/research/mvp/api/sdk-strategy.html }
+  api_sdk_strategy_pdf:                          { kind: pdf,      path: docs/public/research/mvp/api/sdk-strategy.pdf }
+  api_versioning_md:                             { kind: markdown, path: docs/public/research/mvp/api/versioning.md }
+  api_versioning_html:                           { kind: html,     path: docs/public/research/mvp/api/versioning.html }
+  api_versioning_pdf:                            { kind: pdf,      path: docs/public/research/mvp/api/versioning.pdf }
+  architecture_asset_and_download_md:            { kind: markdown, path: docs/public/research/mvp/architecture/asset-and-download.md }
+  architecture_asset_and_download_html:          { kind: html,     path: docs/public/research/mvp/architecture/asset-and-download.html }
+  architecture_asset_and_download_pdf:           { kind: pdf,      path: docs/public/research/mvp/architecture/asset-and-download.pdf }
+  architecture_component_catalog_md:             { kind: markdown, path: docs/public/research/mvp/architecture/component-catalog.md }
+  architecture_component_catalog_html:           { kind: html,     path: docs/public/research/mvp/architecture/component-catalog.html }
+  architecture_component_catalog_pdf:            { kind: pdf,      path: docs/public/research/mvp/architecture/component-catalog.pdf }
+  architecture_concurrency_and_idempotency_md:   { kind: markdown, path: docs/public/research/mvp/architecture/concurrency-and-idempotency.md }
+  architecture_concurrency_and_idempotency_html: { kind: html,     path: docs/public/research/mvp/architecture/concurrency-and-idempotency.html }
+  architecture_concurrency_and_idempotency_pdf:  { kind: pdf,      path: docs/public/research/mvp/architecture/concurrency-and-idempotency.pdf }
+  architecture_data_flow_md:                     { kind: markdown, path: docs/public/research/mvp/architecture/data-flow.md }
+  architecture_data_flow_html:                   { kind: html,     path: docs/public/research/mvp/architecture/data-flow.html }
+  architecture_data_flow_pdf:                    { kind: pdf,      path: docs/public/research/mvp/architecture/data-flow.pdf }
+  architecture_event_model_md:                   { kind: markdown, path: docs/public/research/mvp/architecture/event-model.md }
+  architecture_event_model_html:                 { kind: html,     path: docs/public/research/mvp/architecture/event-model.html }
+  architecture_event_model_pdf:                  { kind: pdf,      path: docs/public/research/mvp/architecture/event-model.pdf }
+  architecture_index_md:                         { kind: markdown, path: docs/public/research/mvp/architecture/index.md }
+  architecture_index_html:                       { kind: html,     path: docs/public/research/mvp/architecture/index.html }
+  architecture_index_pdf:                        { kind: pdf,      path: docs/public/research/mvp/architecture/index.pdf }
+  architecture_messenger_ingestion_md:           { kind: markdown, path: docs/public/research/mvp/architecture/messenger-ingestion.md }
+  architecture_messenger_ingestion_html:         { kind: html,     path: docs/public/research/mvp/architecture/messenger-ingestion.html }
+  architecture_messenger_ingestion_pdf:          { kind: pdf,      path: docs/public/research/mvp/architecture/messenger-ingestion.pdf }
+  architecture_post_lifecycle_md:                { kind: markdown, path: docs/public/research/mvp/architecture/post-lifecycle.md }
+  architecture_post_lifecycle_html:              { kind: html,     path: docs/public/research/mvp/architecture/post-lifecycle.html }
+  architecture_post_lifecycle_pdf:               { kind: pdf,      path: docs/public/research/mvp/architecture/post-lifecycle.pdf }
+  architecture_processing_pipeline_md:           { kind: markdown, path: docs/public/research/mvp/architecture/processing-pipeline.md }
+  architecture_processing_pipeline_html:         { kind: html,     path: docs/public/research/mvp/architecture/processing-pipeline.html }
+  architecture_processing_pipeline_pdf:          { kind: pdf,      path: docs/public/research/mvp/architecture/processing-pipeline.pdf }
+  architecture_security_model_md:                { kind: markdown, path: docs/public/research/mvp/architecture/security-model.md }
+  architecture_security_model_html:              { kind: html,     path: docs/public/research/mvp/architecture/security-model.html }
+  architecture_security_model_pdf:               { kind: pdf,      path: docs/public/research/mvp/architecture/security-model.pdf }
+  architecture_semantic_search_md:               { kind: markdown, path: docs/public/research/mvp/architecture/semantic-search.md }
+  architecture_semantic_search_html:             { kind: html,     path: docs/public/research/mvp/architecture/semantic-search.html }
+  architecture_semantic_search_pdf:              { kind: pdf,      path: docs/public/research/mvp/architecture/semantic-search.pdf }
+  architecture_service_discovery_md:             { kind: markdown, path: docs/public/research/mvp/architecture/service-discovery.md }
+  architecture_service_discovery_html:           { kind: html,     path: docs/public/research/mvp/architecture/service-discovery.html }
+  architecture_service_discovery_pdf:            { kind: pdf,      path: docs/public/research/mvp/architecture/service-discovery.pdf }
+  architecture_system_overview_md:               { kind: markdown, path: docs/public/research/mvp/architecture/system-overview.md }
+  architecture_system_overview_html:             { kind: html,     path: docs/public/research/mvp/architecture/system-overview.html }
+  architecture_system_overview_pdf:              { kind: pdf,      path: docs/public/research/mvp/architecture/system-overview.pdf }
+  database_constraints_and_integrity_md:         { kind: markdown, path: docs/public/research/mvp/database/constraints-and-integrity.md }
+  database_constraints_and_integrity_html:       { kind: html,     path: docs/public/research/mvp/database/constraints-and-integrity.html }
+  database_constraints_and_integrity_pdf:        { kind: pdf,      path: docs/public/research/mvp/database/constraints-and-integrity.pdf }
+  database_erd_md:                               { kind: markdown, path: docs/public/research/mvp/database/erd.md }
+  database_erd_html:                             { kind: html,     path: docs/public/research/mvp/database/erd.html }
+  database_erd_pdf:                              { kind: pdf,      path: docs/public/research/mvp/database/erd.pdf }
+  database_index_md:                             { kind: markdown, path: docs/public/research/mvp/database/index.md }
+  database_index_html:                           { kind: html,     path: docs/public/research/mvp/database/index.html }
+  database_index_pdf:                            { kind: pdf,      path: docs/public/research/mvp/database/index.pdf }
+  database_indexing_md:                          { kind: markdown, path: docs/public/research/mvp/database/indexing.md }
+  database_indexing_html:                        { kind: html,     path: docs/public/research/mvp/database/indexing.html }
+  database_indexing_pdf:                         { kind: pdf,      path: docs/public/research/mvp/database/indexing.pdf }
+  database_materials_er_export_md:               { kind: markdown, path: docs/public/research/mvp/database/materials/er-export.md }
+  database_materials_er_export_html:             { kind: html,     path: docs/public/research/mvp/database/materials/er-export.html }
+  database_materials_er_export_pdf:              { kind: pdf,      path: docs/public/research/mvp/database/materials/er-export.pdf }
+  database_migration_strategy_md:                { kind: markdown, path: docs/public/research/mvp/database/migration-strategy.md }
+  database_migration_strategy_html:              { kind: html,     path: docs/public/research/mvp/database/migration-strategy.html }
+  database_migration_strategy_pdf:               { kind: pdf,      path: docs/public/research/mvp/database/migration-strategy.pdf }
+  database_partitioning_md:                      { kind: markdown, path: docs/public/research/mvp/database/partitioning.md }
+  database_partitioning_html:                    { kind: html,     path: docs/public/research/mvp/database/partitioning.html }
+  database_partitioning_pdf:                     { kind: pdf,      path: docs/public/research/mvp/database/partitioning.pdf }
+  database_retention_archive_md:                 { kind: markdown, path: docs/public/research/mvp/database/retention-archive.md }
+  database_retention_archive_html:               { kind: html,     path: docs/public/research/mvp/database/retention-archive.html }
+  database_retention_archive_pdf:                { kind: pdf,      path: docs/public/research/mvp/database/retention-archive.pdf }
+  deployment_backup_dr_md:                       { kind: markdown, path: docs/public/research/mvp/deployment/backup-dr.md }
+  deployment_backup_dr_html:                     { kind: html,     path: docs/public/research/mvp/deployment/backup-dr.html }
+  deployment_backup_dr_pdf:                      { kind: pdf,      path: docs/public/research/mvp/deployment/backup-dr.pdf }
+  deployment_compose_files_md:                   { kind: markdown, path: docs/public/research/mvp/deployment/compose-files.md }
+  deployment_compose_files_html:                 { kind: html,     path: docs/public/research/mvp/deployment/compose-files.html }
+  deployment_compose_files_pdf:                  { kind: pdf,      path: docs/public/research/mvp/deployment/compose-files.pdf }
+  deployment_container_topology_md:              { kind: markdown, path: docs/public/research/mvp/deployment/container-topology.md }
+  deployment_container_topology_html:            { kind: html,     path: docs/public/research/mvp/deployment/container-topology.html }
+  deployment_container_topology_pdf:             { kind: pdf,      path: docs/public/research/mvp/deployment/container-topology.pdf }
+  deployment_cost_and_capacity_md:               { kind: markdown, path: docs/public/research/mvp/deployment/cost-and-capacity.md }
+  deployment_cost_and_capacity_html:             { kind: html,     path: docs/public/research/mvp/deployment/cost-and-capacity.html }
+  deployment_cost_and_capacity_pdf:              { kind: pdf,      path: docs/public/research/mvp/deployment/cost-and-capacity.pdf }
+  deployment_deploy_and_rollback_md:             { kind: markdown, path: docs/public/research/mvp/deployment/deploy-and-rollback.md }
+  deployment_deploy_and_rollback_html:           { kind: html,     path: docs/public/research/mvp/deployment/deploy-and-rollback.html }
+  deployment_deploy_and_rollback_pdf:            { kind: pdf,      path: docs/public/research/mvp/deployment/deploy-and-rollback.pdf }
+  deployment_environments_md:                    { kind: markdown, path: docs/public/research/mvp/deployment/environments.md }
+  deployment_environments_html:                  { kind: html,     path: docs/public/research/mvp/deployment/environments.html }
+  deployment_environments_pdf:                   { kind: pdf,      path: docs/public/research/mvp/deployment/environments.pdf }
+  deployment_hetzner_provisioning_md:            { kind: markdown, path: docs/public/research/mvp/deployment/hetzner-provisioning.md }
+  deployment_hetzner_provisioning_html:          { kind: html,     path: docs/public/research/mvp/deployment/hetzner-provisioning.html }
+  deployment_hetzner_provisioning_pdf:           { kind: pdf,      path: docs/public/research/mvp/deployment/hetzner-provisioning.pdf }
+  deployment_index_md:                           { kind: markdown, path: docs/public/research/mvp/deployment/index.md }
+  deployment_index_html:                         { kind: html,     path: docs/public/research/mvp/deployment/index.html }
+  deployment_index_pdf:                          { kind: pdf,      path: docs/public/research/mvp/deployment/index.pdf }
+  deployment_materials_firewall_rules_md:        { kind: markdown, path: docs/public/research/mvp/deployment/materials/firewall.rules.md }
+  deployment_materials_firewall_rules_html:      { kind: html,     path: docs/public/research/mvp/deployment/materials/firewall.rules.html }
+  deployment_materials_firewall_rules_pdf:       { kind: pdf,      path: docs/public/research/mvp/deployment/materials/firewall.rules.pdf }
+  deployment_monitoring_observability_md:        { kind: markdown, path: docs/public/research/mvp/deployment/monitoring-observability.md }
+  deployment_monitoring_observability_html:      { kind: html,     path: docs/public/research/mvp/deployment/monitoring-observability.html }
+  deployment_monitoring_observability_pdf:       { kind: pdf,      path: docs/public/research/mvp/deployment/monitoring-observability.pdf }
+  deployment_operations_runbook_md:              { kind: markdown, path: docs/public/research/mvp/deployment/operations-runbook.md }
+  deployment_operations_runbook_html:            { kind: html,     path: docs/public/research/mvp/deployment/operations-runbook.html }
+  deployment_operations_runbook_pdf:             { kind: pdf,      path: docs/public/research/mvp/deployment/operations-runbook.pdf }
+  deployment_podman_compose_md:                  { kind: markdown, path: docs/public/research/mvp/deployment/podman-compose.md }
+  deployment_podman_compose_html:                { kind: html,     path: docs/public/research/mvp/deployment/podman-compose.html }
+  deployment_podman_compose_pdf:                 { kind: pdf,      path: docs/public/research/mvp/deployment/podman-compose.pdf }
+  deployment_secrets_and_config_md:              { kind: markdown, path: docs/public/research/mvp/deployment/secrets-and-config.md }
+  deployment_secrets_and_config_html:            { kind: html,     path: docs/public/research/mvp/deployment/secrets-and-config.html }
+  deployment_secrets_and_config_pdf:             { kind: pdf,      path: docs/public/research/mvp/deployment/secrets-and-config.pdf }
+  deployment_service_discovery_ports_md:         { kind: markdown, path: docs/public/research/mvp/deployment/service-discovery-ports.md }
+  deployment_service_discovery_ports_html:       { kind: html,     path: docs/public/research/mvp/deployment/service-discovery-ports.html }
+  deployment_service_discovery_ports_pdf:        { kind: pdf,      path: docs/public/research/mvp/deployment/service-discovery-ports.pdf }
+  deployment_tls_lets_encrypt_md:                { kind: markdown, path: docs/public/research/mvp/deployment/tls-lets-encrypt.md }
+  deployment_tls_lets_encrypt_html:              { kind: html,     path: docs/public/research/mvp/deployment/tls-lets-encrypt.html }
+  deployment_tls_lets_encrypt_pdf:               { kind: pdf,      path: docs/public/research/mvp/deployment/tls-lets-encrypt.pdf }
+  design_assets_icon_export_matrix_md:           { kind: markdown, path: docs/public/research/mvp/design/assets/icon-export-matrix.md }
+  design_assets_icon_export_matrix_html:         { kind: html,     path: docs/public/research/mvp/design/assets/icon-export-matrix.html }
+  design_assets_icon_export_matrix_pdf:          { kind: pdf,      path: docs/public/research/mvp/design/assets/icon-export-matrix.pdf }
+  design_brand_assets_md:                        { kind: markdown, path: docs/public/research/mvp/design/brand-assets.md }
+  design_brand_assets_html:                      { kind: html,     path: docs/public/research/mvp/design/brand-assets.html }
+  design_brand_assets_pdf:                       { kind: pdf,      path: docs/public/research/mvp/design/brand-assets.pdf }
+  design_component_library_md:                   { kind: markdown, path: docs/public/research/mvp/design/component-library.md }
+  design_component_library_html:                 { kind: html,     path: docs/public/research/mvp/design/component-library.html }
+  design_component_library_pdf:                  { kind: pdf,      path: docs/public/research/mvp/design/component-library.pdf }
+  design_design_system_md:                       { kind: markdown, path: docs/public/research/mvp/design/design-system.md }
+  design_design_system_html:                     { kind: html,     path: docs/public/research/mvp/design/design-system.html }
+  design_design_system_pdf:                      { kind: pdf,      path: docs/public/research/mvp/design/design-system.pdf }
+  design_index_md:                               { kind: markdown, path: docs/public/research/mvp/design/index.md }
+  design_index_html:                             { kind: html,     path: docs/public/research/mvp/design/index.html }
+  design_index_pdf:                              { kind: pdf,      path: docs/public/research/mvp/design/index.pdf }
+  design_prototypes_md:                          { kind: markdown, path: docs/public/research/mvp/design/prototypes.md }
+  design_prototypes_html:                        { kind: html,     path: docs/public/research/mvp/design/prototypes.html }
+  design_prototypes_pdf:                         { kind: pdf,      path: docs/public/research/mvp/design/prototypes.pdf }
+  design_theming_md:                             { kind: markdown, path: docs/public/research/mvp/design/theming.md }
+  design_theming_html:                           { kind: html,     path: docs/public/research/mvp/design/theming.html }
+  design_theming_pdf:                            { kind: pdf,      path: docs/public/research/mvp/design/theming.pdf }
+  design_ux_flows_md:                            { kind: markdown, path: docs/public/research/mvp/design/ux-flows.md }
+  design_ux_flows_html:                          { kind: html,     path: docs/public/research/mvp/design/ux-flows.html }
+  design_ux_flows_pdf:                           { kind: pdf,      path: docs/public/research/mvp/design/ux-flows.pdf }
+  design_wireframes_md:                          { kind: markdown, path: docs/public/research/mvp/design/wireframes.md }
+  design_wireframes_html:                        { kind: html,     path: docs/public/research/mvp/design/wireframes.html }
+  design_wireframes_pdf:                         { kind: pdf,      path: docs/public/research/mvp/design/wireframes.pdf }
+  development_agent_orchestration_md:            { kind: markdown, path: docs/public/research/mvp/development/agent-orchestration.md }
+  development_agent_orchestration_html:          { kind: html,     path: docs/public/research/mvp/development/agent-orchestration.html }
+  development_agent_orchestration_pdf:           { kind: pdf,      path: docs/public/research/mvp/development/agent-orchestration.pdf }
+  development_build_new_subsystems_md:           { kind: markdown, path: docs/public/research/mvp/development/build-new-subsystems.md }
+  development_build_new_subsystems_html:         { kind: html,     path: docs/public/research/mvp/development/build-new-subsystems.html }
+  development_build_new_subsystems_pdf:          { kind: pdf,      path: docs/public/research/mvp/development/build-new-subsystems.pdf }
+  development_coding_standards_md:               { kind: markdown, path: docs/public/research/mvp/development/coding-standards.md }
+  development_coding_standards_html:             { kind: html,     path: docs/public/research/mvp/development/coding-standards.html }
+  development_coding_standards_pdf:              { kind: pdf,      path: docs/public/research/mvp/development/coding-standards.pdf }
+  development_contribution_guidelines_md:        { kind: markdown, path: docs/public/research/mvp/development/contribution-guidelines.md }
+  development_contribution_guidelines_html:      { kind: html,     path: docs/public/research/mvp/development/contribution-guidelines.html }
+  development_contribution_guidelines_pdf:       { kind: pdf,      path: docs/public/research/mvp/development/contribution-guidelines.pdf }
+  development_git_workflow_internals_md:         { kind: markdown, path: docs/public/research/mvp/development/git-workflow-internals.md }
+  development_git_workflow_internals_html:       { kind: html,     path: docs/public/research/mvp/development/git-workflow-internals.html }
+  development_git_workflow_internals_pdf:        { kind: pdf,      path: docs/public/research/mvp/development/git-workflow-internals.pdf }
+  development_index_md:                          { kind: markdown, path: docs/public/research/mvp/development/index.md }
+  development_index_html:                        { kind: html,     path: docs/public/research/mvp/development/index.html }
+  development_index_pdf:                         { kind: pdf,      path: docs/public/research/mvp/development/index.pdf }
+  development_materials_sdk_readme_md:           { kind: markdown, path: docs/public/research/mvp/development/materials/sdk/README.md }
+  development_materials_sdk_readme_html:         { kind: html,     path: docs/public/research/mvp/development/materials/sdk/README.html }
+  development_materials_sdk_readme_pdf:          { kind: pdf,      path: docs/public/research/mvp/development/materials/sdk/README.pdf }
+  development_submodule_map_md:                  { kind: markdown, path: docs/public/research/mvp/development/submodule-map.md }
+  development_submodule_map_html:                { kind: html,     path: docs/public/research/mvp/development/submodule-map.html }
+  development_submodule_map_pdf:                 { kind: pdf,      path: docs/public/research/mvp/development/submodule-map.pdf }
+  development_workable_items_detail_md:          { kind: markdown, path: docs/public/research/mvp/development/workable-items-detail.md }
+  development_workable_items_detail_html:        { kind: html,     path: docs/public/research/mvp/development/workable-items-detail.html }
+  development_workable_items_detail_pdf:         { kind: pdf,      path: docs/public/research/mvp/development/workable-items-detail.pdf }
+  development_workable_items_md:                 { kind: markdown, path: docs/public/research/mvp/development/workable-items.md }
+  development_workable_items_html:               { kind: html,     path: docs/public/research/mvp/development/workable-items.html }
+  development_workable_items_pdf:                { kind: pdf,      path: docs/public/research/mvp/development/workable-items.pdf }
+  diagrams_render_status_md:                     { kind: markdown, path: docs/public/research/mvp/diagrams-render-status.md }
+  diagrams_render_status_html:                   { kind: html,     path: docs/public/research/mvp/diagrams-render-status.html }
+  diagrams_render_status_pdf:                    { kind: pdf,      path: docs/public/research/mvp/diagrams-render-status.pdf }
+  index_md:                                      { kind: markdown, path: docs/public/research/mvp/index.md }
+  index_html:                                    { kind: html,     path: docs/public/research/mvp/index.html }
+  index_pdf:                                     { kind: pdf,      path: docs/public/research/mvp/index.pdf }
+  testing_acceptance_gates_md:                   { kind: markdown, path: docs/public/research/mvp/testing/acceptance-gates.md }
+  testing_acceptance_gates_html:                 { kind: html,     path: docs/public/research/mvp/testing/acceptance-gates.html }
+  testing_acceptance_gates_pdf:                  { kind: pdf,      path: docs/public/research/mvp/testing/acceptance-gates.pdf }
+  testing_challenges_scenarios_md:               { kind: markdown, path: docs/public/research/mvp/testing/challenges-scenarios.md }
+  testing_challenges_scenarios_html:             { kind: html,     path: docs/public/research/mvp/testing/challenges-scenarios.html }
+  testing_challenges_scenarios_pdf:              { kind: pdf,      path: docs/public/research/mvp/testing/challenges-scenarios.pdf }
+  testing_helixqa_banks_md:                      { kind: markdown, path: docs/public/research/mvp/testing/helixqa-banks.md }
+  testing_helixqa_banks_html:                    { kind: html,     path: docs/public/research/mvp/testing/helixqa-banks.html }
+  testing_helixqa_banks_pdf:                     { kind: pdf,      path: docs/public/research/mvp/testing/helixqa-banks.pdf }
+  testing_index_md:                              { kind: markdown, path: docs/public/research/mvp/testing/index.md }
+  testing_index_html:                            { kind: html,     path: docs/public/research/mvp/testing/index.html }
+  testing_index_pdf:                             { kind: pdf,      path: docs/public/research/mvp/testing/index.pdf }
+  testing_performance_and_chaos_md:              { kind: markdown, path: docs/public/research/mvp/testing/performance-and-chaos.md }
+  testing_performance_and_chaos_html:            { kind: html,     path: docs/public/research/mvp/testing/performance-and-chaos.html }
+  testing_performance_and_chaos_pdf:             { kind: pdf,      path: docs/public/research/mvp/testing/performance-and-chaos.pdf }
+  testing_static_analysis_md:                    { kind: markdown, path: docs/public/research/mvp/testing/static-analysis.md }
+  testing_static_analysis_html:                  { kind: html,     path: docs/public/research/mvp/testing/static-analysis.html }
+  testing_static_analysis_pdf:                   { kind: pdf,      path: docs/public/research/mvp/testing/static-analysis.pdf }
+  testing_tdd_skeletons_md:                      { kind: markdown, path: docs/public/research/mvp/testing/tdd-skeletons.md }
+  testing_tdd_skeletons_html:                    { kind: html,     path: docs/public/research/mvp/testing/tdd-skeletons.html }
+  testing_tdd_skeletons_pdf:                     { kind: pdf,      path: docs/public/research/mvp/testing/tdd-skeletons.pdf }
+  testing_test_strategy_md:                      { kind: markdown, path: docs/public/research/mvp/testing/test-strategy.md }
+  testing_test_strategy_html:                    { kind: html,     path: docs/public/research/mvp/testing/test-strategy.html }
+  testing_test_strategy_pdf:                     { kind: pdf,      path: docs/public/research/mvp/testing/test-strategy.pdf }
+  testing_test_types_md:                         { kind: markdown, path: docs/public/research/mvp/testing/test-types.md }
+  testing_test_types_html:                       { kind: html,     path: docs/public/research/mvp/testing/test-types.html }
+  testing_test_types_pdf:                        { kind: pdf,      path: docs/public/research/mvp/testing/test-types.pdf }
+  user_guides_account_admin_guide_md:            { kind: markdown, path: docs/public/research/mvp/user-guides/account-admin-guide.md }
+  user_guides_account_admin_guide_html:          { kind: html,     path: docs/public/research/mvp/user-guides/account-admin-guide.html }
+  user_guides_account_admin_guide_pdf:           { kind: pdf,      path: docs/public/research/mvp/user-guides/account-admin-guide.pdf }
+  user_guides_cli_reference_md:                  { kind: markdown, path: docs/public/research/mvp/user-guides/cli-reference.md }
+  user_guides_cli_reference_html:                { kind: html,     path: docs/public/research/mvp/user-guides/cli-reference.html }
+  user_guides_cli_reference_pdf:                 { kind: pdf,      path: docs/public/research/mvp/user-guides/cli-reference.pdf }
+  user_guides_configuration_md:                  { kind: markdown, path: docs/public/research/mvp/user-guides/configuration.md }
+  user_guides_configuration_html:                { kind: html,     path: docs/public/research/mvp/user-guides/configuration.html }
+  user_guides_configuration_pdf:                 { kind: pdf,      path: docs/public/research/mvp/user-guides/configuration.pdf }
+  user_guides_end_user_manual_md:                { kind: markdown, path: docs/public/research/mvp/user-guides/end-user-manual.md }
+  user_guides_end_user_manual_html:              { kind: html,     path: docs/public/research/mvp/user-guides/end-user-manual.html }
+  user_guides_end_user_manual_pdf:               { kind: pdf,      path: docs/public/research/mvp/user-guides/end-user-manual.pdf }
+  user_guides_faq_md:                            { kind: markdown, path: docs/public/research/mvp/user-guides/faq.md }
+  user_guides_faq_html:                          { kind: html,     path: docs/public/research/mvp/user-guides/faq.html }
+  user_guides_faq_pdf:                           { kind: pdf,      path: docs/public/research/mvp/user-guides/faq.pdf }
+  user_guides_index_md:                          { kind: markdown, path: docs/public/research/mvp/user-guides/index.md }
+  user_guides_index_html:                        { kind: html,     path: docs/public/research/mvp/user-guides/index.html }
+  user_guides_index_pdf:                         { kind: pdf,      path: docs/public/research/mvp/user-guides/index.pdf }
+  user_guides_installation_md:                   { kind: markdown, path: docs/public/research/mvp/user-guides/installation.md }
+  user_guides_installation_html:                 { kind: html,     path: docs/public/research/mvp/user-guides/installation.html }
+  user_guides_installation_pdf:                  { kind: pdf,      path: docs/public/research/mvp/user-guides/installation.pdf }
+  user_guides_mobile_guide_md:                   { kind: markdown, path: docs/public/research/mvp/user-guides/mobile-guide.md }
+  user_guides_mobile_guide_html:                 { kind: html,     path: docs/public/research/mvp/user-guides/mobile-guide.html }
+  user_guides_mobile_guide_pdf:                  { kind: pdf,      path: docs/public/research/mvp/user-guides/mobile-guide.pdf }
+  user_guides_quickstart_md:                     { kind: markdown, path: docs/public/research/mvp/user-guides/quickstart.md }
+  user_guides_quickstart_html:                   { kind: html,     path: docs/public/research/mvp/user-guides/quickstart.html }
+  user_guides_quickstart_pdf:                    { kind: pdf,      path: docs/public/research/mvp/user-guides/quickstart.pdf }
+  user_guides_root_admin_guide_md:               { kind: markdown, path: docs/public/research/mvp/user-guides/root-admin-guide.md }
+  user_guides_root_admin_guide_html:             { kind: html,     path: docs/public/research/mvp/user-guides/root-admin-guide.html }
+  user_guides_root_admin_guide_pdf:              { kind: pdf,      path: docs/public/research/mvp/user-guides/root-admin-guide.pdf }
+  user_guides_sdk_quickstart_md:                 { kind: markdown, path: docs/public/research/mvp/user-guides/sdk-quickstart.md }
+  user_guides_sdk_quickstart_html:               { kind: html,     path: docs/public/research/mvp/user-guides/sdk-quickstart.html }
+  user_guides_sdk_quickstart_pdf:                { kind: pdf,      path: docs/public/research/mvp/user-guides/sdk-quickstart.pdf }
+  user_guides_troubleshooting_md:                { kind: markdown, path: docs/public/research/mvp/user-guides/troubleshooting.md }
+  user_guides_troubleshooting_html:              { kind: html,     path: docs/public/research/mvp/user-guides/troubleshooting.html }
+  user_guides_troubleshooting_pdf:               { kind: pdf,      path: docs/public/research/mvp/user-guides/troubleshooting.pdf }
+  user_guides_tui_usage_md:                      { kind: markdown, path: docs/public/research/mvp/user-guides/tui-usage.md }
+  user_guides_tui_usage_html:                    { kind: html,     path: docs/public/research/mvp/user-guides/tui-usage.html }
+  user_guides_tui_usage_pdf:                     { kind: pdf,      path: docs/public/research/mvp/user-guides/tui-usage.pdf }
+  user_guides_web_portal_guide_md:               { kind: markdown, path: docs/public/research/mvp/user-guides/web-portal-guide.md }
+  user_guides_web_portal_guide_html:             { kind: html,     path: docs/public/research/mvp/user-guides/web-portal-guide.html }
+  user_guides_web_portal_guide_pdf:              { kind: pdf,      path: docs/public/research/mvp/user-guides/web-portal-guide.pdf }
+
+edges:
+  - { type: derive-from, from: completeness_report_md,   to: completeness_report_html, transform: md2html }
+  - { type: derive-from, from: completeness_report_html, to: completeness_report_pdf,  transform: html2pdf }
+  - { type: derive-from, from: conventions_md,   to: conventions_html, transform: md2html }
+  - { type: derive-from, from: conventions_html, to: conventions_pdf,  transform: html2pdf }
+  - { type: derive-from, from: integration_report_md,   to: integration_report_html, transform: md2html }
+  - { type: derive-from, from: integration_report_html, to: integration_report_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_authn_authz_md,   to: api_authn_authz_html, transform: md2html }
+  - { type: derive-from, from: api_authn_authz_html, to: api_authn_authz_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_contract_tests_md,   to: api_contract_tests_html, transform: md2html }
+  - { type: derive-from, from: api_contract_tests_html, to: api_contract_tests_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_error_model_md,   to: api_error_model_html, transform: md2html }
+  - { type: derive-from, from: api_error_model_html, to: api_error_model_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_event_bus_contract_md,   to: api_event_bus_contract_html, transform: md2html }
+  - { type: derive-from, from: api_event_bus_contract_html, to: api_event_bus_contract_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_index_md,   to: api_index_html, transform: md2html }
+  - { type: derive-from, from: api_index_html, to: api_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_materials_readme_md,   to: api_materials_readme_html, transform: md2html }
+  - { type: derive-from, from: api_materials_readme_html, to: api_materials_readme_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_materials_codegen_readme_md,   to: api_materials_codegen_readme_html, transform: md2html }
+  - { type: derive-from, from: api_materials_codegen_readme_html, to: api_materials_codegen_readme_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_materials_examples_readme_md,   to: api_materials_examples_readme_html, transform: md2html }
+  - { type: derive-from, from: api_materials_examples_readme_html, to: api_materials_examples_readme_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_materials_validation_md,   to: api_materials_validation_html, transform: md2html }
+  - { type: derive-from, from: api_materials_validation_html, to: api_materials_validation_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_rest_endpoints_md,   to: api_rest_endpoints_html, transform: md2html }
+  - { type: derive-from, from: api_rest_endpoints_html, to: api_rest_endpoints_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_sdk_examples_md,   to: api_sdk_examples_html, transform: md2html }
+  - { type: derive-from, from: api_sdk_examples_html, to: api_sdk_examples_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_sdk_strategy_md,   to: api_sdk_strategy_html, transform: md2html }
+  - { type: derive-from, from: api_sdk_strategy_html, to: api_sdk_strategy_pdf,  transform: html2pdf }
+  - { type: derive-from, from: api_versioning_md,   to: api_versioning_html, transform: md2html }
+  - { type: derive-from, from: api_versioning_html, to: api_versioning_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_asset_and_download_md,   to: architecture_asset_and_download_html, transform: md2html }
+  - { type: derive-from, from: architecture_asset_and_download_html, to: architecture_asset_and_download_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_component_catalog_md,   to: architecture_component_catalog_html, transform: md2html }
+  - { type: derive-from, from: architecture_component_catalog_html, to: architecture_component_catalog_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_concurrency_and_idempotency_md,   to: architecture_concurrency_and_idempotency_html, transform: md2html }
+  - { type: derive-from, from: architecture_concurrency_and_idempotency_html, to: architecture_concurrency_and_idempotency_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_data_flow_md,   to: architecture_data_flow_html, transform: md2html }
+  - { type: derive-from, from: architecture_data_flow_html, to: architecture_data_flow_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_event_model_md,   to: architecture_event_model_html, transform: md2html }
+  - { type: derive-from, from: architecture_event_model_html, to: architecture_event_model_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_index_md,   to: architecture_index_html, transform: md2html }
+  - { type: derive-from, from: architecture_index_html, to: architecture_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_messenger_ingestion_md,   to: architecture_messenger_ingestion_html, transform: md2html }
+  - { type: derive-from, from: architecture_messenger_ingestion_html, to: architecture_messenger_ingestion_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_post_lifecycle_md,   to: architecture_post_lifecycle_html, transform: md2html }
+  - { type: derive-from, from: architecture_post_lifecycle_html, to: architecture_post_lifecycle_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_processing_pipeline_md,   to: architecture_processing_pipeline_html, transform: md2html }
+  - { type: derive-from, from: architecture_processing_pipeline_html, to: architecture_processing_pipeline_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_security_model_md,   to: architecture_security_model_html, transform: md2html }
+  - { type: derive-from, from: architecture_security_model_html, to: architecture_security_model_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_semantic_search_md,   to: architecture_semantic_search_html, transform: md2html }
+  - { type: derive-from, from: architecture_semantic_search_html, to: architecture_semantic_search_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_service_discovery_md,   to: architecture_service_discovery_html, transform: md2html }
+  - { type: derive-from, from: architecture_service_discovery_html, to: architecture_service_discovery_pdf,  transform: html2pdf }
+  - { type: derive-from, from: architecture_system_overview_md,   to: architecture_system_overview_html, transform: md2html }
+  - { type: derive-from, from: architecture_system_overview_html, to: architecture_system_overview_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_constraints_and_integrity_md,   to: database_constraints_and_integrity_html, transform: md2html }
+  - { type: derive-from, from: database_constraints_and_integrity_html, to: database_constraints_and_integrity_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_erd_md,   to: database_erd_html, transform: md2html }
+  - { type: derive-from, from: database_erd_html, to: database_erd_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_index_md,   to: database_index_html, transform: md2html }
+  - { type: derive-from, from: database_index_html, to: database_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_indexing_md,   to: database_indexing_html, transform: md2html }
+  - { type: derive-from, from: database_indexing_html, to: database_indexing_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_materials_er_export_md,   to: database_materials_er_export_html, transform: md2html }
+  - { type: derive-from, from: database_materials_er_export_html, to: database_materials_er_export_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_migration_strategy_md,   to: database_migration_strategy_html, transform: md2html }
+  - { type: derive-from, from: database_migration_strategy_html, to: database_migration_strategy_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_partitioning_md,   to: database_partitioning_html, transform: md2html }
+  - { type: derive-from, from: database_partitioning_html, to: database_partitioning_pdf,  transform: html2pdf }
+  - { type: derive-from, from: database_retention_archive_md,   to: database_retention_archive_html, transform: md2html }
+  - { type: derive-from, from: database_retention_archive_html, to: database_retention_archive_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_backup_dr_md,   to: deployment_backup_dr_html, transform: md2html }
+  - { type: derive-from, from: deployment_backup_dr_html, to: deployment_backup_dr_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_compose_files_md,   to: deployment_compose_files_html, transform: md2html }
+  - { type: derive-from, from: deployment_compose_files_html, to: deployment_compose_files_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_container_topology_md,   to: deployment_container_topology_html, transform: md2html }
+  - { type: derive-from, from: deployment_container_topology_html, to: deployment_container_topology_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_cost_and_capacity_md,   to: deployment_cost_and_capacity_html, transform: md2html }
+  - { type: derive-from, from: deployment_cost_and_capacity_html, to: deployment_cost_and_capacity_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_deploy_and_rollback_md,   to: deployment_deploy_and_rollback_html, transform: md2html }
+  - { type: derive-from, from: deployment_deploy_and_rollback_html, to: deployment_deploy_and_rollback_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_environments_md,   to: deployment_environments_html, transform: md2html }
+  - { type: derive-from, from: deployment_environments_html, to: deployment_environments_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_hetzner_provisioning_md,   to: deployment_hetzner_provisioning_html, transform: md2html }
+  - { type: derive-from, from: deployment_hetzner_provisioning_html, to: deployment_hetzner_provisioning_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_index_md,   to: deployment_index_html, transform: md2html }
+  - { type: derive-from, from: deployment_index_html, to: deployment_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_materials_firewall_rules_md,   to: deployment_materials_firewall_rules_html, transform: md2html }
+  - { type: derive-from, from: deployment_materials_firewall_rules_html, to: deployment_materials_firewall_rules_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_monitoring_observability_md,   to: deployment_monitoring_observability_html, transform: md2html }
+  - { type: derive-from, from: deployment_monitoring_observability_html, to: deployment_monitoring_observability_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_operations_runbook_md,   to: deployment_operations_runbook_html, transform: md2html }
+  - { type: derive-from, from: deployment_operations_runbook_html, to: deployment_operations_runbook_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_podman_compose_md,   to: deployment_podman_compose_html, transform: md2html }
+  - { type: derive-from, from: deployment_podman_compose_html, to: deployment_podman_compose_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_secrets_and_config_md,   to: deployment_secrets_and_config_html, transform: md2html }
+  - { type: derive-from, from: deployment_secrets_and_config_html, to: deployment_secrets_and_config_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_service_discovery_ports_md,   to: deployment_service_discovery_ports_html, transform: md2html }
+  - { type: derive-from, from: deployment_service_discovery_ports_html, to: deployment_service_discovery_ports_pdf,  transform: html2pdf }
+  - { type: derive-from, from: deployment_tls_lets_encrypt_md,   to: deployment_tls_lets_encrypt_html, transform: md2html }
+  - { type: derive-from, from: deployment_tls_lets_encrypt_html, to: deployment_tls_lets_encrypt_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_assets_icon_export_matrix_md,   to: design_assets_icon_export_matrix_html, transform: md2html }
+  - { type: derive-from, from: design_assets_icon_export_matrix_html, to: design_assets_icon_export_matrix_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_brand_assets_md,   to: design_brand_assets_html, transform: md2html }
+  - { type: derive-from, from: design_brand_assets_html, to: design_brand_assets_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_component_library_md,   to: design_component_library_html, transform: md2html }
+  - { type: derive-from, from: design_component_library_html, to: design_component_library_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_design_system_md,   to: design_design_system_html, transform: md2html }
+  - { type: derive-from, from: design_design_system_html, to: design_design_system_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_index_md,   to: design_index_html, transform: md2html }
+  - { type: derive-from, from: design_index_html, to: design_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_prototypes_md,   to: design_prototypes_html, transform: md2html }
+  - { type: derive-from, from: design_prototypes_html, to: design_prototypes_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_theming_md,   to: design_theming_html, transform: md2html }
+  - { type: derive-from, from: design_theming_html, to: design_theming_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_ux_flows_md,   to: design_ux_flows_html, transform: md2html }
+  - { type: derive-from, from: design_ux_flows_html, to: design_ux_flows_pdf,  transform: html2pdf }
+  - { type: derive-from, from: design_wireframes_md,   to: design_wireframes_html, transform: md2html }
+  - { type: derive-from, from: design_wireframes_html, to: design_wireframes_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_agent_orchestration_md,   to: development_agent_orchestration_html, transform: md2html }
+  - { type: derive-from, from: development_agent_orchestration_html, to: development_agent_orchestration_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_build_new_subsystems_md,   to: development_build_new_subsystems_html, transform: md2html }
+  - { type: derive-from, from: development_build_new_subsystems_html, to: development_build_new_subsystems_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_coding_standards_md,   to: development_coding_standards_html, transform: md2html }
+  - { type: derive-from, from: development_coding_standards_html, to: development_coding_standards_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_contribution_guidelines_md,   to: development_contribution_guidelines_html, transform: md2html }
+  - { type: derive-from, from: development_contribution_guidelines_html, to: development_contribution_guidelines_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_git_workflow_internals_md,   to: development_git_workflow_internals_html, transform: md2html }
+  - { type: derive-from, from: development_git_workflow_internals_html, to: development_git_workflow_internals_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_index_md,   to: development_index_html, transform: md2html }
+  - { type: derive-from, from: development_index_html, to: development_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_materials_sdk_readme_md,   to: development_materials_sdk_readme_html, transform: md2html }
+  - { type: derive-from, from: development_materials_sdk_readme_html, to: development_materials_sdk_readme_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_submodule_map_md,   to: development_submodule_map_html, transform: md2html }
+  - { type: derive-from, from: development_submodule_map_html, to: development_submodule_map_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_workable_items_detail_md,   to: development_workable_items_detail_html, transform: md2html }
+  - { type: derive-from, from: development_workable_items_detail_html, to: development_workable_items_detail_pdf,  transform: html2pdf }
+  - { type: derive-from, from: development_workable_items_md,   to: development_workable_items_html, transform: md2html }
+  - { type: derive-from, from: development_workable_items_html, to: development_workable_items_pdf,  transform: html2pdf }
+  - { type: derive-from, from: diagrams_render_status_md,   to: diagrams_render_status_html, transform: md2html }
+  - { type: derive-from, from: diagrams_render_status_html, to: diagrams_render_status_pdf,  transform: html2pdf }
+  - { type: derive-from, from: index_md,   to: index_html, transform: md2html }
+  - { type: derive-from, from: index_html, to: index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_acceptance_gates_md,   to: testing_acceptance_gates_html, transform: md2html }
+  - { type: derive-from, from: testing_acceptance_gates_html, to: testing_acceptance_gates_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_challenges_scenarios_md,   to: testing_challenges_scenarios_html, transform: md2html }
+  - { type: derive-from, from: testing_challenges_scenarios_html, to: testing_challenges_scenarios_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_helixqa_banks_md,   to: testing_helixqa_banks_html, transform: md2html }
+  - { type: derive-from, from: testing_helixqa_banks_html, to: testing_helixqa_banks_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_index_md,   to: testing_index_html, transform: md2html }
+  - { type: derive-from, from: testing_index_html, to: testing_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_performance_and_chaos_md,   to: testing_performance_and_chaos_html, transform: md2html }
+  - { type: derive-from, from: testing_performance_and_chaos_html, to: testing_performance_and_chaos_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_static_analysis_md,   to: testing_static_analysis_html, transform: md2html }
+  - { type: derive-from, from: testing_static_analysis_html, to: testing_static_analysis_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_tdd_skeletons_md,   to: testing_tdd_skeletons_html, transform: md2html }
+  - { type: derive-from, from: testing_tdd_skeletons_html, to: testing_tdd_skeletons_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_test_strategy_md,   to: testing_test_strategy_html, transform: md2html }
+  - { type: derive-from, from: testing_test_strategy_html, to: testing_test_strategy_pdf,  transform: html2pdf }
+  - { type: derive-from, from: testing_test_types_md,   to: testing_test_types_html, transform: md2html }
+  - { type: derive-from, from: testing_test_types_html, to: testing_test_types_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_account_admin_guide_md,   to: user_guides_account_admin_guide_html, transform: md2html }
+  - { type: derive-from, from: user_guides_account_admin_guide_html, to: user_guides_account_admin_guide_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_cli_reference_md,   to: user_guides_cli_reference_html, transform: md2html }
+  - { type: derive-from, from: user_guides_cli_reference_html, to: user_guides_cli_reference_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_configuration_md,   to: user_guides_configuration_html, transform: md2html }
+  - { type: derive-from, from: user_guides_configuration_html, to: user_guides_configuration_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_end_user_manual_md,   to: user_guides_end_user_manual_html, transform: md2html }
+  - { type: derive-from, from: user_guides_end_user_manual_html, to: user_guides_end_user_manual_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_faq_md,   to: user_guides_faq_html, transform: md2html }
+  - { type: derive-from, from: user_guides_faq_html, to: user_guides_faq_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_index_md,   to: user_guides_index_html, transform: md2html }
+  - { type: derive-from, from: user_guides_index_html, to: user_guides_index_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_installation_md,   to: user_guides_installation_html, transform: md2html }
+  - { type: derive-from, from: user_guides_installation_html, to: user_guides_installation_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_mobile_guide_md,   to: user_guides_mobile_guide_html, transform: md2html }
+  - { type: derive-from, from: user_guides_mobile_guide_html, to: user_guides_mobile_guide_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_quickstart_md,   to: user_guides_quickstart_html, transform: md2html }
+  - { type: derive-from, from: user_guides_quickstart_html, to: user_guides_quickstart_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_root_admin_guide_md,   to: user_guides_root_admin_guide_html, transform: md2html }
+  - { type: derive-from, from: user_guides_root_admin_guide_html, to: user_guides_root_admin_guide_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_sdk_quickstart_md,   to: user_guides_sdk_quickstart_html, transform: md2html }
+  - { type: derive-from, from: user_guides_sdk_quickstart_html, to: user_guides_sdk_quickstart_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_troubleshooting_md,   to: user_guides_troubleshooting_html, transform: md2html }
+  - { type: derive-from, from: user_guides_troubleshooting_html, to: user_guides_troubleshooting_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_tui_usage_md,   to: user_guides_tui_usage_html, transform: md2html }
+  - { type: derive-from, from: user_guides_tui_usage_html, to: user_guides_tui_usage_pdf,  transform: html2pdf }
+  - { type: derive-from, from: user_guides_web_portal_guide_md,   to: user_guides_web_portal_guide_html, transform: md2html }
+  - { type: derive-from, from: user_guides_web_portal_guide_html, to: user_guides_web_portal_guide_pdf,  transform: html2pdf }
+
+transforms:
+  # exec transforms (not the pandoc-html/weasyprint-pdf builtins) so the
+  # mermaid-inlining + branded-CSS + running-header pipeline is applied.
+  md2html:  { exec: "docs/public/research/mvp/scripts/export-docs.sh", args: ["--mode", "md2html"] }
+  html2pdf: { exec: "docs/public/research/mvp/scripts/export-docs.sh", args: ["--mode", "html2pdf"] }
+

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Theming &amp; White‑Labeling</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Theming &amp; White‑Labeling</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#two-orthogonal-axes" id="toc-two-orthogonal-axes">1. Two
+orthogonal axes</a></li>
+<li><a href="#light-dark-resolution" id="toc-light-dark-resolution">2.
+Light / dark resolution</a></li>
+<li><a href="#whitelabeling-model" id="toc-whitelabeling-model">3.
+White‑labeling model</a>
+<ul>
+<li><a href="#shipped-theme-precedents-verified-evidence"
+id="toc-shipped-theme-precedents-verified-evidence">3.1 Shipped-theme
+precedents (verified evidence)</a></li>
+</ul></li>
+<li><a href="#the-whitelabel-cascade" id="toc-the-whitelabel-cascade">4.
+The white‑label cascade</a></li>
+<li><a href="#data-model-ddl" id="toc-data-model-ddl">5. Data model
+(DDL)</a></li>
+<li><a href="#runtime-injection-web-ssrsafe"
+id="toc-runtime-injection-web-ssrsafe">6. Runtime injection (web,
+SSR‑safe)</a></li>
+<li><a href="#api-surface" id="toc-api-surface">7. API surface</a></li>
+<li><a href="#crossplatform-theming" id="toc-crossplatform-theming">8.
+Cross‑platform theming</a></li>
+<li><a href="#branding-on-generated-documents"
+id="toc-branding-on-generated-documents">9. Branding on generated
+documents</a></li>
+<li><a href="#accessibility-guardrails-for-whitelabel"
+id="toc-accessibility-guardrails-for-whitelabel">10. Accessibility
+guardrails for white‑label</a>
+<ul>
+<li><a href="#tdd-reproducefirst-red-then-green-constitution-11.4.2743"
+id="toc-tdd-reproducefirst-red-then-green-constitution-11.4.2743">10.1
+TDD reproduce‑first (RED then GREEN)
+<code>[CONSTITUTION §11.4.27/43]</code></a></li>
+</ul></li>
+<li><a href="#gaps-open-items" id="toc-gaps-open-items">11. Gaps &amp;
+open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Theming & White‑Labeling
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/theming.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./index.md, ./design-system.md, ./brand-assets.md,
+                    ../api/index.md, ../database/index.md, ../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (design)</td>
+<td>Initial complete draft: light/dark resolution, per‑account
+white‑label model, DDL, runtime injection, generated‑document
+branding</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (design · review)</td>
+<td>Second-pass review: aligned <code>account_branding</code> DDL to
+canonical <code>uuid</code> PKs + reconciled with
+<code>accounts.branding</code> JSONB; fixed malformed injected‑CSS
+example + uuid account scope; added <code>422</code> error schema +
+<code>bearerAuth</code> scheme to the OpenAPI slice; added a TDD
+reproduce‑first (RED) test for the AA accent gate</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (design · Pass 3)</td>
+<td>Depth pass: shipped-theme <strong>precedents</strong> table (§3.1,
+helix-green/vasic-red/helix-ota-blue as verified evidence a white-label
+= one brand + AA accent); noted the verified <code>default</code> slogan
+string + the <code>vasic-red</code> PLACEHOLDER caveat</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-two-orthogonal-axes">1. Two orthogonal axes</a></li>
+<li><a href="#2-light--dark-resolution">2. Light / dark
+resolution</a></li>
+<li><a href="#3-white-labeling-model">3. White‑labeling model</a>
+<ul>
+<li><a href="#31-shipped-theme-precedents-verified-evidence">3.1
+Shipped-theme precedents (verified evidence)</a></li>
+</ul></li>
+<li><a href="#4-the-white-label-cascade">4. The white‑label
+cascade</a></li>
+<li><a href="#5-data-model-ddl">5. Data model (DDL)</a></li>
+<li><a href="#6-runtime-injection-web-ssr-safe">6. Runtime injection
+(web, SSR‑safe)</a></li>
+<li><a href="#7-api-surface">7. API surface</a></li>
+<li><a href="#8-cross-platform-theming">8. Cross‑platform
+theming</a></li>
+<li><a href="#9-branding-on-generated-documents">9. Branding on
+generated documents</a></li>
+<li><a href="#10-accessibility-guardrails-for-white-label">10.
+Accessibility guardrails for white‑label</a>
+<ul>
+<li><a href="#101-tdd-reproduce-first-red-then-green">10.1 TDD
+reproduce‑first (RED then GREEN)</a></li>
+</ul></li>
+<li><a href="#11-gaps--open-items">11. Gaps &amp; open items</a></li>
+</ul>
+<h2 id="two-orthogonal-axes">1. Two orthogonal axes</h2>
+<p>Thready theming has <strong>two independent axes</strong> that
+compose:</p>
+<ol type="1">
+<li><strong>Mode</strong> — <em>light</em> vs. <em>dark</em>, with an
+explicit choice and a <em>system</em> default. This is a
+<strong>per‑user, per‑device</strong> preference
+<code>[OPERATOR: light+dark, explicit + system default]</code>.</li>
+<li><strong>Brand</strong> — the <em>color / logo / slogan</em>
+identity. This is <strong>per‑Account</strong> (white‑labeling), set by
+the Root Admin; new Accounts inherit the Thready default
+<code>[OPERATOR §8.3]</code>.</li>
+</ol>
+<p>They are orthogonal: an Account’s brand ships <strong>both</strong> a
+light and a dark palette, and the user’s mode choice selects which one
+renders. Structural tokens (§ design‑system.md §3.1) never change on
+either axis.</p>
+<h2 id="light-dark-resolution">2. Light / dark resolution</h2>
+<p>Thready reuses the shared <code>design_system</code>
+<strong><code>ThemeService</code></strong> verbatim
+<code>[VERIFIED — theme.service.ts]</code>. It is signal‑based,
+SSR‑safe, and stamps the DOM via the <strong>three sanctioned
+mechanisms</strong> that the theme CSS is authored against:</p>
+<ol type="1">
+<li><code>@media (prefers-color-scheme: dark)</code> — the
+<em>system</em> default,</li>
+<li><code>:root[data-theme="dark"]</code> — the <em>explicit</em>
+choice,</li>
+<li><code>.dark</code> class — framework compatibility.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// design_system ThemeService (verbatim behavior) — Thready sets storagePrefix &#39;thready&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> ThemeChoice <span class="op">=</span> <span class="st">&#39;light&#39;</span> <span class="op">|</span> <span class="st">&#39;dark&#39;</span> <span class="op">|</span> <span class="st">&#39;system&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// An effect stamps data-theme on &lt;html&gt;, toggles .dark, and persists to</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// localStorage under `${cfg.storagePrefix}-theme` (= &#39;thready-theme&#39;).</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// resolved(): &#39;light&#39; | &#39;dark&#39;  ← &#39;system&#39; resolves via matchMedia.</span></span></code></pre></div>
+<p>The header exposes the shared
+<strong><code>ds-theme-toggle</code></strong> (Light / Dark / System,
+<code>aria-pressed</code>, keyboard‑ and SR‑accessible)
+<code>[VERIFIED — theme-toggle.component.ts]</code>. Default choice =
+<code>system</code>, so first paint honors the OS. To avoid a flash of
+the wrong theme on SSR/prerender (Angular 22 marketing + Tauri), a tiny
+head script applies the persisted <code>data-theme</code> before first
+paint (the same script that toggles <code>html.no-svg</code>).</p>
+<h2 id="whitelabeling-model">3. White‑labeling model</h2>
+<p>Per §8.3 and the request <code>[OPERATOR]</code>:</p>
+<ul>
+<li>The <strong>system default</strong> brand is <strong>Thready / Helix
+Development</strong> (the <code>thready</code> theme).</li>
+<li><strong>Newly created Accounts default</strong> to the Thready
+brand.</li>
+<li>The <strong>Root Admin</strong> can override, <strong>per
+Account</strong>, the configurable attributes: <strong>main theme
+colors, main (product) logo, slogan</strong>.</li>
+<li><strong>Helix Development attribution persists</strong> in footers
+regardless of override (resolves inconsistency #5) — a white‑label may
+replace the <em>product</em> mark but not the attribution.</li>
+</ul>
+<p><strong>What is overridable vs. locked:</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 58%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Attribute</th>
+<th style="text-align: center;">Overridable per Account</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--brand</code>, <code>--brand-2</code> (decorative)</td>
+<td style="text-align: center;">✅</td>
+<td>Account’s primary/secondary</td>
+</tr>
+<tr>
+<td><code>--accent</code>, <code>--accent-on</code> (text/UI)</td>
+<td style="text-align: center;">✅ (validated, see §10)</td>
+<td>Must pass AA or is auto‑darkened/rejected</td>
+</tr>
+<tr>
+<td>Product logo (header, launcher where applicable)</td>
+<td style="text-align: center;">✅</td>
+<td>Account uploads light + dark, transparent</td>
+</tr>
+<tr>
+<td>Slogan / tagline</td>
+<td style="text-align: center;">✅</td>
+<td>Free text; heart pattern optional</td>
+</tr>
+<tr>
+<td>Structural tokens (type/space/radius/motion)</td>
+<td style="text-align: center;">❌</td>
+<td>One system across all Accounts</td>
+</tr>
+<tr>
+<td>Neutral surfaces / semantic tokens</td>
+<td style="text-align: center;">❌ by default</td>
+<td>Kept AA‑tuned; advanced override gated behind AA validation</td>
+</tr>
+<tr>
+<td><strong>Helix Development attribution footer</strong></td>
+<td style="text-align: center;">❌</td>
+<td>Always present</td>
+</tr>
+</tbody>
+</table>
+<h3 id="shipped-theme-precedents-verified-evidence">3.1 Shipped-theme
+precedents (verified evidence)</h3>
+<p>The white‑label model is not speculative — the design system
+<strong>already ships three brand themes</strong> by exactly the
+mechanism an Account override uses (one <code>--brand</code>, one
+AA‑pinned <code>--accent</code>, shared neutrals). They are the proof
+that “swap <code>--brand</code>/<code>--accent</code>, keep the slate”
+produces an accessible, consistent result
+<code>[VERIFIED — docs/THEMES.md + tokens/themes/*.css]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 17%" />
+<col style="width: 39%" />
+<col style="width: 23%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Theme</th>
+<th><code>--brand</code></th>
+<th><code>--accent</code> light / dark</th>
+<th>AA (measured)</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>helix-green (Thready base)</td>
+<td><code>#B6E376</code></td>
+<td><code>#446E12</code> / <code>#B6E376</code></td>
+<td>6.03:1 / 13.56:1 ✅</td>
+<td>eyedrop mean of 1.63M logo pixels</td>
+</tr>
+<tr>
+<td>vasic-red</td>
+<td><code>#E11D2A</code></td>
+<td><code>#B91C1C</code> / <code>#F87171</code></td>
+<td>6.47:1 / 7.23:1 ✅</td>
+<td>⚠ brand hex is a <strong>PLACEHOLDER</strong> until the vasic logo
+asset lands</td>
+</tr>
+<tr>
+<td>helix-ota-blue</td>
+<td><code>#2563EB</code></td>
+<td><code>#2563EB</code> / <code>#3B82F6</code></td>
+<td>✅</td>
+<td>HelixOTA shadcn blue</td>
+</tr>
+</tbody>
+</table>
+<p>Two facts this evidence pins down for the white‑label editor. First,
+<strong>a red brand ships without masking errors</strong>:
+<code>vasic-red</code> proves <code>--accent</code> (brand) and
+<code>--danger</code> (semantic error) stay separate tokens
+<code>[VERIFIED — THEMES.md "Brand-red vs danger-red"]</code>, which is
+why §10.2 forbids overriding <code>--danger</code>. Second, the
+<strong>default slogan string is a real shipped default</strong> — the
+canonical API models it as <code>slogan</code> defaulting to
+<code>"Made with love ♥ by Helix Development"</code>
+<code>[VERIFIED — api/openapi.yaml#/components/schemas/Branding]</code>;
+an Account may replace it, but the locked Helix Development attribution
+(§9) renders regardless.</p>
+<h2 id="the-whitelabel-cascade">4. The white‑label cascade</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 464px; background-color: white;" viewBox="0 0 464 1409.0201416015625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M237.5,72.6L237.5,76.767C237.5,80.933,237.5,89.267,237.5,96.933C237.5,104.6,237.5,111.6,237.5,115.1L237.5,118.6" id="my-svg-L_ROOT_SYS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_SYS_0" data-points="W3sieCI6MjM3LjUsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6MjM3LjUsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MjM3LjUsInkiOjEyMi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M237.5,187.2L237.5,191.367C237.5,195.533,237.5,203.867,237.5,211.533C237.5,219.2,237.5,226.2,237.5,229.7L237.5,233.2" id="my-svg-L_SYS_ACC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SYS_ACC_0" data-points="W3sieCI6MjM3LjUsInkiOjE4Ny4xOTk5OTY5NDgyNDIyfSx7IngiOjIzNy41LCJ5IjoyMTIuMTk5OTk2OTQ4MjQyMn0seyJ4IjoyMzcuNSwieSI6MjM3LjE5OTk5Njk0ODI0MjE2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M191.839,390.139L180.324,403.666C168.809,417.193,145.78,444.246,134.265,471.342C122.75,498.437,122.75,525.573,122.75,550.96C122.75,576.347,122.75,599.984,122.75,615.302C122.75,630.62,122.75,637.62,122.75,641.12L122.75,644.62" id="my-svg-L_ACC_USE1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACC_USE1_0" data-points="W3sieCI6MTkxLjgzOTEwOTU1MzgyMzk2LCJ5IjozOTAuMTM5MTEyNjA1NTgxODN9LHsieCI6MTIyLjc1LCJ5Ijo0NzEuMzAwMDAzMDUxNzU3OH0seyJ4IjoxMjIuNzUsInkiOjU1Mi43MTAxNDAyMjgyNzE1fSx7IngiOjEyMi43NSwieSI6NjIzLjYyMDI3NzQwNDc4NTJ9LHsieCI6MTIyLjc1LCJ5Ijo2NDguNjIwMjc3NDA0Nzg1Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M283.161,390.139L294.676,403.666C306.191,417.193,329.22,444.246,340.735,463.023C352.25,481.8,352.25,492.3,352.25,497.55L352.25,502.8" id="my-svg-L_ACC_AB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACC_AB_0" data-points="W3sieCI6MjgzLjE2MDg5MDQ0NjE3NiwieSI6MzkwLjEzOTExMjYwNTU4MTgzfSx7IngiOjM1Mi4yNSwieSI6NDcxLjMwMDAwMzA1MTc1Nzh9LHsieCI6MzUyLjI1LCJ5Ijo1MDYuODAwMDAzMDUxNzU3OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M352.25,598.62L352.25,602.787C352.25,606.954,352.25,615.287,352.25,622.954C352.25,630.62,352.25,637.62,352.25,641.12L352.25,644.62" id="my-svg-L_AB_USE2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AB_USE2_0" data-points="W3sieCI6MzUyLjI1LCJ5Ijo1OTguNjIwMjc3NDA0Nzg1Mn0seyJ4IjozNTIuMjUsInkiOjYyMy42MjAyNzc0MDQ3ODUyfSx7IngiOjM1Mi4yNSwieSI6NjQ4LjYyMDI3NzQwNDc4NTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M122.75,713.22L122.75,717.387C122.75,721.554,122.75,729.887,130.498,737.922C138.246,745.958,153.741,753.696,161.489,757.564L169.237,761.433" id="my-svg-L_USE1_RESOLVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_USE1_RESOLVE_0" data-points="W3sieCI6MTIyLjc1LCJ5Ijo3MTMuMjIwMjc1ODc4OTA2Mn0seyJ4IjoxMjIuNzUsInkiOjczOC4yMjAyNzU4Nzg5MDYyfSx7IngiOjE3Mi44MTU0NDU2OTI3OTA2NiwieSI6NzYzLjIyMDI3NTg3ODkwNjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M352.25,713.22L352.25,717.387C352.25,721.554,352.25,729.887,344.502,737.922C336.754,745.958,321.259,753.696,313.511,757.564L305.763,761.433" id="my-svg-L_USE2_RESOLVE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_USE2_RESOLVE_0" data-points="W3sieCI6MzUyLjI1LCJ5Ijo3MTMuMjIwMjc1ODc4OTA2Mn0seyJ4IjozNTIuMjUsInkiOjczOC4yMjAyNzU4Nzg5MDYyfSx7IngiOjMwMi4xODQ1NTQzMDcyMDkzNCwieSI6NzYzLjIyMDI3NTg3ODkwNjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M237.5,827.82L237.5,831.987C237.5,836.154,237.5,844.487,237.5,852.154C237.5,859.82,237.5,866.82,237.5,870.32L237.5,873.82" id="my-svg-L_RESOLVE_MODE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RESOLVE_MODE_0" data-points="W3sieCI6MjM3LjUsInkiOjgyNy44MjAyNzQzNTMwMjczfSx7IngiOjIzNy41LCJ5Ijo4NTIuODIwMjc0MzUzMDI3M30seyJ4IjoyMzcuNSwieSI6ODc3LjgyMDI3NDM1MzAyNzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M193.323,1009.643L179.935,1022.922C166.548,1036.202,139.774,1062.761,126.387,1081.291C113,1099.82,113,1110.32,113,1115.57L113,1120.82" id="my-svg-L_MODE_M1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MODE_M1_0" data-points="W3sieCI6MTkzLjMyMjU4MDY0NTE2MTI4LCJ5IjoxMDA5LjY0Mjg1NDk5ODE4ODd9LHsieCI6MTEzLCJ5IjoxMDg5LjMyMDI3NDM1MzAyNzN9LHsieCI6MTEzLCJ5IjoxMTI0LjgyMDI3NDM1MzAyNzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M281.677,1009.643L295.065,1022.922C308.452,1036.202,335.226,1062.761,348.613,1081.291C362,1099.82,362,1110.32,362,1115.57L362,1120.82" id="my-svg-L_MODE_M2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MODE_M2_0" data-points="W3sieCI6MjgxLjY3NzQxOTM1NDgzODcsInkiOjEwMDkuNjQyODU0OTk4MTg4N30seyJ4IjozNjIsInkiOjEwODkuMzIwMjc0MzUzMDI3M30seyJ4IjozNjIsInkiOjExMjQuODIwMjc0MzUzMDI3M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M113,1171.82L113,1175.987C113,1180.154,113,1188.487,121.448,1196.542C129.895,1204.596,146.79,1212.372,155.238,1216.26L163.686,1220.148" id="my-svg-L_M1_RENDER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_M1_RENDER_0" data-points="W3sieCI6MTEzLCJ5IjoxMTcxLjgyMDI3NDM1MzAyNzN9LHsieCI6MTEzLCJ5IjoxMTk2LjgyMDI3NDM1MzAyNzN9LHsieCI6MTY3LjMxOTM3MjQ1MTAwMTYsInkiOjEyMjEuODIwMjc0MzUzMDI3M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M362,1171.82L362,1175.987C362,1180.154,362,1188.487,353.552,1196.542C345.105,1204.596,328.21,1212.372,319.762,1216.26L311.314,1220.148" id="my-svg-L_M2_RENDER_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_M2_RENDER_0" data-points="W3sieCI6MzYyLCJ5IjoxMTcxLjgyMDI3NDM1MzAyNzN9LHsieCI6MzYyLCJ5IjoxMTk2LjgyMDI3NDM1MzAyNzN9LHsieCI6MzA3LjY4MDYyNzU0ODk5ODM2LCJ5IjoxMjIxLjgyMDI3NDM1MzAyNzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M237.5,1286.42L237.5,1290.587C237.5,1294.754,237.5,1303.087,237.5,1310.754C237.5,1318.42,237.5,1325.42,237.5,1328.92L237.5,1332.42" id="my-svg-L_RENDER_ATTR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RENDER_ATTR_0" data-points="W3sieCI6MjM3LjUsInkiOjEyODYuNDIwMjcyODI3MTQ4NH0seyJ4IjoyMzcuNSwieSI6MTMxMS40MjAyNzI4MjcxNDg0fSx7IngiOjIzNy41LCJ5IjoxMzM2LjQyMDI3MjgyNzE0ODR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_ROOT_SYS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SYS_ACC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(122.75, 552.7101402282715)"><g class="label" data-id="L_ACC_USE1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(352.25, 471.3000030517578)"><g class="label" data-id="L_ACC_AB_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_AB_USE2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_USE1_RESOLVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_USE2_RESOLVE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RESOLVE_MODE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(113, 1089.3202743530273)"><g class="label" data-id="L_MODE_M1_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-27" y="0" width="54" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">system</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(362, 1089.3202743530273)"><g class="label" data-id="L_MODE_M2_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-27" y="0" width="55" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">explicit</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_M1_RENDER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_M2_RENDER_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RENDER_ATTR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-ROOT-0" data-look="classic" transform="translate(237.5, 40.29999923706055)"><rect class="basic label-container" style="" x="-98" y="-32.29999923706055" width="196" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sets</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> system</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SYS-1" data-look="classic" transform="translate(237.5, 154.89999771118164)"><rect class="basic label-container" style="" x="-105" y="-32.29999923706055" width="210" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">System</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> brand</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> theme</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ACC-3" data-look="classic" transform="translate(237.5, 336.5)"><polygon points="99.29999923706055,0 198.5999984741211,-99.29999923706055 99.29999923706055,-198.5999984741211 0,-99.29999923706055" class="label-container" transform="translate(-98.79999923706055, 99.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> has</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">branding</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> override?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-USE1-5" data-look="classic" transform="translate(122.75, 680.9202766418457)"><rect class="basic label-container" style="" x="-89.5" y="-32.29999923706055" width="179" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Effective</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> brand</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AB-7" data-look="classic" transform="translate(352.25, 552.7101402282715)"><path d="M0,14.073426573426572 a80.5,14.073426573426572 0,0,0 161,0 a80.5,14.073426573426572 0,0,0 -161,0 l0,63.67342504754767 a80.5,14.073426573426572 0,0,0 161,0 l0,-63.67342504754767" class="basic label-container outer-path" style="" transform="translate(-80.5, -45.91013909720041)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account_branding</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">colors</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> logo</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> slogan</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-USE2-9" data-look="classic" transform="translate(352.25, 680.9202766418457)"><rect class="basic label-container" style="" x="-90" y="-32.29999923706055" width="180" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Effective</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> brand</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> =</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> override</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RESOLVE-11" data-look="classic" transform="translate(237.5, 795.5202751159668)"><rect class="basic label-container" style="" x="-98.5" y="-32.29999923706055" width="197" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Theme</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> resolver</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">emit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> :root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CSS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> vars</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MODE-15" data-look="classic" transform="translate(237.5, 965.8202743530273)"><polygon points="88,0 176,-88 88,-176 0,-88" class="label-container" transform="translate(-87.5, 88)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Light</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dark</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> choice</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-M1-17" data-look="classic" transform="translate(113, 1148.3202743530273)"><rect class="basic label-container" style="" x="-105" y="-23.5" width="210" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prefers-color-scheme</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-M2-19" data-look="classic" transform="translate(362, 1148.3202743530273)"><rect class="basic label-container" style="" x="-94" y="-23.5" width="188" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">data-theme</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .dark</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RENDER-21" data-look="classic" transform="translate(237.5, 1254.120273590088)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Rendered</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">generated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> documents</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ATTR-25" data-look="classic" transform="translate(237.5, 1368.720272064209)"><rect class="basic label-container" style="" x="-125.5" y="-32.29999923706055" width="251" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Helix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Development</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">attribution</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> persists</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> footer</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/white-label-cascade.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The Root Admin sets the system default brand, which
+is the Thready theme. When a surface renders for an Account, the
+resolver asks whether that Account has a branding override. If not, the
+effective brand is the Thready default; if yes, the effective brand is
+read from the <code>account_branding</code> record (colors, logo,
+slogan). Both paths converge on the theme resolver, which emits the
+effective brand as <code>:root</code> CSS custom properties. The user’s
+light/dark choice then selects which palette renders: <em>system</em>
+resolves via <code>prefers-color-scheme</code>, while an
+<em>explicit</em> choice is applied via
+<code>data-theme</code>/<code>.dark</code>. The result drives both the
+live UI and the branding of generated documents. Finally — and
+independently of any override — the Helix Development attribution
+persists in the footer, so a white‑label never erases the “part of Helix
+Development” signal.</p>
+<h2 id="data-model-ddl">5. Data model (DDL)</h2>
+<blockquote>
+<p><strong>Reconcile with the authoritative schema first
+<code>[OPEN: THREADY-DES-14]</code>.</strong> The
+<strong>canonical</strong> database area (<a
+href="../database/erd.md">../database/erd.md</a>,
+<code>../database/schema-relational.sql</code>) already models
+per‑account branding as an <code>accounts.branding</code>
+<strong>JSONB</strong> column (<code>{colors, logo_url, slogan}</code>).
+The normalized <code>account_branding</code> table below is the
+design‑owned <strong>proposal</strong> to promote that blob into typed,
+<strong>AA‑validated, audit‑friendly</strong> columns (the AA gate in
+§10 needs typed accent columns and an <code>aa_validated</code> flag the
+JSONB blob does not carry). It is <strong>NOT</strong> an independent
+decision: the design area MUST NOT diverge from the canonical schema.
+Either the database area adopts this table (expand‑contract migration
+off <code>accounts.branding</code>) or this doc falls back to
+reading/writing the JSONB — tracked in <a
+href="./index.md#open-items">index.md</a>. Everything below is written
+to match the canonical conventions verbatim: <strong><code>uuid</code>
+surrogate keys</strong> (<code>gen_random_uuid</code>, pgcrypto),
+<code>timestamptz</code> in UTC, and FKs to <code>accounts(id)</code> /
+<code>users(id)</code>.</p>
+</blockquote>
+<p>PostgreSQL <code>[IN-HOUSE: database]</code> (types aligned to
+<code>schema-relational.sql</code> — <code>uuid</code>, not
+<code>bigint</code>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Per-account white-label branding (design-owned normalization of accounts.branding).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- account_id is BOTH the PK and the FK to accounts(id) (1:1 with the account).</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> account_branding (</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    account_id       uuid <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">REFERENCES</span> accounts(<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Decorative brand colors (hex #RRGGBB). NULL =&gt; inherit Thready default.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    brand            text,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    brand_2          text,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Accessible accent, validated AA server-side before persist (see §10).</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    accent_light     text,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    accent_dark      text,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    accent_on_light  text,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    accent_on_dark   text,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Product logos (asset-service refs, never raw paths). Light + dark, transparent.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    logo_light_asset text,      <span class="co">-- resolves via Asset Service</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    logo_dark_asset  text,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Slogan (free text). Helix Development attribution is NOT stored here (always rendered).</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    slogan           text,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Optional theme name for audit/telemetry.</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    theme_id         text <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;thready&#39;</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    aa_validated     <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    updated_by       uuid <span class="kw">REFERENCES</span> users(<span class="kw">id</span>),        <span class="co">-- uuid, matches users.id</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    updated_at       timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> ck_brand_hex     <span class="kw">CHECK</span> (brand    <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> brand    ~<span class="op">*</span> <span class="st">&#39;^#[0-9a-f]{6}$&#39;</span>),</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> ck_brand2_hex    <span class="kw">CHECK</span> (brand_2  <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> brand_2  ~<span class="op">*</span> <span class="st">&#39;^#[0-9a-f]{6}$&#39;</span>),</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> ck_accent_l_hex  <span class="kw">CHECK</span> (accent_light <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> accent_light ~<span class="op">*</span> <span class="st">&#39;^#[0-9a-f]{6}$&#39;</span>),</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> ck_accent_d_hex  <span class="kw">CHECK</span> (accent_dark  <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> accent_dark  ~<span class="op">*</span> <span class="st">&#39;^#[0-9a-f]{6}$&#39;</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> ix_account_branding_updated <span class="kw">ON</span> account_branding (updated_at <span class="kw">DESC</span>);</span></code></pre></div>
+<p>Forward / rollback migration via
+<code>database/pkg/migration.Runner</code> (expand‑contract, tested
+rollback) <code>[IN-HOUSE: database]</code>
+<code>[CONSTITUTION §Q30]</code>. Because the canonical store today is
+<code>accounts.branding</code> JSONB, the <strong>expand</strong> step
+backfills from it and the <strong>contract</strong> step is deferred
+until every writer is cut over — so the migration is reversible with no
+data loss:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- up:   0007_account_branding.up.sql</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   CREATE TABLE account_branding (…);   -- (as above)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">--   -- Expand: backfill from the existing JSONB (non-destructive; accounts.branding is retained).</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">--   INSERT INTO account_branding (account_id, brand, slogan)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">--   SELECT id,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">--          NULLIF(branding-&gt;&gt;&#39;colors&#39;, &#39;&#39;)::text,   -- narrow mapping; full map in the DB area</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">--          NULLIF(branding-&gt;&gt;&#39;slogan&#39;, &#39;&#39;)::text</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">--   FROM accounts</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">--   WHERE branding &lt;&gt; &#39;{}&#39;::jsonb</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">--   ON CONFLICT (account_id) DO NOTHING;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- down: 0007_account_branding.down.sql</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">--   DROP TABLE IF EXISTS account_branding;   -- accounts.branding JSONB is untouched, so this is lossless</span></span></code></pre></div>
+<p>All branding writes are <strong>audit‑logged</strong> (append‑only)
+since they are admin actions <code>[CONSTITUTION §14.4]</code>.</p>
+<h2 id="runtime-injection-web-ssrsafe">6. Runtime injection (web,
+SSR‑safe)</h2>
+<p>The effective brand is delivered to the browser as a scoped CSS
+custom‑property block. Because the neutral/structural tokens never
+change, only the ~8 brand/accent variables are injected — cheap and
+cache‑friendly:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ThreadyBrandService — resolves the effective brand and injects it once, SSR-safe.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Builds on the design_system ThemeService (mode) — this adds the BRAND axis.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">resolveBrandVars</span>(b<span class="op">:</span> AccountBranding <span class="op">|</span> <span class="dt">null</span>)<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>b) <span class="cf">return</span> {}<span class="op">;</span> <span class="co">// inherit Thready default from tokens/themes/thready.css</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;--brand&#39;</span><span class="op">:</span>        b<span class="op">.</span><span class="at">brand</span>        <span class="op">??</span> <span class="st">&#39;var(--brand)&#39;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;--brand-2&#39;</span><span class="op">:</span>      b<span class="op">.</span><span class="at">brand2</span>       <span class="op">??</span> <span class="st">&#39;var(--brand-2)&#39;</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;--accent&#39;</span><span class="op">:</span>       b<span class="op">.</span><span class="at">accentLight</span>  <span class="op">??</span> <span class="st">&#39;var(--accent)&#39;</span><span class="op">,</span>       <span class="co">// light block</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;--accent-on&#39;</span><span class="op">:</span>    b<span class="op">.</span><span class="at">accentOnLight</span><span class="op">??</span> <span class="st">&#39;var(--accent-on)&#39;</span><span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Emitted server-side (SSR/prerender) so first paint is already branded.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">     data-account carries the account uuid (accounts.id), not a numeric id. --&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">style</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;thready-brand&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="in">:root</span><span class="ex">[</span><span class="ss">data-account</span><span class="op">=</span><span class="st">&quot;a1b2c3d4-1111-4222-8333-abcdef012345&quot;</span><span class="ex">]</span>{</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">--brand</span><span class="ch">:</span><span class="cn">#12a3ff</span><span class="op">;</span> <span class="va">--brand-2</span><span class="ch">:</span><span class="cn">#0d6efd</span><span class="op">;</span> <span class="va">--accent</span><span class="ch">:</span><span class="cn">#0b5ed7</span><span class="op">;</span> <span class="va">--accent-on</span><span class="ch">:</span><span class="cn">#ffffff</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="in">:root</span><span class="ex">[</span><span class="ss">data-account</span><span class="op">=</span><span class="st">&quot;a1b2c3d4-1111-4222-8333-abcdef012345&quot;</span><span class="ex">][</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ex">]</span>{</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">--accent</span><span class="ch">:</span><span class="cn">#7db3ff</span><span class="op">;</span> <span class="va">--accent-on</span><span class="ch">:</span><span class="cn">#001a33</span><span class="op">;</span>   <span class="co">/* dark ink for the lighter dark-mode accent */</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">style</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The Account scope (<code>data-account</code> = the account
+<code>uuid</code>) means a Root Admin previewing multiple Accounts sees
+each correctly; the default (no <code>data-account</code>) is the
+Thready brand.</p>
+<h2 id="api-surface">7. API surface</h2>
+<p>Branding is read on bootstrap and written by admins (RBAC‑gated).
+OpenAPI 3.1 slice <code>[DEFAULT — adjustable]</code> (full contract in
+<a href="../api/index.md">../api/index.md</a>).</p>
+<blockquote>
+<p><strong>Reconcile with the canonical contract
+<code>[OPEN: THREADY-DES-14]</code>.</strong> The authoritative API area
+already defines <code>PUT /v1/accounts/{accountId}/branding</code>
+(<code>operationId: setBranding</code>,
+<code>x-required-roles: [account_admin]</code>) with a
+<strong>minimal</strong> <code>Branding</code> schema
+(<code>primary_color</code>, <code>logo_asset_id</code>,
+<code>slogan</code>) in <code>api/openapi.yaml</code>. The slice below
+is the design area’s <strong>expansion proposal</strong>: typed
+<strong>light/dark accent</strong> fields, an <code>aaValidated</code>
+flag, and a <strong><code>422</code> on WCAG‑AA failure</strong> (§10) —
+the shape the branding editor (<a
+href="./wireframes.md#311-settings--branding--messenger-accounts">wireframes.md
+§3.11</a>) and the AA gate require. It MUST be merged into
+<code>api/openapi.yaml</code> (not maintained in parallel); until then
+treat the canonical <code>Branding</code> as the source of record.
+Nullability uses the canonical 3.1 style
+(<code>type: [string, "null"]</code>), matching
+<code>api/openapi.yaml</code>.</p>
+</blockquote>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openapi</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.1.0</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/accounts/{accountId}/branding</span><span class="kw">:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Effective branding for an account (public-readable within the account).</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;200&#39;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> OK</span><span class="kw">,</span><span class="at"> </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/json</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Branding&#39;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">put</span><span class="kw">:</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Set account branding (Root Admin or Account Admin). AA-validated server-side.</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">requestBody</span><span class="kw">:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/json</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/BrandingInput&#39;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;200&#39;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Updated </span><span class="kw">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;403&#39;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Caller lacks the Root/Account-Admin role for this account </span><span class="kw">}</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&#39;422&#39;</span><span class="kw">:</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Accent fails WCAG AA (see §10); returns the failing ratio + suggestion.</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/BrandingError&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">securitySchemes</span><span class="kw">:</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="co">            # full definition in ../api/index.md; reproduced here for a self-contained slice</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">scheme</span><span class="kw">:</span><span class="at"> bearer</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bearerFormat</span><span class="kw">:</span><span class="at"> JWT</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schemas</span><span class="kw">:</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Branding</span><span class="kw">:</span><span class="co">      # design-area EXPANSION of api/openapi.yaml#/components/schemas/Branding (see note above)</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">brand</span><span class="kw">:</span><span class="at">       </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;^#[0-9a-fA-F]{6}$&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">brand2</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;^#[0-9a-fA-F]{6}$&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">accentLight</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;^#[0-9a-fA-F]{6}$&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">accentDark</span><span class="kw">:</span><span class="at">  </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;^#[0-9a-fA-F]{6}$&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">logoLight</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid</span><span class="kw">,</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Asset Service ref (asset id) </span><span class="kw">}</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">logoDark</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">],</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">slogan</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">themeId</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">default</span><span class="kw">:</span><span class="at"> thready </span><span class="kw">}</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">aaValidated</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> boolean</span><span class="kw">,</span><span class="at"> </span><span class="fu">readOnly</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">BrandingInput</span><span class="kw">:</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">allOf</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#/components/schemas/Branding&#39;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">BrandingError</span><span class="kw">:</span><span class="co">      # body of the 422 — the failing ratio + an AA-passing suggestion (mirrors §10 ValidateAccent)</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">error</span><span class="kw">,</span><span class="at"> field</span><span class="kw">,</span><span class="at"> ratio</span><span class="kw">,</span><span class="at"> required</span><span class="kw">,</span><span class="at"> suggestion</span><span class="kw">]</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">error</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> accent_below_wcag_aa </span><span class="kw">}</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">field</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">accentLight</span><span class="kw">,</span><span class="at"> accentDark</span><span class="kw">],</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> accentLight </span><span class="kw">}</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">surface</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> hex of the surface the accent was measured on</span><span class="kw">,</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#ffffff&#39;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">ratio</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> number</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> float</span><span class="kw">,</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.10</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">required</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> number</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> float</span><span class="kw">,</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> </span><span class="fl">4.50</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">suggestion</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;^#[0-9a-fA-F]{6}$&#39;</span><span class="kw">,</span><span class="at"> </span><span class="fu">example</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;#446e12&#39;</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<h2 id="crossplatform-theming">8. Cross‑platform theming</h2>
+<p>The brand axis reaches every surface because it is just token
+values:</p>
+<ul>
+<li><strong>Web / Desktop (Tauri):</strong> the injected
+<code>:root</code> block above.</li>
+<li><strong>TUI:</strong> the resolver emits a Lipgloss palette from the
+same values (regenerated per Account); the TUI reads the effective brand
+at login from <code>/v1/accounts/{id}/branding</code>.</li>
+<li><strong>Mobile (KMP/Compose, native):</strong> the app fetches
+effective branding at login and maps to Compose
+<code>Color</code>/Material theme (KMP bridge,
+<code>[GAP: 8.4]</code>).</li>
+<li><strong>Generated documents:</strong> §9.</li>
+</ul>
+<h2 id="branding-on-generated-documents">9. Branding on generated
+documents</h2>
+<p>Every generated artifact is themed by the <strong>effective Account
+brand</strong> via <strong>Docs Chain</strong>
+<code>[CONSTITUTION §11.4.65]</code> (see <a
+href="./brand-assets.md#9-brand-on-generated-documents">brand-assets.md</a>):</p>
+<ul>
+<li><strong>Header:</strong> effective product logo + title.</li>
+<li><strong>Body:</strong> design‑system typography, code/syntax
+highlight, diagram + callout styles.</li>
+<li><strong>Footer:</strong> <strong>Helix Development attribution
+logo</strong> + “Made with ♥ by Helix Development” slogan (locked) + the
+Account slogan (if set) + revision/date.</li>
+</ul>
+<p>Because the document theme is the same token set, a white‑label
+research PDF matches that Account’s web portal exactly.</p>
+<h2 id="accessibility-guardrails-for-whitelabel">10. Accessibility
+guardrails for white‑label</h2>
+<p>A white‑label must not be allowed to ship an inaccessible palette. On
+<code>PUT …/branding</code>:</p>
+<ol type="1">
+<li><strong>Validate the accent</strong> (<code>accent_light</code> on
+<code>--surface</code>/<code>--bg</code>, <code>accent_dark</code> on
+dark bg) to <strong>WCAG AA</strong> (≥ 4.5:1 text). If it fails →
+<code>422</code> with the measured ratio and an auto‑darkened suggestion
+(the same rule the shipped themes follow).
+<code>[VERIFIED pattern — THEMES.md]</code></li>
+<li><strong>Keep brand vs. semantic separate:</strong> an Account may
+set a red <code>--brand</code>, but <code>--danger</code> stays the
+semantic error red — never overridden — so errors are never masked.</li>
+<li><strong>Decorative brand tokens</strong> (<code>--brand</code>,
+<code>--brand-2</code>) are allowed any hue (they are not used for
+text), but the UI must not place body text on a raw brand fill without
+an AA ink.</li>
+<li>Neutral surfaces default to the AA‑tuned slate set; overriding them
+is gated behind full AA re‑validation (advanced, off by default).</li>
+</ol>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server-side AA gate (Go) — [IN-HOUSE: security/pkg patterns; DEFAULT — adjustable]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> ValidateAccent<span class="op">(</span>accentHex<span class="op">,</span> surfaceHex <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    r <span class="op">:=</span> contrastRatio<span class="op">(</span>accentHex<span class="op">,</span> surfaceHex<span class="op">)</span> <span class="co">// sRGB relative luminance</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> AA <span class="op">=</span> <span class="fl">4.5</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> r <span class="op">&lt;</span> AA <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;accent %s on %s is %.2f:1, below AA %.1f:1; try %s&quot;</span><span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            accentHex<span class="op">,</span> surfaceHex<span class="op">,</span> r<span class="op">,</span> AA<span class="op">,</span> darkenToRatio<span class="op">(</span>accentHex<span class="op">,</span> surfaceHex<span class="op">,</span> AA<span class="op">))</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="tdd-reproducefirst-red-then-green-constitution-11.4.2743">10.1
+TDD reproduce‑first (RED then GREEN)
+<code>[CONSTITUTION §11.4.27/43]</code></h3>
+<p>Per the reproduce‑first mandate, the AA gate is specified by a
+<strong>failing RED test first</strong> — a white‑label accent that a
+designer <em>would</em> try (<code>#7AA590</code>, a soft teal; note the
+captured Thready <code>--brand-2 #ABDDC9</code> is even lighter and
+likewise fails, which is exactly why decorative brand tokens are never
+used as text) is only <strong>2.0:1</strong> on white, so it MUST be
+rejected. The test is authored and run <strong>before</strong>
+<code>ValidateAccent</code> exists (it fails to compile / returns nil →
+RED); implementing the gate above turns it GREEN; then it is extended to
+the full matrix (dark surface, the AA‑passing <code>#446E12</code>, the
+boundary at 4.5:1).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// theming/aa_gate_test.go — RED FIRST: written before ValidateAccent is implemented.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> theming</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;testing&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: reproduces the bug &quot;an inaccessible white-label accent is accepted&quot;.</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestValidateAccent_RejectsBelowAA_onWhite<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// #7AA590 (Thready teal) on #FFFFFF is ~2.0:1 — well below AA 4.5:1.</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> ValidateAccent<span class="op">(</span><span class="st">&quot;#7aa590&quot;</span><span class="op">,</span> <span class="st">&quot;#ffffff&quot;</span><span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;RED: expected a below-AA rejection for #7aa590 on #ffffff, got nil&quot;</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">// GREEN (added after RED passes): the verified helix-green accent must pass.</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestValidateAccent_AcceptsVerifiedAccent<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> ValidateAccent<span class="op">(</span><span class="st">&quot;#446e12&quot;</span><span class="op">,</span> <span class="st">&quot;#ffffff&quot;</span><span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="co">// 6.03:1 [VERIFIED — THEMES.md]</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;expected #446e12 on #ffffff (6.03:1) to pass AA, got %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">// EXTEND: dark surface + the error must carry a usable suggestion (drives the 422 BrandingError, §7).</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestValidateAccent_DarkSurface_and_Suggestion<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> ValidateAccent<span class="op">(</span><span class="st">&quot;#b6e376&quot;</span><span class="op">,</span> <span class="st">&quot;#020817&quot;</span><span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="co">// 13.56:1 dark accent [VERIFIED]</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;expected #b6e376 on #020817 (13.56:1) to pass, got %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> ValidateAccent<span class="op">(</span><span class="st">&quot;#7aa590&quot;</span><span class="op">,</span> <span class="st">&quot;#ffffff&quot;</span><span class="op">)</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">||</span> <span class="op">!</span>containsHexSuggestion<span class="op">(</span>err<span class="op">.</span>Error<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;expected a rejection carrying an AA-passing #RRGGBB suggestion, got %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The same reproduce‑first discipline governs the
+<strong>client‑side</strong> live AA meter in the branding editor (the
+meter and the server gate MUST agree on the ratio) and is mirrored as a
+UI contract case in <a
+href="./component-library.md#9-testing-the-library">component-library.md
+§9</a>.</p>
+<h2 id="gaps-open-items">11. Gaps &amp; open items</h2>
+<ul>
+<li><code>[GAP: 8.1 design_system]</code> — the mode axis reuses the
+verified <code>ThemeService</code>; the brand axis (this doc) is the
+Thready addition. Publish alongside the package
+(THREADY‑DES‑DS‑01).</li>
+<li><code>[GAP: 8.4 UI-Components-KMP]</code> — the mobile brand bridge
+depends on the KMP UI package that has no CI/publish yet; track before
+mobile white‑label ships.</li>
+<li><code>[OPEN: THREADY-DES-06]</code> — decide whether Account Admins
+(tier 2), not only Root, may edit their own Account branding (request
+says Root configures; product may want delegated self‑branding).</li>
+<li><code>[OPEN: THREADY-DES-07]</code> — advanced neutral‑surface
+override (beyond accent) needs a full AA re‑validation matrix before
+being exposed.</li>
+<li><code>[OPEN: THREADY-DES-14]</code> — <strong>branding model must be
+reconciled with the authoritative areas</strong> (storage
+<strong>and</strong> contract). <strong>Storage (§5 note):</strong> the
+canonical schema stores branding as <code>accounts.branding</code>
+<strong>JSONB</strong>; the normalized <code>account_branding</code>
+table here is a proposal (expand‑contract off the JSONB) — confirm with
+<a href="../database/erd.md">../database/erd.md</a>. <strong>Contract
+(§7 note):</strong> <code>api/openapi.yaml</code> already defines
+<code>setBranding</code> with a minimal <code>Branding</code>; the
+expanded slice here (typed accents + <code>422</code> AA gate) must be
+<strong>merged into</strong> <a
+href="../api/index.md">../api/index.md</a>, not maintained in parallel.
+The design area MUST NOT diverge from <code>schema-relational.sql</code>
+/ <code>openapi.yaml</code>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

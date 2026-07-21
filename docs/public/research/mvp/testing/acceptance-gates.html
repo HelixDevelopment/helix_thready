@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Per-Test-Type Acceptance Gates</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Per-Test-Type Acceptance Gates</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#the-gate-ladder" id="toc-the-gate-ladder">1. The gate
+ladder</a></li>
+<li><a href="#gate-register-one-row-per-type"
+id="toc-gate-register-one-row-per-type">2. Gate register (one row per
+type)</a></li>
+<li><a href="#evidence-contract-per-gate"
+id="toc-evidence-contract-per-gate">3. Evidence contract per
+gate</a></li>
+<li><a href="#blocking-severity-policy"
+id="toc-blocking-severity-policy">4. Blocking-severity policy</a></li>
+<li><a href="#the-anti-bluff-meta-gate"
+id="toc-the-anti-bluff-meta-gate">5. The anti-bluff meta-gate</a></li>
+<li><a href="#gate-exit-code-protocol"
+id="toc-gate-exit-code-protocol">6. Gate exit-code protocol</a></li>
+<li><a href="#waivers" id="toc-waivers">7. Waivers</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Per-Test-Type Acceptance Gates
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/acceptance-gates.md
+  Status          : Draft — v0.3
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./index.md, ./test-strategy.md, ./test-types.md, ./tdd-skeletons.md,
+                    ./helixqa-banks.md, ./challenges-scenarios.md, ./static-analysis.md,
+                    ./performance-and-chaos.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Initial draft — one machine-checkable acceptance gate per mandated
+test type, the three-tier gate ladder, evidence contracts,
+blocking-severity policy</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 4 (critic) — <code>G-CONTRACT</code> now names all four pinned
+contracts (embeddings/search/downloads/WS); §4 wires the FLAKY outcome +
+no-retry-for-blocker-gates rule to test-strategy §12</td>
+</tr>
+</tbody>
+</table>
+<p>This document turns the qualitative “gate” line of each of the
+<strong>15 mandated test types</strong> (<a
+href="./test-types.md">test-types.md</a>) into a single
+<strong>machine-checkable acceptance-gate register</strong>. Every gate
+has a stable <strong>gate ID</strong>, an exact
+<strong>precondition</strong>, a <strong>pass condition</strong> written
+so a script (not a human’s judgement) decides GREEN/RED, the
+<strong>runtime evidence</strong> it must emit
+<code>[CONSTITUTION §11.4]</code>, the <strong>tier</strong> it runs on,
+and its <strong>blocking severity</strong>. The gates are the
+enforcement surface of the <a
+href="./test-strategy.md">test-strategy.md</a> covenant and the concrete
+contract the <a href="../deployment/index.md">deployment</a> area’s
+pre-tag retest evaluates.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-the-gate-ladder">1. The gate ladder</a></li>
+<li><a href="#2-gate-register-one-row-per-type">2. Gate register (one
+row per type)</a></li>
+<li><a href="#3-evidence-contract-per-gate">3. Evidence contract per
+gate</a></li>
+<li><a href="#4-blocking-severity-policy">4. Blocking-severity
+policy</a></li>
+<li><a href="#5-the-anti-bluff-meta-gate">5. The anti-bluff
+meta-gate</a></li>
+<li><a href="#6-gate-exit-code-protocol">6. Gate exit-code
+protocol</a></li>
+<li><a href="#7-waivers">7. Waivers</a></li>
+<li><a href="#8-gap-register-items-addressed">8. Gap-register items
+addressed</a></li>
+</ul>
+<h2 id="the-gate-ladder">1. The gate ladder</h2>
+<p>Gates are not a flat list; they run at three escalating tiers so the
+<strong>cheapest</strong> gate that can catch a defect runs
+<strong>first</strong> and most often, and the expensive whole-system
+gates run only on the release path. This is the CI-equivalent
+enforcement of <a
+href="./test-strategy.md#8-ci-equivalent-gating-no-server-side-ci">test-strategy.md
+§8</a> — all local, no server-side CI
+<code>[CONSTITUTION §11.4.156]</code>.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 883.75px; background-color: white;" viewBox="0 0 883.75 2360.400146484375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-L3" data-look="classic"><rect style="" x="8" y="1275.5999908447266" width="550.5" height="941.1999893188477"/><g class="cluster-label" transform="translate(154.75, 1275.5999908447266)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Gate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pre-tag</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> full-suite</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (dev./sta.)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-L2" data-look="classic"><rect style="" x="179.5" y="746.1999969482422" width="568.25" height="458.3999938964844"/><g class="cluster-label" transform="translate(311.625, 746.1999969482422)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Gate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pre-push</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (integration,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> local</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> deps)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-L1" data-look="classic"><rect style="" x="329.25" y="252" width="546.5" height="423.1999969482422"/><g class="cluster-label" transform="translate(487, 252)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Gate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pre-commit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (fast,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> local)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-L0" data-look="classic"><rect style="" x="372" y="8" width="283" height="194"/><g class="cluster-label" transform="translate(433, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Author</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> loop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (RED-first)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M513.5,80L513.5,84.167C513.5,88.333,513.5,96.667,513.5,104.333C513.5,112,513.5,119,513.5,122.5L513.5,126" id="my-svg-L_RED_GREEN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RED_GREEN_0" data-points="W3sieCI6NTEzLjUsInkiOjgwfSx7IngiOjUxMy41LCJ5IjoxMDV9LHsieCI6NTEzLjUsInkiOjEzMH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M513.5,177L513.5,181.167C513.5,185.333,513.5,193.667,513.5,202C513.5,210.333,513.5,218.667,513.5,227C513.5,235.333,513.5,243.667,513.5,251.333C513.5,259,513.5,266,513.5,269.5L513.5,273" id="my-svg-L_GREEN_G_UNIT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GREEN_G_UNIT_0" data-points="W3sieCI6NTEzLjUsInkiOjE3N30seyJ4Ijo1MTMuNSwieSI6MjAyfSx7IngiOjUxMy41LCJ5IjoyMjd9LHsieCI6NTEzLjUsInkiOjI1Mn0seyJ4Ijo1MTMuNSwieSI6Mjc3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M513.5,324L513.5,328.167C513.5,332.333,513.5,340.667,513.5,348.333C513.5,356,513.5,363,513.5,366.5L513.5,370" id="my-svg-L_G_UNIT_G_FMT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_UNIT_G_FMT_0" data-points="W3sieCI6NTEzLjUsInkiOjMyNH0seyJ4Ijo1MTMuNSwieSI6MzQ5fSx7IngiOjUxMy41LCJ5IjozNzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M513.5,421L513.5,425.167C513.5,429.333,513.5,437.667,513.5,445.333C513.5,453,513.5,460,513.5,463.5L513.5,467" id="my-svg-L_G_FMT_G_SEC1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_FMT_G_SEC1_0" data-points="W3sieCI6NTEzLjUsInkiOjQyMX0seyJ4Ijo1MTMuNSwieSI6NDQ2fSx7IngiOjUxMy41LCJ5Ijo0NzF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M513.5,535.6L513.5,539.767C513.5,543.933,513.5,552.267,513.5,559.933C513.5,567.6,513.5,574.6,513.5,578.1L513.5,581.6" id="my-svg-L_G_SEC1_G_AB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_SEC1_G_AB_0" data-points="W3sieCI6NTEzLjUsInkiOjUzNS41OTk5OTg0NzQxMjExfSx7IngiOjUxMy41LCJ5Ijo1NjAuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1MTMuNSwieSI6NTg1LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M462.767,650.2L456.223,654.367C449.678,658.533,436.589,666.867,430.045,676.95C423.5,687.033,423.5,698.867,423.5,710.7C423.5,722.533,423.5,734.367,423.5,743.783C423.5,753.2,423.5,760.2,423.5,763.7L423.5,767.2" id="my-svg-L_G_AB_G_INT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_AB_G_INT_0" data-points="W3sieCI6NDYyLjc2NzAxNjIyOTYzOTcsInkiOjY1MC4xOTk5OTY5NDgyNDIyfSx7IngiOjQyMy41LCJ5Ijo2NzUuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo0MjMuNSwieSI6NzEwLjY5OTk5Njk0ODI0MjJ9LHsieCI6NDIzLjUsInkiOjc0Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjQyMy41LCJ5Ijo3NzEuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M423.5,835.8L423.5,839.967C423.5,844.133,423.5,852.467,423.5,860.133C423.5,867.8,423.5,874.8,423.5,878.3L423.5,881.8" id="my-svg-L_G_INT_G_CONTRACT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_INT_G_CONTRACT_0" data-points="W3sieCI6NDIzLjUsInkiOjgzNS43OTk5OTU0MjIzNjMzfSx7IngiOjQyMy41LCJ5Ijo4NjAuNzk5OTk1NDIyMzYzM30seyJ4Ijo0MjMuNSwieSI6ODg1Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M423.5,950.4L423.5,954.567C423.5,958.733,423.5,967.067,423.5,974.733C423.5,982.4,423.5,989.4,423.5,992.9L423.5,996.4" id="my-svg-L_G_CONTRACT_G_DECOUP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_CONTRACT_G_DECOUP_0" data-points="W3sieCI6NDIzLjUsInkiOjk1MC4zOTk5OTM4OTY0ODQ0fSx7IngiOjQyMy41LCJ5Ijo5NzUuMzk5OTkzODk2NDg0NH0seyJ4Ijo0MjMuNSwieSI6MTAwMC4zOTk5OTM4OTY0ODQ0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M423.5,1065L423.5,1069.167C423.5,1073.333,423.5,1081.667,423.5,1089.333C423.5,1097,423.5,1104,423.5,1107.5L423.5,1111" id="my-svg-L_G_DECOUP_G_QG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_DECOUP_G_QG_0" data-points="W3sieCI6NDIzLjUsInkiOjEwNjQuOTk5OTkyMzcwNjA1NX0seyJ4Ijo0MjMuNSwieSI6MTA4OS45OTk5OTIzNzA2MDU1fSx7IngiOjQyMy41LCJ5IjoxMTE0Ljk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M353.742,1179.6L344.743,1183.767C335.745,1187.933,317.747,1196.267,308.749,1206.35C299.75,1216.433,299.75,1228.267,299.75,1240.1C299.75,1251.933,299.75,1263.767,299.75,1273.183C299.75,1282.6,299.75,1289.6,299.75,1293.1L299.75,1296.6" id="my-svg-L_G_QG_G_E2E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_QG_G_E2E_0" data-points="W3sieCI6MzUzLjc0MjE0NzMxNTc1NDYsInkiOjExNzkuNTk5OTkwODQ0NzI2Nn0seyJ4IjoyOTkuNzUsInkiOjEyMDQuNTk5OTkwODQ0NzI2Nn0seyJ4IjoyOTkuNzUsInkiOjEyNDAuMDk5OTkwODQ0NzI2Nn0seyJ4IjoyOTkuNzUsInkiOjEyNzUuNTk5OTkwODQ0NzI2Nn0seyJ4IjoyOTkuNzUsInkiOjEzMDAuNTk5OTkwODQ0NzI2Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M299.75,1347.6L299.75,1351.767C299.75,1355.933,299.75,1364.267,299.75,1371.933C299.75,1379.6,299.75,1386.6,299.75,1390.1L299.75,1393.6" id="my-svg-L_G_E2E_G_FULLAUTO_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_E2E_G_FULLAUTO_0" data-points="W3sieCI6Mjk5Ljc1LCJ5IjoxMzQ3LjU5OTk5MDg0NDcyNjZ9LHsieCI6Mjk5Ljc1LCJ5IjoxMzcyLjU5OTk5MDg0NDcyNjZ9LHsieCI6Mjk5Ljc1LCJ5IjoxMzk3LjU5OTk5MDg0NDcyNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M299.75,1462.2L299.75,1466.367C299.75,1470.533,299.75,1478.867,299.75,1486.533C299.75,1494.2,299.75,1501.2,299.75,1504.7L299.75,1508.2" id="my-svg-L_G_FULLAUTO_G_UIUX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_FULLAUTO_G_UIUX_0" data-points="W3sieCI6Mjk5Ljc1LCJ5IjoxNDYyLjE5OTk4OTMxODg0Nzd9LHsieCI6Mjk5Ljc1LCJ5IjoxNDg3LjE5OTk4OTMxODg0Nzd9LHsieCI6Mjk5Ljc1LCJ5IjoxNTEyLjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M299.75,1559.2L299.75,1563.367C299.75,1567.533,299.75,1575.867,299.75,1583.533C299.75,1591.2,299.75,1598.2,299.75,1601.7L299.75,1605.2" id="my-svg-L_G_UIUX_G_CH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_UIUX_G_CH_0" data-points="W3sieCI6Mjk5Ljc1LCJ5IjoxNTU5LjE5OTk4OTMxODg0Nzd9LHsieCI6Mjk5Ljc1LCJ5IjoxNTg0LjE5OTk4OTMxODg0Nzd9LHsieCI6Mjk5Ljc1LCJ5IjoxNjA5LjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M299.75,1673.8L299.75,1677.967C299.75,1682.133,299.75,1690.467,299.75,1698.133C299.75,1705.8,299.75,1712.8,299.75,1716.3L299.75,1719.8" id="my-svg-L_G_CH_G_QA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_CH_G_QA_0" data-points="W3sieCI6Mjk5Ljc1LCJ5IjoxNjczLjc5OTk4Nzc5Mjk2ODh9LHsieCI6Mjk5Ljc1LCJ5IjoxNjk4Ljc5OTk4Nzc5Mjk2ODh9LHsieCI6Mjk5Ljc1LCJ5IjoxNzIzLjc5OTk4Nzc5Mjk2ODh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M260.432,1788.4L255.36,1792.567C250.288,1796.733,240.144,1805.067,235.072,1812.733C230,1820.4,230,1827.4,230,1830.9L230,1834.4" id="my-svg-L_G_QA_G_PERF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_QA_G_PERF_0" data-points="W3sieCI6MjYwLjQzMTkzNzU3Nzk3MDc2LCJ5IjoxNzg4LjM5OTk4NjI2NzA4OTh9LHsieCI6MjMwLCJ5IjoxODEzLjM5OTk4NjI2NzA4OTh9LHsieCI6MjMwLCJ5IjoxODM4LjM5OTk4NjI2NzA4OTh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M230,1903L230,1908.917C230,1914.833,230,1926.667,230,1937.833C230,1949,230,1959.5,230,1964.75L230,1970" id="my-svg-L_G_PERF_G_LOAD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_PERF_G_LOAD_0" data-points="W3sieCI6MjMwLCJ5IjoxOTAyLjk5OTk4NDc0MTIxMX0seyJ4IjoyMzAsInkiOjE5MzguNDk5OTg0NzQxMjExfSx7IngiOjIzMCwieSI6MTk3My45OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M197.27,2056.2L192.559,2062.117C187.847,2068.033,178.423,2079.867,173.712,2091.033C169,2102.2,169,2112.7,169,2117.95L169,2123.2" id="my-svg-L_G_LOAD_G_REVIEW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_LOAD_G_REVIEW_0" data-points="W3sieCI6MTk3LjI3MDIzNTU1MDA5MDgsInkiOjIwNTYuMTk5OTgxNjg5NDUzfSx7IngiOjE2OSwieSI6MjA5MS42OTk5ODE2ODk0NTN9LHsieCI6MTY5LCJ5IjoyMTI3LjE5OTk4MTY4OTQ1M31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M169,2191.8L169,2195.967C169,2200.133,169,2208.467,169,2218.55C169,2228.633,169,2240.467,169,2251.633C169,2262.8,169,2273.3,169,2278.55L169,2283.8" id="my-svg-L_G_REVIEW_TAG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_REVIEW_TAG_0" data-points="W3sieCI6MTY5LCJ5IjoyMTkxLjc5OTk4MDE2MzU3NH0seyJ4IjoxNjksInkiOjIyMTYuNzk5OTgwMTYzNTc0fSx7IngiOjE2OSwieSI6MjI1Mi4yOTk5ODAxNjM1NzR9LHsieCI6MTY5LCJ5IjoyMjg3Ljc5OTk4MDE2MzU3NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M621,640.057L649.417,645.914C677.833,651.772,734.667,663.486,763.083,675.26C791.5,687.033,791.5,698.867,791.5,710.7C791.5,722.533,791.5,734.367,791.5,749.833C791.5,765.3,791.5,784.4,791.5,803.5C791.5,822.6,791.5,841.7,791.5,860.8C791.5,879.9,791.5,899,791.5,918.1C791.5,937.2,791.5,956.3,791.5,975.4C791.5,994.5,791.5,1013.6,791.5,1032.7C791.5,1051.8,791.5,1070.9,791.5,1090C791.5,1109.1,791.5,1128.2,791.5,1147.3C791.5,1166.4,791.5,1185.5,791.5,1200.967C791.5,1216.433,791.5,1228.267,791.5,1240.1C791.5,1251.933,791.5,1263.767,791.5,1277.767C791.5,1291.767,791.5,1307.933,791.5,1324.1C791.5,1340.267,791.5,1356.433,791.5,1374.067C791.5,1391.7,791.5,1410.8,791.5,1429.9C791.5,1449,791.5,1468.1,791.5,1485.733C791.5,1503.367,791.5,1519.533,791.5,1535.7C791.5,1551.867,791.5,1568.033,791.5,1585.667C791.5,1603.3,791.5,1622.4,791.5,1641.5C791.5,1660.6,791.5,1679.7,791.5,1698.8C791.5,1717.9,791.5,1737,791.5,1756.1C791.5,1775.2,791.5,1794.3,791.5,1813.4C791.5,1832.5,791.5,1851.6,791.5,1872.45C791.5,1893.3,791.5,1915.9,791.5,1939.967C791.5,1964.033,791.5,1989.567,791.5,2015.1C791.5,2040.633,791.5,2066.167,786.368,2087.086C781.235,2108.005,770.97,2124.31,765.838,2132.462L760.706,2140.615" id="my-svg-L_G_AB_BLOCK_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_AB_BLOCK_0" data-points="W3sieCI6NjIxLCJ5Ijo2NDAuMDU3MzcxNTE2ODc5NX0seyJ4Ijo3OTEuNSwieSI6Njc1LjE5OTk5Njk0ODI0MjJ9LHsieCI6NzkxLjUsInkiOjcxMC42OTk5OTY5NDgyNDIyfSx7IngiOjc5MS41LCJ5Ijo3NDYuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo3OTEuNSwieSI6ODAzLjQ5OTk5NjE4NTMwMjd9LHsieCI6NzkxLjUsInkiOjg2MC43OTk5OTU0MjIzNjMzfSx7IngiOjc5MS41LCJ5Ijo5MTguMDk5OTk0NjU5NDIzOH0seyJ4Ijo3OTEuNSwieSI6OTc1LjM5OTk5Mzg5NjQ4NDR9LHsieCI6NzkxLjUsInkiOjEwMzIuNjk5OTkzMTMzNTQ1fSx7IngiOjc5MS41LCJ5IjoxMDg5Ljk5OTk5MjM3MDYwNTV9LHsieCI6NzkxLjUsInkiOjExNDcuMjk5OTkxNjA3NjY2fSx7IngiOjc5MS41LCJ5IjoxMjA0LjU5OTk5MDg0NDcyNjZ9LHsieCI6NzkxLjUsInkiOjEyNDAuMDk5OTkwODQ0NzI2Nn0seyJ4Ijo3OTEuNSwieSI6MTI3NS41OTk5OTA4NDQ3MjY2fSx7IngiOjc5MS41LCJ5IjoxMzI0LjA5OTk5MDg0NDcyNjZ9LHsieCI6NzkxLjUsInkiOjEzNzIuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo3OTEuNSwieSI6MTQyOS44OTk5OTAwODE3ODd9LHsieCI6NzkxLjUsInkiOjE0ODcuMTk5OTg5MzE4ODQ3N30seyJ4Ijo3OTEuNSwieSI6MTUzNS42OTk5ODkzMTg4NDc3fSx7IngiOjc5MS41LCJ5IjoxNTg0LjE5OTk4OTMxODg0Nzd9LHsieCI6NzkxLjUsInkiOjE2NDEuNDk5OTg4NTU1OTA4Mn0seyJ4Ijo3OTEuNSwieSI6MTY5OC43OTk5ODc3OTI5Njg4fSx7IngiOjc5MS41LCJ5IjoxNzU2LjA5OTk4NzAzMDAyOTN9LHsieCI6NzkxLjUsInkiOjE4MTMuMzk5OTg2MjY3MDg5OH0seyJ4Ijo3OTEuNSwieSI6MTg3MC42OTk5ODU1MDQxNTA0fSx7IngiOjc5MS41LCJ5IjoxOTM4LjQ5OTk4NDc0MTIxMX0seyJ4Ijo3OTEuNSwieSI6MjAxNS4wOTk5ODMyMTUzMzJ9LHsieCI6NzkxLjUsInkiOjIwOTEuNjk5OTgxNjg5NDUzfSx7IngiOjc1OC41NzQ0ODM4OTE5OTA2LCJ5IjoyMTQzLjk5OTk4MDkyNjUxMzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M530.5,1173.473L551.708,1178.661C572.917,1183.849,615.333,1194.224,636.542,1205.329C657.75,1216.433,657.75,1228.267,657.75,1240.1C657.75,1251.933,657.75,1263.767,657.75,1277.767C657.75,1291.767,657.75,1307.933,657.75,1324.1C657.75,1340.267,657.75,1356.433,657.75,1374.067C657.75,1391.7,657.75,1410.8,657.75,1429.9C657.75,1449,657.75,1468.1,657.75,1485.733C657.75,1503.367,657.75,1519.533,657.75,1535.7C657.75,1551.867,657.75,1568.033,657.75,1585.667C657.75,1603.3,657.75,1622.4,657.75,1641.5C657.75,1660.6,657.75,1679.7,657.75,1698.8C657.75,1717.9,657.75,1737,657.75,1756.1C657.75,1775.2,657.75,1794.3,657.75,1813.4C657.75,1832.5,657.75,1851.6,657.75,1872.45C657.75,1893.3,657.75,1915.9,657.75,1939.967C657.75,1964.033,657.75,1989.567,657.75,2015.1C657.75,2040.633,657.75,2066.167,668.761,2087.248C679.773,2108.33,701.796,2124.96,712.807,2133.275L723.819,2141.59" id="my-svg-L_G_QG_BLOCK_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_QG_BLOCK_0" data-points="W3sieCI6NTMwLjUsInkiOjExNzMuNDczMzEwMzYyNjk0N30seyJ4Ijo2NTcuNzUsInkiOjEyMDQuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo2NTcuNzUsInkiOjEyNDAuMDk5OTkwODQ0NzI2Nn0seyJ4Ijo2NTcuNzUsInkiOjEyNzUuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo2NTcuNzUsInkiOjEzMjQuMDk5OTkwODQ0NzI2Nn0seyJ4Ijo2NTcuNzUsInkiOjEzNzIuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo2NTcuNzUsInkiOjE0MjkuODk5OTkwMDgxNzg3fSx7IngiOjY1Ny43NSwieSI6MTQ4Ny4xOTk5ODkzMTg4NDc3fSx7IngiOjY1Ny43NSwieSI6MTUzNS42OTk5ODkzMTg4NDc3fSx7IngiOjY1Ny43NSwieSI6MTU4NC4xOTk5ODkzMTg4NDc3fSx7IngiOjY1Ny43NSwieSI6MTY0MS40OTk5ODg1NTU5MDgyfSx7IngiOjY1Ny43NSwieSI6MTY5OC43OTk5ODc3OTI5Njg4fSx7IngiOjY1Ny43NSwieSI6MTc1Ni4wOTk5ODcwMzAwMjkzfSx7IngiOjY1Ny43NSwieSI6MTgxMy4zOTk5ODYyNjcwODk4fSx7IngiOjY1Ny43NSwieSI6MTg3MC42OTk5ODU1MDQxNTA0fSx7IngiOjY1Ny43NSwieSI6MTkzOC40OTk5ODQ3NDEyMTF9LHsieCI6NjU3Ljc1LCJ5IjoyMDE1LjA5OTk4MzIxNTMzMn0seyJ4Ijo2NTcuNzUsInkiOjIwOTEuNjk5OTgxNjg5NDUzfSx7IngiOjcyNy4wMTEwNjE3MDc5MDUyLCJ5IjoyMTQzLjk5OTk4MDkyNjUxMzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M374.158,1788.4L383.757,1792.567C393.356,1796.733,412.553,1805.067,422.151,1818.783C431.75,1832.5,431.75,1851.6,431.75,1872.45C431.75,1893.3,431.75,1915.9,431.75,1939.967C431.75,1964.033,431.75,1989.567,431.75,2015.1C431.75,2040.633,431.75,2066.167,471.42,2087.509C511.089,2108.852,590.429,2126.003,630.098,2134.579L669.768,2143.155" id="my-svg-L_G_QA_BLOCK_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_QA_BLOCK_0" data-points="W3sieCI6Mzc0LjE1ODM3NjE5NjUyODQsInkiOjE3ODguMzk5OTg2MjY3MDg5OH0seyJ4Ijo0MzEuNzUsInkiOjE4MTMuMzk5OTg2MjY3MDg5OH0seyJ4Ijo0MzEuNzUsInkiOjE4NzAuNjk5OTg1NTA0MTUwNH0seyJ4Ijo0MzEuNzUsInkiOjE5MzguNDk5OTg0NzQxMjExfSx7IngiOjQzMS43NSwieSI6MjAxNS4wOTk5ODMyMTUzMzJ9LHsieCI6NDMxLjc1LCJ5IjoyMDkxLjY5OTk4MTY4OTQ1M30seyJ4Ijo2NzMuNjc3NzI3Nzc0NDIyOSwieSI6MjE0My45OTk5ODA5MjY1MTM3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M262.73,2056.2L267.441,2062.117C272.153,2068.033,281.577,2079.867,346.087,2094.73C410.598,2109.593,530.196,2127.487,589.995,2136.434L649.794,2145.381" id="my-svg-L_G_LOAD_BLOCK_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_LOAD_BLOCK_0" data-points="W3sieCI6MjYyLjcyOTc2NDQ0OTkwOTE3LCJ5IjoyMDU2LjE5OTk4MTY4OTQ1M30seyJ4IjoyOTEsInkiOjIwOTEuNjk5OTgxNjg5NDUzfSx7IngiOjY1My43NSwieSI6MjE0NS45NzIzOTQ4Nzc0NjY3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_RED_GREEN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_GREEN_G_UNIT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_UNIT_G_FMT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_FMT_G_SEC1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_SEC1_G_AB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(423.5, 710.6999969482422)"><g class="label" data-id="L_G_AB_G_INT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-78.5" y="0" width="157" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">clean=0,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> mutation=99</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_G_INT_G_CONTRACT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_CONTRACT_G_DECOUP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_DECOUP_G_QG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(299.75, 1240.0999908447266)"><g class="label" data-id="L_G_QG_G_E2E_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-19" y="0" width="38" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pass</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_G_E2E_G_FULLAUTO_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_FULLAUTO_G_UIUX_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_UIUX_G_CH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_CH_G_QA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_QA_G_PERF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_PERF_G_LOAD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_G_LOAD_G_REVIEW_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(169, 2252.299980163574)"><g class="label" data-id="L_G_REVIEW_TAG_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-55" y="0" width="110" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evidence</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(791.5, 1429.899990081787)"><g class="label" data-id="L_G_AB_BLOCK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-67.5" y="0" width="135" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">any</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> other</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> outcome</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(657.75, 1641.4999885559082)"><g class="label" data-id="L_G_QG_BLOCK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-49" y="0" width="98" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fail</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> high-sev</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(431.75, 1938.499984741211)"><g class="label" data-id="L_G_QA_BLOCK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-75" y="0" width="150" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">evidence-less</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PASS</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(449.93416, 2115.47873)"><g class="label" data-id="L_G_LOAD_BLOCK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-102" y="0" width="204" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SLO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> breach</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> data</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> loss</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RPO</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-RED-0" data-look="classic" transform="translate(513.5, 56.5)"><rect class="basic label-container" style="" x="-102.5" y="-23.5" width="205" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> written</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> first</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GREEN-1" data-look="classic" transform="translate(513.5, 153.5)"><rect class="basic label-container" style="" x="-106.5" y="-23.5" width="213" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Implement</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GREEN</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_UNIT-4" data-look="classic" transform="translate(513.5, 300.5)"><rect class="basic label-container" style="" x="-112.5" y="-23.5" width="225" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-UNIT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> race-clean</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> unit</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_FMT-5" data-look="classic" transform="translate(513.5, 397.5)"><rect class="basic label-container" style="" x="-104.5" y="-23.5" width="209" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-STATIC</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fmt/vet/lint</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_SEC1-6" data-look="classic" transform="translate(513.5, 503.29999923706055)"><rect class="basic label-container" style="" x="-113.5" y="-32.29999923706055" width="227" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-SECRET</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> secret-leak</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">scan</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_AB-7" data-look="classic" transform="translate(513.5, 617.8999977111816)"><rect class="basic label-container" style="" x="-107.5" y="-32.29999923706055" width="215" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-ANTIBLUFF</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> paired</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mutation</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> exit0/exit99</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_INT-8" data-look="classic" transform="translate(423.5, 803.4999961853027)"><rect class="basic label-container" style="" x="-108" y="-32.29999923706055" width="216" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-INT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> real</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Postgres/NATS/MinIO</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_CONTRACT-9" data-look="classic" transform="translate(423.5, 918.0999946594238)"><rect class="basic label-container" style="" x="-125" y="-32.29999923706055" width="250" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-CONTRACT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> OpenAPI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">WS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> envelope</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_DECOUP-10" data-look="classic" transform="translate(423.5, 1032.699993133545)"><rect class="basic label-container" style="" x="-104" y="-32.29999923706055" width="208" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-DECOUPLE</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">config-injected</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reuse</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_QG-11" data-look="classic" transform="translate(423.5, 1147.299991607666)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-SONAR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> G-SNYK</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">quality</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gate</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_E2E-12" data-look="classic" transform="translate(299.75, 1324.0999908447266)"><rect class="basic label-container" style="" x="-119" y="-23.5" width="238" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-E2E</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> canonical</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> journey</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_FULLAUTO-13" data-look="classic" transform="translate(299.75, 1429.899990081787)"><rect class="basic label-container" style="" x="-113" y="-32.29999923706055" width="226" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-FULLAUTO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HelixQA</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">autonomous</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_UIUX-14" data-look="classic" transform="translate(299.75, 1535.6999893188477)"><rect class="basic label-container" style="" x="-123.5" y="-23.5" width="247" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-UI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> G-UX</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> visual</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> a11y</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_CH-15" data-look="classic" transform="translate(299.75, 1641.4999885559082)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-CHALLENGE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> banks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">meta-runner</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_QA-16" data-look="classic" transform="translate(299.75, 1756.0999870300293)"><rect class="basic label-container" style="" x="-103" y="-32.29999923706055" width="206" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-HELIXQA</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> banks</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">evidence</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_PERF-17" data-look="classic" transform="translate(230, 1870.6999855041504)"><rect class="basic label-container" style="" x="-124.5" y="-32.29999923706055" width="249" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-PERF</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> G-BENCH</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SLO</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> baseline</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_LOAD-18" data-look="classic" transform="translate(230, 2015.099983215332)"><rect class="basic label-container" style="" x="-122" y="-41.099998474121094" width="244" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-SCALE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> G-STRESS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-DDOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> G-CHAOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-DR</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-G_REVIEW-19" data-look="classic" transform="translate(169, 2159.4999809265137)"><rect class="basic label-container" style="" x="-126" y="-32.29999923706055" width="252" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">G-REVIEW</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> independent</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GO</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TAG-42" data-look="classic" transform="translate(169, 2320.0999794006348)"><rect class="basic label-container" style="" x="-114" y="-32.29999923706055" width="228" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tag</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PREFIX-version</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 4</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">upstreams</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BLOCK-44" data-look="classic" transform="translate(747.75, 2159.4999809265137)"><polygon points="0,0 173,0 173,-32 0,-32 0,0 -8,0 181,0 181,-32 -8,-32 -8,0" class="label-container" transform="translate(-86.5,16)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RELEASE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> BLOCKER</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/acceptance-gate-ladder.mmd"><code>diagrams/acceptance-gate-ladder.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Work always begins in the author loop at top: a
+<strong>RED</strong> test is written first and the author implements
+only enough to reach <strong>GREEN</strong> (<a
+href="./tdd-skeletons.md#1-the-redgreen-loop">tdd-skeletons.md §1</a>).
+From there the change descends three gate tiers. <strong>Gate 1
+(pre-commit)</strong> is the fast local band that runs on every commit:
+race-clean unit tests (<code>G-UNIT</code>), formatting/vet/lint
+(<code>G-STATIC</code>), a secret-leak scan (<code>G-SECRET</code>), and
+the anti-bluff paired-mutation gate (<code>G-ANTIBLUFF</code>), which
+must exit 0 on the clean run and 99 on the planted-mutation run before
+the change may advance.</p>
+<p><strong>Gate 2 (pre-push)</strong> stands up the real local
+dependency stack and runs the integration band: cross-module integration
+against real Postgres/NATS/MinIO (<code>G-INT</code>), the wire-contract
+tests for the OpenAPI 3.1 responses and the WebSocket/SSE envelope
+(<code>G-CONTRACT</code>), the decoupling audit that proves each reused
+submodule is config-injected and project-unaware
+(<code>G-DECOUPLE</code>), and the SonarQube + Snyk quality gate
+(<code>G-SONAR</code>/<code>G-SNYK</code>). A failure here bounces the
+change back to the author or, for a high-severity security finding,
+straight to the release-blocker terminal.</p>
+<p><strong>Gate 3 (pre-tag full-suite)</strong> runs on the
+<code>dev.</code> and <code>sta.</code> tiers before any release tag and
+is the widest band: the end-to-end canonical journey
+(<code>G-E2E</code>), the unattended HelixQA autonomous session
+(<code>G-FULLAUTO</code>), the visual-regression and accessibility gates
+(<code>G-UI</code>/<code>G-UX</code>), the Challenges banks plus their
+meta-runner (<code>G-CHALLENGE</code>), the evidence-backed HelixQA
+banks (<code>G-HELIXQA</code>), the performance/benchmark SLO gates
+(<code>G-PERF</code>/<code>G-BENCH</code>), the load-and-resilience
+family
+(<code>G-SCALE</code>/<code>G-STRESS</code>/<code>G-DDOS</code>/<code>G-CHAOS</code>/<code>G-DR</code>),
+and finally the independent AI review (<code>G-REVIEW</code>) which must
+emit <strong>GO</strong>. Only a fully green, evidence-backed Gate-3
+pass tags a project-prefixed release and fans it out to the four
+upstreams. The dashed edges are the short-circuits to the
+<strong>release-blocker</strong> terminal: any non-{0,99} anti-bluff
+outcome, a failed quality gate or high-severity finding, an
+<strong>evidence-less PASS</strong> from HelixQA, or an SLO breach /
+data loss beyond RPO each block the tag immediately regardless of the
+other gates.</p>
+<h2 id="gate-register-one-row-per-type">2. Gate register (one row per
+type)</h2>
+<p><code>●</code> mandatory · pass conditions are written to be
+script-decidable. “Tier” is the ladder band from §1. Gate IDs are stable
+and referenced from the other testing docs and from the <a
+href="../development/index.md">development</a> ATM-NNN items.</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 17%" />
+<col style="width: 43%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate ID</th>
+<th>Type</th>
+<th style="text-align: center;">Tier</th>
+<th>Precondition</th>
+<th>Pass condition (script-decidable)</th>
+<th style="text-align: center;">Blocking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>G-UNIT</code></td>
+<td>Unit</td>
+<td style="text-align: center;">1</td>
+<td>package compiles</td>
+<td><code>go test -race ./...</code> exit 0; no data race;
+<code>go-mutesting</code> survivors triaged/waived</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-STATIC</code></td>
+<td>(all)</td>
+<td style="text-align: center;">1</td>
+<td>working tree</td>
+<td><code>gofmt -l</code> empty, <code>go vet</code> clean,
+TS/Kotlin/Swift/Rust lint clean</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-SECRET</code></td>
+<td>Security</td>
+<td style="text-align: center;">1</td>
+<td>working tree</td>
+<td>secret-leak scan finds 0 credentials in code/tests/logs
+(<code>security/pkg/pii</code>)</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-ANTIBLUFF</code></td>
+<td>(scaffold deps)</td>
+<td style="text-align: center;">1</td>
+<td>touched scaffold module</td>
+<td>clean run exit 0 <strong>and</strong> planted-mutation run exit 99;
+any other outcome blocks</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-INT</code></td>
+<td>Integration</td>
+<td style="text-align: center;">2</td>
+<td>local deps up (Podman)</td>
+<td>all cross-module contract + critical-path integration tests GREEN
+against real deps; no fakes beyond unit</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-CONTRACT</code></td>
+<td>Integration</td>
+<td style="text-align: center;">2</td>
+<td>API area OpenAPI/event spec</td>
+<td>responses validate against <code>../api/openapi.yaml</code>:
+<code>/v1/embeddings</code> OpenAI envelope + index order + config
+dimension; <code>/v1/search</code> ranked envelope + real-embedder +
+503-on-hash; <code>/v1/downloads</code> enqueue
+<code>{job_id,state}</code> + standardized completion callback; WS
+<code>ProcessingEvent</code> envelope</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-DECOUPLE</code></td>
+<td>Integration</td>
+<td style="text-align: center;">2</td>
+<td>reused submodule under test</td>
+<td>module constructed from config only; no Thready-specific
+globals/imports; project-unaware</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-SONAR</code></td>
+<td>Security/quality</td>
+<td style="text-align: center;">2</td>
+<td>scanner + server up</td>
+<td>Quality Gate PASS on new code (0 new Blocker/Critical vuln/bug,
+hotspots 100% reviewed, dup &lt; 3%, new-code line cov ≥ 80%)</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-SNYK</code></td>
+<td>Security</td>
+<td style="text-align: center;">2</td>
+<td>manifests resolved</td>
+<td>0 new high/critical dependency or <code>snyk code</code> findings;
+container image scan clean</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-E2E</code></td>
+<td>E2E</td>
+<td style="text-align: center;">3</td>
+<td><code>dev.</code> stack live</td>
+<td>canonical journey <em>add thread → classify → dispatch Skill →
+status reply + asset + embedding → find via <code>/v1/search</code></em>
+passes with evidence</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-FULLAUTO</code></td>
+<td>Full-automation</td>
+<td style="text-align: center;">3</td>
+<td><code>dev.</code> + banks</td>
+<td><code>helixqa autonomous</code> reaches configured coverage target
+unattended; findings ticketed; 0 unresolved critical</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-UI</code></td>
+<td>UI</td>
+<td style="text-align: center;">3</td>
+<td>built clients</td>
+<td>0 unreviewed visual diff on design-system components + key screens,
+light+dark (Panoptic/VisualRegression/ScreenDiff)</td>
+<td style="text-align: center;">● (clients)</td>
+</tr>
+<tr>
+<td><code>G-UX</code></td>
+<td>UX</td>
+<td style="text-align: center;">3</td>
+<td>built clients</td>
+<td>0 critical WCAG a11y violations (<code>cypress-axe</code>);
+documented flows dead-end-free; issuedetector 0 unresolved critical</td>
+<td style="text-align: center;">● (clients)</td>
+</tr>
+<tr>
+<td><code>G-CHALLENGE</code></td>
+<td>Challenges</td>
+<td style="text-align: center;">3</td>
+<td>banks registered</td>
+<td>every Thready bank runs GREEN with ≥1 passing assertion
+<strong>and</strong> ≥1 recorded action
+(<code>ValidateAntiBluff</code>); meta-gate clean=0 / mutation=99</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-HELIXQA</code></td>
+<td>HelixQA</td>
+<td style="text-align: center;">3</td>
+<td>banks + target app</td>
+<td>every PASS carries the bank’s <code>required_evidence</code>; 0
+evidence-less PASS; 0 crash/ANR from <code>detector</code></td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-PERF</code></td>
+<td>Performance</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code> prod-like</td>
+<td>k6 thresholds hold: API p95 &lt; 150 ms, search p95 &lt; 500 ms,
+page &lt; 1.5 s; corroborated by ClickHouse histograms</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-BENCH</code></td>
+<td>Benchmarking</td>
+<td style="text-align: center;">3</td>
+<td>baseline stored</td>
+<td><code>benchstat baseline new</code> shows no significant regression
+without a waiver</td>
+<td style="text-align: center;">●</td>
+</tr>
+<tr>
+<td><code>G-SCALE</code></td>
+<td>Scaling</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code> at scale</td>
+<td>throughput scales ~linearly with workers/replicas; search &lt; 500
+ms at 50 TB-class index; single-claim holds under storm</td>
+<td style="text-align: center;">● (svc)</td>
+</tr>
+<tr>
+<td><code>G-STRESS</code></td>
+<td>Stress</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code></td>
+<td>beyond-capacity ramp degrades gracefully (queues/429/back-pressure),
+no OOM/crash, auto-recovers; no <code>pprof</code> leak at the knee</td>
+<td style="text-align: center;">● (svc)</td>
+</tr>
+<tr>
+<td><code>G-DDOS</code></td>
+<td>DDoS</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code> + ratelimiter</td>
+<td>under flood the rate-limiter sheds deterministically (429 +
+<code>Retry-After</code>), legit p95 within SLO or graceful, no
+crash/OOM</td>
+<td style="text-align: center;">● (svc)</td>
+</tr>
+<tr>
+<td><code>G-CHAOS</code></td>
+<td>Chaos</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code> + injectors</td>
+<td>mid-flight kill → exactly-once resume (no dup
+reply/asset/embedding); durable consumers replay on reconnect</td>
+<td style="text-align: center;">● (svc)</td>
+</tr>
+<tr>
+<td><code>G-DR</code></td>
+<td>Chaos/DR</td>
+<td style="text-align: center;">3</td>
+<td><code>sta.</code> + backups</td>
+<td>full restore from daily-full + hourly-incrementals completes within
+<strong>RTO ≈ 4 h</strong>, loses ≤ <strong>RPO ≈ 1 h</strong></td>
+<td style="text-align: center;">● (svc)</td>
+</tr>
+<tr>
+<td><code>G-REVIEW</code></td>
+<td>(all)</td>
+<td style="text-align: center;">3</td>
+<td>gates 1–3 green</td>
+<td>independent AI review (Fable @ xhigh, Opus xhigh fallback) emits
+<strong>GO</strong> across the 8 mandated angles</td>
+<td style="text-align: center;">●</td>
+</tr>
+</tbody>
+</table>
+<h2 id="evidence-contract-per-gate">3. Evidence contract per gate</h2>
+<p><code>[CONSTITUTION §11.4]</code> — beyond unit, a green result is a
+<strong>critical defect</strong> unless it carries positive runtime
+evidence. The evidence a gate must emit is a fixed contract so the
+pre-tag retest can assert its <strong>presence</strong>, not merely
+trust the summary line. Evidence artifact types are the verified HelixQA
+<code>evidence.Type</code> set — <code>screenshot</code>,
+<code>video</code>, <code>logcat</code>, <code>stacktrace</code>,
+<code>console_log</code>, <code>audio</code>
+<code>[IN-HOUSE: helix_qa pkg/evidence/collector.go]</code> — plus the
+challenge-layer <code>RecordedActions</code> action trace
+<code>[IN-HOUSE: challenges pkg/challenge/antibluff.go]</code>.</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 54%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Minimum evidence emitted</th>
+<th>Where consumed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>G-UNIT</code>/<code>G-STATIC</code>/<code>G-SECRET</code>/<code>G-ANTIBLUFF</code></td>
+<td>exit codes + JUnit/<code>go test -json</code> logs; mutation
+exit-pair record</td>
+<td>git-hook log, SonarQube</td>
+</tr>
+<tr>
+<td><code>G-INT</code>/<code>G-CONTRACT</code>/<code>G-DECOUPLE</code></td>
+<td>request/response transcripts
+(<code>LogPaths.APIRequests</code>/<code>APIResponses</code>), container
+logs</td>
+<td>Challenge report, coverage matrix</td>
+</tr>
+<tr>
+<td><code>G-SONAR</code>/<code>G-SNYK</code></td>
+<td>Quality-Gate JSON + Snyk SARIF; waiver records</td>
+<td>quality dashboard, risk register</td>
+</tr>
+<tr>
+<td><code>G-E2E</code>/<code>G-FULLAUTO</code></td>
+<td><code>video</code> timeline + <code>screenshot</code> per step +
+<code>console_log</code>; ticket Markdown for any failure</td>
+<td>HelixQA reporter, AI fix pipeline</td>
+</tr>
+<tr>
+<td><code>G-UI</code>/<code>G-UX</code></td>
+<td>before/after <code>screenshot</code> diffs (light+dark), a11y
+violation report</td>
+<td>visual-regression review</td>
+</tr>
+<tr>
+<td><code>G-CHALLENGE</code></td>
+<td><code>challenge.Result</code> JSON: <code>Assertions[]</code> (≥1
+<code>Passed</code>), <code>RecordedActions[]</code> (≥1),
+<code>Metrics</code>, <code>Outputs</code>, <code>Logs</code></td>
+<td><code>report.Reporter</code>, meta-runner</td>
+</tr>
+<tr>
+<td><code>G-HELIXQA</code></td>
+<td>the case’s declared <code>required_evidence</code> items
+(e.g. <code>[screenshot, video]</code>) all present</td>
+<td>HelixQA validator, pre-tag gate</td>
+</tr>
+<tr>
+<td><code>G-PERF</code>/<code>G-BENCH</code></td>
+<td>k6 threshold JSON, <code>benchstat</code> delta, <code>pprof</code>
+profiles, ClickHouse histogram export</td>
+<td>SLO gate, benchmark baseline store</td>
+</tr>
+<tr>
+<td><code>G-SCALE</code>/<code>G-STRESS</code>/<code>G-DDOS</code></td>
+<td>load histograms (SLO-bucketed), rate-limiter 429 counts,
+<code>pprof</code> heap/goroutine at knee</td>
+<td>performance report</td>
+</tr>
+<tr>
+<td><code>G-CHAOS</code>/<code>G-DR</code></td>
+<td>experiment log (injection → observed behavior), restore timing vs
+RTO/RPO, reconcile diff</td>
+<td>DR drill report, deployment runbook</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>required_evidence</code> field is a <strong>first-class
+YAML field</strong> on every HelixQA test case (<code>schema.go</code>
+<code>RequiredEvidence []string</code>), so a bank author declares per
+case exactly which artifacts a PASS must produce; the validator fails
+the case if any declared artifact is missing — this is the mechanical
+realization of the anti-bluff Operative Rule at the bank layer.</p>
+<h2 id="blocking-severity-policy">4. Blocking-severity policy</h2>
+<p>Not every red result blocks a release tag identically. The policy
+classifies gate failures so the pre-tag retest and the AI fix pipeline
+can triage deterministically:</p>
+<ul>
+<li><strong>Release blocker (hard stop).</strong>
+<code>G-ANTIBLUFF</code> non-{0,99}; any <code>G-HELIXQA</code>
+<strong>evidence-less PASS</strong>; a new Blocker/Critical security
+finding (<code>G-SONAR</code>/<code>G-SNYK</code>); an SLO breach at
+<code>G-PERF</code>; data loss beyond RPO or restore beyond RTO at
+<code>G-DR</code>; a <code>G-CHAOS</code> duplicate-processing
+observation. These map to
+<code>[CONSTITUTION CONST-035 / Art. XI §11.9]</code> — a bluff is
+treated as severe as a missing feature.</li>
+<li><strong>Iterate (return to author).</strong>
+<code>G-UNIT</code>/<code>G-INT</code>/<code>G-E2E</code>/<code>G-CONTRACT</code>
+red, <code>G-BENCH</code> regression without waiver, <code>G-UX</code>
+critical a11y, <code>G-UI</code> unreviewed diff. The change re-enters
+the ladder after a fix.</li>
+<li><strong>Track (waiver-eligible).</strong> <code>G-BENCH</code>
+regression with an approved waiver, a Sonar code-smell below Blocker, a
+<code>G-STRESS</code> knee below the Large-scale target that is
+documented and scheduled, and a <strong>FLAKY</strong> outcome (a case
+that needed a bounded retry to pass, per <a
+href="./test-strategy.md#12-test-determinism--flaky-test-policy">test-strategy.md
+§12</a>). These become tracked risks in the workable-item register
+<code>[RESEARCH: final §22.4]</code>.</li>
+</ul>
+<p><strong>Retries never mask a blocker.</strong> The bounded-retry
+policy (test-strategy §12) is explicitly <strong>forbidden</strong> for
+<code>G-ANTIBLUFF</code>, <code>G-CONTRACT</code>,
+<code>G-SECRET</code>/<code>G-SONAR</code>/<code>G-SNYK</code> and
+<code>G-DR</code>: a bluff, a broken wire contract, a leaked secret or a
+missed RPO/RTO is never flaky. A case that flakes on ≥ 2 of the last 20
+recorded runs is auto-quarantined and reported as an <strong>open
+coverage hole</strong> for its cell — it cannot count toward GREEN while
+quarantined.</p>
+<h2 id="the-anti-bluff-meta-gate">5. The anti-bluff meta-gate</h2>
+<p>The bank engines are themselves test infrastructure, so their honesty
+is gated <strong>meta</strong>: the banks that validate features are
+themselves validated. Two verified in-house realizations back
+<code>G-ANTIBLUFF</code> and <code>G-CHALLENGE</code>:</p>
+<ol type="1">
+<li><strong>Challenge-result validation</strong> —
+<code>challenge.ValidateAntiBluff(r)</code> returns
+<code>ErrBluffPass</code> unless a <code>Status=Passed</code> result
+carries <strong>≥1 <code>RecordedAction</code></strong> <em>and</em>
+<strong>≥1 passing <code>AssertionResult</code></strong>; a
+metadata-only “pass” is rejected in-engine
+<code>[IN-HOUSE: challenges pkg/challenge/antibluff.go]</code>. Thready
+challenges therefore cannot report green without proof the runtime
+actually did something.</li>
+<li><strong>Bank-inventory mutation</strong> — the challenges repo ships
+<code>scripts/anti-bluff/bluff-scanner.sh</code> and a
+<code>pre-commit-hook.sh</code>
+(<code>scripts/anti-bluff/install-hooks.sh</code> wires them), and
+HelixQA ships
+<code>challenges/scripts/mutation_ratchet_challenge.sh</code> and
+<code>challenges/scripts/helixqa_orchestrator_challenge.sh</code> (an
+8-phase orchestrator-surface validator with a built-in paired mutation)
+<code>[IN-HOUSE: challenges, helix_qa]</code>. Thready’s
+describe-Challenge meta-runner (<a
+href="./challenges-scenarios.md#7-the-describe-challenge-meta-runner-anti-bluff">challenges-scenarios.md
+§7</a>) is realized by these: a clean tree exits 0, a planted inventory
+mismatch exits 99.</li>
+</ol>
+<h2 id="gate-exit-code-protocol">6. Gate exit-code protocol</h2>
+<p>Every gate script obeys a uniform exit-code protocol so the ladder
+driver can compose them without parsing prose:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 30%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Exit</th>
+<th>Meaning</th>
+<th>Ladder action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>gate passed with required evidence</td>
+<td>advance</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>gate failed (ordinary red)</td>
+<td>iterate → author</td>
+</tr>
+<tr>
+<td><code>77</code></td>
+<td>gate skipped (missing tier/tooling, e.g. no device farm, no
+pandoc)</td>
+<td>record SKIP, do not block; open item</td>
+</tr>
+<tr>
+<td><code>99</code></td>
+<td>anti-bluff violation / bluff detected / evidence-less PASS</td>
+<td><strong>release blocker</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Exit <code>77</code> is the SKIP channel for the genuinely-blocked
+open items (<a href="#8-gap-register-items-addressed">§8</a>): a gate
+that cannot run because its tier is unprovisioned (HarmonyOS/Aurora
+device farm, <code>pandoc</code>/<code>weasyprint</code> for the docs
+export) emits <code>77</code> and is recorded as a tracked SKIP rather
+than a false GREEN or a spurious block. Exit <code>99</code> is reserved
+exclusively for the anti-bluff class so a bluff can never be confused
+with an ordinary failure.</p>
+<h2 id="waivers">7. Waivers</h2>
+<p>A waiver is the only way past a non-blocker gate failure and is
+itself audited. A waiver MUST record: the gate ID, the exact finding,
+the justification, the owner, an expiry, and a linked workable item.
+Waivers surface in the pre-tag report and in the SonarQube/risk
+dashboards <code>[RESEARCH: final §22.4]</code>. <strong>Release-blocker
+gates (§4) are never waivable</strong> — a bluff, an evidence-less PASS,
+a Critical vulnerability, an SLO breach or RPO/RTO miss cannot be
+waived, only fixed.</p>
+<h2 id="gap-register-items-addressed">8. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §9.4]</code> DocProcessor feature-map → coverage — each
+gate row annotates the coverage cell it fills (<a
+href="./test-strategy.md#10-feature-map--coverage-tracking-docprocessor">test-strategy.md
+§10</a>).</li>
+<li><code>[GAP: §12 anti-bluff sweep]</code> — <code>G-ANTIBLUFF</code>
++ the §5 meta-gate, backed by verified <code>ValidateAntiBluff</code>
+and the real anti-bluff scripts.</li>
+<li><code>[GAP: §12 CI-equivalent gating]</code> — the three-tier ladder
+is entirely local hooks/timers.</li>
+<li><code>[GAP: §9.1]</code> HelixQA evidence — <code>G-HELIXQA</code>
+enforces per-case <code>required_evidence</code>.</li>
+<li><code>[GAP: §9.3]</code> visual-regression family —
+<code>G-UI</code> wires Panoptic/VisualRegression/ScreenDiff into Gate 3
+(and pre-commit for touched UI).</li>
+</ul>
+<p>Open items and their SKIP (<code>77</code>) channels are tracked in
+<a href="./index.md#7-open-items-tracked-in-this-area">index.md
+§7</a>.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

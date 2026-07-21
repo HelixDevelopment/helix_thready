@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Authentication &amp; Authorization</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Authentication &amp;
+Authorization</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#scope-grounding" id="toc-scope-grounding">1. Scope &amp;
+grounding</a></li>
+<li><a href="#credential-types" id="toc-credential-types">2. Credential
+types</a></li>
+<li><a href="#jwt-access-refresh" id="toc-jwt-access-refresh">3. JWT
+access + refresh</a></li>
+<li><a href="#api-keys-with-scopes" id="toc-api-keys-with-scopes">4. API
+keys with scopes</a></li>
+<li><a href="#oauth2-external-linking"
+id="toc-oauth2-external-linking">5. OAuth2 external linking</a></li>
+<li><a href="#three-tier-rbac" id="toc-three-tier-rbac">6. Three-tier
+RBAC</a></li>
+<li><a href="#scope-catalog" id="toc-scope-catalog">7. Scope
+catalog</a></li>
+<li><a href="#mfa-sessions-passwords" id="toc-mfa-sessions-passwords">8.
+MFA, sessions, passwords</a></li>
+<li><a href="#middleware-chain-edge-enforcement"
+id="toc-middleware-chain-edge-enforcement">9. Middleware chain (edge
+enforcement)</a></li>
+<li><a href="#gaps-addressed" id="toc-gaps-addressed">10. Gaps
+addressed</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Authentication & Authorization
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/api/authn-authz.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (API & SDKs)
+  Related         : ./openapi.yaml, ./rest-endpoints.md, ./error-model.md,
+                    ./event-bus-contract.md, ../architecture/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Initial draft grounded in <code>digital.vasic.auth</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (API &amp; SDKs)</td>
+<td>Documented the 4th credential path (HMAC <code>hmacAuth</code> for
+machine callbacks/webhooks); confirmed the 11-scope catalog is 1:1 with
+<code>openapi.yaml</code>; linked contract-tests.md</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (API &amp; SDKs)</td>
+<td><strong>Depth pass, re-verified at source.</strong> Corrected the
+RS256 story: <code>jwt.Config.Secret</code> is <code>[]byte</code> used
+for BOTH sign+verify, so the module natively supports HMAC only —
+RS256/EdDSA is a module extension, and <code>manager.SetKey(...)</code>
+does not exist. Corrected <code>middleware.APIKeyHeader</code> signature
+(2nd arg is a header name, not a store). Added verified
+<code>pkg/oauth.AutoRefresher</code> defaults; the client-side
+<code>pkg/tokenmanager</code> refresh lifecycle; the raw-middleware
+error-body adaptation; <code>accesstoken.RevokeAllForUser</code> for
+logout-all. Closed <code>[OPEN: authz-2]</code> (kid scheme).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--grounding">Scope &amp; grounding</a></li>
+<li><a href="#2-credential-types">Credential types</a></li>
+<li><a href="#3-jwt-access--refresh">JWT access + refresh</a></li>
+<li><a href="#4-api-keys-with-scopes">API keys with scopes</a></li>
+<li><a href="#5-oauth2-external-linking">OAuth2 external
+linking</a></li>
+<li><a href="#6-three-tier-rbac">Three-tier RBAC</a></li>
+<li><a href="#7-scope-catalog">Scope catalog</a></li>
+<li><a href="#8-mfa-sessions-passwords">MFA, sessions,
+passwords</a></li>
+<li><a href="#9-middleware-chain-edge-enforcement">Middleware chain
+(edge enforcement)</a></li>
+<li><a href="#10-gaps-addressed">Gaps addressed</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<h2 id="scope-grounding">1. Scope &amp; grounding</h2>
+<p>Authentication and authorization are provided by
+<strong><code>digital.vasic.auth</code></strong>
+<code>[IN-HOUSE: auth]</code> <code>[VERIFIED]</code> (read at source:
+module <code>digital.vasic.auth</code>, <code>go 1.25.0</code>),
+composed into a new <strong>User Service</strong>
+<code>[GAP: New#User Service]</code> together with
+<code>security/pkg/policy</code> (enforcer) and the RBAC pattern proven
+in Catalogizer. This resolves Q9/Q10 and gap-register items
+<code>#10 / 7.2</code>.</p>
+<p>The <code>auth</code> module packages actually present at source
+<code>[VERIFIED]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role in Thready</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pkg/jwt</code></td>
+<td><code>Manager.Create/Validate/Refresh</code>,
+<code>Config.SigningMethod</code> — access+refresh tokens</td>
+</tr>
+<tr>
+<td><code>pkg/token</code></td>
+<td><code>Token</code> interface, <code>Claims</code> map helpers,
+in-memory store with <strong>TTL + revocation</strong></td>
+</tr>
+<tr>
+<td><code>pkg/apikey</code></td>
+<td><code>APIKey{Scopes}</code>,
+<code>Generator.Generate(name, scopes, expiry)</code>,
+<code>Validate(store, key)</code>, <code>MaskKey</code>,
+<code>HasScope</code>/<code>HasAllScopes</code></td>
+</tr>
+<tr>
+<td><code>pkg/oauth</code> + <code>pkg/oauth2provider</code></td>
+<td>OAuth2 credential management, refresh, caching, rate limiting</td>
+</tr>
+<tr>
+<td><code>pkg/middleware</code></td>
+<td><code>BearerToken</code>, <code>APIKeyHeader</code>,
+<code>RequireScopes</code>, <code>Chain</code>,
+<code>ClaimsFromContext</code>, <code>ScopesFromContext</code></td>
+</tr>
+<tr>
+<td><code>pkg/accesstoken</code> / <code>pkg/tokenmanager</code></td>
+<td>token lifecycle helpers</td>
+</tr>
+<tr>
+<td><code>pkg/i18n</code></td>
+<td>locale-aware error translation (NoopTranslator default; Thready
+injects HelixTranslate)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="credential-types">2. Credential types</h2>
+<p>Three credential types authenticate against the <strong>same</strong>
+RBAC enforcer (Q10):</p>
+<ul>
+<li><strong>JWT (access + refresh)</strong> — interactive clients (web,
+desktop, mobile, TUI login).</li>
+<li><strong>Scoped API keys (<code>sk-…</code>)</strong> —
+SDK/CLI/automation (non-interactive).</li>
+<li><strong>OAuth2 authorization-code</strong> — linking external
+services (Dropbox/GDrive/OneDrive), not primary user login.</li>
+</ul>
+<p>In <code>openapi.yaml</code> these are the <code>bearerAuth</code>,
+<code>apiKeyAuth</code>, and <code>oauth2</code> security schemes. The
+default <code>security</code> requirement is <code>bearerAuth</code> OR
+<code>apiKeyAuth</code>; a handful of operations override it
+(<code>security: []</code> for <code>/auth/login</code>,
+<code>/auth/refresh</code>, <code>/.well-known/jwks.json</code>,
+<code>/healthz</code>, <code>/readyz</code>).</p>
+<p>A <strong>fourth, machine-only credential path</strong> exists for
+server-to-server traffic that is not a user or an SDK: the
+<code>hmacAuth</code> scheme (<code>type: apiKey</code>, header
+<code>X-Thready-Signature</code>, an <strong>HMAC-SHA256</strong> over
+the raw body). It authenticates the <strong>inbound 3rd-party
+callback</strong> (<code>POST /v1/processing/callbacks/{provider}</code>
+— Boba/MeTube/Download Manager) and the <strong>outbound
+<code>eventDelivery</code> webhook</strong>. The shared secret is
+provisioned per provider/sink out of band and rotated via the secrets
+pack; a bad signature is <code>401 unauthenticated</code>. This path
+carries <strong>no RBAC role</strong>
+(<code>x-required-roles: []</code>) — trust is the secret, and the
+effect is scoped to the referenced <code>job_id</code>/sink. See <a
+href="./event-bus-contract.md">event-bus-contract.md</a> §9.</p>
+<h2 id="jwt-access-refresh">3. JWT access + refresh</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="max-width: 1496.5px; background-color: white;" viewBox="-50 -10 1496.5 666" role="graphics-document document" aria-roledescription="sequence"><g><rect x="1207.5" y="580" fill="#eaeaea" stroke="#666" width="189" height="65" name="KMS" rx="3" ry="3" class="actor actor-bottom"/><text x="1302" y="612.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1302" dy="0">security key store + JWKS</tspan></text></g><g><rect x="812.5" y="580" fill="#eaeaea" stroke="#666" width="221" height="65" name="AUTH" rx="3" ry="3" class="actor actor-bottom"/><text x="923" y="612.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="923" dy="0">User Service (digital.vasic.auth)</tspan></text></g><g><rect x="379" y="580" fill="#eaeaea" stroke="#666" width="258" height="65" name="API" rx="3" ry="3" class="actor actor-bottom"/><text x="508" y="612.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="508" dy="0">REST /v1 (middleware.BearerToken)</tspan></text></g><g/><g><line id="actor3" x1="1302" y1="65" x2="1302" y2="580" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="KMS" data-et="life-line" data-id="KMS"/><g id="root-3" data-et="participant" data-type="participant" data-id="KMS"><rect x="1207.5" y="0" fill="#eaeaea" stroke="#666" width="189" height="65" name="KMS" rx="3" ry="3" class="actor actor-top"/><text x="1302" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1302" dy="0">security key store + JWKS</tspan></text></g></g><g><line id="actor2" x1="923" y1="65" x2="923" y2="580" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="AUTH" data-et="life-line" data-id="AUTH"/><g id="root-2" data-et="participant" data-type="participant" data-id="AUTH"><rect x="812.5" y="0" fill="#eaeaea" stroke="#666" width="221" height="65" name="AUTH" rx="3" ry="3" class="actor actor-top"/><text x="923" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="923" dy="0">User Service (digital.vasic.auth)</tspan></text></g></g><g><line id="actor1" x1="508" y1="65" x2="508" y2="580" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="API" data-et="life-line" data-id="API"/><g id="root-1" data-et="participant" data-type="participant" data-id="API"><rect x="379" y="0" fill="#eaeaea" stroke="#666" width="258" height="65" name="API" rx="3" ry="3" class="actor actor-top"/><text x="508" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="508" dy="0">REST /v1 (middleware.BearerToken)</tspan></text></g></g><g><line id="actor0" x1="75" y1="80" x2="75" y2="580" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="U" data-et="life-line" data-id="U"/></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg rect.note[data-look="neo"]{stroke:#999;fill:#666;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg text.actor&gt;tspan{fill:#333;stroke:none;}#my-svg .actor-line{stroke:hsl(0, 0%, 83%);}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:#333;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:#333;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:#333;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#my-svg .note{stroke:#999;fill:#666;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:#fff;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#eee;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#999;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="note" data-id="i10"><rect x="50" y="523" fill="#EDF2AE" stroke="#666" width="483" height="37" class="note"/><text x="292" y="528" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="292">API keys (sk-... scoped) and OAuth2 external linking are alternate credential paths into the same RBAC enforcer.</tspan></text></g><g class="actor-man actor-top" name="U" data-et="participant" data-type="actor" data-id="U" style="stroke: rgb(212, 212, 212);"><line id="actor-man-torso0" x1="75" y1="25" x2="75" y2="45"/><line id="actor-man-arms0" x1="57" y1="33" x2="93" y2="33"/><line x1="57" y1="60" x2="75" y2="45"/><line x1="75" y1="45" x2="91" y2="60"/><circle cx="75" cy="10" r="15" width="150" height="65"/><text x="75" y="67.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Client</tspan></text></g><text x="290" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">POST /v1/auth/login {email, password, totp?}</text><line x1="76" y1="109" x2="504" y2="109" class="messageLine0" data-et="message" data-id="i0" data-from="U" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="714" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">verify Argon2id hash + TOTP (admin tiers mandatory)</text><line x1="509" y1="153" x2="919" y2="153" class="messageLine0" data-et="message" data-id="i1" data-from="API" data-to="AUTH" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1111" y="168" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">sign access (RS256/EdDSA, 15m) + refresh (7d)</text><line x1="924" y1="197" x2="1298" y2="197" class="messageLine0" data-et="message" data-id="i2" data-from="AUTH" data-to="KMS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="501" y="212" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">200 {access_token, refresh_token, token_type, expires_in}</text><line x1="922" y1="243" x2="79" y2="243" class="messageLine1" data-et="message" data-id="i3" data-from="AUTH" data-to="U" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="290" y="258" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">GET /v1/... Authorization: Bearer &lt;access&gt;</text><line x1="76" y1="287" x2="504" y2="287" class="messageLine0" data-et="message" data-id="i4" data-from="U" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="904" y="302" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">fetch JWKS (cached), verify sig + iss/aud/exp + scopes</text><line x1="509" y1="331" x2="1298" y2="331" class="messageLine0" data-et="message" data-id="i5" data-from="API" data-to="KMS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="293" y="346" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">200 | 401 unauthenticated | 403 permission_denied</text><line x1="507" y1="377" x2="79" y2="377" class="messageLine1" data-et="message" data-id="i6" data-from="API" data-to="U" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="290" y="392" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">POST /v1/auth/refresh {refresh_token}</text><line x1="76" y1="423" x2="504" y2="423" class="messageLine0" data-et="message" data-id="i7" data-from="U" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="714" y="438" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">validate refresh, rotate, revoke old (token store)</text><line x1="509" y1="467" x2="919" y2="467" class="messageLine0" data-et="message" data-id="i8" data-from="API" data-to="AUTH" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="501" y="482" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">200 new {access_token, refresh_token}</text><line x1="922" y1="513" x2="79" y2="513" class="messageLine1" data-et="message" data-id="i9" data-from="AUTH" data-to="U" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><g class="actor-man actor-bottom" name="U" style="stroke: rgb(212, 212, 212);"><line id="actor-man-torso3" x1="75" y1="605" x2="75" y2="625"/><line id="actor-man-arms3" x1="57" y1="613" x2="93" y2="613"/><line x1="57" y1="640" x2="75" y2="625"/><line x1="75" y1="625" x2="91" y2="640"/><circle cx="75" cy="590" r="15" width="150" height="65"/><text x="75" y="647.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-man" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Client</tspan></text></g></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/auth-flow.mmd">diagrams/auth-flow.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A client posts its email, password and — for admin
+tiers — a TOTP code to <code>POST /v1/auth/login</code>. The User
+Service verifies the Argon2id password hash and the TOTP, then asks the
+<code>security</code> key store to mint two tokens: a short-lived access
+token (15 minutes) and a longer-lived refresh token (7 days). Both are
+returned as a <code>TokenPair</code>.</p>
+<p>On every subsequent call the client sends
+<code>Authorization: Bearer &lt;access_token&gt;</code>; the
+<code>middleware.BearerToken</code> validator fetches the JWKS (cached),
+verifies the signature and the standard claims (issuer, audience,
+expiry) plus the <code>scopes</code> claim, and either lets the request
+proceed (200), rejects an invalid/expired credential (401
+<code>unauthenticated</code>), or rejects a credential lacking the
+required scope/role (403 <code>permission_denied</code>). Because the
+JWKS is cached with a short TTL and refetched on an unknown
+<code>kid</code>, verification adds no per-request network hop in steady
+state.</p>
+<p>When the access token nears expiry the client calls
+<code>POST /v1/auth/refresh</code>; the service validates the refresh
+token, issues a fresh pair, and <strong>revokes the old refresh
+token</strong> via the token store, giving rotation. API keys and OAuth2
+are alternate entry paths that resolve into the very same claims/scopes
+model, so authorization logic is written once — the note at the bottom
+of the diagram makes explicit that all three credential types converge
+on one enforcer.</p>
+<p><strong>Signing algorithm — the gap, verified precisely.</strong>
+<code>[GAP: #10 / 7.2]</code> <code>[VERIFIED: pkg/jwt/jwt.go]</code>
+The <code>auth</code> module’s <code>jwt.DefaultConfig</code> sets
+<code>SigningMethod: gojwt.SigningMethodHS256</code> (symmetric HMAC,
+<code>jwt.go:30</code>). HS256 is adequate for a single service that
+both signs and verifies, but Thready is a <strong>multi-service</strong>
+system (REST API, Event Bus service, Asset Service, callback ingress)
+where every service must <em>verify</em> tokens without holding the
+<em>signing</em> secret — so Thready needs <strong>RS256 (or
+EdDSA)</strong> asymmetric signing.</p>
+<p>The gap is <strong>deeper than a config flag</strong>, and the
+earlier draft overstated the module’s readiness. Read at source,
+<code>jwt.Config</code> carries a single <code>Secret []byte</code>
+field (<code>jwt.go:18</code>) that is used for <strong>both</strong>
+signing (<code>token.SignedString(m.config.Secret)</code>,
+<code>jwt.go:109</code>) <strong>and</strong> verification (the keyfunc
+returns <code>m.config.Secret</code>, <code>jwt.go:127</code>). That
+shape only supports symmetric algorithms: <code>gojwt</code>’s
+RS256/EdDSA signer requires a <code>*rsa.PrivateKey</code> /
+<code>ed25519.PrivateKey</code> for signing and the matching
+<strong>public</strong> key for verification, which a single
+<code>[]byte</code> cannot represent. There is also <strong>no
+<code>SetKey</code> method</strong> on <code>jwt.Manager</code> — its
+methods are exactly <code>NewManager</code>, <code>SetParser</code>,
+<code>Create</code>, <code>Validate</code>, <code>Refresh</code>
+(<code>jwt.go</code>). So RS256/EdDSA requires <strong>one</strong>
+of:</p>
+<ul>
+<li><code>[BUILD-NEW]</code> extend <code>jwt.Config</code> in the
+<code>auth</code> module to accept <code>crypto.Signer</code> + a
+public-key verifier (a small, upstreamable change),
+<strong>or</strong></li>
+<li>the <strong>User Service</strong> wraps
+<code>github.com/golang-jwt/jwt/v5</code> directly for the asymmetric
+sign/verify path and reuses the module only for the symmetric/internal
+cases.</li>
+</ul>
+<p>Thready takes the first option (module extension, so every service
+keeps one auth dependency). The <em>contract</em> is unchanged either
+way — tokens are RS256/EdDSA, verified via JWKS:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// PROPOSED extended config (module change tracked as [BUILD-NEW]); illustrative.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>cfg <span class="op">:=</span> jwt<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    SigningMethod<span class="op">:</span> gojwt<span class="op">.</span>SigningMethodRS256<span class="op">,</span>        <span class="co">// or EdDSA (Ed25519)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Issuer<span class="op">:</span>        <span class="st">&quot;thready-user-service&quot;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Expiration<span class="op">:</span>    <span class="dv">15</span> <span class="op">*</span> time<span class="op">.</span>Minute<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Signer/Verifier added by the extension; private key loaded runtime-only</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// from a gitignored secret (CONST §11.4.10), never the []byte Secret.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> jwt<span class="op">.</span>NewManager<span class="op">(&amp;</span>cfg<span class="op">)</span>                     <span class="co">// Create() signs, Validate() verifies</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// every OTHER service verifies against the PUBLIC JWKS at /.well-known/jwks.json</span></span></code></pre></div>
+<p>The public keys are published at
+<code>GET /v1/.well-known/jwks.json</code> (unauthenticated) so any
+service or SDK can verify tokens; <strong>key rotation</strong>
+publishes the new key with a fresh <code>kid</code> before retiring the
+old, and access tokens carry the <code>kid</code> header so verifiers
+pick the right key. Crucially, the algorithm-confusion protection is
+<strong>already real in the module</strong>:
+<code>jwt.Manager.Validate</code> pins the algorithm with
+<code>if t.Method.Alg() != m.config.SigningMethod.Alg() { return error }</code>
+(<code>jwt.go:122</code>) <code>[VERIFIED]</code>, so downgrade attacks
+(<code>alg: none</code>, HS256-signed-with-the-RSA- public-key) are
+rejected regardless of which sign/verify wiring is chosen. That
+guarantee is what the §security negative controls in <a
+href="./contract-tests.md">contract-tests.md</a> assert.</p>
+<p><strong>Access-token claims</strong>
+(<code>[DEFAULT — adjustable]</code>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;iss&quot;</span><span class="fu">:</span> <span class="st">&quot;thready-user-service&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sub&quot;</span><span class="fu">:</span> <span class="st">&quot;b1e2…user-uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;aud&quot;</span><span class="fu">:</span> <span class="st">&quot;thready-api&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;exp&quot;</span><span class="fu">:</span> <span class="dv">1721560800</span><span class="fu">,</span> <span class="dt">&quot;iat&quot;</span><span class="fu">:</span> <span class="dv">1721559900</span><span class="fu">,</span> <span class="dt">&quot;kid&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-07&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;role&quot;</span><span class="fu">:</span> <span class="st">&quot;account_admin&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;account_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a1c2…account-uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scopes&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;posts:read&quot;</span><span class="ot">,</span> <span class="st">&quot;posts:write&quot;</span><span class="ot">,</span> <span class="st">&quot;assets:read&quot;</span><span class="ot">,</span> <span class="st">&quot;accounts:admin&quot;</span><span class="ot">]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="api-keys-with-scopes">4. API keys with scopes</h2>
+<p>Non-interactive clients mint keys at <code>POST /v1/api-keys</code>
+with an explicit scope list. Grounded on <code>pkg/apikey</code>
+<code>[VERIFIED]</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>gen <span class="op">:=</span> apikey<span class="op">.</span>NewGenerator<span class="op">(&amp;</span>apikey<span class="op">.</span>GeneratorConfig<span class="op">{</span>Prefix<span class="op">:</span> <span class="st">&quot;sk-&quot;</span><span class="op">,</span> Length<span class="op">:</span> <span class="dv">32</span><span class="op">})</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>key<span class="op">,</span> _ <span class="op">:=</span> gen<span class="op">.</span>Generate<span class="op">(</span><span class="st">&quot;ci-bot&quot;</span><span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;posts:read&quot;</span><span class="op">,</span> <span class="st">&quot;search:read&quot;</span><span class="op">},</span> expiry<span class="op">)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// key.Scopes == [&quot;posts:read&quot;,&quot;search:read&quot;]; store.Store(key)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// On each request: apikey.Validate(store, presented) → *APIKey, then key.HasAllScopes(required)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Logs/UI only ever show apikey.MaskKey(key) → &quot;sk-ab…yz&quot;</span></span></code></pre></div>
+<p>Rules:</p>
+<ul>
+<li>The full secret is returned <strong>once</strong> at creation
+(<code>ApiKey.secret</code>), never again; only the masked form
+(<code>apikey.MaskKey</code>) is shown thereafter.</li>
+<li>Keys are presented as <code>Authorization: Bearer sk-…</code>; the
+<code>apiKeyAuth</code> scheme in <code>openapi.yaml</code>. Scope
+enforcement is identical to JWT scopes
+(<code>RequireScopes</code>).</li>
+<li>Keys carry an optional <code>expires_at</code>; expired/revoked keys
+fail <code>apikey.Validate</code>.</li>
+<li>A key’s scopes are a <strong>subset</strong> of the minting
+principal’s scopes — a <code>user</code> cannot mint a
+<code>root:admin</code> key (enforced server-side, returns 403).</li>
+</ul>
+<h2 id="oauth2-external-linking">5. OAuth2 external linking</h2>
+<p>OAuth2 (via <code>pkg/oauth</code> / <code>pkg/oauth2provider</code>)
+is used to <strong>link external accounts</strong> (cloud storage
+presets that also appear in <code>Auth-KMP</code>), not for primary
+login. Flow:
+<code>GET /v1/auth/oauth2/authorize?provider=dropbox&amp;redirect_uri=…</code>
+→ provider consent → callback exchanges the code for provider tokens,
+which are stored <strong>encrypted</strong> (AES-256-GCM via
+<code>security/pkg/securestorage</code>) against the user, and
+auto-refreshed with caching + rate limiting by the module. Provider
+tokens never enter Thready JWTs.</p>
+<p><strong>Verified refresh behaviour
+<code>[VERIFIED: pkg/oauth/oauth.go]</code>.</strong> The module’s
+<code>oauth.AutoRefresher</code>
+(<code>NewAutoRefresher(reader, refresher, config, endpoints)</code>)
+proactively refreshes a provider credential when it is within a
+threshold of expiry, backed by a cache and a per-provider rate limit.
+<code>oauth.DefaultConfig()</code> sets
+<code>RefreshThreshold: 10m</code>, <code>CacheDuration: 5m</code>,
+<code>RateLimitInterval: 30s</code> (<code>oauth.go:271</code>), and
+<code>GetCredentials</code> returns the cached credential while fresh,
+re-reads on staleness, and only re-hits the provider token endpoint when
+<code>NeedsRefresh</code> is true and the rate-limit window has elapsed
+— so a burst of asset operations against a linked Dropbox account never
+stampedes the provider. If a token is <strong>expired and refresh
+fails</strong>, <code>GetCredentials</code> returns an error (the Asset
+Service surfaces this as <code>503 unavailable</code> for that link),
+rather than silently serving a dead token.</p>
+<h2 id="three-tier-rbac">6. Three-tier RBAC</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1804.7px; background-color: white;" viewBox="0 0 1804.699951171875 629.7000122070312" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M1669.7,232.05L1669.7,262.792C1669.7,293.533,1669.7,355.017,1669.7,389.258C1669.7,423.5,1669.7,430.5,1669.7,434L1669.7,437.5" id="my-svg-L_ROOT_AA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_AA_0" data-points="W3sieCI6MTY2OS42OTk5NTExNzE4NzUsInkiOjIzMi4wNDk5OTkyMzcwNjA1NX0seyJ4IjoxNjY5LjY5OTk1MTE3MTg3NSwieSI6NDE2LjV9LHsieCI6MTY2OS42OTk5NTExNzE4NzUsInkiOjQ0MS41fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1669.7,507.1L1669.7,511.267C1669.7,515.433,1669.7,523.767,1669.7,531.433C1669.7,539.1,1669.7,546.1,1669.7,549.6L1669.7,553.1" id="my-svg-L_AA_USR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AA_USR_0" data-points="W3sieCI6MTY2OS42OTk5NTExNzE4NzUsInkiOjUwNy4wOTk5OTg0NzQxMjExfSx7IngiOjE2NjkuNjk5OTUxMTcxODc1LCJ5Ijo1MzIuMDk5OTk4NDc0MTIxMX0seyJ4IjoxNjY5LjY5OTk1MTE3MTg3NSwieSI6NTU3LjA5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_ROOT_AA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_AA_USR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="root" transform="translate(0, 0)"><g class="clusters"><g class="cluster" id="my-svg-Enforcement" data-look="classic"><rect style="" x="8" y="8" width="1496.2000122070312" height="383.50000381469727"/><g class="cluster-label" transform="translate(666.6000061035156, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Per-request</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> authorization</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M299.5,108.2L305.75,108.2C312,108.2,324.5,108.2,341.488,113.537C358.476,118.873,379.951,129.547,390.689,134.883L401.427,140.22" id="my-svg-L_CRED_ENF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CRED_ENF_0" data-points="W3sieCI6Mjk5LjUsInkiOjEwOC4yMDAwMDA3NjI5Mzk0NX0seyJ4IjozMzcsInkiOjEwOC4yMDAwMDA3NjI5Mzk0NX0seyJ4Ijo0MDUuMDA5MDc3MTkwNjYwNjYsInkiOjE0Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M296.5,282.8L303.25,282.8C310,282.8,323.5,282.8,345.301,270.521C367.102,258.243,397.205,233.686,412.256,221.407L427.307,209.129" id="my-svg-L_ROUTE_ENF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROUTE_ENF_0" data-points="W3sieCI6Mjk2LjUsInkiOjI4Mi44MDAwMDMwNTE3NTc4fSx7IngiOjMzNywieSI6MjgyLjgwMDAwMzA1MTc1Nzh9LHsieCI6NDMwLjQwNjQ1Mzk0MDE2OSwieSI6MjA2LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M565.5,174.3L571.75,174.3C578,174.3,590.5,174.3,602.333,174.3C614.167,174.3,625.333,174.3,630.917,174.3L636.5,174.3" id="my-svg-L_ENF_TEN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ENF_TEN_0" data-points="W3sieCI6NTY1LjUsInkiOjE3NC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo2MDMsInkiOjE3NC4yOTk5OTkyMzcwNjA1NX0seyJ4Ijo2NDAuNSwieSI6MTc0LjI5OTk5OTIzNzA2MDU4fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M784.614,139.814L799.028,130.745C813.442,121.676,842.271,103.538,883.069,94.469C923.867,85.4,976.633,85.4,1029.4,85.4C1082.167,85.4,1134.933,85.4,1169.319,86.137C1203.706,86.875,1219.711,88.35,1227.714,89.087L1235.717,89.825" id="my-svg-L_TEN_DENY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TEN_DENY_0" data-points="W3sieCI6Nzg0LjYxMzYwMjc5OTQzNzcsInkiOjEzOS44MTM1OTU5MzI5ODI2Mn0seyJ4Ijo4NzEuMTAwMDA2MTAzNTE1NiwieSI6ODUuNDAwMDAxNTI1ODc4OX0seyJ4IjoxMDI5LjQwMDAwOTE1NTI3MzQsInkiOjg1LjQwMDAwMTUyNTg3ODl9LHsieCI6MTE4Ny43MDAwMTIyMDcwMzEyLCJ5Ijo4NS40MDAwMDE1MjU4Nzg5fSx7IngiOjEyMzkuNzAwMDEyMjA3MDMxMiwieSI6OTAuMTkxNTQyMzExMzc3Mzl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M787.894,205.506L801.762,212.955C815.63,220.404,843.365,235.302,865.232,242.751C887.1,250.2,903.1,250.2,911.1,250.2L919.1,250.2" id="my-svg-L_TEN_SCOPE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TEN_SCOPE_0" data-points="W3sieCI6Nzg3Ljg5NDM0MjA4Mzk4ODgsInkiOjIwNS41MDU2NjMyNTY1ODczfSx7IngiOjg3MS4xMDAwMDYxMDM1MTU2LCJ5IjoyNTAuMjAwMDAwNzYyOTM5NDV9LHsieCI6OTIzLjEwMDAwNjEwMzUxNTcsInkiOjI1MC4yMDAwMDA3NjI5Mzk0NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1101.947,216.447L1116.239,209.798C1130.531,203.148,1159.116,189.849,1191.663,174.827C1224.211,159.806,1260.721,143.062,1278.977,134.69L1297.232,126.317" id="my-svg-L_SCOPE_DENY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SCOPE_DENY_0" data-points="W3sieCI6MTEwMS45NDcwNjk5NTM0ODksInkiOjIxNi40NDcwNTg1MDkzOTcyfSx7IngiOjExODcuNzAwMDEyMjA3MDMxMiwieSI6MTc2LjU1MDAwMzA1MTc1Nzh9LHsieCI6MTMwMC44Njc5OTc0NDg4MjczLCJ5IjoxMjQuNjUwMDAxNTI1ODc4OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1113.663,272.237L1126.002,275.464C1138.342,278.691,1163.021,285.146,1187.11,288.373C1211.2,291.6,1234.7,291.6,1246.45,291.6L1258.2,291.6" id="my-svg-L_SCOPE_ALLOW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SCOPE_ALLOW_0" data-points="W3sieCI6MTExMy42NjI4NTU1MzM2OTMxLCJ5IjoyNzIuMjM3MTU3NDM2Mjc3NX0seyJ4IjoxMTg3LjcwMDAxMjIwNzAzMTIsInkiOjI5MS42MDAwMDIyODg4MTgzNn0seyJ4IjoxMjYyLjIwMDAxMjIwNzAzMTIsInkiOjI5MS42MDAwMDIyODg4MTgzNn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_CRED_ENF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ROUTE_ENF_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ENF_TEN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1029.4000091552734, 85.4000015258789)"><g class="label" data-id="L_TEN_DENY_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(871.1000061035156, 250.20000076293945)"><g class="label" data-id="L_TEN_SCOPE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1201.29892, 170.3134)"><g class="label" data-id="L_SCOPE_DENY_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-11" y="0" width="22" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">no</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1187.7000122070312, 291.60000228881836)"><g class="label" data-id="L_SCOPE_ALLOW_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-14.5" y="0" width="29" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">yes</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-CRED-4" data-look="classic" transform="translate(172.5, 108.20000076293945)"><rect class="basic label-container" style="" x="-127" y="-41.099998474121094" width="254" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Credential:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JWT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> claims</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sub/role/account_id/scopes</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">OR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> API</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> key</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scopes</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENF-5" data-look="classic" transform="translate(470, 174.29999923706055)"><rect class="basic label-container" style="" x="-95.5" y="-32.29999923706055" width="191" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">policy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> enforcer:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">security/pkg/policy</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ROUTE-6" data-look="classic" transform="translate(172.5, 282.8000030517578)"><rect class="basic label-container" style="" x="-124" y="-41.099998474121094" width="248" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Route</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> contract:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">x-required-roles</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> required</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">scopes</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TEN-9" data-look="classic" transform="translate(729.8000030517578, 174.29999923706055)"><polygon points="89.29999923706055,0 178.5999984741211,-89.29999923706055 89.29999923706055,-178.5999984741211 0,-89.29999923706055" class="label-container" transform="translate(-88.79999923706055, 89.29999923706055)"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tenant</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> match</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account_id?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DENY-11" data-look="classic" transform="translate(1353.2000122070312, 100.6500015258789)"><rect class="basic label-container" style="" x="-113.5" y="-24" width="227" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">403</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> permission_denied</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SCOPE-13" data-look="classic" transform="translate(1029.4000091552734, 250.20000076293945)"><polygon points="106.29999923706055,0 212.5999984741211,-106.29999923706055 106.29999923706055,-212.5999984741211 0,-106.29999923706055" class="label-container" transform="translate(-105.79999923706055, 106.29999923706055)"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">role</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> floor</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> and</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scopes</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">satisfied?</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ALLOW-17" data-look="classic" transform="translate(1353.2000122070312, 291.60000228881836)"><rect class="basic label-container" style="" x="-91" y="-23.5" width="182" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">handler</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> executes</tspan></tspan></text></g></g></g></g></g><g class="node default" id="my-svg-flowchart-ROOT-0" data-look="classic" transform="translate(1669.699951171875, 199.75)"><rect class="basic label-container" style="" x="-115.5" y="-32.29999923706055" width="231" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tier</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 1</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> role:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> only</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> one</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AA-1" data-look="classic" transform="translate(1669.699951171875, 474.29999923706055)"><rect class="basic label-container" style="" x="-127" y="-32.79999923706055" width="254" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tier</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Admin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> role:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account_admin</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-USR-3" data-look="classic" transform="translate(1669.699951171875, 589.3999977111816)"><rect class="basic label-container" style="" x="-125.5" y="-32.29999923706055" width="251" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tier</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Standard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> User</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> role:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">user</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/rbac.mmd">diagrams/rbac.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Thready has exactly three roles matching the final
+request’s §6.1 hierarchy. <strong>Root Admin</strong>
+(<code>role: root</code>, only one exists) has full control of every
+account and every user. <strong>Account Admin</strong>
+(<code>role: account_admin</code>) has full control of <em>their</em>
+account and its users. <strong>Standard User</strong>
+(<code>role: user</code>) has consumer access to the accounts they are
+members of. A user can belong to multiple accounts with a different role
+in each, captured by the <code>Membership</code> list.</p>
+<p>On every request the enforcer (<code>security/pkg/policy</code>)
+receives two inputs: the credential (JWT claims — <code>sub</code>,
+<code>role</code>, <code>account_id</code>, <code>scopes</code> — or the
+API key’s scopes) and the route contract (the operation’s
+<code>x-required-roles</code> floor plus the required scopes). It first
+checks tenancy: the target resource’s <code>account_id</code> must match
+the principal’s account (or the principal must be <code>root</code>,
+which may cross tenants). If the tenant check fails, the request is
+denied with 403 <code>permission_denied</code> — and, per the ordering
+in <a href="./error-model.md">error-model.md</a> §4, this happens before
+any existence check, so a probe cannot distinguish “not yours” from
+“does not exist”.</p>
+<p>If the tenant check passes, the enforcer checks that the principal’s
+role meets the route’s role floor <strong>and</strong> that the required
+scopes are all present; only then does the handler run. This keeps
+authorization declarative in the contract
+(<code>x-required-roles</code>) and enforced in one place in Go, never
+in the OpenAPI document itself — the contract <em>describes</em> the
+floor, the enforcer <em>imposes</em> it.</p>
+<p><strong>Role floor semantics.</strong>
+<code>x-required-roles: [user]</code> means “any authenticated principal
+whose role is at least <code>user</code>” — <code>account_admin</code>
+and <code>root</code> inherit everything a <code>user</code> can do
+within their scope; <code>[account_admin]</code> additionally requires
+admin of the target account (or <code>root</code>); <code>[root]</code>
+is root-only; <code>[]</code> is unauthenticated.</p>
+<h2 id="scope-catalog">7. Scope catalog</h2>
+<p>Scopes are fine-grained, orthogonal to roles
+(<code>[DEFAULT — adjustable]</code>; mirrors the OAuth2 scopes in
+<code>openapi.yaml</code>):</p>
+<table>
+<colgroup>
+<col style="width: 46%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Grants</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>posts:read</code></td>
+<td>read posts/threads/hashtags</td>
+</tr>
+<tr>
+<td><code>posts:write</code></td>
+<td>register channels, trigger (re)processing</td>
+</tr>
+<tr>
+<td><code>assets:read</code></td>
+<td>list/read/download assets</td>
+</tr>
+<tr>
+<td><code>assets:write</code></td>
+<td>manage assets, download jobs, re-download</td>
+</tr>
+<tr>
+<td><code>search:read</code></td>
+<td>run <code>/v1/search</code></td>
+</tr>
+<tr>
+<td><code>skills:read</code></td>
+<td>read Skill-Graph</td>
+</tr>
+<tr>
+<td><code>skills:write</code></td>
+<td>register/update skills</td>
+</tr>
+<tr>
+<td><code>events:read</code></td>
+<td>subscribe to WS/SSE, read sticky snapshots</td>
+</tr>
+<tr>
+<td><code>accounts:admin</code></td>
+<td>administer an account + its users, branding, subscription</td>
+</tr>
+<tr>
+<td><code>billing:read</code></td>
+<td>read subscription/usage/invoices</td>
+</tr>
+<tr>
+<td><code>root:admin</code></td>
+<td>root-only system administration</td>
+</tr>
+</tbody>
+</table>
+<p>A route requires <strong>both</strong> its role floor and its scope
+set; e.g. <code>POST /v1/skills</code> requires role
+<code>account_admin</code> <strong>and</strong> scope
+<code>skills:write</code>.</p>
+<h2 id="mfa-sessions-passwords">8. MFA, sessions, passwords</h2>
+<p>Resolves Q9 (<code>[DEFAULT — adjustable]</code>, tuned to the
+Aggressive posture):</p>
+<ul>
+<li><strong>MFA</strong> — <strong>TOTP mandatory for Root Admin and
+Account Admin</strong>, optional for users. Enrolment via
+<code>/v1/auth/mfa/totp/enroll</code> → <code>/verify</code>.</li>
+<li><strong>Sessions</strong> — access token <strong>15 min</strong>,
+refresh <strong>7 d</strong>, idle timeout <strong>30 min</strong>
+(web). Revocation through the <code>pkg/token</code> store
+(<code>Store.Get/Set/Delete/Revoke</code>, TTL + revocation,
+<code>[VERIFIED: pkg/token/token.go]</code>).
+<strong>Logout-all</strong> (revoke every session for a compromised
+user) is backed by
+<code>accesstoken.MemoryStore.RevokeAllForUser(userID) int</code>
+<code>[VERIFIED: pkg/accesstoken]</code>, which the User Service exposes
+behind <code>POST /v1/auth/logout</code> with an <code>all: true</code>
+option. On the <strong>client</strong> side the SDK thin layer persists
+the pair via the <code>pkg/tokenmanager.Manager</code> shape
+(<code>StoreTokenInfo</code> / <code>GetAccessToken</code> /
+<code>IsExpired</code> / <code>ClearTokens</code>,
+<code>[VERIFIED: pkg/tokenmanager]</code>), which is exactly the R7
+transparent-refresh recipe in <a
+href="./sdk-examples.md">sdk-examples.md</a>.</li>
+<li><strong>Passwords</strong> — Argon2id (<code>security</code>),
+<strong>min 12 chars</strong>, breach-list checked.</li>
+<li><strong>Secrets</strong> — signing keys and OAuth tokens are
+runtime-loaded from gitignored <code>.env</code>/<code>secrets</code>
+(<code>chmod 600/700</code>), never logged
+<code>[CONSTITUTION §11.4.10]</code>.</li>
+</ul>
+<h2 id="middleware-chain-edge-enforcement">9. Middleware chain (edge
+enforcement)</h2>
+<p>Enforcement happens in the shared chain
+(<code>pkg/middleware</code>), composed with <code>Chain(...)</code>,
+before any handler — so authz is uniform and un-bypassable:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>secured <span class="op">:=</span> middleware<span class="op">.</span>Chain<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    reqid<span class="op">.</span>Middleware<span class="op">(),</span>                       <span class="co">// digital.vasic.middleware: request-id</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    recovery<span class="op">.</span>Middleware<span class="op">(),</span>                    <span class="co">// panic → 500 internal + trace_id</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    cors<span class="op">.</span>Middleware<span class="op">(</span>corsCfg<span class="op">),</span>                 <span class="co">// CORS</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">.</span>Middleware<span class="op">(),</span>                     <span class="co">// security/pkg/headers</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    ratelimiter<span class="op">.</span>Middleware<span class="op">(</span>rlCfg<span class="op">),</span>            <span class="co">// digital.vasic.ratelimiter → 429</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    middleware<span class="op">.</span>BearerToken<span class="op">(</span>jwtValidator<span class="op">),</span>     <span class="co">// auth: TokenValidator → claims in ctx</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    middleware<span class="op">.</span>APIKeyHeader<span class="op">(</span>apiKeyValidator<span class="op">,</span> <span class="st">&quot;Authorization&quot;</span><span class="op">),</span> <span class="co">// 2nd arg is the HEADER NAME</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    middleware<span class="op">.</span>RequireScopes<span class="op">(</span><span class="st">&quot;posts:read&quot;</span><span class="op">),</span>   <span class="co">// per-route</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">)(</span>handler<span class="op">)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// handler reads middleware.ClaimsFromContext(ctx) / ScopesFromContext(ctx) / APIKeyFromContext(ctx)</span></span></code></pre></div>
+<p><strong>Verified signatures
+<code>[VERIFIED: pkg/middleware/middleware.go]</code>.</strong> The
+earlier draft passed a <code>store</code> as <code>APIKeyHeader</code>’s
+second argument; at source the signature is
+<code>APIKeyHeader(validator APIKeyValidator, headerName string)</code>
+(<code>middleware.go:103</code>) — the second argument is the
+<strong>header name to read</strong> (Thready reads
+<code>Authorization</code>, then the validator strips the
+<code>Bearer</code> prefix and calls
+<code>apikey.Validate(store, key)</code> internally). The two validator
+interfaces are minimal:
+<code>TokenValidator.ValidateToken(token) (map[string] interface{}, error)</code>
+and <code>APIKeyValidator.ValidateKey(key) ([]string, error)</code> —
+note the API-key path returns <strong>scopes only, no role</strong>, so
+a key’s role floor is derived from the minting principal at creation
+time, not carried on the key. <code>BearerToken</code> also normalises
+the <code>scopes</code> claim through <code>coerceScopes</code>, which
+accepts both <code>[]string</code> and the <code>[]interface{}</code>
+form a JWT round-trip produces (<code>middleware.go:208</code>)
+<code>[VERIFIED]</code>.</p>
+<p><strong>Error-envelope adaptation.</strong> The raw module middleware
+writes terse bodies (<code>{"error":"invalid token"}</code> → 401,
+<code>{"error":"insufficient scopes"}</code> → 403;
+<code>middleware.go:78/166</code>), <strong>not</strong> Thready’s
+canonical envelope. The User Service therefore wraps the chain with a
+small adapter that rewrites these into the <a
+href="./error-model.md">error-model.md</a> envelope
+(<code>unauthenticated</code> / <code>permission_denied</code> with a
+<code>trace_id</code>), so clients see one error shape.
+<code>RequireScopes</code> (and the <code>security/pkg/policy</code>
+enforcer for role/tenant) gate the route; rate limiting sits ahead of
+auth so anonymous floods are shed cheaply (<code>[GAP: #14]</code>
+DDoS/rate limiting).</p>
+<h2 id="gaps-addressed">10. Gaps addressed</h2>
+<ul>
+<li><code>[GAP: #10 / 7.2]</code> JWT default HMAC-SHA256 →
+<strong>RS256/EdDSA + JWKS rotation</strong> (multi-service
+verification) — §3. Verified at source that HS256 is the module default
+and that <code>Validate</code> pins the algorithm.</li>
+<li><code>[GAP: 7.2]</code> <strong>No built-in RBAC in
+<code>auth</code></strong> → a reusable RBAC layer
+(root/account_admin/user) folded into the new <strong>User
+Service</strong> on <code>security/pkg/policy</code> — §6.
+<code>[GAP: New#User Service]</code>.</li>
+<li><code>[GAP: 7.2]</code> <strong>TOTP MFA for admin tiers</strong> —
+§8.</li>
+<li><code>[GAP: 7.1 security]</code> “encrypted yet semantically
+searchable credentials” — the searchable-but-sealed representation is
+specified in the architecture/database packs; the API never returns raw
+secrets (masked keys, encrypted OAuth tokens) — §4, §5.</li>
+<li><code>[GAP: 7.3/7.4 Security-KMP]</code> mobile secure storage is an
+<strong>in-memory stub</strong> — the API contract is unaffected, but
+SDK guidance (mobile) <strong>must</strong> block release until native
+Keychain/KeyStore lands; cross-referenced in <a
+href="./sdk-strategy.md">sdk-strategy.md</a>.</li>
+<li><strong>TDD</strong> — the security negative controls for every
+claim here (algorithm-confusion
+<code>alg:none</code>/HS256-with-public-key rejection, cross-tenant
+<code>403</code>, API-key scope-subset enforcement, admin-tier TOTP
+mandatory, HMAC bad-signature <code>401</code>) are written RED-first in
+<a href="./contract-tests.md">contract-tests.md</a> §security
+<code>[CONSTITUTION §11.4.27]</code>.</li>
+</ul>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: authz-1]</code> The exact
+<code>security/pkg/policy</code> rule DSL for tenant+role+scope
+composition is finalized with the User Service implementation; this doc
+fixes the <em>contract</em> (claims, scopes, role floors), not the
+enforcer’s internal rule syntax.</li>
+<li><code>[RESOLVED: authz-2]</code> <strong>JWKS rotation cadence +
+<code>kid</code> scheme fixed</strong>
+(<code>[DEFAULT — adjustable]</code>):
+<code>kid = "&lt;YYYY-MM&gt;-&lt;8-hex-of-thumbprint&gt;"</code>
+(e.g. <code>2026-07-a1b2c3d4</code>) so the <code>kid</code> is
+human-legible in logs yet collision-safe. Rotation is
+<strong>monthly</strong>, overlap-first: the new key is published to
+<code>/.well-known/jwks.json</code> and used for signing on day 1 of the
+window, the previous key stays in the JWKS (verify-only) for one full
+access-token lifetime plus a 24 h margin, then is retired. Verifiers
+cache the JWKS with a short TTL and refetch on an unknown
+<code>kid</code>. Compromise triggers an out-of-band emergency rotation
+that also calls <code>RevokeAllForUser</code> for affected principals.
+The exact secrets-pack mechanics (HSM vs sealed file) remain
+deployment-pack detail; the <strong>verifiable contract</strong> (kid
+format, overlap, emergency path) is fixed here.</li>
+<li><code>[BUILD-NEW: auth-rs256]</code> Extend
+<code>digital.vasic.auth/pkg/jwt.Config</code> to carry asymmetric key
+material (<code>crypto.Signer</code> + public verifier) so RS256/EdDSA
+is first-class in the module — see §3. Tracked as an upstreamable module
+change; the User Service ships with a direct-<code>gojwt</code> fallback
+until it lands so the contract (RS256 tokens + JWKS) holds on day
+one.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

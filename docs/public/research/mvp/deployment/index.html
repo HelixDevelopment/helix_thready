@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Deployment &amp; Operations (Area Index)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Deployment &amp; Operations (Area
+Index)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#scope-operator-decisions"
+id="toc-scope-operator-decisions">1. Scope &amp; operator
+decisions</a></li>
+<li><a href="#upstream-downstream-dependencies"
+id="toc-upstream-downstream-dependencies">2. Upstream / Downstream
+dependencies</a></li>
+<li><a href="#in-house-modules-this-area-binds-to"
+id="toc-in-house-modules-this-area-binds-to">3. In-house modules this
+area binds to</a></li>
+<li><a href="#deployment-overview-diagram"
+id="toc-deployment-overview-diagram">4. Deployment overview
+diagram</a></li>
+<li><a href="#document-map" id="toc-document-map">5. Document
+map</a></li>
+<li><a href="#gap-register-items-addressed-by-this-area"
+id="toc-gap-register-items-addressed-by-this-area">6. Gap-register items
+addressed by this area</a></li>
+<li><a href="#open-items-tracked-by-this-area"
+id="toc-open-items-tracked-by-this-area">7. Open items tracked by this
+area</a></li>
+<li><a href="#verified-vs-assumed-reading-guide"
+id="toc-verified-vs-assumed-reading-guide">8. Verified vs assumed —
+reading guide</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Deployment & Operations (Area Index)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/index.md
+  Status          : Review — v0.4
+  Revision        : 4 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ../CONVENTIONS.md, ../index.md,
+                    ./container-topology.md, ./podman-compose.md, ./compose-files.md,
+                    ./environments.md, ./tls-lets-encrypt.md, ./deploy-and-rollback.md,
+                    ./backup-dr.md, ./service-discovery-ports.md, ./hetzner-provisioning.md,
+                    ./secrets-and-config.md, ./operations-runbook.md,
+                    ./monitoring-observability.md, ./cost-and-capacity.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial implementation-ready draft of the full Deployment &amp;
+Operations pack</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (deployment review)</td>
+<td>Review pass: added OpenAPI 3.1 health contract + reproduce-first TDD
+skeletons, fixed the boot <code>--wait</code> contradiction, addressed
+GAP #17, split single-paragraph diagram explanations</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Pass 3 depth: added <code>compose-files.md</code> (complete per-env
+rootless compose YAML) + <code>operations-runbook.md</code> (day-2 ops
+&amp; incident playbooks); re-verified every module signature at
+<code>vasic-digital/containers</code> +
+<code>vasic-digital/lets_encrypt</code> source; narrowed
+<code>[OPEN: dns-provider]</code> (Loopia/<code>dns_loopia</code>) and
+<code>[OPEN: host-sizing]</code> (candidate Hetzner SKUs)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (deployment critic)</td>
+<td>Completeness pass: added <code>cost-and-capacity.md</code> (closes
+the <code>§16.3</code> “quantify in the deployment pack” promise —
+host/object/backup/GPU cost + subscription/metered offset model) and
+<code>monitoring-observability.md</code> (Q42/Q43 depth — SLOs, the
+service/edge/cert/latency/resource alert rules the runbook referenced
+but were undefined, routing, dashboards, reproduce-first alert test);
+completed the deterministic port plan (ClickHouse native
+<code>9009</code>, Jaeger OTLP <code>4317</code>) to match the compose
+files</td>
+</tr>
+</tbody>
+</table>
+<p>This is the canonical entry point for the <strong>Deployment &amp;
+Operations</strong> documentation of Helix Thready. It specifies how the
+system is provisioned, containerized, secured with TLS, released, rolled
+back, backed up and recovered on a <strong>single Hetzner dedicated
+host</strong>, running <strong>three fully-separated
+environments</strong> (<code>dev</code> / <code>sta</code> /
+<code>prod</code>) as <strong>rootless Podman Compose</strong> stacks
+behind subdomains, using only the in-house <code>vasic-digital</code>
+module fleet named in the technology decision matrix. All authors follow
+<strong><a href="../CONVENTIONS.md">CONVENTIONS.md</a></strong>.</p>
+<blockquote>
+<p>Every Mermaid diagram in this pack has a sibling source under <a
+href="./diagrams/"><code>diagrams/</code></a> and a following
+multi-paragraph prose explanation. Rendered PNG/SVG exported via Docs
+Chain (<code>§11.4.65</code>).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--operator-decisions">Scope &amp; operator
+decisions</a></li>
+<li><a href="#2-upstream--downstream-dependencies">Upstream / Downstream
+dependencies</a></li>
+<li><a href="#3-in-house-modules-this-area-binds-to">In-house modules
+this area binds to</a></li>
+<li><a href="#4-deployment-overview-diagram">Deployment overview
+diagram</a></li>
+<li><a href="#5-document-map">Document map</a></li>
+<li><a href="#6-gap-register-items-addressed-by-this-area">Gap-register
+items addressed by this area</a></li>
+<li><a href="#7-open-items-tracked-by-this-area">Open items tracked by
+this area</a></li>
+<li><a href="#8-verified-vs-assumed--reading-guide">Verified vs assumed
+— reading guide</a></li>
+</ol>
+<hr />
+<h2 id="scope-operator-decisions">1. Scope &amp; operator decisions</h2>
+<p>The scope of this area is fixed by the operator decisions in the
+final research request (<code>§0.1</code>) and answers Q8, Q21, Q39,
+Q41–Q45 <code>[OPERATOR]</code> <code>[CONSTITUTION]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 32%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Decision</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Orchestration</td>
+<td><strong>Rootless Podman Compose only</strong> via
+<code>vasic-digital/containers</code> — no Docker, no
+<code>sudo</code></td>
+<td><code>[CONSTITUTION §11.4.76/161]</code></td>
+</tr>
+<tr>
+<td>Host</td>
+<td><strong>One Hetzner dedicated host</strong>; root provisions the
+<code>thready</code> user (<code>/home/thready</code>)</td>
+<td><code>[OPERATOR]</code> <code>[CONSTITUTION §11.4.76]</code></td>
+</tr>
+<tr>
+<td>Environments</td>
+<td><strong>Three fully-separated</strong> stacks behind subdomains
+(<code>dev.</code> / <code>sta.</code> / <code>thready.</code>)</td>
+<td><code>[OPERATOR]</code> (Q8, §8.2)</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td><strong><code>vasic-digital/lets_encrypt</code></strong> (acme.sh,
+HTTP-01/DNS-01, atomic deploy-hook + rollback)</td>
+<td><code>[IN-HOUSE: lets_encrypt]</code> (Q44)</td>
+</tr>
+<tr>
+<td>Ports / discovery</td>
+<td>Dynamic ports via <strong><code>port_prefix</code></strong>,
+discovery via <strong><code>discovery</code></strong> +
+<strong><code>mdns</code></strong></td>
+<td><code>[IN-HOUSE]</code> (§14.3)</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td><strong>No server-side CI</strong> — local git-hooks + pre-tag
+full-suite retest + all-upstreams push</td>
+<td><code>[CONSTITUTION §11.4.156/75/40/§2.1]</code> (Q21)</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td><strong>Runtime-load-only</strong> from gitignored <code>.env</code>
+/ <code>api_keys.sh</code>, <code>chmod 600/700</code>, never
+logged</td>
+<td><code>[CONSTITUTION §11.4.10]</code> (Q39)</td>
+</tr>
+<tr>
+<td>Backup / DR</td>
+<td><strong>Daily full + hourly DB incrementals</strong>; RPO ≈ 1 h, RTO
+≈ 4 h; documented restore runbook</td>
+<td><code>[OPERATOR]</code> (Q41, Q45)</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Prometheus + Grafana + OpenTelemetry (Jaeger) + ClickHouse via
+<code>observability</code></td>
+<td><code>[IN-HOUSE]</code> (Q42/Q43)</td>
+</tr>
+</tbody>
+</table>
+<p>The three subdomains (from <code>§8.2</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Domain</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Development</td>
+<td><code>dev.thready.hxd3v.com</code></td>
+<td>Development testing</td>
+</tr>
+<tr>
+<td>Staging</td>
+<td><code>sta.thready.hxd3v.com</code></td>
+<td>Pre-production</td>
+</tr>
+<tr>
+<td>Production</td>
+<td><code>thready.hxd3v.com</code></td>
+<td>Live system</td>
+</tr>
+</tbody>
+</table>
+<h2 id="upstream-downstream-dependencies">2. Upstream / Downstream
+dependencies</h2>
+<p><strong>Upstream (this area consumes):</strong></p>
+<ul>
+<li><strong><a href="../architecture/index.md">architecture</a></strong>
+— the service inventory (Herald, Processing Engine, Asset Service,
+Semantic Search, API, Event Bus) that the container topology
+packages.</li>
+<li><strong><a href="../database/index.md">database</a></strong> — the
+PostgreSQL + pgvector schema, migration runner
+(<code>migration.Runner</code>) and partitioning strategy that the
+deploy/rollback and backup runbooks operate on (expand-contract
+migrations; PITR from WAL).</li>
+<li><strong><a href="../api/index.md">api</a></strong> — the REST
+<code>/v1</code> (HTTP/3) + WebSocket/SSE surface the edge reverse proxy
+fronts and the <code>LE_VALIDATE_URL</code> health probe hits.</li>
+</ul>
+<p><strong>Downstream (consumes this area):</strong></p>
+<ul>
+<li><strong><a href="../development/index.md">development</a></strong> —
+the ATM-NNN workable items that build the new submodules (Download
+Manager, User Service, Max adapter, etc.) whose containers this topology
+reserves slots for; the local git-hook enforcement defined in <a
+href="./secrets-and-config.md">secrets-and-config.md</a>.</li>
+<li><strong><a href="../testing/index.md">testing</a></strong> — the
+chaos / DR / scaling tests (<code>§11.4.27</code>) that validate the <a
+href="./backup-dr.md">backup-dr.md</a> RPO/RTO targets and the <a
+href="./deploy-and-rollback.md">deploy-and-rollback.md</a> rollback
+gate.</li>
+</ul>
+<h2 id="in-house-modules-this-area-binds-to">3. In-house modules this
+area binds to</h2>
+<p>Every module below is named in the decision matrix
+(<code>§0.2</code>). Interfaces were read at source
+(<code>gh repo view</code> / shallow clone) during authoring —
+<strong>do not invent APIs</strong> <code>[CONVENTIONS §1]</code>.</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 10%" />
+<col style="width: 35%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Repo</th>
+<th>Role in deployment</th>
+<th>Verified surface used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Containers</td>
+<td><code>vasic-digital/containers</code></td>
+<td>Rootless compose orchestration, boot, health, discovery, remote
+deploy</td>
+<td><code>pkg/compose.ComposeOrchestrator</code>,
+<code>pkg/boot.BootManager</code>,
+<code>pkg/health.HealthChecker</code>,
+<code>pkg/endpoint.ServiceEndpoint</code>,
+<code>pkg/serviceregistry.ServiceRegistry</code>,
+<code>cmd/deploy-stack</code></td>
+</tr>
+<tr>
+<td>Let’s Encrypt</td>
+<td><code>vasic-digital/lets_encrypt</code></td>
+<td>ACME issuance/renewal/rotation; atomic deploy-hook + rollback</td>
+<td><code>scripts/{issue,renew,rotate,revoke,deploy-hook}.sh</code>,
+<code>config/lets_encrypt.conf</code>, <code>systemd/*</code>,
+<code>api/le-api</code></td>
+</tr>
+<tr>
+<td>Port prefix</td>
+<td><code>vasic-digital/port_prefix</code></td>
+<td>Deterministic per-env host-port bands</td>
+<td><code>portprefix.Exposed(prefix, internalPort, taken) (int, error)</code></td>
+</tr>
+<tr>
+<td>mDNS</td>
+<td><code>vasic-digital/mdns</code></td>
+<td>LAN service announcement/discovery</td>
+<td><code>Announce</code> / <code>Browse</code></td>
+</tr>
+<tr>
+<td>Discovery</td>
+<td><code>vasic-digital/discovery</code></td>
+<td>Network/service scanning</td>
+<td><code>pkg/scanner.Scanner</code></td>
+</tr>
+<tr>
+<td>Observability</td>
+<td><code>vasic-digital/observability</code></td>
+<td>Health aggregation, metrics, tracing</td>
+<td><code>pkg/health.{Checker,Aggregator,Report}</code>,
+<code>pkg/metrics</code></td>
+</tr>
+<tr>
+<td>HTTP/3</td>
+<td><code>vasic-digital/http3</code></td>
+<td>QUIC transport for API + edge</td>
+<td><code>http3.Config</code> / <code>http3.Server</code></td>
+</tr>
+<tr>
+<td>Security</td>
+<td><code>digital.vasic.security</code></td>
+<td>AES-256-GCM sealed key store for secrets at rest</td>
+<td><code>pkg/securestorage</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="deployment-overview-diagram">4. Deployment overview diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1837.75px; background-color: white;" viewBox="0 0 1837.75 686.2850952148438" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Host" data-look="classic"><rect style="" x="288" y="8" width="1252.75" height="670.2850799560547"/><g class="cluster-label" transform="translate(714.375, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Single</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Hetzner</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dedicated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> user:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (rootless)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-PROD" data-look="classic"><rect style="" x="313.25" y="375.5999984741211" width="358.25" height="277.6850814819336"/><g class="cluster-label" transform="translate(387.375, 375.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> port</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 62xxx</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-STA" data-look="classic"><rect style="" x="691.5" y="375.5999984741211" width="269" height="277.6850814819336"/><g class="cluster-label" transform="translate(726.5, 375.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> port</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 61xxx</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-DEV" data-look="classic"><rect style="" x="1250.5" y="375.5999984741211" width="270.25" height="277.6850814819336"/><g class="cluster-label" transform="translate(1283.625, 375.5999984741211)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> port</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 60xxx</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M1377.25,465.2L1377.25,472.3C1377.25,479.4,1377.25,493.6,1377.823,504.872C1378.396,516.145,1379.541,524.489,1380.114,528.662L1380.687,532.834" id="my-svg-L_DAPI_DDATA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DAPI_DDATA_0" data-points="W3sieCI6MTM3Ny4yNSwieSI6NDY1LjE5OTk5Njk0ODI0MjJ9LHsieCI6MTM3Ny4yNSwieSI6NTA3Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTM4MC42ODY3Nzg0MjcxNjc0LCJ5Ijo1MzIuODMzOTg2NDk2MzM0NH1d" data-look="classic"/><path d="M817,465.2L817,472.3C817,479.4,817,493.6,817.573,504.872C818.146,516.145,819.291,524.489,819.864,528.662L820.437,532.834" id="my-svg-L_SAPI_SDATA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SAPI_SDATA_0" data-points="W3sieCI6ODE3LCJ5Ijo0NjUuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo4MTcsInkiOjUwNy43OTk5OTU0MjIzNjMzfSx7IngiOjgyMC40MzY3Nzg0MjcxNjczLCJ5Ijo1MzIuODMzOTg2NDk2MzM0NH1d" data-look="classic"/><path d="M498.5,465.2L498.5,472.3C498.5,479.4,498.5,493.6,499.646,504.889C500.791,516.179,503.082,524.558,504.228,528.747L505.374,532.936" id="my-svg-L_PAPI_PDATA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PAPI_PDATA_0" data-points="W3sieCI6NDk4LjUsInkiOjQ2NS4xOTk5OTY5NDgyNDIyfSx7IngiOjQ5OC41LCJ5Ijo1MDcuNzk5OTk1NDIyMzYzM30seyJ4Ijo1MDUuMzczNTU2ODU0MzM0NiwieSI6NTMyLjkzNjQxNzAzMjg5MjZ9XQ==" data-look="classic"/><path d="M206.775,97.6L235.5,106.45C264.225,115.3,321.675,133,395.064,152.447C468.453,171.895,557.78,193.089,602.444,203.687L647.108,214.284" id="my-svg-L_DNS_EDGE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DNS_EDGE_0" data-points="W3sieCI6MjA2Ljc3NTI5NTI1MzA5MjIyLCJ5Ijo5Ny41OTk5OTg0NzQxMjExfSx7IngiOjM3OS4xMjUsInkiOjE1MC42OTk5OTY5NDgyNDIyfSx7IngiOjY1MSwieSI6MjE1LjIwNzUxMzkxMDE1Njh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M905.5,266.957L977.458,279.148C1049.417,291.338,1193.333,315.719,1265.292,333.826C1337.25,351.933,1337.25,363.767,1341.201,376.213C1345.153,388.659,1353.055,401.719,1357.007,408.248L1360.958,414.778" id="my-svg-L_EDGE_DAPI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_DAPI_0" data-points="W3sieCI6OTA1LjUsInkiOjI2Ni45NTczNzcxMzM1MTQ0Nn0seyJ4IjoxMzM3LjI1LCJ5IjozNDAuMDk5OTk4NDc0MTIxMX0seyJ4IjoxMzM3LjI1LCJ5IjozNzUuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMzYzLjAyOTEyMjIxMzMyMzMsInkiOjQxOC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M778.25,304.6L778.25,310.517C778.25,316.433,778.25,328.267,778.25,340.1C778.25,351.933,778.25,363.767,782.075,376.208C785.9,388.65,793.55,401.699,797.375,408.224L801.201,414.749" id="my-svg-L_EDGE_SAPI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_SAPI_0" data-points="W3sieCI6Nzc4LjI1LCJ5IjozMDQuNTk5OTk4NDc0MTIxMX0seyJ4Ijo3NzguMjUsInkiOjM0MC4wOTk5OTg0NzQxMjExfSx7IngiOjc3OC4yNSwieSI6Mzc1LjU5OTk5ODQ3NDEyMTF9LHsieCI6ODAzLjIyMzUyNDY0NDE1NjgsInkiOjQxOC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M651,277.259L609.167,287.732C567.333,298.206,483.667,319.153,441.833,335.543C400,351.933,400,363.767,410.027,376.412C420.053,389.057,440.106,402.514,450.133,409.243L460.16,415.971" id="my-svg-L_EDGE_PAPI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EDGE_PAPI_0" data-points="W3sieCI6NjUxLCJ5IjoyNzcuMjU4NzU1NDAzNDA2NX0seyJ4Ijo0MDAsInkiOjM0MC4wOTk5OTg0NzQxMjExfSx7IngiOjQwMCwieSI6Mzc1LjU5OTk5ODQ3NDEyMTF9LHsieCI6NDYzLjQ4MTA4ODQ1MDMwODMzLCJ5Ijo0MTguMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1345.5,115.2L1345.5,121.117C1345.5,127.033,1345.5,138.867,1272.824,156.916C1200.148,174.966,1054.797,199.232,982.121,211.365L909.445,223.497" id="my-svg-L_LE_EDGE_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_LE_EDGE_0" data-points="W3sieCI6MTM0NS41LCJ5IjoxMTUuMTk5OTk2OTQ4MjQyMTl9LHsieCI6MTM0NS41LCJ5IjoxNTAuNjk5OTk2OTQ4MjQyMn0seyJ4Ijo5MDUuNSwieSI6MjI0LjE1NjE0NTYyMjg4ODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1215.5,463.18L1253.583,470.617C1291.667,478.053,1367.833,492.927,1403.065,504.185C1438.296,515.443,1432.592,523.087,1429.74,526.908L1426.889,530.73" id="my-svg-L_BK_DDATA_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BK_DDATA_0" data-points="W3sieCI6MTIxNS41LCJ5Ijo0NjMuMTgwMDU1NTM2NTgyODd9LHsieCI6MTQ0NCwieSI6NTA3Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTQyNC40OTYyODI0MjU4MjU3LCJ5Ijo1MzMuOTM1NjQzNDIzNzk4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M995.5,474.489L976.875,480.041C958.25,485.593,921,496.696,899.523,506.07C878.046,515.443,872.342,523.087,869.49,526.908L866.639,530.73" id="my-svg-L_BK_SDATA_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BK_SDATA_0" data-points="W3sieCI6OTk1LjUsInkiOjQ3NC40ODkxNzMxOTI0NTEwNn0seyJ4Ijo4ODMuNzUsInkiOjUwNy43OTk5OTU0MjIzNjMzfSx7IngiOjg2NC4yNDYyODI0MjU4MjU2LCJ5Ijo1MzMuOTM1NjQzNDIzNzk4OH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M995.5,455.936L928.708,464.58C861.917,473.224,728.333,490.512,657.637,503.197C586.941,515.882,579.133,523.963,575.228,528.004L571.324,532.045" id="my-svg-L_BK_PDATA_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BK_PDATA_0" data-points="W3sieCI6OTk1LjUsInkiOjQ1NS45MzU5MjQxNzcxMjc4fSx7IngiOjU5NC43NSwieSI6NTA3Ljc5OTk5NTQyMjM2MzN9LHsieCI6NTY4LjU0NDU2NDQ5Mjg0OTQsInkiOjUzNC45MjExNDQ1ODE1NzY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M253,271.293L540,340.1" id="my-svg-L_GPU_PROD_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GPU_PROD_0" data-points="W3sieCI6MjUzLCJ5IjoyNzEuMjkyNjU2MTQ3NjMwOX0seyJ4Ijo1NDAsInkiOjM0MC4wOTk5OTg0NzQxMjExfSx7IngiOjU0MCwieSI6Mzc1LjU5OTk5ODQ3NDEyMTF9LHsieCI6NTEzLjI1NDE2MDcwMzY3NzEsInkiOjQxOC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic"/><path d="M1586.112,286.5L1437.773,338.771" id="my-svg-L_SEC_DEV_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEC_DEV_0" data-points="W3sieCI6MTU4Ni4xMTE5Mzc2ODgxNDkzLCJ5IjoyODYuNDk5OTk2MTg1MzAyNzN9LHsieCI6MTQzNCwieSI6MzQwLjA5OTk5ODQ3NDEyMTF9LHsieCI6MTQzNCwieSI6Mzc1LjU5OTk5ODQ3NDEyMTF9LHsieCI6MTM5Ny40MjU4NzAzNTk4NDc3LCJ5Ijo0MTguMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1575.75,259.908L877.724,339.646" id="my-svg-L_SEC_STA_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEC_STA_0" data-points="W3sieCI6MTU3NS43NSwieSI6MjU5LjkwNzcxNzk3MjgxNDF9LHsieCI6ODczLjc1LCJ5IjozNDAuMDk5OTk4NDc0MTIxMX0seyJ4Ijo4NzMuNzUsInkiOjM3NS41OTk5OTg0NzQxMjExfSx7IngiOjgzNy4xNzU4NzAzNTk4NDc3LCJ5Ijo0MTguMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1575.75,256.606L633.485,339.748" id="my-svg-L_SEC_PROD_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SEC_PROD_0" data-points="W3sieCI6MTU3NS43NSwieSI6MjU2LjYwNjA1NDE3MjI5ODJ9LHsieCI6NjI5LjUsInkiOjM0MC4wOTk5OTg0NzQxMjExfSx7IngiOjYyOS41LCJ5IjozNzUuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1NDUuMDczMzc0NzUxMzY2NiwieSI6NDE4LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_DAPI_DDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SAPI_SDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PAPI_PDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DNS_EDGE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1337.25, 340.0999984741211)"><g class="label" data-id="L_EDGE_DAPI_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-37" y="0" width="74" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Host:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dev.</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(778.25, 340.0999984741211)"><g class="label" data-id="L_EDGE_SAPI_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-35" y="0" width="70" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Host:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sta.</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(400, 340.0999984741211)"><g class="label" data-id="L_EDGE_PAPI_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-50.5" y="0" width="101" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Host:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready.</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1345.5, 150.6999969482422)"><g class="label" data-id="L_LE_EDGE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-44" y="0" width="88" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reload</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HUP</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_BK_DDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_BK_SDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_BK_PDATA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(396.5, 305.69633)"><g class="label" data-id="L_GPU_PROD_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-69" y="0" width="139" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">discovery/endpoint</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_SEC_DEV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEC_STA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SEC_PROD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-EDGE-0" data-look="classic" transform="translate(778.25, 245.39999771118164)"><rect class="basic label-container" style="" x="-127.25" y="-59.20000076293945" width="254.5" height="118.4000015258789"/><g class="label" style="" transform="translate(0, -44.20000076293945)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reverse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> proxy</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Caddy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (rootless</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Podman)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">:80</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> :443</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (TCP/UDP</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HTTP-3)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TLS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> certs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> lets_encrypt</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DAPI-1" data-look="classic" transform="translate(1377.25, 441.6999969482422)"><rect class="basic label-container" style="" x="-85" y="-23.5" width="170" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-api</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dev</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DDATA-2" data-look="classic" transform="translate(1387.25, 580.542537689209)"><path d="M0,15.295031055900623 a98.5,15.295031055900623 0,0,0 197,0 a98.5,15.295031055900623 0,0,0 -197,0 l0,64.89502953002172 a98.5,15.295031055900623 0,0,0 197,0 l0,-64.89502953002172" class="basic label-container outer-path" style="" transform="translate(-98.5, -47.74254582091148)"/><g class="label" style="" transform="translate(-0.5, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres+pgvector</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> nats</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">minio</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> redis</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SAPI-3" data-look="classic" transform="translate(817, 441.6999969482422)"><rect class="basic label-container" style="" x="-82.5" y="-23.5" width="165" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-api</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sta</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SDATA-4" data-look="classic" transform="translate(827, 580.542537689209)"><path d="M0,15.295031055900623 a98.5,15.295031055900623 0,0,0 197,0 a98.5,15.295031055900623 0,0,0 -197,0 l0,64.89502953002172 a98.5,15.295031055900623 0,0,0 197,0 l0,-64.89502953002172" class="basic label-container outer-path" style="" transform="translate(-98.5, -47.74254582091148)"/><g class="label" style="" transform="translate(-0.5, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres+pgvector</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> nats</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">minio</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> redis</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PAPI-5" data-look="classic" transform="translate(498.5, 441.6999969482422)"><rect class="basic label-container" style="" x="-88" y="-23.5" width="176" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-api</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prod</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PDATA-6" data-look="classic" transform="translate(518.5, 580.542537689209)"><path d="M0,15.295031055900623 a98.5,15.295031055900623 0,0,0 197,0 a98.5,15.295031055900623 0,0,0 -197,0 l0,64.89502953002172 a98.5,15.295031055900623 0,0,0 197,0 l0,-64.89502953002172" class="basic label-container outer-path" style="" transform="translate(-98.5, -47.74254582091148)"/><g class="label" style="" transform="translate(-0.5, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">postgres+pgvector</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> nats</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">minio</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> redis</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LE-7" data-look="classic" transform="translate(1345.5, 74.0999984741211)"><rect class="basic label-container" style="" x="-102" y="-41.099998474121094" width="204" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">lets_encrypt</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">issue/renew/rotate</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">systemd</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> --user</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> timer</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BK-8" data-look="classic" transform="translate(1105.5, 441.6999969482422)"><rect class="basic label-container" style="" x="-110" y="-41.099998474121094" width="220" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">backup+DR</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">daily</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> full</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hourly</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> WAL</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">snapshot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> secondary</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DNS-9" data-look="classic" transform="translate(130.5, 74.0999984741211)"><rect class="basic label-container" style="" x="-122.5" y="-23.5" width="245" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">DNS:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *.thready.hxd3v.com</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GPU-19" data-look="classic" transform="translate(145, 245.39999771118164)"><rect class="basic label-container" style="" x="-108" y="-41.099998474121094" width="216" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HelixLLM</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GPU</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> node</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">workstation</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(external</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> endpoint)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SEC-25" data-look="classic" transform="translate(1702.75, 245.39999771118164)"><rect class="basic label-container" style="" x="-127" y="-41.099998474121094" width="254" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Secrets:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> api_keys.sh</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">runtime-load-only,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> chmod</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">600</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The entire system lives on a single Hetzner dedicated
+host and runs entirely as the unprivileged <code>thready</code> user —
+there is no Docker daemon and no <code>sudo</code> in the runtime path
+<code>[CONSTITUTION §11.4.76/161]</code>. Public DNS points the wildcard
+<code>*.thready.hxd3v.com</code> (and the apex
+<code>thready.hxd3v.com</code>) at the host’s single public IP.</p>
+<p>A single <strong>rootless edge reverse proxy</strong> (Caddy 2,
+itself a rootless Podman container) is the only process bound to the
+public ports 80 and 443 (443 on both TCP and UDP so HTTP/3 works). It
+terminates TLS using certificates that the
+<strong><code>lets_encrypt</code></strong> module issues and installs,
+then routes by HTTP <code>Host</code> header to the correct environment:
+<code>dev.</code> → the dev stack, <code>sta.</code> → the staging
+stack, <code>thready.</code> (apex) → the production stack.</p>
+<p>Each of the three environments is an <strong>independent Podman
+Compose project</strong> with its own Postgres+pgvector, NATS JetStream,
+MinIO object store and Redis cache — nothing is shared across
+environments, which is what “fully separated” means (<code>§8.2</code>).
+The three stacks never collide on the host because each is assigned a
+disjoint <strong>host-port band</strong> via the
+<code>port_prefix</code> module (dev = <code>60xxx</code>, sta =
+<code>61xxx</code>, prod = <code>62xxx</code>); the details are in <a
+href="./service-discovery-ports.md">service-discovery-ports.md</a>. The
+<code>lets_encrypt</code> renewal runs as a <code>systemd --user</code>
+timer and, on a successful renew, atomically installs the new cert and
+sends the edge proxy a <code>HUP</code> reload with zero dropped
+connections. The <strong>backup/DR</strong> subsystem takes a daily full
+backup plus hourly PostgreSQL WAL increments of all three stacks and
+ships snapshots to a secondary store, meeting the RPO ≈ 1 h / RTO ≈ 4 h
+targets. Because the operator workstation holds the 32 GB GPU,
+<strong>HelixLLM</strong> is reached as an <em>external endpoint</em>
+(via the containers <code>discovery</code>/<code>endpoint</code> layer)
+rather than being packaged inside the per-environment compose files.
+Finally, every stack loads its secrets at runtime only, from gitignored
+<code>.env</code> and <code>api_keys.sh</code> files with
+<code>chmod 600</code>, never from a tracked file and never into logs
+<code>[CONSTITUTION §11.4.10]</code>.</p>
+<h2 id="document-map">5. Document map</h2>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr>
+<th>Document</th>
+<th>What it specifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./container-topology.md">container-topology.md</a></td>
+<td>The full per-environment service inventory, container images,
+networks, volumes, resource limits, and the BUILD-NEW placeholders</td>
+</tr>
+<tr>
+<td><a href="./podman-compose.md">podman-compose.md</a></td>
+<td>Rootless Podman + <code>podman-compose</code> runtime, the
+<code>containers</code> boot/orchestrator API, compose file layout,
+health gating</td>
+</tr>
+<tr>
+<td><a href="./compose-files.md">compose-files.md</a></td>
+<td>The complete, copy-paste-ready rootless Podman Compose YAML for the
+edge + dev/sta/prod, the <code>buildnew</code> profile, healthchecks,
+loopback bindings, and the per-env render step</td>
+</tr>
+<tr>
+<td><a href="./environments.md">environments.md</a></td>
+<td>The three-environment separation model, subdomain routing, per-env
+config, promotion flow</td>
+</tr>
+<tr>
+<td><a href="./tls-lets-encrypt.md">tls-lets-encrypt.md</a></td>
+<td>ACME issuance (HTTP-01/DNS-01), renewal timer, atomic deploy-hook +
+risk-free rollback, per-subdomain certs</td>
+</tr>
+<tr>
+<td><a href="./deploy-and-rollback.md">deploy-and-rollback.md</a></td>
+<td>The deploy pipeline (bash + Go health gate), image-tag pinning,
+expand-contract migrations, rollback</td>
+</tr>
+<tr>
+<td><a href="./backup-dr.md">backup-dr.md</a></td>
+<td>Daily full + hourly WAL backups, asset snapshots, RPO/RTO, the
+restore runbook, chaos validation</td>
+</tr>
+<tr>
+<td><a
+href="./service-discovery-ports.md">service-discovery-ports.md</a></td>
+<td><code>port_prefix</code> bands,
+<code>discovery</code>/<code>mdns</code>, <code>serviceregistry</code>,
+the deterministic port plan</td>
+</tr>
+<tr>
+<td><a href="./hetzner-provisioning.md">hetzner-provisioning.md</a></td>
+<td>Root bootstrap → <code>thready</code> user, rootless Podman setup,
+firewall, linger, sysctl, first deploy</td>
+</tr>
+<tr>
+<td><a href="./secrets-and-config.md">secrets-and-config.md</a></td>
+<td>Secret sources, load precedence, <code>chmod</code>, leak-audit,
+local git-hook enforcement (no server CI)</td>
+</tr>
+<tr>
+<td><a href="./operations-runbook.md">operations-runbook.md</a></td>
+<td>Day-2 operations: on-call quick card, routine ops, incident-triage,
+per-failure playbooks (service down, cert, WAL, disk, reboot, stuck
+deploy, leak), maintenance cadence</td>
+</tr>
+<tr>
+<td><a
+href="./monitoring-observability.md">monitoring-observability.md</a></td>
+<td>The Q42/Q43 observability deployment:
+Prometheus/Grafana/OTel-Jaeger/ClickHouse per env, SLOs, the complete
+alert-rule set (service-down, edge, cert-expiry, latency, resource),
+alert routing, dashboards, reproduce-first alert test</td>
+</tr>
+<tr>
+<td><a href="./cost-and-capacity.md">cost-and-capacity.md</a></td>
+<td>Monthly run-cost quantification (<code>§16.3</code>): Hetzner host +
+object tier + backup secondary + GPU (external), the capacity envelope,
+three cost scenarios, and the subscription+metered billing-offset
+model</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gap-register-items-addressed-by-this-area">6. Gap-register items
+addressed by this area</h2>
+<p>From <code>helix_thready_subsystem_gaps_and_improvements.md</code>.
+Each is tagged <code>[GAP: ...]</code> at the point of treatment in the
+relevant document.</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 51%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Where addressed</th>
+<th>Treatment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>#1 HelixLLM <code>HashEmbedder</code> trap
+(P0)</strong></td>
+<td><a href="./secrets-and-config.md">secrets-and-config.md</a>, <a
+href="./environments.md">environments.md</a></td>
+<td>Mandatory <code>HELIX_EMBEDDING_PROVIDER=llama</code> env var
+enforced per environment; deploy gate fails if unset for a semantic
+workload</td>
+</tr>
+<tr>
+<td><strong>#3.2 database/storage — no partitioning; MinIO signed-URL
+parity (P1)</strong></td>
+<td><a href="./backup-dr.md">backup-dr.md</a>, <a
+href="./container-topology.md">container-topology.md</a></td>
+<td>Self-hosted MinIO on Hetzner validated for signed URLs;
+time-partition-aware backup plan; tracked item</td>
+</tr>
+<tr>
+<td><strong>#19 docs_chain SKIPs without pandoc/weasyprint
+(P2)</strong></td>
+<td><a href="./hetzner-provisioning.md">hetzner-provisioning.md</a></td>
+<td>Provision <code>pandoc</code> + <code>weasyprint</code> in the host
+toolchain so md→HTML/PDF siblings generate</td>
+</tr>
+<tr>
+<td><strong>#12 CI-equivalent gating (P1, cross-cutting)</strong></td>
+<td><a href="./secrets-and-config.md">secrets-and-config.md</a>, <a
+href="./deploy-and-rollback.md">deploy-and-rollback.md</a></td>
+<td>Local git-hooks (secret-scan pre-commit, full-suite pre-tag retest)
+replace forbidden server CI</td>
+</tr>
+<tr>
+<td><strong>#12 Decoupling / anti-bluff sweep (P1)</strong></td>
+<td><a href="./deploy-and-rollback.md">deploy-and-rollback.md</a></td>
+<td>Deploy verification asserts real health (not stub) before promotion;
+DEV-only default creds in the <code>containers</code> compose are
+overridden</td>
+</tr>
+<tr>
+<td><strong>#20 BUILD-NEW subsystems</strong></td>
+<td><a href="./container-topology.md">container-topology.md</a></td>
+<td>Their containers are declared as <em>placeholders</em> and clearly
+marked not-yet-working until built</td>
+</tr>
+<tr>
+<td><strong>#17 LLMsVerifier port discrepancy (:7061 vs :8080)
+(P2)</strong></td>
+<td><a
+href="./service-discovery-ports.md">service-discovery-ports.md</a></td>
+<td><code>HELIX_LLM_VERIFIER_URL</code> pinned explicitly per env to the
+port LLMsVerifier actually serves; endpoint marked <code>Required</code>
+only if in the fallback chain, else skipped</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-items-tracked-by-this-area">7. Open items tracked by this
+area</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 24%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Item</th>
+<th>Status</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[OPEN: dns-provider]</code></td>
+<td>acme.sh DNS-01 hook for <code>hxd3v.com</code></td>
+<td><strong>Narrowed (Rev 3)</strong> — concrete <code>dns_loopia</code>
+path documented (verified config-example provider + reserved
+<code>LOOPIA_*</code> keys); HTTP-01 is the working default; closes on
+operator registrar confirmation</td>
+<td><a
+href="./tls-lets-encrypt.md#41-concrete-dns-01-with-the-loopia-hook">tls-lets-encrypt.md
+§4.1</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: host-sizing]</code></td>
+<td>Exact Hetzner SKU + object-tier backing</td>
+<td><strong>Narrowed (Rev 3)</strong> — candidate AX/SX SKU families +
+object-tier split table added; specific model confirmed at purchase
+after load tests</td>
+<td><a
+href="./hetzner-provisioning.md#11-candidate-hetzner-skus--object-tier-split">hetzner-provisioning.md
+§1.1</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: secondary-store]</code></td>
+<td>Backup secondary target (Storage Box vs 2nd MinIO)</td>
+<td>Proposed default (Storage Box); both meet physical-separation</td>
+<td><a href="./backup-dr.md">backup-dr.md</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: buildnew-images]</code></td>
+<td>Images for BUILD-NEW services do not exist yet</td>
+<td>Reserved via the <code>buildnew</code> compose profile so a default
+<code>up</code> excludes them</td>
+<td><a href="./container-topology.md">container-topology.md</a>, <a
+href="./compose-files.md#6-the-build-new-profile-in-the-file">compose-files.md
+§6</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: pgvector-image]</code></td>
+<td><code>pgvector/pgvector:pg17</code> vs
+<code>postgres:17-alpine</code> + extension</td>
+<td>Both satisfy the topology; owned by the database area</td>
+<td><a href="./compose-files.md#10-open-items">compose-files.md
+§10</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: alerting-route]</code></td>
+<td>Where alerts page (email/Telegram/PagerDuty)</td>
+<td>The complete rule set (<code>what</code> fires, with
+<code>severity</code>/<code>page</code> labels) is now defined;
+<code>who</code> is paged is an observability-wiring choice</td>
+<td><a
+href="./monitoring-observability.md#6-alert-routing">monitoring-observability.md
+§6</a>, <a
+href="./operations-runbook.md#13-open-items">operations-runbook.md
+§13</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: pricing]</code></td>
+<td>Subscription tier prices + metered rates</td>
+<td>This pack quantifies COGS (<code>§16.3</code>); the price card is a
+product/billing decision owned by the User/Billing service</td>
+<td><a
+href="./cost-and-capacity.md#6-billing-offset-model-subscription--metered">cost-and-capacity.md
+§6</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="verified-vs-assumed-reading-guide">8. Verified vs assumed —
+reading guide</h2>
+<ul>
+<li><strong>VERIFIED</strong> facts are drawn from module source read
+during authoring (<code>containers</code>, <code>lets_encrypt</code>,
+<code>port_prefix</code>, <code>mdns</code>, <code>discovery</code>,
+<code>observability</code>) or from the authoritative research
+documents. They are stated plainly and cite the module/section.</li>
+<li><strong>ASSUMPTIONS / DEFAULTS</strong> are tagged
+<code>[DEFAULT — adjustable]</code> — enterprise defaults the operator
+may override (port-band prefixes, backup retention, resource limits,
+Caddy-vs-nginx edge).</li>
+<li>Where a module is a <strong>scaffold/stub</strong> per the gap
+register, this pack <strong>never claims it works</strong>: its
+container is a declared placeholder with a <code>[GAP: ...]</code> tag
+and a plan to close it.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

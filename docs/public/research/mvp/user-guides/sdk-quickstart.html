@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — SDK Quickstart (Go primary)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — SDK Quickstart (Go primary)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#language-priority-install"
+id="toc-language-priority-install">1. Language priority &amp;
+install</a></li>
+<li><a href="#requestevent-flow-diagram"
+id="toc-requestevent-flow-diagram">2. Request/event flow
+(diagram)</a></li>
+<li><a href="#go-quickstart" id="toc-go-quickstart">3. Go
+quickstart</a></li>
+<li><a href="#authentication" id="toc-authentication">4.
+Authentication</a></li>
+<li><a href="#search" id="toc-search">5. Search</a></li>
+<li><a href="#subscribing-to-events" id="toc-subscribing-to-events">6.
+Subscribing to events</a>
+<ul>
+<li><a href="#event-catalog-topics-payloads-semantics"
+id="toc-event-catalog-topics-payloads-semantics">6.1 Event catalog
+(topics · payloads · semantics)</a></li>
+</ul></li>
+<li><a href="#assets-reprocessing" id="toc-assets-reprocessing">7.
+Assets &amp; reprocessing</a></li>
+<li><a href="#other-languages-surface"
+id="toc-other-languages-surface">8. Other languages (surface)</a></li>
+<li><a href="#errors-retries-slos" id="toc-errors-retries-slos">9.
+Errors, retries &amp; SLOs</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — SDK Quickstart (Go primary)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/user-guides/sdk-quickstart.md
+  Status          : Draft — v0.1 (zero-version)
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (user-guides)
+  Related         : ./cli-reference.md, ./configuration.md, ../api/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (user-guides)</td>
+<td>Initial SDK quickstart (Go + multi-language surface)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (user-guides, Pass 3)</td>
+<td>Depth pass: split the request/event-flow diagram explanation into
+multi-paragraph form; linked <a
+href="./quickstart.md">quickstart.md</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (user-guides, Critic pass)</td>
+<td>Completeness pass: added the consolidated <strong>§6.1 Event
+catalog</strong> (every topic · when it fires · one-time vs sticky ·
+payload · min scope) mandated by final request §3.4 — the single
+reference the CLI/TUI/Web event views point to; added the
+reconnect/replay contract note</td>
+</tr>
+</tbody>
+</table>
+<p>Helix Thready ships <strong>native SDKs</strong> wrapped per
+language. <strong>Go is the primary language</strong> (final request
+§13.1). SDKs are generated from an <strong>OpenAPI 3.1</strong> REST
+surface + <strong>Protobuf</strong> event/DTO contracts (the mature
+<code>helix_proto</code> pattern: <code>buf</code> → Go/Rust,
+<code>openapi-generator</code> → TS/Dart), with a thin hand-written
+idiomatic layer per language <code>[DEFAULT — adjustable]</code>.</p>
+<blockquote>
+<p><strong>VERIFIED vs ASSUMPTION.</strong> The codegen strategy
+(OpenAPI 3.1 + Protobuf via <code>helix_proto</code>) and the language
+priority are VERIFIED from the decision matrix. The Go API shapes below
+are illustrative and track <a
+href="../api/index.md">../api/index.md</a>; reconcile once the OpenAPI
+spec is published.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-language-priority--install">Language priority &amp;
+install</a></li>
+<li><a href="#2-requestevent-flow-diagram">Request/event flow
+(diagram)</a></li>
+<li><a href="#3-go-quickstart">Go quickstart</a></li>
+<li><a href="#4-authentication">Authentication</a></li>
+<li><a href="#5-search">Search</a></li>
+<li><a href="#6-subscribing-to-events">Subscribing to events</a>
+<ul>
+<li><a href="#61-event-catalog-topics--payloads--semantics">6.1 Event
+catalog (topics · payloads · semantics)</a></li>
+</ul></li>
+<li><a href="#7-assets--reprocessing">Assets &amp; reprocessing</a></li>
+<li><a href="#8-other-languages-surface">Other languages
+(surface)</a></li>
+<li><a href="#9-errors-retries--slos">Errors, retries &amp;
+SLOs</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<h2 id="language-priority-install">1. Language priority &amp;
+install</h2>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 34%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Language</th>
+<th>Priority</th>
+<th>Install</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Go</strong></td>
+<td>Critical (primary)</td>
+<td><code>go get github.com/HelixDevelopment/helix_thready/sdk/go</code></td>
+</tr>
+<tr>
+<td>Java/Kotlin/Groovy/Scala</td>
+<td>High</td>
+<td>Maven/Gradle <code>dev.helix:thready-sdk</code></td>
+</tr>
+<tr>
+<td>Python</td>
+<td>High</td>
+<td><code>pip install thready-sdk</code></td>
+</tr>
+<tr>
+<td>TypeScript/JavaScript</td>
+<td>High</td>
+<td><code>npm i @helixdevelopment/thready-sdk</code></td>
+</tr>
+<tr>
+<td>Swift</td>
+<td>Medium</td>
+<td>SwiftPM</td>
+</tr>
+<tr>
+<td>C++ / Rust / C# (Mono)</td>
+<td>Medium</td>
+<td>per-registry</td>
+</tr>
+<tr>
+<td>Zig / Ruby / PHP</td>
+<td>Low</td>
+<td>per-registry</td>
+</tr>
+</tbody>
+</table>
+<h2 id="requestevent-flow-diagram">2. Request/event flow (diagram)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="max-width: 1127.5px; background-color: white;" viewBox="-50 -10 1127.5 787" role="graphics-document document" aria-roledescription="sequence"><g><rect x="874.5" y="701" fill="#eaeaea" stroke="#666" width="153" height="65" name="WS" rx="3" ry="3" class="actor actor-bottom"/><text x="951" y="733.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="951" dy="0">Event bus (WS/SSE)</tspan></text></g><g><rect x="673.5" y="701" fill="#eaeaea" stroke="#666" width="151" height="65" name="API" rx="3" ry="3" class="actor actor-bottom"/><text x="749" y="733.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="749" dy="0">REST /v1 (HTTP/3)</tspan></text></g><g><rect x="383" y="701" fill="#eaeaea" stroke="#666" width="150" height="65" name="SDK" rx="3" ry="3" class="actor actor-bottom"/><text x="458" y="733.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="458" dy="0">thready-go SDK</tspan></text></g><g><rect x="0" y="701" fill="#eaeaea" stroke="#666" width="150" height="65" name="App" rx="3" ry="3" class="actor actor-bottom"/><text x="75" y="733.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Your Go app</tspan></text></g><g><line id="actor3" x1="951" y1="65" x2="951" y2="701" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="WS" data-et="life-line" data-id="WS"/><g id="root-3" data-et="participant" data-type="participant" data-id="WS"><rect x="874.5" y="0" fill="#eaeaea" stroke="#666" width="153" height="65" name="WS" rx="3" ry="3" class="actor actor-top"/><text x="951" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="951" dy="0">Event bus (WS/SSE)</tspan></text></g></g><g><line id="actor2" x1="749" y1="65" x2="749" y2="701" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="API" data-et="life-line" data-id="API"/><g id="root-2" data-et="participant" data-type="participant" data-id="API"><rect x="673.5" y="0" fill="#eaeaea" stroke="#666" width="151" height="65" name="API" rx="3" ry="3" class="actor actor-top"/><text x="749" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="749" dy="0">REST /v1 (HTTP/3)</tspan></text></g></g><g><line id="actor1" x1="458" y1="65" x2="458" y2="701" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="SDK" data-et="life-line" data-id="SDK"/><g id="root-1" data-et="participant" data-type="participant" data-id="SDK"><rect x="383" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="SDK" rx="3" ry="3" class="actor actor-top"/><text x="458" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="458" dy="0">thready-go SDK</tspan></text></g></g><g><line id="actor0" x1="75" y1="65" x2="75" y2="701" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="App" data-et="life-line" data-id="App"/><g id="root-0" data-et="participant" data-type="participant" data-id="App"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="App" rx="3" ry="3" class="actor actor-top"/><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Your Go app</tspan></text></g></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg rect.note[data-look="neo"]{stroke:#999;fill:#666;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg text.actor&gt;tspan{fill:#333;stroke:none;}#my-svg .actor-line{stroke:hsl(0, 0%, 83%);}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:#333;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:#333;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:#333;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#my-svg .note{stroke:#999;fill:#666;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:#fff;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#eee;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#999;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><text x="265" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">thready.New(WithAPIKey(key), WithServer(url))</text><line x1="76" y1="109" x2="454" y2="109" class="messageLine0" data-et="message" data-id="i0" data-from="App" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="602" y="124" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">GET /v1/meta/version (handshake)</text><line x1="459" y1="153" x2="745" y2="153" class="messageLine0" data-et="message" data-id="i1" data-from="SDK" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="605" y="168" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">200 {version, capabilities}</text><line x1="748" y1="197" x2="462" y2="197" class="messageLine1" data-et="message" data-id="i2" data-from="API" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="265" y="212" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">client.Search(ctx, query, filters)</text><line x1="76" y1="241" x2="454" y2="241" class="messageLine0" data-et="message" data-id="i3" data-from="App" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="602" y="256" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">POST /v1/search (Bearer key)</text><line x1="459" y1="285" x2="745" y2="285" class="messageLine0" data-et="message" data-id="i4" data-from="SDK" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="605" y="300" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">200 {results:[{id,kind,score}]}</text><line x1="748" y1="329" x2="462" y2="329" class="messageLine1" data-et="message" data-id="i5" data-from="API" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="268" y="344" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">[]SearchResult (hydrated)</text><line x1="457" y1="373" x2="79" y2="373" class="messageLine1" data-et="message" data-id="i6" data-from="SDK" data-to="App" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="265" y="388" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">client.Events.Subscribe(ctx, "post.processed")</text><line x1="76" y1="417" x2="454" y2="417" class="messageLine0" data-et="message" data-id="i7" data-from="App" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="703" y="432" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">upgrade + subscribe(post.processed)</text><line x1="459" y1="461" x2="947" y2="461" class="messageLine0" data-et="message" data-id="i8" data-from="SDK" data-to="WS" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="706" y="476" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">event stream (durable replay on reconnect)</text><line x1="950" y1="505" x2="462" y2="505" class="messageLine1" data-et="message" data-id="i9" data-from="WS" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="268" y="520" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">&lt;-chan Event</text><line x1="457" y1="549" x2="79" y2="549" class="messageLine1" data-et="message" data-id="i10" data-from="SDK" data-to="App" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="265" y="564" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">client.Posts.Reprocess(ctx, postID)</text><line x1="76" y1="593" x2="454" y2="593" class="messageLine0" data-et="message" data-id="i11" data-from="App" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="602" y="608" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">POST /v1/posts/{id}/reprocess</text><line x1="459" y1="637" x2="745" y2="637" class="messageLine0" data-et="message" data-id="i12" data-from="SDK" data-to="API" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="605" y="652" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">202 Accepted</text><line x1="748" y1="681" x2="462" y2="681" class="messageLine1" data-et="message" data-id="i13" data-from="API" data-to="SDK" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/sdk-sequence.mmd">diagrams/sdk-sequence.mmd</a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Your application constructs a client with an API key
+and server URL. On construction the SDK performs a lightweight handshake
+(<code>GET /v1/meta/version</code>) to negotiate version and
+capabilities and <strong>fail fast on mismatch</strong> — this is
+deliberate, so an incompatible client/server pair errors at startup
+rather than deep inside a later call where the failure is harder to
+diagnose.</p>
+<p>A search call becomes a <code>POST /v1/search</code> with the key as
+a Bearer token. The API returns result ids with kinds and scores, and
+the SDK <strong>hydrates</strong> them into typed
+<code>SearchResult</code> values by fetching the full records from the
+relational store. This hydration is why the SDK returns rich objects
+rather than bare ids — the caller gets the source post/asset, not just a
+vector hit.</p>
+<p>To receive real-time updates the app subscribes to an event topic
+(<code>post.processed</code>). The SDK upgrades to the WebSocket
+transport (or falls back to SSE where WS is blocked) and returns a Go
+channel the app ranges over, with <strong>durable replay on
+reconnect</strong> so no event is lost across a dropped connection. The
+channel abstraction hides the transport entirely — the app writes a
+<code>for range</code>, not socket-handling code.</p>
+<p>Finally a reprocess request is a
+<code>POST /v1/posts/{id}/reprocess</code> that returns
+<code>202 Accepted</code>. Processing is <strong>asynchronous</strong>:
+the 202 means “accepted for processing”, and the actual completion
+arrives later as a <code>post.processed</code> event on the
+subscription, not as the response body. An app that wants to know when
+reprocessing finished watches the event stream, it does not block on the
+HTTP call.</p>
+<p>The sequence as a whole shows the <strong>two-transport
+model</strong> every Thready SDK follows: request/response over REST for
+actions and queries, and a live event channel for push updates.
+Internalizing this split is the key to using any of the SDKs —
+synchronous answers come back from REST, asynchronous outcomes come back
+over events.</p>
+<h2 id="go-quickstart">3. Go quickstart</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;fmt&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;log&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    thready <span class="st">&quot;github.com/HelixDevelopment/helix_thready/sdk/go&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    ctx <span class="op">:=</span> context<span class="op">.</span>Background<span class="op">()</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Construct a client. Key comes from env/keyring, never hardcoded.</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    client<span class="op">,</span> err <span class="op">:=</span> thready<span class="op">.</span>New<span class="op">(</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        thready<span class="op">.</span>WithServer<span class="op">(</span><span class="st">&quot;https://thready.hxd3v.com&quot;</span><span class="op">),</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        thready<span class="op">.</span>WithAPIKeyFromEnv<span class="op">(</span><span class="st">&quot;THREADY_TOKEN&quot;</span><span class="op">),</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        thready<span class="op">.</span>WithTimeout<span class="op">(</span><span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">),</span> <span class="co">// Aggressive SLO: p95 &lt; 150 ms</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;sdk init: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> client<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Semantic search over posts + generated materials.</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    results<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Search<span class="op">(</span>ctx<span class="op">,</span> thready<span class="op">.</span>SearchRequest<span class="op">{</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        Query<span class="op">:</span> <span class="st">&quot;kubernetes operator retry backoff&quot;</span><span class="op">,</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        Kind<span class="op">:</span>  thready<span class="op">.</span>KindResearch<span class="op">,</span> <span class="co">// post | asset | research</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        Limit<span class="op">:</span> <span class="dv">20</span><span class="op">,</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;search: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> r <span class="op">:=</span> <span class="kw">range</span> results <span class="op">{</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%.3f  %s  %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> r<span class="op">.</span>Score<span class="op">,</span> r<span class="op">.</span>Kind<span class="op">,</span> r<span class="op">.</span>Title<span class="op">)</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="authentication">4. Authentication</h2>
+<p><code>[GAP: 10]</code> Tokens are HS256 today; RS256/EdDSA is the
+multi-service target. For SDK/automation use a <strong>scoped API
+key</strong> (mint via
+<code>thready auth token --scopes read:search</code>), not an
+interactive JWT.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Option A: scoped API key (recommended for services)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>thready<span class="op">.</span>WithAPIKeyFromEnv<span class="op">(</span><span class="st">&quot;THREADY_TOKEN&quot;</span><span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Option B: username/password → JWT (interactive tools); refreshes automatically</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>client<span class="op">,</span> _ <span class="op">:=</span> thready<span class="op">.</span>New<span class="op">(</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    thready<span class="op">.</span>WithServer<span class="op">(</span>url<span class="op">),</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    thready<span class="op">.</span>WithPasswordLogin<span class="op">(</span>user<span class="op">,</span> passFromEnv<span class="op">),</span> <span class="co">// performs MFA challenge if required</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<p>Never log the token; the SDK redacts it in errors. Keys carry scopes
+— a <code>read:search</code> key cannot call admin endpoints (server
+returns <code>403</code>, SDK returns
+<code>thready.ErrForbidden</code>).</p>
+<h2 id="search">5. Search</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Search<span class="op">(</span>ctx<span class="op">,</span> thready<span class="op">.</span>SearchRequest<span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Query<span class="op">:</span>     <span class="st">&quot;invoice signature&quot;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Kind<span class="op">:</span>      thready<span class="op">.</span>KindAsset<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Account<span class="op">:</span>   <span class="st">&quot;Acme&quot;</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Since<span class="op">:</span>     thready<span class="op">.</span>Days<span class="op">(</span><span class="dv">90</span><span class="op">),</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Sensitive<span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Limit<span class="op">:</span>     <span class="dv">25</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p>Results return source ids hydrated from the relational store, so
+<code>res[i].Post</code> / <code>res[i].Asset</code> are fully
+populated. Target latency &lt; 500 ms. If the server runs the hash
+embedder <code>[GAP: 1]</code> the response carries
+<code>Degraded: true</code> and a reason — surface it, don’t trust the
+ranking.</p>
+<p><strong>The contract behind the call (OpenAPI 3.1).</strong> Every
+SDK method is generated from the REST surface defined in <strong>OpenAPI
+3.1</strong> (<code>buf</code>/<code>openapi-generator</code>, the
+<code>helix_proto</code> pattern). The <code>/v1/search</code> operation
+the code above calls is, illustratively (canonical spec lives in <a
+href="../api/index.md">../api/index.md</a>; reconcile on freeze —
+<code>[OPEN: sdk-1]</code>):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openapi</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.1.0</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">info</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Helix Thready API</span><span class="kw">,</span><span class="at"> </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0.0&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/search</span><span class="kw">:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">post</span><span class="kw">:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> search</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Semantic search over posts + generated materials (pgvector, &lt; 500 ms SLO)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">apiKey</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;read:search&quot;</span><span class="at"> </span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">requestBody</span><span class="kw">:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#/components/schemas/SearchRequest&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;200&quot;</span><span class="kw">:</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Ranked results (source ids hydrated from the relational store)</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">content</span><span class="kw">:</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">application/json</span><span class="kw">:</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#/components/schemas/SearchResponse&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;401&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Unauthorized </span><span class="kw">}</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;403&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Forbidden — key lacks read:search scope </span><span class="kw">}</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;429&quot;</span><span class="kw">:</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Rate limited (THREADY_RATE_LIMIT_RPS)</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">headers</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">Retry-After</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> integer </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">securitySchemes</span><span class="kw">:</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">apiKey</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http</span><span class="kw">,</span><span class="at"> </span><span class="fu">scheme</span><span class="kw">:</span><span class="at"> bearer</span><span class="kw">,</span><span class="at"> </span><span class="fu">bearerFormat</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;scoped-api-key | JWT&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schemas</span><span class="kw">:</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SearchRequest</span><span class="kw">:</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> query </span><span class="kw">]</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">query</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">minLength</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">kind</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> post</span><span class="kw">,</span><span class="at"> asset</span><span class="kw">,</span><span class="at"> research </span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">account</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">since</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> duration</span><span class="kw">,</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;e.g. 90d&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">sensitive</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> boolean</span><span class="kw">,</span><span class="at"> </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">limit</span><span class="kw">:</span><span class="at">     </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> integer</span><span class="kw">,</span><span class="at"> </span><span class="fu">minimum</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">maximum</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span><span class="kw">,</span><span class="at"> </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SearchResponse</span><span class="kw">:</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> results</span><span class="kw">,</span><span class="at"> degraded </span><span class="kw">]</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">degraded</span><span class="kw">:</span><span class="at">      </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> boolean</span><span class="kw">,</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;true if a non-semantic embedder was used [GAP: 1]&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="at">        degradedReason</span><span class="fu">:{ type</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;null&quot;</span><span class="at"> </span><span class="kw">]</span><span class="at"> }</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">results</span><span class="kw">:</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">type</span><span class="kw">:</span><span class="at"> array</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> id</span><span class="kw">,</span><span class="at"> kind</span><span class="kw">,</span><span class="at"> score </span><span class="kw">]</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">id</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">kind</span><span class="kw">:</span><span class="at">  </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> post</span><span class="kw">,</span><span class="at"> asset</span><span class="kw">,</span><span class="at"> research </span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">score</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> number</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> float </span><span class="kw">}</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span></code></pre></div>
+<p>Note the OpenAPI 3.1 idioms: <code>type: [ string, "null" ]</code>
+for nullable, and the <code>Degraded</code> field wired into the
+response schema so the <code>[GAP: 1]</code> hash-embedder condition is
+part of the contract, not an afterthought.</p>
+<h2 id="subscribing-to-events">6. Subscribing to events</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sub<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Events<span class="op">.</span>Subscribe<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;post.processed&quot;</span><span class="op">,</span> <span class="st">&quot;download.error&quot;</span><span class="op">)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> sub<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ev <span class="op">:=</span> <span class="kw">range</span> sub<span class="op">.</span>C<span class="op">()</span> <span class="op">{</span> <span class="co">// durable replay backfills on reconnect</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> e <span class="op">:=</span> ev<span class="op">.(</span><span class="kw">type</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">*</span>thready<span class="op">.</span>PostProcessed<span class="op">:</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;post %s done: %d assets, %d research</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> e<span class="op">.</span>PostID<span class="op">,</span> e<span class="op">.</span>Assets<span class="op">,</span> e<span class="op">.</span>Research<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">*</span>thready<span class="op">.</span>DownloadError<span class="op">:</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;post %s step %s retry %d/%d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> e<span class="op">.</span>PostID<span class="op">,</span> e<span class="op">.</span>Step<span class="op">,</span> e<span class="op">.</span>Retry<span class="op">,</span> e<span class="op">.</span>Max<span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Event names + payloads are defined once in Protobuf and shared across
+SDKs. Sticky events replay last-value on subscribe; one-time events fire
+once (final request §3.4).</p>
+<p><strong>The real-time wire contract (WebSocket + SSE
+fallback).</strong> The SDK negotiates a WebSocket upgrade at
+<code>GET /v1/events</code> and transparently falls back to Server-Sent
+Events (<code>Accept: text/event-stream</code>) where WS is blocked.
+Both carry the same JSON envelope generated from the Protobuf event
+schema; the SSE frame form is:</p>
+<pre><code>GET /v1/events?topics=post.processed,download.error&amp;replay=last-value
+Authorization: Bearer &lt;scoped-api-key&gt;
+Accept: text/event-stream
+
+event: post.processed
+id: 0197c3f2-8f3a-7c11-9a2e-000000000042      # JetStream sequence — resume token for durable replay
+data: {&quot;topic&quot;:&quot;post.processed&quot;,&quot;postId&quot;:&quot;8f3a…&quot;,&quot;account&quot;:&quot;Acme&quot;,&quot;assets&quot;:1,&quot;research&quot;:1,&quot;tookMs&quot;:48000,&quot;sticky&quot;:true}
+
+event: download.error
+id: 0197c3f2-8f3a-7c11-9a2e-000000000043
+data: {&quot;topic&quot;:&quot;download.error&quot;,&quot;postId&quot;:&quot;91b2…&quot;,&quot;step&quot;:&quot;metube&quot;,&quot;retry&quot;:2,&quot;max&quot;:5,&quot;backoffMs&quot;:8000}</code></pre>
+<p>On reconnect the SDK sends <code>Last-Event-ID</code> (SSE) or the
+JetStream sequence (WS), and the durable consumer <strong>replays every
+missed event</strong> from that point — this is the “no event lost
+across a dropped connection” guarantee the diagram encodes (final
+request §3.4). Sticky topics (<code>"sticky": true</code>) also deliver
+their last value immediately on subscribe so a fresh client rehydrates
+state without a REST round-trip; clients still reconcile via REST
+snapshots for authoritative state.</p>
+<h3 id="event-catalog-topics-payloads-semantics">6.1 Event catalog
+(topics · payloads · semantics)</h3>
+<p>The final request (§3.4) mandates that <em>“a dedicated document
+enumerates every system event, when it fires, and how to
+subscribe.”</em> This is that catalog — the <strong>single consolidated
+reference</strong> the <a
+href="./cli-reference.md#4-content-commands">CLI
+<code>events tail</code></a>, the <a
+href="./tui-usage.md#5-the-live-event-stream">TUI live stream</a>, and
+the <a href="./web-portal-guide.md#7-real-time-updates">Web real-time
+updates</a> all surface. Every topic below is subscribable over the same
+<code>GET /v1/events</code> WebSocket (SSE fallback) shown in §6; the
+<code>topics=</code> filter takes any comma-separated subset.</p>
+<blockquote>
+<p><strong>VERIFIED vs ASSUMPTION.</strong> The <em>transport</em> and
+<em>semantics</em> (in-process bus + NATS JetStream, at-least-once,
+idempotent consumers, sticky = last-value/compaction with invalidation,
+durable replay) are VERIFIED from the decision matrix and final request
+§3.4. The <strong>topic names and payload field spellings below are this
+guide’s proposal</strong> <code>[DEFAULT — adjustable]</code>, to be
+frozen against the Protobuf event contract in <a
+href="../api/index.md">../api/index.md</a> — see <a
+href="#10-open-items">Open items</a> <code>[OPEN: sdk-4]</code>.</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 20%" />
+<col style="width: 16%" />
+<col style="width: 33%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Fires when</th>
+<th>Delivery</th>
+<th>Key payload fields</th>
+<th>Min scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>post.received</code></td>
+<td>A complete post (root + organic replies) is ingested and
+enqueued</td>
+<td>one-time</td>
+<td><code>postId</code>, <code>channel</code>, <code>account</code>,
+<code>hashtags[]</code></td>
+<td><code>read:events</code> (own account)</td>
+</tr>
+<tr>
+<td><code>skill.dispatch</code></td>
+<td>The matching Skill(s) are selected and ordered for a post</td>
+<td>one-time</td>
+<td><code>postId</code>, <code>order[]</code>
+(e.g. <code>[download,research,reply]</code>)</td>
+<td><code>read:events</code></td>
+</tr>
+<tr>
+<td><code>download.error</code></td>
+<td>A download step fails and is scheduled for retry/back-off</td>
+<td>one-time</td>
+<td><code>postId</code>, <code>step</code>
+(<code>metube</code>|<code>boba</code>|<code>dlm</code>),
+<code>retry</code>, <code>max</code>, <code>backoffMs</code></td>
+<td><code>read:events</code></td>
+</tr>
+<tr>
+<td><code>download.complete</code></td>
+<td>A delegated 3rd-party download finishes (Boba SSE / MeTube poll →
+webhook <code>[GAP: 5]</code>)</td>
+<td>one-time</td>
+<td><code>postId</code>, <code>step</code>, <code>assetId</code>,
+<code>bytes</code></td>
+<td><code>read:events</code></td>
+</tr>
+<tr>
+<td><code>post.processed</code></td>
+<td>All dispatched Skills for a post complete</td>
+<td><strong>sticky</strong> (last-value per <code>postId</code>)</td>
+<td><code>postId</code>, <code>account</code>, <code>assets</code>,
+<code>research</code>, <code>tookMs</code>,
+<code>sticky:true</code></td>
+<td><code>read:events</code></td>
+</tr>
+<tr>
+<td><code>post.failed</code></td>
+<td>A post exhausts the retry ceiling and lands in the DLQ</td>
+<td>one-time</td>
+<td><code>postId</code>, <code>step</code>, <code>error</code>,
+<code>retry</code>, <code>max</code></td>
+<td><code>read:events</code></td>
+</tr>
+<tr>
+<td><code>config.changed</code></td>
+<td>A runtime-editable setting is changed (client → REST → System)</td>
+<td>one-time</td>
+<td><code>key</code>, <code>scope</code>
+(<code>global</code>|<code>account:&lt;id&gt;</code>),
+<code>actor</code></td>
+<td><code>account_admin</code> (own) / <code>root</code> (global)</td>
+</tr>
+<tr>
+<td><code>processing.paused</code> /
+<code>processing.resumed</code></td>
+<td>Processing is paused/resumed for a scope</td>
+<td><strong>sticky</strong> (state per scope)</td>
+<td><code>scope</code>, <code>actor</code>, <code>at</code></td>
+<td><code>account_admin</code> (own) / <code>root</code> (global)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to read the two delivery modes.</strong>
+<em>One-time</em> events fire once and are consumed; a client that was
+offline receives them via durable JetStream replay on reconnect
+(<code>Last-Event-ID</code>), never a re-fire. <em>Sticky</em> events
+retain their last value with explicit invalidation, so a
+<strong>fresh</strong> subscriber is handed the current state
+immediately on subscribe (e.g. <code>post.processed</code> for a post it
+never saw process, or the live <code>processing.paused</code> state)
+without a REST round-trip — the mechanism is a compacted JetStream
+subject / last-value cache keyed by entity id (final request §3.4).
+Sticky entries are invalidated on the next state change or TTL. Because
+delivery is <strong>at-least-once</strong>, consumers must be
+idempotent: key side-effects on <code>postId</code> (or
+<code>scope</code>) so a replayed event is a no-op, exactly as the
+server’s own single-claim guarantee does for posts.</p>
+<p><strong>Scopes.</strong> Event visibility is RBAC-scoped like every
+other surface: a Standard User’s <code>read:events</code> key only
+receives events for accounts they belong to;
+<code>config.changed</code>/<code>processing.*</code> at global scope
+require <code>root</code>. A key lacking the scope receives no frames
+for that topic (it is filtered server-side), never a partial or
+unauthorized payload.</p>
+<h2 id="assets-reprocessing">7. Assets &amp; reprocessing</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolve a signed URL via the Asset Service (never a direct file path)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>url<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Assets<span class="op">.</span>SignedURL<span class="op">(</span>ctx<span class="op">,</span> assetID<span class="op">,</span> thready<span class="op">.</span>RenditionWeb<span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Re-download a broken physical link</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> client<span class="op">.</span>Assets<span class="op">.</span>Reheal<span class="op">(</span>ctx<span class="op">,</span> assetID<span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Trigger a full re-process (async; completion arrives as an event)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> client<span class="op">.</span>Posts<span class="op">.</span>Reprocess<span class="op">(</span>ctx<span class="op">,</span> postID<span class="op">)</span>                 <span class="co">// 202 Accepted</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> client<span class="op">.</span>Posts<span class="op">.</span>RetryStep<span class="op">(</span>ctx<span class="op">,</span> postID<span class="op">,</span> thready<span class="op">.</span>StepDownload<span class="op">)</span></span></code></pre></div>
+<h2 id="other-languages-surface">8. Other languages (surface)</h2>
+<p>The same operations exist in every SDK with idiomatic naming.
+TypeScript sketch:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Thready } <span class="im">from</span> <span class="st">&quot;@helixdevelopment/thready-sdk&quot;</span><span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> client <span class="op">=</span> <span class="kw">new</span> <span class="fu">Thready</span>({ server<span class="op">:</span> <span class="st">&quot;https://thready.hxd3v.com&quot;</span><span class="op">,</span> apiKey<span class="op">:</span> <span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">THREADY_TOKEN</span> })<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> results <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="fu">search</span>({ query<span class="op">:</span> <span class="st">&quot;rust async runtime&quot;</span><span class="op">,</span> kind<span class="op">:</span> <span class="st">&quot;research&quot;</span><span class="op">,</span> limit<span class="op">:</span> <span class="dv">20</span> })<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sub <span class="op">=</span> client<span class="op">.</span><span class="at">events</span><span class="op">.</span><span class="fu">subscribe</span>([<span class="st">&quot;post.processed&quot;</span>])<span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="cf">await</span> (<span class="kw">const</span> ev <span class="kw">of</span> sub) <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(ev<span class="op">.</span><span class="at">postId</span><span class="op">,</span> ev<span class="op">.</span><span class="at">assets</span>)<span class="op">;</span></span></code></pre></div>
+<p>Python sketch:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> thready_sdk <span class="im">import</span> Thready</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> Thready(server<span class="op">=</span><span class="st">&quot;https://thready.hxd3v.com&quot;</span>, api_key<span class="op">=</span>os.environ[<span class="st">&quot;THREADY_TOKEN&quot;</span>])</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> r <span class="kw">in</span> client.search(query<span class="op">=</span><span class="st">&quot;signature contract&quot;</span>, kind<span class="op">=</span><span class="st">&quot;asset&quot;</span>, limit<span class="op">=</span><span class="dv">25</span>):</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(r.score, r.title)</span></code></pre></div>
+<h2 id="errors-retries-slos">9. Errors, retries &amp; SLOs</h2>
+<table>
+<thead>
+<tr>
+<th>SDK error</th>
+<th>HTTP</th>
+<th>Retry?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ErrUnauthorized</code></td>
+<td>401</td>
+<td>No — refresh/re-auth</td>
+</tr>
+<tr>
+<td><code>ErrForbidden</code></td>
+<td>403</td>
+<td>No — insufficient scope/role</td>
+</tr>
+<tr>
+<td><code>ErrNotFound</code></td>
+<td>404</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>ErrRateLimited</code></td>
+<td>429</td>
+<td>Yes — honor <code>Retry-After</code></td>
+</tr>
+<tr>
+<td><code>ErrUnavailable</code></td>
+<td>503 / timeout</td>
+<td>Yes — exponential back-off</td>
+</tr>
+</tbody>
+</table>
+<p>The SDK applies back-off with jitter for retriable classes and honors
+the server rate limiter (<code>THREADY_RATE_LIMIT_RPS</code>). SLO
+targets: API p95 &lt; 150 ms, search &lt; 500 ms. Use a per-call
+<code>context</code> deadline; the SDK propagates cancellation.</p>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: sdk-1]</code> Go/TS/Python API shapes track the
+unpublished OpenAPI 3.1 spec + Protobuf contracts; reconcile once <a
+href="../api/index.md">../api/index.md</a> is frozen. Tracked:
+<strong>ATM — generate SDKs from the frozen OpenAPI+proto</strong>.</li>
+<li><code>[OPEN: sdk-2]</code> Token signing moves HS256 → RS256/EdDSA
+<code>[GAP: 10]</code>; SDK key/JWKS handling updates then. Tracked:
+<strong>ATM — SDK JWKS verification support</strong>.</li>
+<li><code>[OPEN: sdk-3]</code> Lower-priority language SDKs
+(Zig/Ruby/PHP) are surface-only in the zero version. Tracked:
+<strong>ATM — complete low-priority SDK wrappers</strong>.</li>
+<li><code>[OPEN: sdk-4]</code> The §6.1 event <strong>topic names and
+payload spellings</strong> are <code>[DEFAULT — adjustable]</code>;
+freeze them against the Protobuf event contract published in <a
+href="../api/index.md">../api/index.md</a> (the transport/semantics are
+VERIFIED, the names are not). Tracked: <strong>ATM — freeze event topic
++ payload schema against the api/ Protobuf contract</strong>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

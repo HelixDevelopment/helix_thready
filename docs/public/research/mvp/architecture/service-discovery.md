@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/architecture/service-discovery.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (System Architecture)
   Related         : ./system-overview.md, ./component-catalog.md, ./security-model.md
 -->
@@ -15,6 +15,7 @@
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — discovery, mDNS, port_prefix, health |
 | 2 | 2026-07-22 | swarm (Pass 3 depth) | Close DISC-1 — real `discovery/pkg/broadcast` (`Announcer`/`Listener`/`Responder`/`ServiceInfo`) + `pkg/scanner`/`pkg/report`/`pkg/resilience` verified; no central `Registry.Resolve`; deepen discovery diagram explanation |
 | 3 | 2026-07-22 | swarm (critic consistency) | Fix residual central-registry model still drawn in the §5 diagram + `discovery.mmd` sibling (now `broadcast.Announcer`/`Listener` multicast, no `register`/`resolve` edges — matches the DISC-1 correction & the prose); rewrite the §10 TDD skeleton off the non-existent `Registry`/`Resolve`/`ErrNoHealthyInstance` API onto `broadcast.Listener`+`pickHealthy` |
+| 4 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -158,7 +159,7 @@ environment's multicast group and the `env`/`role` metadata.
 ```mermaid
 flowchart TB
   subgraph Host["Hetzner host — rootless Podman Compose (env band)"]
-    PP[port_prefix\nExposed(prefix, internalPort, taken)]:::c
+    PP["port_prefix\nExposed(prefix, internalPort, taken)"]:::c
     subgraph Envs["env → prefix band"]
       DEV[dev → 52xxx]:::b
       STA[sta → 53xxx]:::b

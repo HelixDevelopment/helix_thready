@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Icon Export Size/Format Matrix</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Icon Export Size/Format Matrix</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#scope-sources-of-truth-and-conventions"
+id="toc-scope-sources-of-truth-and-conventions">1. Scope, sources of
+truth, and conventions</a></li>
+<li><a href="#source-svgs-and-the-sourcetarget-mapping"
+id="toc-source-svgs-and-the-sourcetarget-mapping">2. Source SVGs and the
+source→target mapping</a></li>
+<li><a href="#the-pixelformat-matrix-per-platform"
+id="toc-the-pixelformat-matrix-per-platform">3. The pixel/format matrix
+(per platform)</a>
+<ul>
+<li><a href="#web-pwa" id="toc-web-pwa">3.1 Web / PWA</a></li>
+<li><a href="#android" id="toc-android">3.2 Android</a></li>
+<li><a href="#ios" id="toc-ios">3.3 iOS</a></li>
+<li><a href="#windows" id="toc-windows">3.4 Windows</a></li>
+<li><a href="#macos" id="toc-macos">3.5 macOS</a></li>
+<li><a href="#linux" id="toc-linux">3.6 Linux</a></li>
+<li><a href="#harmonyos" id="toc-harmonyos">3.7 HarmonyOS</a></li>
+<li><a href="#aurora" id="toc-aurora">3.8 Aurora</a></li>
+<li><a href="#brand-lockups-non-launcher-convenience-raster"
+id="toc-brand-lockups-non-launcher-convenience-raster">3.9 Brand lockups
+(non-launcher, convenience raster)</a></li>
+</ul></li>
+<li><a href="#export-fan-out-diagram" id="toc-export-fan-out-diagram">4.
+Export fan-out (diagram)</a></li>
+<li><a href="#output-inventory-tree" id="toc-output-inventory-tree">5.
+Output inventory tree</a></li>
+<li><a href="#renderer-bundler-tooling-contract"
+id="toc-renderer-bundler-tooling-contract">6. Renderer &amp; bundler
+tooling contract</a></li>
+<li><a href="#verification-legibility-gates"
+id="toc-verification-legibility-gates">7. Verification / legibility
+gates</a></li>
+<li><a href="#gaps-open-items" id="toc-gaps-open-items">8. Gaps &amp;
+open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Icon Export Size/Format Matrix
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/assets/icon-export-matrix.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · assets)
+  Related         : ../brand-assets.md, ../design-system.md, ./generate-raster.sh,
+                    ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · assets)</td>
+<td>Initial matrix: exact per-platform pixel/format table for every OS
+surface (Web/PWA favicon + maskable, Android mipmap/adaptive/monochrome,
+iOS AppIcon incl. dark/tinted, Windows <code>.ico</code>, macOS
+<code>.icns</code>, Linux hicolor, HarmonyOS layered, Aurora);
+source-SVG→target mapping; output inventory tree; renderer/bundler
+tooling contract. Locked 1:1 to <code>generate-raster.sh</code>.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · assets · verify)</td>
+<td>Verification pass: all 7 master SVGs confirmed
+<code>xmllint</code>-valid; <code>generate-raster.sh</code> confirmed
+<code>shellcheck</code>-clean and executed end-to-end (chromium
+renderer, ImageMagick <code>.ico</code> bundler, <code>.icns</code>
+correctly SKIPPED with note) — <strong>83 real rasters, no faked/blank
+output</strong> (<code>favicon-16</code> non-blank, all outputs
+transparent-bg, <code>.ico</code> multi-res 16–256 verified). Corrected
+<code>logo-full-h64</code> cell 170→<strong>169</strong> px
+(⌊64·1060/400⌋) to keep the 1:1 lock with the script.
+<code>[VERIFIED — 2026-07-22 live run]</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope-sources-of-truth-and-conventions">1. Scope,
+sources of truth, and conventions</a></li>
+<li><a href="#2-source-svgs-and-the-sourcetarget-mapping">2. Source SVGs
+and the source→target mapping</a></li>
+<li><a href="#3-the-pixelformat-matrix-per-platform">3. The pixel/format
+matrix (per platform)</a>
+<ul>
+<li><a href="#31-web--pwa">3.1 Web / PWA</a></li>
+<li><a href="#32-android">3.2 Android</a></li>
+<li><a href="#33-ios">3.3 iOS</a></li>
+<li><a href="#34-windows">3.4 Windows</a></li>
+<li><a href="#35-macos">3.5 macOS</a></li>
+<li><a href="#36-linux">3.6 Linux</a></li>
+<li><a href="#37-harmonyos">3.7 HarmonyOS</a></li>
+<li><a href="#38-aurora">3.8 Aurora</a></li>
+<li><a href="#39-brand-lockups-non-launcher-convenience-raster">3.9
+Brand lockups (non-launcher, convenience raster)</a></li>
+</ul></li>
+<li><a href="#4-export-fan-out-diagram">4. Export fan-out
+(diagram)</a></li>
+<li><a href="#5-output-inventory-tree">5. Output inventory tree</a></li>
+<li><a href="#6-renderer--bundler-tooling-contract">6. Renderer &amp;
+bundler tooling contract</a></li>
+<li><a href="#7-verification--legibility-gates">7. Verification /
+legibility gates</a></li>
+<li><a href="#8-gaps--open-items">8. Gaps &amp; open items</a></li>
+</ul>
+<h2 id="scope-sources-of-truth-and-conventions">1. Scope, sources of
+truth, and conventions</h2>
+<p>This file is the <strong>exact pixel/format matrix</strong> for every
+OS/platform icon Helix Thready ships, and is the specification
+<code>generate-raster.sh</code> (sibling in this directory) implements
+1:1. It expands the platform tables in <a
+href="../brand-assets.md#5-os--platform-export-matrix">brand-assets.md
+§5</a> into concrete filenames and pixel dimensions.</p>
+<p><strong>Sources of truth</strong> (never contradicted, per <a
+href="../../CONVENTIONS.md">CONVENTIONS §1</a>):</p>
+<ul>
+<li><a href="../brand-assets.md">brand-assets.md</a> — icon concept,
+numeric geometry (§3.1), platform matrix (§5), concrete manifests
+(§5.1). <code>[VERIFIED — inspected]</code></li>
+<li><a
+href="../design-system.md#32-the-thready-brand-theme">design-system.md
+§3.2</a> — the brand palette (<code>brand #B6E376</code>,
+<code>brand-2 #ABDDC9</code>/<code>#B7EBD6</code>,
+<code>accent #446E12</code>/<code>#B6E376</code>).
+<code>[VERIFIED]</code></li>
+<li><code>helix_thready_research_request_final.md</code> (decision
+matrix, Q1–Q45) and
+<code>helix_thready_subsystem_gaps_and_improvements.md</code> (gap
+register) — the merged request and the per-subsystem gaps referenced
+below (<code>[GAP: 8.5]</code>). <code>[CONSTITUTION]</code></li>
+</ul>
+<p><strong>Units.</strong> All sizes are <strong>pixels of the exported
+raster</strong> unless the row says “vector”. Android
+adaptive/monochrome are quoted as <strong>dp @ density</strong> with the
+resolved px in the same cell (px = <code>dp × density</code>, mdpi =
+×1). iOS legacy rows quote the resolved <strong>px</strong> (the
+<code>pt@scale</code> role is noted).</p>
+<p><strong>Provenance legend</strong> (per <a
+href="../../CONVENTIONS.md">CONVENTIONS §3</a>): <code>[VERIFIED]</code>
+size set is the platform-canonical set corroborated by brand-assets.md
+§5 / platform packaging docs · <code>[RESEARCH]</code> must be
+re-verified against current OS docs at integration ·
+<code>[GAP: id]</code> produced now but consumed by a subsystem the gap
+register flags as a <strong>scaffold</strong> (do not claim that
+launcher ships).</p>
+<h2 id="source-svgs-and-the-sourcetarget-mapping">2. Source SVGs and the
+source→target mapping</h2>
+<p>Six hand-authored, <strong>valid</strong> (xmllint-clean) master
+vectors in this directory feed every raster. No output invents a new
+drawing — each is a rasterization of one master (single-source
+consistency, brand-assets.md §3).</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 14%" />
+<col style="width: 39%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Source SVG</th>
+<th>Fill</th>
+<th>Transparent bg</th>
+<th>Feeds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>launcher-icon.svg</code> (neutral master)</td>
+<td><code>brand #B6E376 → brand-2 #ABDDC9</code> gradient</td>
+<td>yes</td>
+<td>Web/PWA, Android legacy+adaptive-fg+Play, iOS light + legacy set,
+Windows, macOS, Linux, HarmonyOS, Aurora</td>
+</tr>
+<tr>
+<td><code>launcher-icon-light.svg</code></td>
+<td><code>accent #446E12 → brand #B6E376</code></td>
+<td>yes</td>
+<td>light-surface in-app mark; optional light launcher slot</td>
+</tr>
+<tr>
+<td><code>launcher-icon-dark.svg</code></td>
+<td><code>brand #B6E376 → brand-2(dark) #B7EBD6</code></td>
+<td>yes</td>
+<td>iOS 18 <strong>dark</strong> appearance
+(<code>icon-1024-dark.png</code>); dark-surface in-app mark</td>
+</tr>
+<tr>
+<td><code>launcher-icon-mono.svg</code></td>
+<td>single tone via <code>currentColor</code> (default
+<code>accent #446E12</code>)</td>
+<td>yes</td>
+<td>Android <strong>monochrome</strong> layer; iOS 18
+<strong>tinted</strong> appearance
+(<code>icon-1024-tinted.png</code>)</td>
+</tr>
+<tr>
+<td><code>logo-full.svg</code> (mark + “Thready” wordmark)</td>
+<td>mark gradient + theme-aware text</td>
+<td>yes</td>
+<td>headers/marketing lockup raster (§3.9) — <strong>never</strong> a
+launcher icon</td>
+</tr>
+<tr>
+<td><code>logo-mark.svg</code> (tight-crop mark)</td>
+<td><code>brand → brand-2</code> gradient</td>
+<td>yes</td>
+<td>avatar/lockup raster (§3.9)</td>
+</tr>
+<tr>
+<td><code>footer-slogan.svg</code> (“Made with ♥ by Helix
+Development”)</td>
+<td>heart <code>ds-heart = accent</code>; text <code>muted</code></td>
+<td>yes</td>
+<td>footer lockup raster (§3.9)</td>
+</tr>
+</tbody>
+</table>
+<p>The launcher icons are <strong>letter-free by construction</strong>
+(brand-assets.md §1); the wordmark and slogan carry text and are never
+baked into a launcher/OS icon slot.</p>
+<h2 id="the-pixelformat-matrix-per-platform">3. The pixel/format matrix
+(per platform)</h2>
+<h3 id="web-pwa">3.1 Web / PWA</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 18%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 14%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output file</th>
+<th>Size (px)</th>
+<th>Format</th>
+<th>Source</th>
+<th>Purpose</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>web/favicon.svg</code></td>
+<td>vector</td>
+<td>SVG</td>
+<td><code>launcher-icon.svg</code></td>
+<td>scalable favicon (<code>rel=icon type=image/svg+xml</code>)</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/favicon-16.png</code></td>
+<td>16</td>
+<td>PNG</td>
+<td>master</td>
+<td>favicon component</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/favicon-32.png</code></td>
+<td>32</td>
+<td>PNG</td>
+<td>master</td>
+<td>favicon component</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/favicon-48.png</code></td>
+<td>48</td>
+<td>PNG</td>
+<td>master</td>
+<td>favicon component</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/favicon.ico</code></td>
+<td>16 + 32 + 48</td>
+<td>ICO (multi)</td>
+<td>master (bundled)</td>
+<td>legacy <code>rel=icon</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/icon-192.png</code></td>
+<td>192</td>
+<td>PNG</td>
+<td>master</td>
+<td>PWA manifest <code>purpose:any</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/icon-512.png</code></td>
+<td>512</td>
+<td>PNG</td>
+<td>master</td>
+<td>PWA manifest <code>purpose:any</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/maskable-192.png</code></td>
+<td>192</td>
+<td>PNG</td>
+<td>master</td>
+<td>PWA <code>purpose:maskable</code> (art within Ø916 safe zone,
+§3.1)</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/maskable-512.png</code></td>
+<td>512</td>
+<td>PNG</td>
+<td>master</td>
+<td>PWA <code>purpose:maskable</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>web/apple-touch-icon.png</code></td>
+<td>180</td>
+<td>PNG</td>
+<td>master</td>
+<td>iOS Safari home-screen</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Wired via <code>manifest.webmanifest</code> +
+<code>&lt;head&gt;</code> in <a
+href="../brand-assets.md#51-concrete-platform-manifests">brand-assets.md
+§5.1</a> (self-hosted, no external CDN — CSP hygiene).</p>
+<h3 id="android">3.2 Android</h3>
+<p>Legacy density mipmaps
+(<code>res/mipmap-&lt;density&gt;/ic_launcher.png</code>):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Density</th>
+<th>Size (px)</th>
+<th>Output</th>
+<th>Source</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mdpi (×1)</td>
+<td>48</td>
+<td><code>android/mipmap-mdpi/ic_launcher.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>hdpi (×1.5)</td>
+<td>72</td>
+<td><code>android/mipmap-hdpi/ic_launcher.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xhdpi (×2)</td>
+<td>96</td>
+<td><code>android/mipmap-xhdpi/ic_launcher.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xxhdpi (×3)</td>
+<td>144</td>
+<td><code>android/mipmap-xxhdpi/ic_launcher.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xxxhdpi (×4)</td>
+<td>192</td>
+<td><code>android/mipmap-xxxhdpi/ic_launcher.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Adaptive <strong>foreground</strong> + Android-13
+<strong>monochrome</strong> (108 dp canvas,
+<code>res/mipmap-&lt;density&gt;/</code>):</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 16%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th>Density</th>
+<th>108 dp → px</th>
+<th><code>_foreground</code> source</th>
+<th><code>_monochrome</code> source</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mdpi</td>
+<td>108</td>
+<td>master</td>
+<td><code>launcher-icon-mono.svg</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>hdpi</td>
+<td>162</td>
+<td>master</td>
+<td>mono</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xhdpi</td>
+<td>216</td>
+<td>master</td>
+<td>mono</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xxhdpi</td>
+<td>324</td>
+<td>master</td>
+<td>mono</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>xxxhdpi</td>
+<td>432</td>
+<td>master</td>
+<td>mono</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 33%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Extra</th>
+<th>Size (px)</th>
+<th>Output</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adaptive <strong>background</strong></td>
+<td>—</td>
+<td><code>@color/ic_launcher_background</code></td>
+<td>solid/token color, <strong>not</strong> a raster (brand-assets.md
+§5.1 <code>ic_launcher.xml</code>)</td>
+</tr>
+<tr>
+<td>Play Store listing</td>
+<td>512</td>
+<td><code>android/play-store-512.png</code></td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Adaptive art stays within the <strong>66 dp inner safe
+circle</strong> so no coil clips under the OS mask (§3.1).
+<code>ic_launcher.xml</code> (<code>mipmap-anydpi-v26</code>) references
+<code>background</code>/<code>foreground</code>/<code>monochrome</code>
+verbatim per <a
+href="../brand-assets.md#51-concrete-platform-manifests">brand-assets.md
+§5.1</a>.</p>
+<h3 id="ios">3.3 iOS</h3>
+<p><code>Assets.xcassets/AppIcon.appiconset/</code> — modern single-size
++ iOS 18 appearances:</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 19%" />
+<col style="width: 14%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output file</th>
+<th>Size (px)</th>
+<th>Source</th>
+<th>Appearance</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>icon-1024.png</code></td>
+<td>1024</td>
+<td><code>launcher-icon.svg</code></td>
+<td>any / light</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>icon-1024-dark.png</code></td>
+<td>1024</td>
+<td><code>launcher-icon-dark.svg</code></td>
+<td>dark (<code>luminosity:dark</code>)</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><code>icon-1024-tinted.png</code></td>
+<td>1024</td>
+<td><code>launcher-icon-mono.svg</code></td>
+<td>tinted (<code>luminosity:tinted</code>)</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Legacy full set (only if targeting pre-Xcode-14 catalogs), all from
+master:</p>
+<table>
+<thead>
+<tr>
+<th>Size (px)</th>
+<th><code>pt@scale</code> role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20</td>
+<td>notification 20pt@1x (iPad)</td>
+</tr>
+<tr>
+<td>29</td>
+<td>settings 29pt@1x</td>
+</tr>
+<tr>
+<td>40</td>
+<td>notification 20pt@2x / spotlight 40pt@1x</td>
+</tr>
+<tr>
+<td>58</td>
+<td>settings 29pt@2x</td>
+</tr>
+<tr>
+<td>60</td>
+<td>notification 20pt@3x</td>
+</tr>
+<tr>
+<td>76</td>
+<td>app 76pt@1x (iPad)</td>
+</tr>
+<tr>
+<td>80</td>
+<td>spotlight 40pt@2x</td>
+</tr>
+<tr>
+<td>87</td>
+<td>settings 29pt@3x</td>
+</tr>
+<tr>
+<td>120</td>
+<td>app 60pt@2x (iPhone) / spotlight 40pt@3x</td>
+</tr>
+<tr>
+<td>152</td>
+<td>app 76pt@2x (iPad)</td>
+</tr>
+<tr>
+<td>167</td>
+<td>app 83.5pt@2x (iPad Pro)</td>
+</tr>
+<tr>
+<td>180</td>
+<td>app 60pt@3x (iPhone)</td>
+</tr>
+</tbody>
+</table>
+<p><code>Contents.json</code> (single-size + dark + tinted) is
+reproduced verbatim in <a
+href="../brand-assets.md#51-concrete-platform-manifests">brand-assets.md
+§5.1</a>. <code>[VERIFIED]</code></p>
+<h3 id="windows">3.4 Windows</h3>
+<p><code>.ico</code> multi-resolution bundle (Tauri <code>icon</code> /
+<code>tauri.conf.json</code>):</p>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>PNG components (px)</th>
+<th>Bundle</th>
+<th>Source</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16, 24, 32, 48, 64, 128, 256</td>
+<td><code>windows/thready.ico</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="macos">3.5 macOS</h3>
+<p><code>.icns</code> iconset components
+(<code>macos/thready.iconset/</code>), bundled to
+<code>macos/thready.icns</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Iconset name</th>
+<th>Size (px)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>icon_16x16.png</code></td>
+<td>16</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_16x16@2x.png</code></td>
+<td>32</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_32x32.png</code></td>
+<td>32</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_32x32@2x.png</code></td>
+<td>64</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_128x128.png</code></td>
+<td>128</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_128x128@2x.png</code></td>
+<td>256</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_256x256.png</code></td>
+<td>256</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_256x256@2x.png</code></td>
+<td>512</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_512x512.png</code></td>
+<td>512</td>
+<td>master</td>
+</tr>
+<tr>
+<td><code>icon_512x512@2x.png</code></td>
+<td>1024</td>
+<td>master</td>
+</tr>
+</tbody>
+</table>
+<p>Unique pixel sizes bundled: <strong>16, 32, 64, 128, 256, 512,
+1024</strong>. <code>[VERIFIED]</code></p>
+<h3 id="linux">3.6 Linux</h3>
+<p>hicolor icon theme
+(<code>linux/hicolor/&lt;size&gt;x&lt;size&gt;/apps/thready.png</code>)
++ scalable SVG:</p>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Size (px)</th>
+<th>Output</th>
+<th>Source</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td><code>hicolor/16x16/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>hicolor/22x22/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>hicolor/24x24/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>hicolor/32x32/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>hicolor/48x48/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>64</td>
+<td><code>hicolor/64x64/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>128</td>
+<td><code>hicolor/128x128/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>256</td>
+<td><code>hicolor/256x256/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>512</td>
+<td><code>hicolor/512x512/apps/thready.png</code></td>
+<td>master</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>vector</td>
+<td><code>hicolor/scalable/apps/thready.svg</code></td>
+<td>master (copy)</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="harmonyos">3.7 HarmonyOS</h3>
+<p>Layered image (<code>resources/base/media/</code>), consumed by the
+ArkTS client — a <strong>scaffold</strong>
+<code>[GAP: 8.5 helix_shims / HarmonyOS]</code>; assets are produced
+now, but no HarmonyOS launcher is claimed to ship:</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 24%" />
+<col style="width: 17%" />
+<col style="width: 13%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output</th>
+<th>Size (px)</th>
+<th>Source</th>
+<th>Role</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>harmonyos/foreground.png</code></td>
+<td>216</td>
+<td>master</td>
+<td><code>layered_image.json &gt; foreground</code></td>
+<td><code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td><code>harmonyos/background.png</code></td>
+<td>216</td>
+<td>master</td>
+<td><code>layered_image.json &gt; background</code> (solid/branded bg
+supplied at integration)</td>
+<td><code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td><code>harmonyos/appgallery-1024.png</code></td>
+<td>1024</td>
+<td>master</td>
+<td>AppGallery listing</td>
+<td><code>[GAP: 8.5]</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>layered_image.json</code> is reproduced in <a
+href="../brand-assets.md#51-concrete-platform-manifests">brand-assets.md
+§5.1</a>.</p>
+<h3 id="aurora">3.8 Aurora</h3>
+<p>Aurora OS (auroraos.ru / Sailfish density buckets) —
+<code>[RESEARCH]</code>, re-verify against current Aurora packaging docs
+at integration (<code>[OPEN: THREADY-DES-05]</code>); consumed by a
+native Qt client scaffold <code>[GAP: 8.5]</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Size (px)</th>
+<th>Source</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aurora/thready-86.png</code></td>
+<td>86</td>
+<td>master</td>
+<td><code>[RESEARCH]</code></td>
+</tr>
+<tr>
+<td><code>aurora/thready-108.png</code></td>
+<td>108</td>
+<td>master</td>
+<td><code>[RESEARCH]</code></td>
+</tr>
+<tr>
+<td><code>aurora/thready-128.png</code></td>
+<td>128</td>
+<td>master</td>
+<td><code>[RESEARCH]</code></td>
+</tr>
+<tr>
+<td><code>aurora/thready-172.png</code></td>
+<td>172</td>
+<td>master</td>
+<td><code>[RESEARCH]</code></td>
+</tr>
+<tr>
+<td><code>aurora/thready-250.png</code></td>
+<td>250</td>
+<td>master</td>
+<td><code>[RESEARCH]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="brand-lockups-non-launcher-convenience-raster">3.9 Brand lockups
+(non-launcher, convenience raster)</h3>
+<p>Emitted for docs/marketing/email where an SVG cannot be used.
+<strong>Not</strong> launcher icons (they carry text); never placed in
+an OS icon slot.</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 39%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output</th>
+<th>Size (W×H px)</th>
+<th>Source</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>brand/logo-full-h64.png</code></td>
+<td>169×64</td>
+<td><code>logo-full.svg</code></td>
+<td>aspect 1060:400 preserved (169 = ⌊64·1060/400⌋)</td>
+</tr>
+<tr>
+<td><code>brand/logo-full-h128.png</code></td>
+<td>339×128</td>
+<td><code>logo-full.svg</code></td>
+<td>aspect preserved</td>
+</tr>
+<tr>
+<td><code>brand/logo-mark-128.png</code></td>
+<td>128×128</td>
+<td><code>logo-mark.svg</code></td>
+<td>square mark</td>
+</tr>
+<tr>
+<td><code>brand/logo-mark-256.png</code></td>
+<td>256×256</td>
+<td><code>logo-mark.svg</code></td>
+<td>square mark</td>
+</tr>
+<tr>
+<td><code>brand/logo-mark-512.png</code></td>
+<td>512×512</td>
+<td><code>logo-mark.svg</code></td>
+<td>square mark</td>
+</tr>
+<tr>
+<td><code>brand/footer-slogan-h44.png</code></td>
+<td>560×44</td>
+<td><code>footer-slogan.svg</code></td>
+<td>aspect 560:44 preserved</td>
+</tr>
+</tbody>
+</table>
+<h2 id="export-fan-out-diagram">4. Export fan-out (diagram)</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 835px; background-color: white;" viewBox="0 0 835 1039.300048828125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M427.569,548L447.474,518.867C467.379,489.733,507.19,431.467,532.345,402.333C557.5,373.2,568,373.2,573.25,373.2L578.5,373.2" id="my-svg-L_MASTER_WEB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_WEB_0" data-points="W3sieCI6NDI3LjU2ODgwNjk4MDc3NDQ3LCJ5Ijo1NDh9LHsieCI6NTQ3LCJ5IjozNzMuMjAwMDAwNzYyOTM5NDV9LHsieCI6NTgyLjUsInkiOjM3My4yMDAwMDA3NjI5Mzk0NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M416.45,548L438.208,483.817C459.967,419.633,503.483,291.267,529.6,228.309C555.716,165.352,564.433,167.804,568.791,169.03L573.149,170.256" id="my-svg-L_MASTER_AND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_AND_0" data-points="W3sieCI6NDE2LjQ0OTgwODA4ODY5NDUsInkiOjU0OH0seyJ4Ijo1NDcsInkiOjE2Mi44OTk5OTk2MTg1MzAyN30seyJ4Ijo1NzcsInkiOjE3MS4zMzkzNDM4MDU3ODIxNH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M229.284,228.1L235.07,229.867C240.856,231.633,252.428,235.167,263.381,236.933C274.333,238.7,284.667,238.7,289.833,238.7L295,238.7" id="my-svg-L_MONO_ANDM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MONO_ANDM_0" data-points="W3sieCI6MjI5LjI4NDM4MDcyNjM1MzA1LCJ5IjoyMjguMDk5OTk4NDc0MTIxMX0seyJ4IjoyNjQsInkiOjIzOC42OTk5OTg4NTU1OTA4Mn0seyJ4IjoyOTksInkiOjIzOC42OTk5OTg4NTU1OTA4Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M413.679,548L435.899,460.25C458.119,372.5,502.56,197,531.474,111.239C560.389,25.477,573.777,29.454,580.471,31.443L587.166,33.431" id="my-svg-L_MASTER_IOS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_IOS_0" data-points="W3sieCI6NDEzLjY3OTA0NDE5ODc5MDYsInkiOjU0OH0seyJ4Ijo1NDcsInkiOjIxLjV9LHsieCI6NTkxLCJ5IjozNC41NzAxNjM3MTQyOTk0NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M234.5,31.5L239.417,31.5C244.333,31.5,254.167,31.5,268.417,31.5C282.667,31.5,301.333,31.5,310.667,31.5L320,31.5" id="my-svg-L_DARK_IOSD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DARK_IOSD_0" data-points="W3sieCI6MjM0LjUsInkiOjMxLjV9LHsieCI6MjY0LCJ5IjozMS41fSx7IngiOjMyNCwieSI6MzEuNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M195.649,163.5L207.041,158.4C218.432,153.3,241.216,143.1,261.358,138C281.5,132.9,299,132.9,307.75,132.9L316.5,132.9" id="my-svg-L_MONO_IOST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MONO_IOST_0" data-points="W3sieCI6MTk1LjY0ODY0NzM4MjAyNzU1LCJ5IjoxNjMuNX0seyJ4IjoyNjQsInkiOjEzMi44OTk5OTk2MTg1MzAyN30seyJ4IjozMjAuNSwieSI6MTMyLjg5OTk5OTYxODUzMDI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M485.264,548L495.553,543.833C505.842,539.667,526.421,531.333,542.461,527.167C558.5,523,570,523,575.75,523L581.5,523" id="my-svg-L_MASTER_WIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_WIN_0" data-points="W3sieCI6NDg1LjI2MzUyNDQ4MzM5OTgsInkiOjU0OH0seyJ4Ijo1NDcsInkiOjUyM30seyJ4Ijo1ODUuNSwieSI6NTIzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M485.264,612.6L495.553,616.767C505.842,620.933,526.421,629.267,540.211,633.433C554,637.6,561,637.6,564.5,637.6L568,637.6" id="my-svg-L_MASTER_MAC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_MAC_0" data-points="W3sieCI6NDg1LjI2MzUyNDQ4MzM5OTgsInkiOjYxMi41OTk5OTg0NzQxMjExfSx7IngiOjU0NywieSI6NjM3LjU5OTk5ODQ3NDEyMTF9LHsieCI6NTcyLCJ5Ijo2MzcuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M430.793,612.6L450.161,637.333C469.529,662.067,508.264,711.533,531.132,736.267C554,761,561,761,564.5,761L568,761" id="my-svg-L_MASTER_LIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_LIN_0" data-points="W3sieCI6NDMwLjc5MzAyNjk0NjQ5ODQsInkiOjYxMi41OTk5OTg0NzQxMjExfSx7IngiOjU0NywieSI6NzYwLjk5OTk5NjE4NTMwMjd9LHsieCI6NTcyLCJ5Ijo3NjAuOTk5OTk2MTg1MzAyN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M420.529,612.6L441.608,657.9C462.686,703.2,504.843,793.8,529.755,839.1C554.667,884.4,562.333,884.4,566.167,884.4L570,884.4" id="my-svg-L_MASTER_HAR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_HAR_0" data-points="W3sieCI6NDIwLjUyOTQzMTAxNzEzMjE0LCJ5Ijo2MTIuNTk5OTk4NDc0MTIxMX0seyJ4Ijo1NDcsInkiOjg4NC4zOTk5OTM4OTY0ODQ0fSx7IngiOjU3NCwieSI6ODg0LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M416.416,612.6L438.18,677C459.944,741.4,503.472,870.2,528.819,934.6C554.167,999,561.333,999,564.917,999L568.5,999" id="my-svg-L_MASTER_AUR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MASTER_AUR_0" data-points="W3sieCI6NDE2LjQxNTgxMDc2NDI2MzIsInkiOjYxMi41OTk5OTg0NzQxMjExfSx7IngiOjU0NywieSI6OTk4Ljk5OTk5MjM3MDYwNTV9LHsieCI6NTcyLjUsInkiOjk5OC45OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M512,269.408L517.833,271.09C523.667,272.772,535.333,276.136,548.774,274.141C562.215,272.147,577.43,264.794,585.038,261.117L592.645,257.441" id="my-svg-L_ANDM_AND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ANDM_AND_0" data-points="W3sieCI6NTEyLCJ5IjoyNjkuNDA4MTI2OTI1NDExMn0seyJ4Ijo1NDcsInkiOjI3OS41fSx7IngiOjU5Ni4yNDY5NDQ5OTQyOTE3LCJ5IjoyNTUuNzAwMDAwNzYyOTM5NDV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M487,37.26L497,37.966C507,38.673,527,40.087,543.676,41.901C560.351,43.715,573.703,45.93,580.378,47.038L587.054,48.145" id="my-svg-L_IOSD_IOS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IOSD_IOS_0" data-points="W3sieCI6NDg3LCJ5IjozNy4yNTk3MTczMTQ0ODc2M30seyJ4Ijo1NDcsInkiOjQxLjV9LHsieCI6NTkxLCJ5Ijo0OC43OTk2NzE5MTEwMjA3NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M490.5,138.907L499.917,139.573C509.333,140.238,528.167,141.569,551.616,135.232C575.065,128.895,603.129,114.891,617.161,107.888L631.194,100.886" id="my-svg-L_IOST_IOS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IOST_IOS_0" data-points="W3sieCI6NDkwLjUsInkiOjEzOC45MDcwNjY3NTYzMzk0N30seyJ4Ijo1NDcsInkiOjE0Mi44OTk5OTk2MTg1MzAyN30seyJ4Ijo2MzQuNzcyNjY5Mzk2MDU1LCJ5Ijo5OS4wOTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_MASTER_WEB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_AND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MONO_ANDM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_IOS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_DARK_IOSD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MONO_IOST_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_WIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_MAC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_LIN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_HAR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_MASTER_AUR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ANDM_AND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IOSD_IOS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IOST_IOS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-MASTER-0" data-look="classic" transform="translate(405.5, 580.2999992370605)"><rect class="basic label-container" style="" x="-116.5" y="-32.29999923706055" width="233" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">launcher-icon.svg</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(neutral</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gradient</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> master)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DARK-1" data-look="classic" transform="translate(123.5, 31.5)"><rect class="basic label-container" style="" x="-111" y="-23.5" width="222" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">launcher-icon-dark.svg</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MONO-2" data-look="classic" transform="translate(123.5, 195.79999923706055)"><rect class="basic label-container" style="" x="-115.5" y="-32.29999923706055" width="231" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">launcher-icon-mono.svg</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(currentColor)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WEB-4" data-look="classic" transform="translate(699.5, 373.20000076293945)"><rect class="basic label-container" style="" x="-117" y="-67.5" width="234" height="135"/><g class="label" style="" transform="translate(0, -52.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PWA</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">favicon</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 16/32/48</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .ico</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.svg</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">icon</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 192/512</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> maskable</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">192/512</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="5.4em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">apple-touch</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 180</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AND-6" data-look="classic" transform="translate(699.5, 205.79999923706055)"><rect class="basic label-container" style="" x="-122.5" y="-49.900001525878906" width="245" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Android</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mipmap</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 48/72/96/144/192</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">adaptive</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fg</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 108-432px</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Play</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 512</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ANDM-8" data-look="classic" transform="translate(405.5, 238.69999885559082)"><rect class="basic label-container" style="" x="-106.5" y="-32.29999923706055" width="213" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Android</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> monochrome</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">108-432px</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IOS-10" data-look="classic" transform="translate(699.5, 66.79999923706055)"><rect class="basic label-container" style="" x="-108.5" y="-32.29999923706055" width="217" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">iOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> AppIcon</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">1024</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> legacy</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 20..180</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IOSD-12" data-look="classic" transform="translate(405.5, 31.5)"><rect class="basic label-container" style="" x="-81.5" y="-23.5" width="163" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">iOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 1024</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dark</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IOST-14" data-look="classic" transform="translate(405.5, 132.89999961853027)"><rect class="basic label-container" style="" x="-85" y="-23.5" width="170" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">iOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 1024</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tinted</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WIN-16" data-look="classic" transform="translate(699.5, 523)"><rect class="basic label-container" style="" x="-114" y="-32.29999923706055" width="228" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Windows</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .ico</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">16/24/32/48/64/128/256</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MAC-18" data-look="classic" transform="translate(699.5, 637.5999984741211)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">macOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .icns</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">16/32/64/128/256/512/1024</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LIN-20" data-look="classic" transform="translate(699.5, 760.9999961853027)"><rect class="basic label-container" style="" x="-127.5" y="-41.099998474121094" width="255" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Linux</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hicolor</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">16/22/24/32/48/64/128/256/</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">512</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .svg</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-HAR-22" data-look="classic" transform="translate(699.5, 884.3999938964844)"><rect class="basic label-container" style="" x="-125.5" y="-32.29999923706055" width="251" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HarmonyOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> layered</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fg/bg</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 216</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 1024</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [GAP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8.5]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUR-24" data-look="classic" transform="translate(699.5, 998.9999923706055)"><rect class="basic label-container" style="" x="-127" y="-32.29999923706055" width="254" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Aurora</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 86/108/128/172/250</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">[RESEARCH]</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>icon-export-fanout.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Three of the six master vectors drive the launcher
+outputs. The <strong>neutral master</strong>
+(<code>launcher-icon.svg</code>) is the single source for almost every
+platform bundle: the Web/PWA set (scalable + 16/32/48 favicons, the
+multi-resolution <code>.ico</code>, the 192/512 <code>purpose:any</code>
+icons, the 192/512 <code>maskable</code> icons whose art sits inside the
+Ø916 safe zone, and the 180 px apple-touch icon); the Android legacy
+density mipmaps (48/72/96/144/192) and the adaptive
+<strong>foreground</strong> across the five densities (108→432 px) plus
+the 512 Play-Store image; the iOS 1024 base and its legacy 20–180 px
+set; the Windows <code>.ico</code> components (16–256); the macOS
+<code>.icns</code> iconset (unique sizes 16–1024); the Linux hicolor
+theme (16–512 plus the scalable SVG copy); and the HarmonyOS layered
+foreground/background (216) + AppGallery (1024) and Aurora buckets
+(86–250). Two masters specialize appearance-variant slots: the
+<strong>dark master</strong> (<code>launcher-icon-dark.svg</code>)
+renders the iOS 18 <strong>dark</strong> 1024, and the
+<strong>monochrome master</strong> (<code>launcher-icon-mono.svg</code>,
+drawn with <code>currentColor</code>) renders both the Android 13+
+<strong>monochrome</strong> layer at every density and the iOS 18
+<strong>tinted</strong> 1024. The monochrome and dark/tinted branches
+feed back into their platform’s asset set (they are additional slots in
+the same Android <code>mipmap</code> folders and the same iOS
+<code>AppIcon.appiconset</code>), which is why their edges rejoin the
+Android and iOS nodes. Because every arrow originates from one
+hand-authored, xmllint-valid vector, a change to a master re-emits its
+whole downstream fan without drift. HarmonyOS and Aurora are drawn but
+flagged (<code>[GAP 8.5]</code>, <code>[RESEARCH]</code>) because the
+clients that consume them are scaffolds.</p>
+<h2 id="output-inventory-tree">5. Output inventory tree</h2>
+<p><code>generate-raster.sh [OUTPUT_DIR]</code> (default
+<code>./raster</code>) writes exactly this tree:</p>
+<pre class="text"><code>raster/
+  web/        favicon.svg  favicon-{16,32,48}.png  favicon.ico
+              icon-{192,512}.png  maskable-{192,512}.png  apple-touch-icon.png
+  android/    mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher.png
+              mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher_foreground.png
+              mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher_monochrome.png
+              play-store-512.png
+  ios/AppIcon.appiconset/
+              icon-1024.png  icon-1024-dark.png  icon-1024-tinted.png
+              icon-{20,29,40,58,60,76,80,87,120,152,167,180}.png
+  windows/    icon-{16,24,32,48,64,128,256}.png  thready.ico
+  macos/thready.iconset/
+              icon_16x16.png … icon_512x512@2x.png            (10 components)
+        thready.icns                                          (if packer present)
+  linux/hicolor/
+              {16,22,24,32,48,64,128,256,512}x…/apps/thready.png
+              scalable/apps/thready.svg
+  harmonyos/  foreground.png  background.png  appgallery-1024.png   [GAP 8.5]
+  aurora/     thready-{86,108,128,172,250}.png                       [RESEARCH]
+  brand/      logo-full-h{64,128}.png  logo-mark-{128,256,512}.png  footer-slogan-h44.png</code></pre>
+<p>Total distinct raster targets ≈ <strong>95 PNGs + 2 SVG copies + up
+to 2 bundles</strong> (<code>.ico</code>, <code>.icns</code>).</p>
+<h2 id="renderer-bundler-tooling-contract">6. Renderer &amp; bundler
+tooling contract</h2>
+<p><code>generate-raster.sh</code> <strong>detects</strong> a real
+rasterizer and <strong>self-tests</strong> it before use; if none
+renders it prints a <code>[SKIP]</code> note and exits 0 <strong>without
+writing any placeholder/fake PNG</strong> (the “no bluff” rule, <a
+href="../../CONVENTIONS.md">CONVENTIONS §7</a>).</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 69%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Accepted tools (in preference order)</th>
+<th>If absent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SVG → PNG rasterizer</td>
+<td><code>rsvg-convert</code> (librsvg) → <code>inkscape</code> →
+<code>resvg</code> → headless Chromium/Chrome → ImageMagick*</td>
+<td><code>[SKIP]</code>, exit 0, no output faked</td>
+</tr>
+<tr>
+<td><code>.ico</code> bundler</td>
+<td><code>icotool</code> → ImageMagick (<code>magick</code>)</td>
+<td>PNG components kept; <code>.ico</code> step skipped with a note</td>
+</tr>
+<tr>
+<td><code>.icns</code> bundler</td>
+<td><code>png2icns</code> → <code>iconutil</code> (macOS)</td>
+<td><code>.iconset/*.png</code> kept; run <code>iconutil -c icns</code>
+on macOS</td>
+</tr>
+</tbody>
+</table>
+<p>* ImageMagick is accepted <strong>only</strong> if its SVG delegate
+actually renders this directory’s masters: the probe rejects an IM whose
+internal MSVG coder mishandles
+<code>&lt;text&gt;</code>/CSS/<code>currentColor</code>, so it falls
+through to the next renderer instead of emitting garbage.
+<code>[VERIFIED — probe logic in the script]</code></p>
+<p><strong>Detected in this environment
+<code>[VERIFIED — 2026-07-22]</code>:</strong>
+<code>magick</code>/<code>convert</code> and headless
+<code>chromium</code> are present; <code>rsvg-convert</code>,
+<code>inkscape</code>, <code>resvg</code>, <code>icotool</code>,
+<code>png2icns</code>, <code>iconutil</code> are
+<strong>absent</strong>. The script therefore selects Chromium (which
+renders the masters and honors the transparent background via
+<code>--default-background-color=00000000</code>); <code>.ico</code>
+bundling falls to ImageMagick; <code>.icns</code> bundling is
+<strong>skipped with a note</strong> (no
+<code>png2icns</code>/<code>iconutil</code> here) and leaves the
+<code>.iconset</code> PNGs for a macOS packaging pass. All seven source
+SVGs are xmllint-valid, so the strict librsvg/resvg paths also succeed
+where those tools are installed.</p>
+<h2 id="verification-legibility-gates">7. Verification / legibility
+gates</h2>
+<p>Per brand-assets.md §6 export-pipeline <code>verify:</code> block and
+<a
+href="../design-system.md#8-visual-regression--a11y-testing">design-system.md
+§8</a>:</p>
+<ul>
+<li><strong>Legibility:</strong> every rendered size asserts no clipped
+coil (art within the Ø768 keyline / Ø916 maskable safe circle) and ≥ 3:1
+mark/background where placed. The <strong>full</strong> gradient tier is
+used ≥ 48 px; 16–32 px favicons rely on the simplified/heavier-stroke
+reading (mono stroke widened to 128 for tint slots).</li>
+<li><strong>Transparent background:</strong> every launcher output is
+transparent (probe render confirms non-opaque canvas); no platform
+corners are baked into the art — the OS applies its own mask.</li>
+<li><strong>Visual-regression:</strong> snapshot each target into the
+<code>ScreenDiff</code> bank <code>[GAP: 9.3]</code> so a master edit
+that breaks a size fails CI once that bank has CI (workable item
+THREADY-DES-VR-01).</li>
+</ul>
+<h2 id="gaps-open-items">8. Gaps &amp; open items</h2>
+<ul>
+<li><code>[GAP: 8.5 helix_shims / HarmonyOS + Aurora]</code> — HarmonyOS
+layered + Aurora PNGs are produced now but consumed by native ArkTS/Qt
+clients that are <strong>scaffolds</strong>; do not claim those
+launchers ship.</li>
+<li><code>[OPEN: THREADY-DES-05]</code> — Aurora density buckets
+(86/108/128/172/250) are <code>[RESEARCH]</code>; re-verify against
+current Aurora OS packaging docs at integration.</li>
+<li><code>[OPEN: THREADY-DES-03]</code> — heart color in
+<code>footer-slogan.svg</code> is <code>ds-heart = accent</code> (brand)
+by in-house precedent; classic love-red is the alternative pending an
+operator decision.</li>
+<li><code>[GAP: 9.3 VisualRegression family]</code> — the
+size-legibility snapshots have no CI yet; tracked as
+THREADY-DES-VR-01.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

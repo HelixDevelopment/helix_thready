@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Constraints &amp; Referential Integrity</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Constraints &amp; Referential
+Integrity</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#enforcement-layer-model"
+id="toc-enforcement-layer-model">1. Enforcement-layer model</a></li>
+<li><a href="#check-domain-catalogue-enum-like-columns"
+id="toc-check-domain-catalogue-enum-like-columns">2. CHECK-domain
+catalogue (enum-like columns)</a></li>
+<li><a href="#fk-on-delete-action-matrix"
+id="toc-fk-on-delete-action-matrix">3. FK on-delete action
+matrix</a></li>
+<li><a href="#soft-references-into-partitioned-tables"
+id="toc-soft-references-into-partitioned-tables">4. Soft references into
+partitioned tables</a></li>
+<li><a href="#optional-validation-triggers-closing-atm-db-004"
+id="toc-optional-validation-triggers-closing-atm-db-004">5. Optional
+validation triggers (closing ATM-DB-004)</a></li>
+<li><a href="#append-only-audit-log-enforcement"
+id="toc-append-only-audit-log-enforcement">6. Append-only audit-log
+enforcement</a></li>
+<li><a href="#updated_at-trigger-single-root-guard"
+id="toc-updated_at-trigger-single-root-guard">7. <code>updated_at</code>
+trigger &amp; single-root guard</a></li>
+<li><a href="#verification-open-items"
+id="toc-verification-open-items">8. Verification &amp; open
+items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Constraints & Referential Integrity
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/database/constraints-and-integrity.md
+  Status          : Draft — v0.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (database, Pass 3)
+  Related         : ./schema-relational.sql ./erd.md ./partitioning.md
+                    ./indexing.md ./migration-strategy.md
+                    ../architecture/index.md ../api/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (database, Pass 3)</td>
+<td>New doc: enforcement-layer model, CHECK-domain catalogue, FK
+on-delete matrix, append-only audit trigger DDL, and the opt-in soft-ref
+validation triggers that close <code>ATM-DB-004</code> for the
+safety-critical links</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<p>This document consolidates the data-integrity rules that were
+previously scattered across <a
+href="./schema-relational.sql"><code>schema-relational.sql</code></a>,
+<a href="./erd.md"><code>erd.md</code></a>, and <a
+href="./partitioning.md"><code>partitioning.md</code></a> into one
+enterprise reference: <strong>what is guaranteed, where it is guaranteed
+(declarative DB / application / trigger), and the exact DDL</strong> for
+the optional hardening triggers. It closes the design half of the
+partitioned-FK trade-off (<code>ATM-DB-004</code>) with concrete,
+runnable trigger definitions.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-enforcement-layer-model">Enforcement-layer
+model</a></li>
+<li><a href="#2-check-domain-catalogue-enum-like-columns">CHECK-domain
+catalogue (enum-like columns)</a></li>
+<li><a href="#3-fk-on-delete-action-matrix">FK on-delete action
+matrix</a></li>
+<li><a href="#4-soft-references-into-partitioned-tables">Soft references
+into partitioned tables</a></li>
+<li><a
+href="#5-optional-validation-triggers-closing-atm-db-004">Optional
+validation triggers (closing ATM-DB-004)</a></li>
+<li><a href="#6-append-only-audit-log-enforcement">Append-only audit-log
+enforcement</a></li>
+<li><a
+href="#7-updated_at-trigger--single-root-guard"><code>updated_at</code>
+trigger &amp; single-root guard</a></li>
+<li><a href="#8-verification--open-items">Verification &amp; open
+items</a></li>
+</ol>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). The diagram
+below has a sibling <a
+href="./diagrams/integrity-layers.mmd"><code>diagrams/integrity-layers.mmd</code></a>
+per <a href="../CONVENTIONS.md">CONVENTIONS.md §4</a>.</p>
+</blockquote>
+<hr />
+<h2 id="enforcement-layer-model">1. Enforcement-layer model</h2>
+<p>Source: <a
+href="./diagrams/integrity-layers.mmd"><code>diagrams/integrity-layers.mmd</code></a>.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2052.75px; background-color: white;" viewBox="0 0 2052.75 565.2058715820312" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-TRG" data-look="classic"><rect style="" x="1210.75" y="264" width="834" height="132.1999969482422"/><g class="cluster-label" transform="translate(1510.75, 264)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Trigger</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> layer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (optional</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> enforced)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-DB" data-look="classic"><rect style="" x="8" y="264" width="1182.75" height="132.1999969482422"/><g class="cluster-label" transform="translate(463.375, 264)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">PostgreSQL</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> declarative</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> guarantees</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-APP" data-look="classic"><rect style="" x="62.75" y="8" width="1309" height="132.1999969482422"/><g class="cluster-label" transform="translate(608.75, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Application</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> layer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (Go</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> services)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M243.631,106.4L230.442,112.033C217.254,117.667,190.877,128.933,177.688,144.883C164.5,160.833,164.5,181.467,164.5,202.1C164.5,222.733,164.5,243.367,164.5,257.183C164.5,271,164.5,278,164.5,281.5L164.5,285" id="my-svg-L_RD_FK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RD_FK_0" data-points="W3sieCI6MjQzLjYzMDg2MjM3MDMzNjM2LCJ5IjoxMDYuMzk5OTk3NzExMTgxNjR9LHsieCI6MTY0LjUsInkiOjE0MC4xOTk5OTY5NDgyNDIyfSx7IngiOjE2NC41LCJ5IjoyMDIuMDk5OTk4NDc0MTIxMX0seyJ4IjoxNjQuNSwieSI6MjY0fSx7IngiOjE2NC41LCJ5IjoyODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M316.44,106.4L315.95,112.033C315.46,117.667,314.48,128.933,313.99,144.883C313.5,160.833,313.5,181.467,313.5,202.1C313.5,222.733,313.5,243.367,324.976,259.035C336.453,274.703,359.405,285.406,370.882,290.758L382.358,296.11" id="my-svg-L_RD_UQ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RD_UQ_0" data-points="W3sieCI6MzE2LjQ0MDI0MjA1ODk5NDcsInkiOjEwNi4zOTk5OTc3MTExODE2NH0seyJ4IjozMTMuNSwieSI6MTQwLjE5OTk5Njk0ODI0MjJ9LHsieCI6MzEzLjUsInkiOjIwMi4wOTk5OTg0NzQxMjExfSx7IngiOjMxMy41LCJ5IjoyNjR9LHsieCI6Mzg1Ljk4MzM1ODU4NDc4MzA1LCJ5IjoyOTcuNzk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1030.885,115.2L1030.696,119.367C1030.506,123.533,1030.128,131.867,1029.939,146.35C1029.75,160.833,1029.75,181.467,1029.75,202.1C1029.75,222.733,1029.75,243.367,1029.75,258.567C1029.75,273.767,1029.75,283.533,1029.75,288.417L1029.75,293.3" id="my-svg-L_PE_PK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PE_PK_0" data-points="W3sieCI6MTAzMC44ODQ2NDQ1MDQyNTYxLCJ5IjoxMTUuMTk5OTk2OTQ4MjQyMTl9LHsieCI6MTAyOS43NSwieSI6MTQwLjE5OTk5Njk0ODI0MjJ9LHsieCI6MTAyOS43NSwieSI6MjAyLjA5OTk5ODQ3NDEyMTF9LHsieCI6MTAyOS43NSwieSI6MjY0fSx7IngiOjEwMjkuNzUsInkiOjI5Ny4yOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M677.063,106.4L664.386,112.033C651.709,117.667,626.354,128.933,613.677,144.883C601,160.833,601,181.467,601,202.1C601,222.733,601,243.367,589.186,259.041C577.371,274.716,553.743,285.432,541.928,290.79L530.114,296.148" id="my-svg-L_SV_UQ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SV_UQ_0" data-points="W3sieCI6Njc3LjA2Mjc4MzcwMDA4MSwieSI6MTA2LjM5OTk5NzcxMTE4MTY0fSx7IngiOjYwMSwieSI6MTQwLjE5OTk5Njk0ODI0MjJ9LHsieCI6NjAxLCJ5IjoyMDIuMDk5OTk4NDc0MTIxMX0seyJ4Ijo2MDEsInkiOjI2NH0seyJ4Ijo1MjYuNDcxMjU1NjM1MDQ2NiwieSI6Mjk3Ljc5OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M164.5,371.2L164.5,375.367C164.5,379.533,164.5,387.867,164.5,399.417C164.5,410.967,164.5,425.733,293.67,445.322C422.839,464.91,681.178,489.319,810.348,501.524L939.518,513.729" id="my-svg-L_FK_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FK_DBOK_0" data-points="W3sieCI6MTY0LjUsInkiOjM3MS4xOTk5OTY5NDgyNDIyfSx7IngiOjE2NC41LCJ5IjozOTYuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNjQuNSwieSI6NDQwLjQ5OTk5NjE4NTMwMjczfSx7IngiOjk0My41LCJ5Ijo1MTQuMTA1Mzk1MzEyNjAwM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M455.25,362.4L455.25,368.033C455.25,373.667,455.25,384.933,455.25,397.95C455.25,410.967,455.25,425.733,535.965,444.694C616.68,463.655,778.11,486.81,858.825,498.387L939.541,509.964" id="my-svg-L_UQ_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_UQ_DBOK_0" data-points="W3sieCI6NDU1LjI1LCJ5IjozNjIuMzk5OTk3NzExMTgxNjR9LHsieCI6NDU1LjI1LCJ5IjozOTYuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo0NTUuMjUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4Ijo5NDMuNSwieSI6NTEwLjUzMjE4NjEwOTcxNzAzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M732.75,362.4L732.75,368.033C732.75,373.667,732.75,384.933,732.75,397.95C732.75,410.967,732.75,425.733,767.234,442.9C801.717,460.067,870.685,479.634,905.168,489.417L939.652,499.2" id="my-svg-L_CK_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CK_DBOK_0" data-points="W3sieCI6NzMyLjc1LCJ5IjozNjIuMzk5OTk3NzExMTgxNjR9LHsieCI6NzMyLjc1LCJ5IjozOTYuMTk5OTk2OTQ4MjQyMn0seyJ4Ijo3MzIuNzUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4Ijo5NDMuNSwieSI6NTAwLjI5MjA1Njk5NzAyMTl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1029.75,362.9L1029.75,368.45C1029.75,374,1029.75,385.1,1029.75,398.033C1029.75,410.967,1029.75,425.733,1028.643,439.85C1027.536,453.966,1025.322,467.432,1024.215,474.165L1023.108,480.898" id="my-svg-L_PK_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PK_DBOK_0" data-points="W3sieCI6MTAyOS43NSwieSI6MzYyLjg5OTk5NzcxMTE4MTY0fSx7IngiOjEwMjkuNzUsInkiOjM5Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjEwMjkuNzUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4IjoxMDIyLjQ1ODY1MjY1MDQ4MjMsInkiOjQ4NC44NDQ5MzkxNjE4OTUyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1348.75,362.9L1348.75,368.45C1348.75,374,1348.75,385.1,1348.75,398.033C1348.75,410.967,1348.75,425.733,1306.19,443.429C1263.629,461.124,1178.508,481.749,1135.948,492.061L1093.388,502.373" id="my-svg-L_UPD_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_UPD_DBOK_0" data-points="W3sieCI6MTM0OC43NSwieSI6MzYyLjg5OTk5NzcxMTE4MTY0fSx7IngiOjEzNDguNzUsInkiOjM5Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjEzNDguNzUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4IjoxMDg5LjUsInkiOjUwMy4zMTUzMTczNDQ4MDkwNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1619.75,362.4L1619.75,368.033C1619.75,373.667,1619.75,384.933,1619.75,397.95C1619.75,410.967,1619.75,425.733,1532.036,444.822C1444.322,463.911,1268.893,487.321,1181.179,499.027L1093.465,510.732" id="my-svg-L_AO_DBOK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_AO_DBOK_0" data-points="W3sieCI6MTYxOS43NSwieSI6MzYyLjM5OTk5NzcxMTE4MTY0fSx7IngiOjE2MTkuNzUsInkiOjM5Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjE2MTkuNzUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4IjoxMDg5LjUsInkiOjUxMS4yNjExOTA3MjAzMzE3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1898.75,362.4L1898.75,368.033C1898.75,373.667,1898.75,384.933,1898.75,397.95C1898.75,410.967,1898.75,425.733,1764.539,445.363C1630.328,464.993,1361.906,489.486,1227.695,501.732L1093.483,513.978" id="my-svg-L_VAL_DBOK_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_VAL_DBOK_0" data-points="W3sieCI6MTg5OC43NSwieSI6MzYyLjM5OTk5NzcxMTE4MTY0fSx7IngiOjE4OTguNzUsInkiOjM5Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjE4OTguNzUsInkiOjQ0MC40OTk5OTYxODUzMDI3M30seyJ4IjoxMDg5LjUsInkiOjUxNC4zNDE4OTQwMjgxNzI2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1348.75,140.2L1348.75,150.517C1348.75,160.833,1348.75,181.467,1348.75,201.433C1348.75,221.4,1348.75,240.7,1348.75,250.35L1348.75,260" id="my-svg-L_APP_TRG_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_APP_TRG_0" data-points="W3sieCI6NDQ2Ljc1LCJ5Ijo4Mi4yODYyNTM3NDg5NjM2N30seyJ4IjoxMzQ4Ljc1LCJ5IjoxNDAuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxMzQ4Ljc1LCJ5IjoyMDIuMDk5OTk4NDc0MTIxMX0seyJ4IjoxMzQ4Ljc1LCJ5IjoyNjR9LHsieCI6MTM0OC43NSwieSI6Mjk3LjI5OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_RD_FK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RD_UQ_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PE_PK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SV_UQ_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_FK_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_UQ_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CK_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PK_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_UPD_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_AO_DBOK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1898.75, 440.49999618530273)"><g class="label" data-id="L_VAL_DBOK_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-53.5" y="0" width="107" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">opt-in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> env</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(ATM-DB-004)</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1348.75, 202.0999984741211)"><g class="label" data-id="L_APP_TRG_0" transform="translate(0, -36.900001525878906)"><g><rect class="background" style="" x="-84" y="0" width="168" height="73.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">soft</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> refs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> into</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> partitioned</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tables</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(no</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DB</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> FK;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> app</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> VAL</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">enforce)</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-RD-0" data-look="classic" transform="translate(319.25, 74.0999984741211)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thread</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reader</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ONE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tx</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PE-1" data-look="classic" transform="translate(1032.75, 74.0999984741211)"><rect class="basic label-container" style="" x="-127" y="-41.099998474121094" width="254" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Processing</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> engine</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">single-claim</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> FOR</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UPDATE</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SKIP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> LOCKED</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SV-2" data-look="classic" transform="translate(749.75, 74.0999984741211)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tenant</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> filter</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> over-fetch</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FK-3" data-look="classic" transform="translate(164.5, 330.0999984741211)"><rect class="basic label-container" style="" x="-121.5" y="-41.099998474121094" width="243" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Real</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> FKs</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">CASCADE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RESTRICT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SET</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> NULL</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-UQ-4" data-look="classic" transform="translate(455.25, 330.0999984741211)"><rect class="basic label-container" style="" x="-106.5" y="-32.29999923706055" width="213" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UNIQUE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> natural</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> keys</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dedup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> idempotency</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CK-5" data-look="classic" transform="translate(732.75, 330.0999984741211)"><rect class="basic label-container" style="" x="-121" y="-32.29999923706055" width="242" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">CHECK</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> domains</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">enum-like</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> TEXT</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ranges</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PK-6" data-look="classic" transform="translate(1029.75, 330.0999984741211)"><rect class="basic label-container" style="" x="-126" y="-32.79999923706055" width="252" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Composite</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> PKs</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(id,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> posted_at)</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> on</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> firehoses</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-UPD-7" data-look="classic" transform="translate(1348.75, 330.0999984741211)"><rect class="basic label-container" style="" x="-103" y="-32.79999923706055" width="206" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">trg_*_updated</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">maintain</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> updated_at</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AO-8" data-look="classic" transform="translate(1619.75, 330.0999984741211)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">audit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> append-only</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">block</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UPDATE/DELETE</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-VAL-9" data-look="classic" transform="translate(1898.75, 330.0999984741211)"><rect class="basic label-container" style="" x="-111" y="-32.29999923706055" width="222" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">validate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> soft-ref</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">posts/replies</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> existence</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DBOK-18" data-look="classic" transform="translate(1016.5, 521.0029487609863)"><path d="M0,13.468634686346864 a73,13.468634686346864 0,0,0 146,0 a73,13.468634686346864 0,0,0 -146,0 l0,45.46863468634686 a73,13.468634686346864 0,0,0 146,0 l0,-45.46863468634686" class="basic label-container outer-path" style="" transform="translate(-73, -36.20295202952029)"/><g class="label" style="" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">referential</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> integrity</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Helix Thready enforces integrity at three layers, and
+the diagram shows which guarantee lives where. The top box is the
+<strong>application layer</strong>: the thread reader writes a root post
+and its <code>threads</code> envelope in a single transaction (so the
+soft <code>root_post_id</code> reference is never dangling at commit),
+the processing engine claims exactly one post at a time with
+<code>SELECT … FOR UPDATE SKIP LOCKED</code> (so a
+<code>post.received</code> storm cannot double-process), and the search
+service applies the tenant filter itself because — as verified at source
+— the pgvector adapter’s <code>Search</code> emits no <code>WHERE</code>
+clause. These are behaviours the database cannot express declaratively,
+so they are owned by code and covered by tests.</p>
+<p>The middle box is the <strong>declarative database layer</strong>,
+which carries everything Postgres can guarantee without a procedure:
+real foreign keys (with the CASCADE/RESTRICT/SET NULL choices in §3),
+<code>UNIQUE</code> natural keys that make ingestion idempotent and
+dedup content, <code>CHECK</code> domains that constrain the enum-like
+<code>TEXT</code> columns and numeric ranges (§2), and the composite
+<code>(id, posted_at)</code> primary keys that the RANGE-partitioned
+firehose tables require. This layer is always on and needs no
+application cooperation — a buggy service still cannot insert a post
+with a duplicate
+<code>(channel_id, external_message_id, posted_at)</code> or an
+out-of-domain <code>status</code>.</p>
+<p>The bottom box is the <strong>trigger layer</strong>. Two triggers
+are always enforced: <code>trg_*_updated</code> maintains
+<code>updated_at</code>, and (recommended) an append-only rule blocks
+<code>UPDATE</code>/<code>DELETE</code> on <code>audit_log</code> so the
+compliance trail is tamper-evident. A third, <strong>optional</strong>
+family — <code>VAL</code>, the soft-reference validation triggers of §5
+— is the closure for <code>ATM-DB-004</code>: because Postgres forbids a
+foreign key that points <em>into</em> a partitioned table without the
+partition key, deployments that want a hard DB guarantee (not just the
+app guarantee) on the safety-critical
+<code>processing_state → posts</code> link can install a constraint
+trigger that checks existence on insert. The dotted edge marks it opt-in
+per environment: it trades a little write throughput for belt-and-braces
+integrity, and the default is app-enforced.</p>
+<hr />
+<h2 id="check-domain-catalogue-enum-like-columns">2. CHECK-domain
+catalogue (enum-like columns)</h2>
+<p>Thready uses <strong><code>TEXT</code> + <code>CHECK</code></strong>
+instead of <code>CREATE TYPE</code> enums so a domain can be widened by
+an expand-only <code>ALTER … DROP/ADD CONSTRAINT</code> (no
+<code>ALTER TYPE</code> table rewrite — see <a
+href="./migration-strategy.md#5-expand--contract-zero-downtime">migration-strategy.md
+§5</a>). The complete catalogue:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 38%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Table.column</th>
+<th>Allowed values</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>accounts.status</code></td>
+<td><code>active, suspended, deleted</code></td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td><code>users.status</code></td>
+<td><code>active, invited, disabled, deleted</code></td>
+<td>§6.3</td>
+</tr>
+<tr>
+<td><code>roles.tier</code></td>
+<td><code>root, account_admin, user</code></td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td><code>memberships.status</code></td>
+<td><code>active, invited, revoked</code></td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td><code>messengers.kind</code></td>
+<td><code>telegram, max</code></td>
+<td>§1.2</td>
+</tr>
+<tr>
+<td><code>messenger_accounts.auth_state</code></td>
+<td><code>unauthenticated, pending_code, pending_2fa, authenticated, revoked</code></td>
+<td>§3.1</td>
+</tr>
+<tr>
+<td><code>messenger_accounts.status</code></td>
+<td><code>active, disabled</code></td>
+<td>§3.1</td>
+</tr>
+<tr>
+<td><code>channels.kind</code></td>
+<td><code>channel, group, forum</code></td>
+<td>§3.1</td>
+</tr>
+<tr>
+<td><code>post_hashtags.source</code> /
+<code>reply_hashtags.source</code></td>
+<td><code>explicit, indirect, ai_inferred</code></td>
+<td>§3.5 / §3.2.1</td>
+</tr>
+<tr>
+<td><code>categories.precedence_class</code></td>
+<td><code>download, convert, analyze, research, reply</code></td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td><code>post_categories.confidence</code></td>
+<td><code>0 ≤ confidence ≤ 1</code> (real range)</td>
+<td>§3.2.2</td>
+</tr>
+<tr>
+<td><code>processing_state.status</code></td>
+<td><code>pending, claimed, running, done, failed, skipped</code></td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td><code>skills.kind</code></td>
+<td><code>atomic, composite, umbrella</code></td>
+<td>helix_skills taxonomy</td>
+</tr>
+<tr>
+<td><code>skill_runs.status</code></td>
+<td><code>pending, running, done, failed, skipped</code></td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td><code>generated_artifacts.kind</code></td>
+<td><code>research_doc, book, transcript, summary, other</code></td>
+<td>§3.2.3</td>
+</tr>
+<tr>
+<td><code>assets.kind</code></td>
+<td><code>video, audio, image, document, book, comic, other</code></td>
+<td>§7</td>
+</tr>
+<tr>
+<td><code>assets.storage_backend</code></td>
+<td><code>minio, s3, local</code></td>
+<td>§7 / ATM-DB-033</td>
+</tr>
+<tr>
+<td><code>assets.sensitivity</code></td>
+<td><code>public, internal, sensitive</code></td>
+<td>§3.6</td>
+</tr>
+<tr>
+<td><code>asset_links.role</code></td>
+<td><code>source, generated, rendition</code></td>
+<td>§7.3</td>
+</tr>
+<tr>
+<td><code>asset_links</code> (constraint)</td>
+<td>exactly one of
+<code>{post_id, reply_id, generated_artifact_id}</code> set</td>
+<td>§7.3</td>
+</tr>
+<tr>
+<td><code>events.scope</code></td>
+<td><code>one_time, sticky</code></td>
+<td>§3.4</td>
+</tr>
+<tr>
+<td><code>event_subscriptions.transport</code></td>
+<td><code>ws, sse, webhook</code></td>
+<td>§13.3</td>
+</tr>
+<tr>
+<td><code>plans.interval</code></td>
+<td><code>month, year</code></td>
+<td>Q11</td>
+</tr>
+<tr>
+<td><code>subscriptions.status</code></td>
+<td><code>trialing, active, past_due, canceled</code></td>
+<td>Q11</td>
+</tr>
+<tr>
+<td><code>usage_records.metric</code></td>
+<td><code>posts_processed, assets_bytes, llm_tokens, searches</code></td>
+<td>Q11</td>
+</tr>
+<tr>
+<td><code>invoices.status</code></td>
+<td><code>open, paid, void</code></td>
+<td>Q11</td>
+</tr>
+<tr>
+<td>Non-negative ranges</td>
+<td><code>accounts.default_retention_days ≥ 0</code>,
+<code>channels.retention_days ≥ 0</code>,
+<code>channels.poll_interval_seconds &gt; 0</code>,
+<code>assets.size_bytes ≥ 0</code>, <code>plans.price_cents ≥ 0</code>,
+<code>invoices.amount_cents ≥ 0</code>,
+<code>usage_records.quantity ≥ 0</code></td>
+<td>schema</td>
+</tr>
+</tbody>
+</table>
+<p>Widening example (already shown in migration-strategy.md) — adding a
+<code>translate</code> precedence class is a pure expand:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- +thready Up</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> categories <span class="kw">DROP</span> <span class="kw">CONSTRAINT</span> categories_precedence_class_check;</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> categories <span class="kw">ADD</span>  <span class="kw">CONSTRAINT</span> categories_precedence_class_check</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CHECK</span> (precedence_class <span class="kw">IN</span> (<span class="st">&#39;download&#39;</span>,<span class="st">&#39;convert&#39;</span>,<span class="st">&#39;analyze&#39;</span>,<span class="st">&#39;research&#39;</span>,<span class="st">&#39;reply&#39;</span>,<span class="st">&#39;translate&#39;</span>));</span></code></pre></div>
+<hr />
+<h2 id="fk-on-delete-action-matrix">3. FK on-delete action matrix</h2>
+<p>The choices are commented at each column in <a
+href="./schema-relational.sql"><code>schema-relational.sql</code></a>
+and summarised here.</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 51%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Action</th>
+<th>Foreign keys</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CASCADE</strong></td>
+<td><code>memberships → users/accounts</code>,
+<code>roles → accounts</code>,
+<code>role_permissions → roles/permissions</code>,
+<code>messenger_accounts → accounts</code>,
+<code>channels → accounts/messenger_accounts</code>,
+<code>threads → accounts/channels</code>,
+<code>posts → accounts/channels</code>,
+<code>replies → accounts/threads</code>,
+<code>processing_state → accounts</code>,
+<code>generated_artifacts → accounts</code>,
+<code>assets → accounts</code>,
+<code>asset_links → assets/generated_artifacts</code>,
+<code>subscriptions → accounts</code>,
+<code>usage_records → accounts</code>, <code>invoices → accounts</code>,
+<code>event_subscriptions → accounts/users</code>, all
+<code>*_hashtags/*_categories → hashtags/categories</code></td>
+<td>The child is meaningless without the parent; deleting a tenant must
+reclaim all its rows (GDPR erasure relies on this — see <a
+href="./retention-archive.md#6-gdpr-aware-erasure--export">retention-archive.md
+§6</a>).</td>
+</tr>
+<tr>
+<td><strong>RESTRICT</strong></td>
+<td><code>messenger_accounts → messengers</code>,
+<code>memberships → roles</code>, <code>skill_runs → skills</code>,
+<code>subscriptions → plans</code></td>
+<td>Deleting the parent would erase authorisation/audit meaning;
+deactivate (<code>is_active=false</code>) instead of deleting.</td>
+</tr>
+<tr>
+<td><strong>SET NULL</strong></td>
+<td><code>posts → threads</code>,
+<code>memberships.invited_by → users</code>,
+<code>invoices → subscriptions</code>,
+<code>assets.parent_asset_id → assets</code></td>
+<td>The reference is advisory; the child must survive parent loss (an
+invoice is a financial record; a post may be re-threaded).</td>
+</tr>
+<tr>
+<td><strong>(no FK)</strong></td>
+<td>soft refs into partitioned <code>posts</code>/<code>replies</code>
+(<code>threads.root_post_id</code>, <code>replies.parent_post_id</code>,
+<code>processing_state</code>, <code>skill_runs</code>,
+<code>generated_artifacts</code>, <code>asset_links</code>); high-volume
+soft refs (<code>events</code>/<code>audit_log</code> →
+<code>accounts</code>/<code>users</code>)</td>
+<td>Postgres forbids a FK into a partitioned table without the partition
+key; audit/event rows must outlive a deleted account (§4, <a
+href="./erd.md#9-referential-integrity-strategy-partitioned-tables">erd.md
+§9</a>).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="soft-references-into-partitioned-tables">4. Soft references into
+partitioned tables</h2>
+<p><strong>VERIFIED constraint (PostgreSQL).</strong> A foreign key’s
+target must include the referenced table’s partition key. The firehose
+tables <code>posts</code>, <code>replies</code>, <code>events</code>,
+<code>audit_log</code> are RANGE-partitioned on a timestamp, so their PK
+is <code>(id, &lt;time&gt;)</code>. A child that wants a real FK would
+have to carry both
+<code>(&lt;child&gt;_id, &lt;child&gt;_posted_at)</code>
+<strong>and</strong> cascade over the composite — heavy on the 10k+/day
+write path. Thready therefore:</p>
+<ol type="1">
+<li>Stores a <strong>plain UUID</strong> reference column
+(e.g. <code>processing_state.post_id</code>), plus a
+<strong>denormalised <code>…_posted_at</code></strong> copy of the
+partition key so joins back to the parent prune partitions.</li>
+<li>Guarantees existence in the <strong>application</strong>: the thread
+reader writes root post + thread in one transaction; the processing
+engine creates <code>processing_state</code> in the same unit of work
+that persists the post.</li>
+<li>Optionally installs the <strong>validation triggers</strong> below
+where a hard DB guarantee is wanted.</li>
+</ol>
+<p>This is a standard pattern at Large scale; the honest trade-off
+(throughput vs DB-enforced integrity) is tracked as
+<code>ATM-DB-004</code>.</p>
+<hr />
+<h2 id="optional-validation-triggers-closing-atm-db-004">5. Optional
+validation triggers (closing ATM-DB-004)</h2>
+<p>Two concrete hardening options, from lightest to strongest. Both are
+<strong>opt-in per environment</strong> and default OFF (app-enforced is
+the baseline).</p>
+<p><strong>Option A — composite FK on the safety-critical link
+only.</strong> For <code>processing_state → posts</code>, carry the
+partition key and declare the composite FK (already shown in <a
+href="./partitioning.md#8-the-partitioned-fk-trade-off">partitioning.md
+§8</a>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> processing_state</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ADD</span> <span class="kw">CONSTRAINT</span> fk_processing_post</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (post_id, post_posted_at) <span class="kw">REFERENCES</span> posts (<span class="kw">id</span>, posted_at)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>;</span></code></pre></div>
+<p>This is the strongest guarantee but forces every
+<code>processing_state</code> write to supply
+<code>post_posted_at</code> and makes cascades heavier on the firehose
+delete path.</p>
+<p><strong>Option B — constraint trigger that checks existence on
+insert.</strong> Lighter than a composite FK (no cascade machinery), it
+rejects an orphan at insert time while leaving the delete path cheap.
+Because the check carries <code>post_posted_at</code>, the existence
+probe prunes to one partition:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Reject a processing_state row whose (post_id, post_posted_at) has no matching post.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> thready_assert_post_exists() RETURNS <span class="kw">trigger</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql <span class="kw">AS</span> $$</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="dv">1</span> <span class="kw">FROM</span> posts</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> <span class="kw">id</span> <span class="op">=</span> <span class="kw">NEW</span>.post_id <span class="kw">AND</span> posted_at <span class="op">=</span> <span class="kw">NEW</span>.post_posted_at   <span class="co">-- prunes to one partition</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="cf">THEN</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    RAISE foreign_key_violation</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">USING</span> MESSAGE <span class="op">=</span> format(<span class="st">&#39;processing_state references missing post %s @ %s&#39;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                             <span class="kw">NEW</span>.post_id, <span class="kw">NEW</span>.post_posted_at);</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>$$;</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- CONSTRAINT TRIGGER so it can be deferred within a tx if the post is written slightly later.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">CONSTRAINT</span> <span class="kw">TRIGGER</span> trg_processing_post_exists</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">ON</span> processing_state</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">DEFERRABLE</span> <span class="kw">INITIALLY</span> <span class="kw">DEFERRED</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> thready_assert_post_exists();</span></code></pre></div>
+<p>The same pattern generalises to <code>skill_runs</code>,
+<code>generated_artifacts</code>, and <code>asset_links</code> (probe
+<code>posts</code>/<code>replies</code> by the denormalised partition
+key). Deployments that value throughput over a DB-level guarantee simply
+do not install these — the application transaction is the contract.
+<code>[OPEN: db-partition-fk]</code> (<code>ATM-DB-004</code>) — decide
+per environment in the deployment pack.</p>
+<hr />
+<h2 id="append-only-audit-log-enforcement">6. Append-only audit-log
+enforcement</h2>
+<p><a href="./schema-relational.sql"><code>audit_log</code></a> is a
+compliance record: no <code>UPDATE</code>/<code>DELETE</code> in normal
+operation (<a href="./erd.md#6-domain-d--events-billing--audit">final
+request §14.4, Q40</a>). Enforce it in depth — role privileges
+<strong>and</strong> a trigger so even a privileged mistake is
+blocked:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 1) Least privilege: the app role may only INSERT/SELECT.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">REVOKE</span> <span class="kw">UPDATE</span>, <span class="kw">DELETE</span>, <span class="kw">TRUNCATE</span> <span class="kw">ON</span> audit_log <span class="kw">FROM</span> thready_app;</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span>  <span class="kw">INSERT</span>, <span class="kw">SELECT</span>           <span class="kw">ON</span> audit_log <span class="kw">TO</span>   thready_app;</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2) Defence in depth: a trigger that raises on any UPDATE/DELETE, even by the owner.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> thready_block_audit_mutation() RETURNS <span class="kw">trigger</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql <span class="kw">AS</span> $$</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  RAISE insufficient_privilege</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> MESSAGE <span class="op">=</span> <span class="st">&#39;audit_log is append-only: UPDATE/DELETE is not permitted&#39;</span>;</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>$$;</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trg_audit_append_only</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">BEFORE</span> <span class="kw">UPDATE</span> <span class="kw">OR</span> <span class="kw">DELETE</span> <span class="kw">ON</span> audit_log</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> thready_block_audit_mutation();</span></code></pre></div>
+<p>Age-out of old audit partitions is <strong>not</strong> an
+<code>UPDATE</code>/<code>DELETE</code> — it is a partition
+<code>DETACH</code> + archive (<a
+href="./retention-archive.md#4-archive-pipeline-detach--cold--drop">retention-archive.md
+§4</a>), which the trigger does not block (it fires on row DML, not
+DDL). Retention default is 1 year (Q40, adjustable), independent of
+content retention.</p>
+<hr />
+<h2 id="updated_at-trigger-single-root-guard">7. <code>updated_at</code>
+trigger &amp; single-root guard</h2>
+<p>Two always-on guarantees already in the schema, restated here for
+completeness:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Every mutable table has BEFORE UPDATE -&gt; thready_set_updated_at() (sets NEW.updated_at := now()).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Applied to: accounts, users, memberships, messenger_accounts, channels, threads,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- processing_state, skills, generated_artifacts, assets, subscriptions.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trg_accounts_updated <span class="kw">BEFORE</span> <span class="kw">UPDATE</span> <span class="kw">ON</span> accounts</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> thready_set_updated_at();</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exactly one Root Admin (final request §6.1 &quot;only one exists&quot;):</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> uq_users_single_root <span class="kw">ON</span> users ((is_root)) <span class="kw">WHERE</span> is_root;</span></code></pre></div>
+<p>The single-root guard is a <strong>partial UNIQUE index</strong>, not
+a trigger: indexing <code>((is_root)) WHERE is_root</code> means at most
+one row can have <code>is_root = true</code>, enforced by the index
+without any procedural code and with no cost to the common
+<code>is_root = false</code> case.</p>
+<hr />
+<h2 id="verification-open-items">8. Verification &amp; open items</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CHECK-domain widening is expand-only</td>
+<td>Demonstrated §2; covered by the migration apply/rollback test
+bank</td>
+</tr>
+<tr>
+<td>FK on-delete choices (CASCADE for GDPR erasure)</td>
+<td>§3; erasure reach tested in <a
+href="./retention-archive.md#6-gdpr-aware-erasure--export">retention-archive.md
+§6</a></td>
+</tr>
+<tr>
+<td><code>[OPEN: db-partition-fk]</code> app- vs DB-enforced soft
+refs</td>
+<td>§5 — both hardening options specified with runnable DDL; default
+app-enforced; tracked <code>ATM-DB-004</code></td>
+</tr>
+<tr>
+<td>Append-only audit enforced in depth</td>
+<td>§6 privileges + trigger; a chaos/security test asserts UPDATE/DELETE
+is rejected</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification.</strong> A security test asserts the audit
+trigger rejects UPDATE/DELETE; a correctness test asserts the Option-B
+constraint trigger rejects an orphan <code>processing_state</code>
+insert and accepts a valid one; a migration test asserts each CHECK
+widening applies and rolls back cleanly. All run against a real Postgres
+container per <code>[CONSTITUTION §11.4.27]</code>.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

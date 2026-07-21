@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Hetzner Host Provisioning</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Hetzner Host Provisioning</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#host-baseline-sizing" id="toc-host-baseline-sizing">1.
+Host baseline (sizing)</a>
+<ul>
+<li><a href="#candidate-hetzner-skus-object-tier-split"
+id="toc-candidate-hetzner-skus-object-tier-split">1.1 Candidate Hetzner
+SKUs + object-tier split</a></li>
+</ul></li>
+<li><a href="#provisioning-phases-diagram"
+id="toc-provisioning-phases-diagram">2. Provisioning phases
+diagram</a></li>
+<li><a href="#phase-a-root-bootstrap-one-time"
+id="toc-phase-a-root-bootstrap-one-time">3. Phase A — root bootstrap
+(one time)</a></li>
+<li><a href="#the-privileged-port-sysctl-why-root-is-needed-once"
+id="toc-the-privileged-port-sysctl-why-root-is-needed-once">4. The
+privileged-port sysctl (why root is needed once)</a></li>
+<li><a href="#firewall" id="toc-firewall">5. Firewall</a></li>
+<li><a href="#phase-b-the-thready-user-rootless"
+id="toc-phase-b-the-thready-user-rootless">6. Phase B — the thready user
+(rootless)</a></li>
+<li><a href="#phase-c-first-deploy" id="toc-phase-c-first-deploy">7.
+Phase C — first deploy</a></li>
+<li><a href="#host-toolchain-incl.-docs_chain-deps"
+id="toc-host-toolchain-incl.-docs_chain-deps">8. Host toolchain
+(incl. docs_chain deps)</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">9.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Hetzner Host Provisioning
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/hetzner-provisioning.md
+  Status          : Review — v0.3
+  Revision        : 4 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./podman-compose.md, ./secrets-and-config.md,
+                    ./tls-lets-encrypt.md, ./environments.md, ./compose-files.md,
+                    ./operations-runbook.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial root→thready provisioning, rootless Podman, firewall,
+linger, sysctl, first deploy</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (deployment review)</td>
+<td>Split the provisioning-phases prose into multiple paragraphs</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Pass 3: added the candidate Hetzner SKU + object-tier split table
+(§1.1) to make <code>[OPEN: host-sizing]</code> implementation-ready;
+cross-linked the day-2 operations runbook</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<p>This document is the step-by-step provisioning of the single Hetzner
+dedicated host: from <strong>root</strong> bootstrap to the unprivileged
+<strong><code>thready</code></strong> user under which all three
+environments run rootless (<code>§14.2</code>, Q8). It ends at a first
+health-gated deploy.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-host-baseline-sizing">Host baseline (sizing)</a>
+<ul>
+<li><a href="#11-candidate-hetzner-skus--object-tier-split">1.1
+Candidate Hetzner SKUs + object-tier split</a></li>
+</ul></li>
+<li><a href="#2-provisioning-phases-diagram">Provisioning phases
+diagram</a></li>
+<li><a href="#3-phase-a--root-bootstrap-one-time">Phase A — root
+bootstrap (one time)</a></li>
+<li><a href="#4-the-privileged-port-sysctl-why-root-is-needed-once">The
+privileged-port sysctl (why root is needed once)</a></li>
+<li><a href="#5-firewall">Firewall</a></li>
+<li><a href="#6-phase-b--the-thready-user-rootless">Phase B — the
+thready user (rootless)</a></li>
+<li><a href="#7-phase-c--first-deploy">Phase C — first deploy</a></li>
+<li><a href="#8-host-toolchain-incl-docs_chain-deps">Host toolchain
+(incl. docs_chain deps)</a></li>
+<li><a href="#9-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#10-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="host-baseline-sizing">1. Host baseline (sizing)</h2>
+<p><code>[DEFAULT — adjustable]</code> baseline for the Large scale (Q5)
+— three co-resident stacks + object tier:</p>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 32%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Baseline</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vCPU</td>
+<td>≥ 16</td>
+<td>prod + sta + dev app/data planes co-reside</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>≥ 64 GB</td>
+<td>Postgres + pgvector working set; JetStream; three stacks</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>NVMe for Postgres/pgvector; large HDD/NVMe pool for MinIO (50
+TB+)</td>
+<td>Q5, asset tier</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>1 Gbit+; static IPv4 + IPv6</td>
+<td>edge on one IP; HTTP/3 over UDP</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td><strong>not on this host</strong> — HelixLLM runs on the
+workstation/GPU node</td>
+<td>Q5; reached as external endpoint</td>
+</tr>
+</tbody>
+</table>
+<p><code>[OPEN: host-sizing]</code> — exact Hetzner SKU (e.g. a
+dedicated <strong>AX</strong>/<strong>EX</strong> line box) and whether
+MinIO uses local disks or a Hetzner volume/Storage Box for the object
+tier is finalized after load tests. HelixLLM’s GPU node topology is
+separate. The candidate mapping in <a
+href="#11-candidate-hetzner-skus--object-tier-split">§1.1</a> makes this
+implementation-ready without pre-committing the operator to a
+purchase.</p>
+<h3 id="candidate-hetzner-skus-object-tier-split">1.1 Candidate Hetzner
+SKUs + object-tier split</h3>
+<p><code>[RESEARCH]</code> <code>[DEFAULT — adjustable]</code> — mapping
+the abstract baseline (≥ 16 vCPU / ≥ 64 GB, NVMe for the DB, a large
+pool for 50 TB+ assets) onto concrete, purchasable Hetzner
+<strong>dedicated</strong> hardware. The central sizing tension is that
+<strong>fast compute</strong> (AX/EX line, NVMe) and <strong>bulk
+storage</strong> (SX line, many large HDDs) live in different product
+families — so the decision is really “one box or two tiers”:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 39%" />
+<col style="width: 12%" />
+<col style="width: 6%" />
+<col style="width: 23%" />
+<col style="width: 6%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Family / representative SKU</th>
+<th>Compute</th>
+<th>RAM</th>
+<th>Storage profile</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — single compute box + external object tier</strong>
+<em>(recommended default)</em></td>
+<td><strong>AX</strong> line (e.g. AX102-class, Ryzen 9, 16C/32T)</td>
+<td>16C/32T</td>
+<td>128 GB DDR5</td>
+<td>2× ~2 TB NVMe (RAID1) for DB + hot state</td>
+<td>Best DB/pgvector latency; assets go to a <strong>separate object
+tier</strong> (below)</td>
+</tr>
+<tr>
+<td><strong>B — single storage box</strong></td>
+<td><strong>SX</strong> line (e.g. SX-class storage server)</td>
+<td>8–16C</td>
+<td>64–128 GB</td>
+<td>many large HDDs (tens of TB) + small NVMe</td>
+<td>Holds 50 TB+ assets <em>on-box</em> but HDD-backed Postgres hurts
+pgvector latency</td>
+</tr>
+<tr>
+<td><strong>C — split: AX compute + SX/Storage-Box object
+tier</strong></td>
+<td>AX compute <strong>+</strong> SX server or Storage Box</td>
+<td>16C+/32T+</td>
+<td>128 GB+</td>
+<td>NVMe DB on AX; HDD object pool off-box</td>
+<td>Cleanest at scale; object tier doubles as the <a
+href="./backup-dr.md#6-secondary-store--retention">backup secondary</a>
+candidate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Object-tier decision (the 50 TB+ MinIO volume).</strong>
+Three backings, in order of preference:</p>
+<ol type="1">
+<li><strong>Hetzner dedicated storage server (SX)</strong> or a
+<strong>large NVMe/HDD RAID</strong> on the same host — highest MinIO
+throughput, simplest network path; best when assets and compute can
+share one box (Option B) or a second SX box (Option C).</li>
+<li><strong>Hetzner Volume</strong> attached to the AX box — elastic,
+but capped per-volume and network-latency bound; fine for a
+smaller-than-50 TB start that grows.</li>
+<li><strong>Hetzner Storage Box</strong> (SFTP/rclone) — cheapest,
+off-host; already the <a
+href="./backup-dr.md#6-secondary-store--retention">backup secondary
+default</a>, so reusing it as the live object tier would couple primary
+and backup — <strong>avoid</strong> for the live tier, keep it for
+backups.</li>
+</ol>
+<p><strong>Recommendation:</strong> start <strong>Option A</strong> (one
+AX compute box, NVMe DB, assets on a Volume or a small SX tier) and
+split to <strong>Option C</strong> once asset volume approaches the 50
+TB envelope — the compose files and port plan do not change, only the
+MinIO volume’s backing does. The GPU that HelixLLM needs is
+<strong>not</strong> on this host under any option; it stays the
+operator workstation / GPU node reached as an <a
+href="./container-topology.md#9-helixllm-as-an-external-endpoint">external
+endpoint</a>. Exact SKU codes drift with Hetzner’s catalogue, so the
+<em>family + profile</em> is what is fixed here; the specific model is
+confirmed at purchase after the load test sets the real asset-growth and
+pgvector-working-set curves.</p>
+<h2 id="provisioning-phases-diagram">2. Provisioning phases diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 347px; background-color: white;" viewBox="0 0 347 2136.599853515625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-FIRST" data-look="classic"><rect style="" x="8" y="1687.7999801635742" width="331" height="440.7999954223633"/><g class="cluster-label" transform="translate(92, 1687.7999801635742)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Phase</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> C</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> first</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> deploy</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-USER" data-look="classic"><rect style="" x="19" y="913.9999923706055" width="309" height="723.7999877929688"/><g class="cluster-label" transform="translate(59, 913.9999923706055)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Phase</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> B</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> as</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (rootless)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-ROOT" data-look="classic"><rect style="" x="9.5" y="8" width="328" height="855.9999923706055"/><g class="cluster-label" transform="translate(70.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Phase</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> A</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> as</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (one</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> time)</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M173.5,132.8L173.5,136.967C173.5,141.133,173.5,149.467,173.5,157.133C173.5,164.8,173.5,171.8,173.5,175.3L173.5,178.8" id="my-svg-L_A1_A2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A1_A2_0" data-points="W3sieCI6MTczLjUsInkiOjEzMi44MDAwMDMwNTE3NTc4fSx7IngiOjE3My41LCJ5IjoxNTcuODAwMDAzMDUxNzU3OH0seyJ4IjoxNzMuNSwieSI6MTgyLjgwMDAwMzA1MTc1Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,247.4L173.5,251.567C173.5,255.733,173.5,264.067,173.5,271.733C173.5,279.4,173.5,286.4,173.5,289.9L173.5,293.4" id="my-svg-L_A2_A3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A2_A3_0" data-points="W3sieCI6MTczLjUsInkiOjI0Ny40MDAwMDE1MjU4Nzg5fSx7IngiOjE3My41LCJ5IjoyNzIuNDAwMDAxNTI1ODc4OX0seyJ4IjoxNzMuNSwieSI6Mjk3LjQwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,362L173.5,366.167C173.5,370.333,173.5,378.667,173.5,386.333C173.5,394,173.5,401,173.5,404.5L173.5,408" id="my-svg-L_A3_A4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A3_A4_0" data-points="W3sieCI6MTczLjUsInkiOjM2Mn0seyJ4IjoxNzMuNSwieSI6Mzg3fSx7IngiOjE3My41LCJ5Ijo0MTJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,495.2L173.5,499.367C173.5,503.533,173.5,511.867,173.5,519.533C173.5,527.2,173.5,534.2,173.5,537.7L173.5,541.2" id="my-svg-L_A4_A5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A4_A5_0" data-points="W3sieCI6MTczLjUsInkiOjQ5NS4xOTk5OTY5NDgyNDIyfSx7IngiOjE3My41LCJ5Ijo1MjAuMTk5OTk2OTQ4MjQyMn0seyJ4IjoxNzMuNSwieSI6NTQ1LjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,609.8L173.5,613.967C173.5,618.133,173.5,626.467,173.5,634.133C173.5,641.8,173.5,648.8,173.5,652.3L173.5,655.8" id="my-svg-L_A5_A6_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A5_A6_0" data-points="W3sieCI6MTczLjUsInkiOjYwOS43OTk5OTU0MjIzNjMzfSx7IngiOjE3My41LCJ5Ijo2MzQuNzk5OTk1NDIyMzYzM30seyJ4IjoxNzMuNSwieSI6NjU5Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,724.4L173.5,728.567C173.5,732.733,173.5,741.067,173.5,748.733C173.5,756.4,173.5,763.4,173.5,766.9L173.5,770.4" id="my-svg-L_A6_A7_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A6_A7_0" data-points="W3sieCI6MTczLjUsInkiOjcyNC4zOTk5OTM4OTY0ODQ0fSx7IngiOjE3My41LCJ5Ijo3NDkuMzk5OTkzODk2NDg0NH0seyJ4IjoxNzMuNSwieSI6Nzc0LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,986L173.5,990.167C173.5,994.333,173.5,1002.667,173.5,1010.333C173.5,1018,173.5,1025,173.5,1028.5L173.5,1032" id="my-svg-L_B1_B2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B1_B2_0" data-points="W3sieCI6MTczLjUsInkiOjk4NS45OTk5OTIzNzA2MDU1fSx7IngiOjE3My41LCJ5IjoxMDEwLjk5OTk5MjM3MDYwNTV9LHsieCI6MTczLjUsInkiOjEwMzUuOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1119.2L173.5,1123.367C173.5,1127.533,173.5,1135.867,173.5,1143.533C173.5,1151.2,173.5,1158.2,173.5,1161.7L173.5,1165.2" id="my-svg-L_B2_B3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B2_B3_0" data-points="W3sieCI6MTczLjUsInkiOjExMTkuMTk5OTg5MzE4ODQ3N30seyJ4IjoxNzMuNSwieSI6MTE0NC4xOTk5ODkzMTg4NDc3fSx7IngiOjE3My41LCJ5IjoxMTY5LjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1251.4L173.5,1255.567C173.5,1259.733,173.5,1268.067,173.5,1275.733C173.5,1283.4,173.5,1290.4,173.5,1293.9L173.5,1297.4" id="my-svg-L_B3_B4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B3_B4_0" data-points="W3sieCI6MTczLjUsInkiOjEyNTEuMzk5OTg2MjY3MDg5OH0seyJ4IjoxNzMuNSwieSI6MTI3Ni4zOTk5ODYyNjcwODk4fSx7IngiOjE3My41LCJ5IjoxMzAxLjM5OTk4NjI2NzA4OTh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1366L173.5,1370.167C173.5,1374.333,173.5,1382.667,173.5,1390.333C173.5,1398,173.5,1405,173.5,1408.5L173.5,1412" id="my-svg-L_B4_B5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B4_B5_0" data-points="W3sieCI6MTczLjUsInkiOjEzNjUuOTk5OTg0NzQxMjExfSx7IngiOjE3My41LCJ5IjoxMzkwLjk5OTk4NDc0MTIxMX0seyJ4IjoxNzMuNSwieSI6MTQxNS45OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1480.6L173.5,1484.767C173.5,1488.933,173.5,1497.267,173.5,1504.933C173.5,1512.6,173.5,1519.6,173.5,1523.1L173.5,1526.6" id="my-svg-L_B5_B6_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B5_B6_0" data-points="W3sieCI6MTczLjUsInkiOjE0ODAuNTk5OTgzMjE1MzMyfSx7IngiOjE3My41LCJ5IjoxNTA1LjU5OTk4MzIxNTMzMn0seyJ4IjoxNzMuNSwieSI6MTUzMC41OTk5ODMyMTUzMzJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1777.4L173.5,1781.567C173.5,1785.733,173.5,1794.067,173.5,1801.733C173.5,1809.4,173.5,1816.4,173.5,1819.9L173.5,1823.4" id="my-svg-L_C1_C2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C1_C2_0" data-points="W3sieCI6MTczLjUsInkiOjE3NzcuMzk5OTc4NjM3Njk1M30seyJ4IjoxNzMuNSwieSI6MTgwMi4zOTk5Nzg2Mzc2OTUzfSx7IngiOjE3My41LCJ5IjoxODI3LjM5OTk3ODYzNzY5NTN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1892L173.5,1896.167C173.5,1900.333,173.5,1908.667,173.5,1916.333C173.5,1924,173.5,1931,173.5,1934.5L173.5,1938" id="my-svg-L_C2_C3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C2_C3_0" data-points="W3sieCI6MTczLjUsInkiOjE4OTEuOTk5OTc3MTExODE2NH0seyJ4IjoxNzMuNSwieSI6MTkxNi45OTk5NzcxMTE4MTY0fSx7IngiOjE3My41LCJ5IjoxOTQxLjk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1989L173.5,1993.167C173.5,1997.333,173.5,2005.667,173.5,2013.333C173.5,2021,173.5,2028,173.5,2031.5L173.5,2035" id="my-svg-L_C3_C4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C3_C4_0" data-points="W3sieCI6MTczLjUsInkiOjE5ODguOTk5OTc3MTExODE2NH0seyJ4IjoxNzMuNSwieSI6MjAxMy45OTk5NzcxMTE4MTY0fSx7IngiOjE3My41LCJ5IjoyMDM4Ljk5OTk3NzExMTgxNjR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,839L173.5,843.167C173.5,847.333,173.5,855.667,173.5,864C173.5,872.333,173.5,880.667,173.5,889C173.5,897.333,173.5,905.667,173.5,913.333C173.5,921,173.5,928,173.5,931.5L173.5,935" id="my-svg-L_A7_B1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A7_B1_0" data-points="W3sieCI6MTczLjUsInkiOjgzOC45OTk5OTIzNzA2MDU1fSx7IngiOjE3My41LCJ5Ijo4NjMuOTk5OTkyMzcwNjA1NX0seyJ4IjoxNzMuNSwieSI6ODg4Ljk5OTk5MjM3MDYwNTV9LHsieCI6MTczLjUsInkiOjkxMy45OTk5OTIzNzA2MDU1fSx7IngiOjE3My41LCJ5Ijo5MzguOTk5OTkyMzcwNjA1NX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M173.5,1612.8L173.5,1616.967C173.5,1621.133,173.5,1629.467,173.5,1637.8C173.5,1646.133,173.5,1654.467,173.5,1662.8C173.5,1671.133,173.5,1679.467,173.5,1687.133C173.5,1694.8,173.5,1701.8,173.5,1705.3L173.5,1708.8" id="my-svg-L_B6_C1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B6_C1_0" data-points="W3sieCI6MTczLjUsInkiOjE2MTIuNzk5OTgwMTYzNTc0Mn0seyJ4IjoxNzMuNSwieSI6MTYzNy43OTk5ODAxNjM1NzQyfSx7IngiOjE3My41LCJ5IjoxNjYyLjc5OTk4MDE2MzU3NDJ9LHsieCI6MTczLjUsInkiOjE2ODcuNzk5OTgwMTYzNTc0Mn0seyJ4IjoxNzMuNSwieSI6MTcxMi43OTk5ODAxNjM1NzQyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A1_A2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A2_A3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A3_A4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A4_A5_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A5_A6_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A6_A7_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B1_B2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B2_B3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B3_B4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B4_B5_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B5_B6_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_C1_C2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_C2_C3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_C3_C4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_A7_B1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_B6_C1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-A1-0" data-look="classic" transform="translate(173.5, 82.9000015258789)"><rect class="basic label-container" style="" x="-129" y="-49.900001525878906" width="258" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Update</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> OS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> install</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">podman,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> podman-compose,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">rclone,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> openssl,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> curl,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pandoc,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> weasyprint</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A2-1" data-look="classic" transform="translate(173.5, 215.10000228881836)"><rect class="basic label-container" style="" x="-125" y="-32.29999923706055" width="250" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Create</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> user</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 'thready'</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> home</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/home/thready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A3-2" data-look="classic" transform="translate(173.5, 329.70000076293945)"><rect class="basic label-container" style="" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Set</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /etc/subuid</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /etc/subgid</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">for</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A4-3" data-look="classic" transform="translate(173.5, 453.5999984741211)"><rect class="basic label-container" style="" x="-128.5" y="-41.599998474121094" width="257" height="83.19999694824219"/><g class="label" style="" transform="translate(0, -26.599998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sysctl</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">net.ipv4.ip_unprivileged_po</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">rt_start=80</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A5-4" data-look="classic" transform="translate(173.5, 577.4999961853027)"><rect class="basic label-container" style="" x="-122" y="-32.29999923706055" width="244" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Harden</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SSH:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> key-only,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> no</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> login</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A6-5" data-look="classic" transform="translate(173.5, 692.0999946594238)"><rect class="basic label-container" style="" x="-111.5" y="-32.29999923706055" width="223" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Firewall</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> nftables:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> allow</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">22,80,443;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> deny</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rest</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-A7-6" data-look="classic" transform="translate(173.5, 806.6999931335449)"><rect class="basic label-container" style="" x="-105" y="-32.29999923706055" width="210" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loginctl</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> enable-linger</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B1-14" data-look="classic" transform="translate(173.5, 962.4999923706055)"><rect class="basic label-container" style="" x="-109.5" y="-23.5" width="219" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SSH</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> key-in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> as</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B2-15" data-look="classic" transform="translate(173.5, 1077.5999908447266)"><rect class="basic label-container" style="" x="-114.5" y="-41.599998474121094" width="229" height="83.19999694824219"/><g class="label" style="" transform="translate(0, -26.599998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Clone</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> helix_thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">submodules</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> containers,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">lets_encrypt</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B3-16" data-look="classic" transform="translate(173.5, 1210.2999877929688)"><rect class="basic label-container" style="" x="-118.5" y="-41.099998474121094" width="237" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Place</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> api_keys.sh</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">chmod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 600</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> from</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> private</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">repo</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B4-17" data-look="classic" transform="translate(173.5, 1333.6999855041504)"><rect class="basic label-container" style="" x="-119.5" y="-32.29999923706055" width="239" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">podman</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> login</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> registries</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> if</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">needed</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B5-18" data-look="classic" transform="translate(173.5, 1448.2999839782715)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">lets_encrypt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> setup.sh</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">--install</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> acme.sh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rootless</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-B6-19" data-look="classic" transform="translate(173.5, 1571.6999816894531)"><rect class="basic label-container" style="" x="-112" y="-41.099998474121094" width="224" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Install</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> systemd</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> --user</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">timers:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">le-renew-{dev,sta,prod}</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-C1-26" data-look="classic" transform="translate(173.5, 1745.0999794006348)"><rect class="basic label-container" style="" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Issue</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> certs</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> STAGING</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> then</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">PROD</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> subdomain</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-C2-27" data-look="classic" transform="translate(173.5, 1859.6999778747559)"><rect class="basic label-container" style="" x="-121.5" y="-32.29999923706055" width="243" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">deploy-stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thready-deploy.sh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> per</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> env</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-C3-28" data-look="classic" transform="translate(173.5, 1965.4999771118164)"><rect class="basic label-container" style="" x="-120" y="-23.5" width="240" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Health</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> gate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> edge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> probe</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-C4-29" data-look="classic" transform="translate(173.5, 2071.299976348877)"><rect class="basic label-container" style="" x="-130.5" y="-32.29999923706055" width="261" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Enable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stack</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> systemd</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> --user</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">units</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Provisioning has three phases. <strong>Phase A (root,
+one time)</strong> does everything that genuinely needs privilege and
+nothing more: it updates the OS and installs the container + backup +
+cert + docs toolchain; creates the unprivileged <code>thready</code>
+user with home <code>/home/thready</code>; assigns the subordinate
+UID/GID ranges rootless Podman needs (<code>/etc/subuid</code>,
+<code>/etc/subgid</code>); lowers the
+<code>net.ipv4.ip_unprivileged_port_start</code> sysctl to 80 so a
+rootless container can bind 80/443; hardens SSH to key-only with no root
+login; installs an <code>nftables</code> firewall that allows only
+22/80/443; and enables <strong>lingering</strong> for
+<code>thready</code> so the user’s systemd (stacks + cert timers) runs
+even when nobody is logged in. After Phase A, root is <strong>no longer
+used</strong> in the runtime path.</p>
+<p><strong>Phase B (as <code>thready</code>, rootless)</strong> signs in
+with an SSH key, clones the <code>helix_thready</code> repo plus the
+<code>containers</code> and <code>lets_encrypt</code> submodules, drops
+the runtime secrets (<code>.env</code>, <code>api_keys.sh</code>) with
+<code>chmod 600</code> from the private repo, logs into any container
+registries, installs <code>acme.sh</code> rootless via the
+<code>lets_encrypt</code> setup script, and installs the per-environment
+renewal timers. Every command in this phase runs as the unprivileged
+user — there is no <code>sudo</code> anywhere in it.</p>
+<p><strong>Phase C (first deploy)</strong> issues certificates against
+the staging CA then production per subdomain, deploys each environment
+through the health-gated deploy, and enables the stacks’
+<code>systemd --user</code> units so they survive reboot. The arrows
+enforce order: linger before the user phase, timers before certs, certs
+before the app deploy — so nothing is attempted before its prerequisite
+exists.</p>
+<h2 id="phase-a-root-bootstrap-one-time">3. Phase A — root bootstrap
+(one time)</h2>
+<p>Run <strong>once</strong> as root on a fresh Hetzner host. Idempotent
+where possible.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># provision-root.sh  (run as root, ONE TIME)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. OS + toolchain (Debian/Ubuntu shown; adapt for the chosen distro)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">apt-get</span> update <span class="kw">&amp;&amp;</span> <span class="ex">apt-get</span> <span class="at">-y</span> upgrade</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">apt-get</span> <span class="at">-y</span> install podman podman-compose slirp4netns fuse-overlayfs <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                   rclone openssl curl git nftables <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                   pandoc weasyprint            <span class="co"># docs_chain deps — GAP #19</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create the unprivileged runtime user</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">useradd</span> <span class="at">-m</span> <span class="at">-s</span> /bin/bash <span class="at">-d</span> /home/thready thready</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Rootless Podman subordinate ID ranges (65536 each is the usual default)</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ex">usermod</span> <span class="at">--add-subuids</span> 100000-165535 <span class="at">--add-subgids</span> 100000-165535 thready</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Allow rootless bind of 80/443 (see §4 for the why)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;net.ipv4.ip_unprivileged_port_start=80&#39;</span> <span class="op">&gt;</span> /etc/sysctl.d/99-thready-ports.conf</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ex">sysctl</span> <span class="at">--system</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Harden SSH (key-only, no root login)</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">install</span> <span class="at">-m</span> 700 <span class="at">-o</span> thready <span class="at">-g</span> thready <span class="at">-d</span> /home/thready/.ssh</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># (append the operator&#39;s public key to /home/thready/.ssh/authorized_keys, chmod 600)</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/^#\?PermitRootLogin.*/PermitRootLogin no/&#39;</span> /etc/ssh/sshd_config</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/^#\?PasswordAuthentication.*/PasswordAuthentication no/&#39;</span> /etc/ssh/sshd_config</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> reload ssh</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Firewall (see §5)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="fu">install</span> <span class="at">-m</span> 600 /dev/stdin /etc/nftables.conf <span class="op">&lt;&lt;&#39;NFT&#39;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="st"># … see §5 …</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="op">NFT</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> enable <span class="at">--now</span> nftables</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Let the thready user&#39;s systemd run without an active login (stacks + cert timers)</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> enable-linger thready</span></code></pre></div>
+<blockquote>
+<p>The SSH credentials for the <code>thready</code> account are provided
+at deployment time and kept <strong>only in the private
+submodule</strong> (<code>§14.2</code>); they never enter a public repo
+or a log.</p>
+</blockquote>
+<h2 id="the-privileged-port-sysctl-why-root-is-needed-once">4. The
+privileged-port sysctl (why root is needed once)</h2>
+<p>Rootless containers cannot bind ports &lt; 1024 by default. Thready
+needs the edge on 80 and 443. Two options; Thready picks the first as
+its <code>[DEFAULT — adjustable]</code>:</p>
+<ol type="1">
+<li><strong>Lower <code>net.ipv4.ip_unprivileged_port_start</code> to
+80</strong> (chosen) — a single, auditable sysctl set once by root in
+Phase A. Thereafter the rootless <code>thready</code> edge binds 80/443
+with <strong>no</strong> runtime privilege. Clean and simple.</li>
+<li><strong>Port-forward helper / socket activation</strong> — keep the
+sysctl at 1024 and forward 80/443 via a privileged helper or
+<code>systemd</code> socket. More moving parts; avoided for MVP.</li>
+</ol>
+<p>Only the edge needs this; every other service binds a high loopback
+port in its <a href="./service-discovery-ports.md">band</a>. This keeps
+the privileged-port surface to exactly two ports on one container.</p>
+<h2 id="firewall">5. Firewall</h2>
+<p>Minimal ingress — the entire public surface is SSH + the edge:</p>
+<pre class="nft"><code># /etc/nftables.conf
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ct state established,related accept
+    iif &quot;lo&quot; accept
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+    tcp dport 22 accept          # SSH (key-only)
+    tcp dport { 80, 443 } accept # edge: HTTP-01 + HTTPS
+    udp dport 443 accept         # HTTP/3 (QUIC) — edge
+  }
+  chain forward { type filter hook forward priority 0; policy drop; }
+  chain output  { type filter hook output priority 0; policy accept; }
+}</code></pre>
+<ul>
+<li><strong>No</strong> database/MinIO/NATS port is ever open to the
+internet — they bind <code>127.0.0.1</code> in their bands and are
+reached only via the compose network or an operator SSH tunnel.</li>
+<li><code>udp/443</code> is required for HTTP/3 (QUIC), which the edge
+and <code>vasic-digital/http3</code> use.</li>
+<li>Optional: <code>fail2ban</code> on SSH; egress stays open for ACME,
+image pulls and messenger APIs.</li>
+</ul>
+<h2 id="phase-b-the-thready-user-rootless">6. Phase B — the thready user
+(rootless)</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># provision-thready.sh  (run as the thready user, rootless)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/thready</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Clone the project + the two deployment submodules</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:HelixDevelopment/helix_thready.git repo</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> repo submodule update <span class="at">--init</span> submodules/containers submodules/lets_encrypt <span class="kw">||</span> <span class="fu">true</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-sfn</span> repo/submodules/containers   /home/thready/submodules/containers</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-sfn</span> repo/submodules/lets_encrypt /home/thready/submodules/lets_encrypt</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Layout (see podman-compose.md §3)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> edge/certs/<span class="dt">{dev</span><span class="op">,</span><span class="dt">sta</span><span class="op">,</span><span class="dt">prod}</span> dev/config sta/config prod/config secrets releases</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Runtime secrets from the PRIVATE repo — chmod 600, never committed here</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#    (see secrets-and-config.md). Placeholder: operator copies them in securely.</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> dev sta prod<span class="kw">;</span> <span class="cf">do</span> <span class="fu">install</span> <span class="at">-m</span> 600 /dev/null <span class="st">&quot;</span><span class="va">$e</span><span class="st">/.env&quot;</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">install</span> <span class="at">-m</span> 600 /dev/null secrets/api_keys.sh</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Rootless acme.sh install (per env config)</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> prod sta dev<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="ex">submodules/lets_encrypt/scripts/setup.sh</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$e</span><span class="st">/config/lets_encrypt.conf&quot;</span> <span class="at">--install</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Install the rootless renewal timers (see tls-lets-encrypt.md §10)</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">#    le-renew-{dev,sta,prod}.timer under ~/.config/systemd/user/</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> daemon-reload</span></code></pre></div>
+<ul>
+<li>Everything runs as <code>thready</code>; <strong>no
+<code>sudo</code></strong> appears anywhere in this phase.</li>
+<li><code>podman login</code> (if pulling from a private registry)
+stores creds under the user’s runtime dir.</li>
+</ul>
+<h2 id="phase-c-first-deploy">7. Phase C — first deploy</h2>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># As thready. Staging certs first (rehearse), then production.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> prod sta dev<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># a. issue certs (LE_STAGING=1 → 0 after rehearsal), per subdomain</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">submodules/lets_encrypt/scripts/issue.sh</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$e</span><span class="st">/config/lets_encrypt.conf&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># b. bring up the edge, then each env via the health-gated deploy</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> edge <span class="kw">&amp;&amp;</span> <span class="ex">podman-compose</span> <span class="at">-p</span> thready-edge up <span class="at">-d</span> <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ..</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> dev sta prod<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="ex">submodules/containers/scripts/thready-deploy.sh</span> <span class="st">&quot;</span><span class="va">$e</span><span class="st">&quot;</span> <span class="st">&quot;THREADY-</span><span class="va">$(</span><span class="fu">cat</span> repo/VERSION<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># c. enable stack + edge units so they survive reboot (linger already on)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> enable <span class="at">--now</span> thready-edge.service <span class="dt">\</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  thready-dev.service thready-sta.service thready-prod.service</span></code></pre></div>
+<p>The deploy in step (b) is the full <a
+href="./deploy-and-rollback.md">health-gated pipeline with rollback</a>;
+a failed env restores itself and does not block the others.</p>
+<h2 id="host-toolchain-incl.-docs_chain-deps">8. Host toolchain
+(incl. docs_chain deps)</h2>
+<p><code>[GAP: #19 docs_chain]</code> — the <code>docs_chain</code>
+engine honestly <strong>SKIPs</strong> md→HTML/PDF sibling generation
+when <code>pandoc</code>/<code>weasyprint</code> are absent (the gap
+register notes the current host lacks them). Phase A therefore
+<strong>installs <code>pandoc</code> and
+<code>weasyprint</code></strong> so every <code>.md</code> in this pack
+gets its HTML/PDF siblings per <code>[CONSTITUTION §11.4.65]</code>. The
+full host toolchain:</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>podman</code>, <code>podman-compose</code>,
+<code>slirp4netns</code>/<code>pasta</code>,
+<code>fuse-overlayfs</code></td>
+<td>rootless container runtime</td>
+</tr>
+<tr>
+<td><code>rclone</code></td>
+<td>ship backups to the secondary store</td>
+</tr>
+<tr>
+<td><code>acme.sh</code> (via <code>lets_encrypt setup.sh</code>)</td>
+<td>ACME client (installed rootless in Phase B)</td>
+</tr>
+<tr>
+<td><code>openssl</code>, <code>curl</code></td>
+<td>cert validation + reachability probes (lets_encrypt deps)</td>
+</tr>
+<tr>
+<td><code>pandoc</code>, <code>weasyprint</code></td>
+<td><strong>docs_chain</strong> md→HTML/PDF
+(<code>[GAP: #19]</code>)</td>
+</tr>
+<tr>
+<td><code>git</code></td>
+<td>repo + submodules + all-upstreams push (<code>§2.1</code>)</td>
+</tr>
+<tr>
+<td><code>nftables</code></td>
+<td>firewall</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verified-vs-assumed">9. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED:</strong> the root→<code>thready</code> user model
+with home <code>/home/thready</code> (<code>§14.2</code>, Q8); rootless
+mandate (<code>§11.4.76/161</code>);
+<code>lets_encrypt setup.sh --install</code> is rootless (module
+README); the docs_chain pandoc/weasyprint SKIP behaviour (gap register
+#19); private-repo-only SSH creds (<code>§14.2</code>).</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong> the
+sysctl-lowering approach for privileged ports; the Debian/Ubuntu package
+names; the <code>nftables</code> ruleset; the subuid/subgid ranges; the
+≥16 vCPU/≥64 GB sizing baseline.</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: host-sizing]</code> — exact Hetzner SKU + MinIO
+object-tier backing (local disks vs volume vs Storage Box) + GPU-node
+topology, pending load tests.</li>
+<li><code>[OPEN: distro]</code> — the host distro
+(Debian/Ubuntu/AlmaLinux) is a <code>[DEFAULT — adjustable]</code>
+choice; package names in Phase A adapt accordingly.</li>
+<li><code>[OPEN: golden-image]</code> — a saved post-Phase-A image would
+shorten the <a href="./backup-dr.md">DR runbook</a> step 1;
+nice-to-have, not MVP-blocking.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

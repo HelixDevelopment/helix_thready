@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Indexing Strategy</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Indexing Strategy</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#objectives-slo-budget" id="toc-objectives-slo-budget">1.
+Objectives &amp; SLO budget</a></li>
+<li><a href="#query-path-index-map" id="toc-query-path-index-map">2.
+Query-path → index map</a></li>
+<li><a href="#relational-index-catalogue"
+id="toc-relational-index-catalogue">3. Relational index catalogue</a>
+<ul>
+<li><a href="#index-rationale-matrix"
+id="toc-index-rationale-matrix">3.1 Index rationale matrix</a></li>
+</ul></li>
+<li><a href="#full-text-search-fts" id="toc-full-text-search-fts">4.
+Full-text search (FTS)</a></li>
+<li><a href="#vector-ann-indexes-pgvector"
+id="toc-vector-ann-indexes-pgvector">5. Vector ANN indexes
+(pgvector)</a></li>
+<li><a href="#the-hot-claim-index-idempotent-processing"
+id="toc-the-hot-claim-index-idempotent-processing">6. The hot claim
+index (idempotent processing)</a></li>
+<li><a href="#index-maintenance-on-partitioned-tables"
+id="toc-index-maintenance-on-partitioned-tables">7. Index maintenance on
+partitioned tables</a></li>
+<li><a href="#verification-tdd" id="toc-verification-tdd">8.
+Verification &amp; TDD</a></li>
+<li><a href="#gaps-open-items" id="toc-gaps-open-items">9. Gaps &amp;
+open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Indexing Strategy
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/database/indexing.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (database)
+  Related         : ./schema-relational.sql ./schema-vector.sql ./erd.md
+                    ./partitioning.md ./migration-strategy.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (database)</td>
+<td>Initial index catalogue: btree/GIN/trigram/FTS/partial/ANN + SLO
+tuning</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (database, Pass 3)</td>
+<td>Added the full per-index rationale matrix (§3.1: type, columns,
+predicate, query served, write-amplification, selectivity); a
+covering/<code>INCLUDE</code> example for thread assembly;
+source-confirmed that the pgvector adapter’s <code>Search</code> emits
+no tenant filter (§5)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-objectives--slo-budget">Objectives &amp; SLO
+budget</a></li>
+<li><a href="#2-query-path--index-map">Query-path → index map</a></li>
+<li><a href="#3-relational-index-catalogue">Relational index
+catalogue</a>
+<ul>
+<li><a href="#31-index-rationale-matrix">3.1 Index rationale
+matrix</a></li>
+</ul></li>
+<li><a href="#4-full-text-search-fts">Full-text search (FTS)</a></li>
+<li><a href="#5-vector-ann-indexes-pgvector">Vector ANN indexes
+(pgvector)</a></li>
+<li><a href="#6-the-hot-claim-index-idempotent-processing">The hot claim
+index (idempotent processing)</a></li>
+<li><a href="#7-index-maintenance-on-partitioned-tables">Index
+maintenance on partitioned tables</a></li>
+<li><a href="#8-verification--tdd">Verification &amp; TDD</a></li>
+<li><a href="#9-gaps--open-items">Gaps &amp; open items</a></li>
+</ol>
+<hr />
+<h2 id="objectives-slo-budget">1. Objectives &amp; SLO budget</h2>
+<p>The operator chose the <strong>Aggressive</strong> performance tier
+(final request Q14): API p95 &lt; 150 ms, semantic search &lt; 500 ms,
+page &lt; 1.5 s. Indexing must make the read paths that back those SLOs
+index-only or index-scan, never sequential-scan, at the Large scale
+(100+ channels, 10k+ posts/day, 100+ users, 50 TB+ assets — Q2). Every
+index below is justified by a concrete query path; we do
+<strong>not</strong> add speculative indexes (each index taxes the hot
+write path — 10k+ inserts/day plus replies).</p>
+<p>Design rules:</p>
+<ul>
+<li><strong>Partition-prune first.</strong> All firehose reads
+(<code>posts</code>, <code>replies</code>, <code>events</code>,
+<code>audit_log</code>) carry the time predicate so the planner prunes
+to a few partitions before any index scan. Children denormalise
+<code>…_posted_at</code> for this reason (see <a
+href="./erd.md#9-referential-integrity-strategy-partitioned-tables">erd.md
+§9</a>).</li>
+<li><strong>Tenant-scope every business query</strong> with
+<code>account_id</code> as the leading (or included) index column.</li>
+<li><strong>Partial indexes</strong> for skewed predicates (claimable
+rows, active channels).</li>
+<li><strong>GIN</strong> for JSONB containment and array/tsvector
+membership; <strong>trigram</strong> for fuzzy text;
+<strong>HNSW</strong> for vector ANN.</li>
+<li>Structural PK/UNIQUE indexes live in <a
+href="./schema-relational.sql"><code>schema-relational.sql</code></a>;
+the secondary indexes below are applied by migration
+<code>0007_secondary_indexes</code> using
+<code>CREATE INDEX CONCURRENTLY</code> (see <a
+href="./migration-strategy.md">migration-strategy.md</a>).</li>
+</ul>
+<hr />
+<h2 id="query-path-index-map">2. Query-path → index map</h2>
+<p>Source: <a
+href="./diagrams/indexing-query-paths.mmd"><code>diagrams/indexing-query-paths.mmd</code></a>.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 573px; background-color: white;" viewBox="0 0 573 930" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M253.5,40.3L257.917,40.3C262.333,40.3,271.167,40.3,281.333,40.3C291.5,40.3,303,40.3,308.75,40.3L314.5,40.3" id="my-svg-L_Q1_I1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q1_I1_0" data-points="W3sieCI6MjUzLjUsInkiOjQwLjI5OTk5OTIzNzA2MDU1fSx7IngiOjI4MCwieSI6NDAuMjk5OTk5MjM3MDYwNTV9LHsieCI6MzE4LjUsInkiOjQwLjI5OTk5OTIzNzA2MDU1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M244.5,154.9L250.417,154.9C256.333,154.9,268.167,154.9,280,154.9C291.833,154.9,303.667,154.9,309.583,154.9L315.5,154.9" id="my-svg-L_Q2_I2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q2_I2_0" data-points="W3sieCI6MjQ0LjUsInkiOjE1NC44OTk5OTc3MTExODE2NH0seyJ4IjoyODAsInkiOjE1NC44OTk5OTc3MTExODE2NH0seyJ4IjozMTkuNSwieSI6MTU0Ljg5OTk5NzcxMTE4MTY0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M253,261.2L257.5,261.2C262,261.2,271,261.2,280.167,261.2C289.333,261.2,298.667,261.2,303.333,261.2L308,261.2" id="my-svg-L_Q3_I3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q3_I3_0" data-points="W3sieCI6MjUzLCJ5IjoyNjEuMTk5OTk2OTQ4MjQyMn0seyJ4IjoyODAsInkiOjI2MS4xOTk5OTY5NDgyNDIyfSx7IngiOjMxMiwieSI6MjYxLjE5OTk5Njk0ODI0MjJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M238,375.8L245,375.8C252,375.8,266,375.8,277.5,375.8C289,375.8,298,375.8,302.5,375.8L307,375.8" id="my-svg-L_Q4_I4_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q4_I4_0" data-points="W3sieCI6MjM4LCJ5IjozNzUuNzk5OTk1NDIyMzYzM30seyJ4IjoyODAsInkiOjM3NS43OTk5OTU0MjIzNjMzfSx7IngiOjMxMSwieSI6Mzc1Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M247,481.6L252.5,481.6C258,481.6,269,481.6,285.75,481.6C302.5,481.6,325,481.6,336.25,481.6L347.5,481.6" id="my-svg-L_Q5_I5_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q5_I5_0" data-points="W3sieCI6MjQ3LCJ5Ijo0ODEuNTk5OTk0NjU5NDIzOH0seyJ4IjoyODAsInkiOjQ4MS41OTk5OTQ2NTk0MjM4fSx7IngiOjM1MS41LCJ5Ijo0ODEuNTk5OTk0NjU5NDIzOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M221.5,579.1L231.25,579.1C241,579.1,260.5,579.1,273.75,579.1C287,579.1,294,579.1,297.5,579.1L301,579.1" id="my-svg-L_Q6_I6_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q6_I6_0" data-points="W3sieCI6MjIxLjUsInkiOjU3OS4wOTk5OTQ2NTk0MjM4fSx7IngiOjI4MCwieSI6NTc5LjA5OTk5NDY1OTQyMzh9LHsieCI6MzA1LCJ5Ijo1NzkuMDk5OTk0NjU5NDIzOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M255,677.1L259.167,677.1C263.333,677.1,271.667,677.1,284.333,677.1C297,677.1,314,677.1,322.5,677.1L331,677.1" id="my-svg-L_Q7_I7_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q7_I7_0" data-points="W3sieCI6MjU1LCJ5Ijo2NzcuMDk5OTk0NjU5NDIzOH0seyJ4IjoyODAsInkiOjY3Ny4wOTk5OTQ2NTk0MjM4fSx7IngiOjMzNSwieSI6Njc3LjA5OTk5NDY1OTQyMzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M253.5,783.4L257.917,783.4C262.333,783.4,271.167,783.4,280.583,783.4C290,783.4,300,783.4,305,783.4L310,783.4" id="my-svg-L_Q8_I8_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q8_I8_0" data-points="W3sieCI6MjUzLjUsInkiOjc4My4zOTk5OTM4OTY0ODQ0fSx7IngiOjI4MCwieSI6NzgzLjM5OTk5Mzg5NjQ4NDR9LHsieCI6MzE0LCJ5Ijo3ODMuMzk5OTkzODk2NDg0NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M238.5,889.7L245.417,889.7C252.333,889.7,266.167,889.7,278.083,889.7C290,889.7,300,889.7,305,889.7L310,889.7" id="my-svg-L_Q9_I9_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q9_I9_0" data-points="W3sieCI6MjM4LjUsInkiOjg4OS42OTk5OTMxMzM1NDQ5fSx7IngiOjI4MCwieSI6ODg5LjY5OTk5MzEzMzU0NDl9LHsieCI6MzE0LCJ5Ijo4ODkuNjk5OTkzMTMzNTQ0OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_Q1_I1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q2_I2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q3_I3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q4_I4_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q5_I5_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q6_I6_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q7_I7_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q8_I8_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_Q9_I9_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-Q1-0" data-look="classic" transform="translate(131.5, 40.29999923706055)"><rect class="basic label-container" style="" x="-122" y="-32.29999923706055" width="244" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">poll:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> new</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> posts</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> channel</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">since</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> T</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I1-1" data-look="classic" transform="translate(435, 40.29999923706055)"><rect class="basic label-container" style="" x="-116.5" y="-24" width="233" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_posts_channel_time</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q2-2" data-look="classic" transform="translate(131.5, 154.89999771118164)"><rect class="basic label-container" style="" x="-113" y="-32.29999923706055" width="226" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">assemble</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">replies</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I2-3" data-look="classic" transform="translate(435, 154.89999771118164)"><rect class="basic label-container" style="" x="-115.5" y="-24" width="231" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_replies_thread_time</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q3-4" data-look="classic" transform="translate(131.5, 261.1999969482422)"><rect class="basic label-container" style="" x="-121.5" y="-23.5" width="243" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">claim</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> next</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> process</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I3-5" data-look="classic" transform="translate(435, 261.1999969482422)"><rect class="basic label-container" style="" x="-123" y="-32.29999923706055" width="246" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_processing_claimable</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">partial</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q4-6" data-look="classic" transform="translate(131.5, 375.7999954223633)"><rect class="basic label-container" style="" x="-106.5" y="-23.5" width="213" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> topK</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I4-7" data-look="classic" transform="translate(435, 375.7999954223633)"><rect class="basic label-container" style="" x="-124" y="-32.29999923706055" width="248" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HNSW</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> vector_cosine_ops</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GIN</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> metadata</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q5-8" data-look="classic" transform="translate(131.5, 481.5999946594238)"><rect class="basic label-container" style="" x="-115.5" y="-23.5" width="231" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">keyword</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> posts</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I5-9" data-look="classic" transform="translate(435, 481.5999946594238)"><rect class="basic label-container" style="" x="-83.5" y="-23.5" width="167" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GIN</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tsvector</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fts</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q6-10" data-look="classic" transform="translate(131.5, 579.0999946594238)"><rect class="basic label-container" style="" x="-90" y="-23.5" width="180" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">posts</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hashtag</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I6-11" data-look="classic" transform="translate(435, 579.0999946594238)"><rect class="basic label-container" style="" x="-130" y="-24" width="260" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_post_hashtags_hashtag</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q7-12" data-look="classic" transform="translate(131.5, 677.0999946594238)"><rect class="basic label-container" style="" x="-123.5" y="-23.5" width="247" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dashboard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> counts</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I7-13" data-look="classic" transform="translate(435, 677.0999946594238)"><rect class="basic label-container" style="" x="-100" y="-24" width="200" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_*_account_time</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q8-14" data-look="classic" transform="translate(131.5, 783.3999938964844)"><rect class="basic label-container" style="" x="-122" y="-23.5" width="244" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">audit</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> query</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> actor/target</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I8-15" data-look="classic" transform="translate(435, 783.3999938964844)"><rect class="basic label-container" style="" x="-121" y="-32.29999923706055" width="242" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">idx_audit_account_time</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">actor</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-Q9-16" data-look="classic" transform="translate(131.5, 889.6999931335449)"><rect class="basic label-container" style="" x="-107" y="-32.29999923706055" width="214" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> content</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hash</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dedup</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-I9-17" data-look="classic" transform="translate(435, 889.6999931335449)"><rect class="basic label-container" style="" x="-121" y="-24" width="242" height="48"/><g class="label" style="" transform="translate(0, -9)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">uq_assets_account_hash</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram maps the nine dominant query paths
+(<code>Q1</code>–<code>Q9</code>, left) to the index that serves each
+(<code>I1</code>–<code>I9</code>, right). The point of drawing it is
+that every index in this document is <em>pulled</em> by a concrete query
+path rather than added speculatively — a discipline that matters on a
+firehose where each extra index taxes every insert.</p>
+<p>The two ingestion paths anchor the design. <code>Q1</code> — the
+messenger poller asking “what posts arrived in this channel since
+timestamp T” — is served by a composite btree on
+<code>(channel_id, posted_at)</code> after partition pruning, so the
+planner touches only the relevant month(s). <code>Q2</code> — assembling
+a complete post (root + organic reply chain) — is served by
+<code>(thread_id, posted_at)</code> on <code>replies</code>, returning
+the chain already in reading order. <code>Q3</code> — the processing
+engine claiming the next unit — is served by the
+<strong>partial</strong> index on
+<code>processing_state(visible_at) WHERE status='pending'</code>, which
+stays tiny because only unclaimed rows are indexed even though the table
+grows one row per post forever.</p>
+<p>The discovery and reporting paths fan out from there. <code>Q4</code>
+— semantic search — combines the HNSW ANN index on the embedding with a
+GIN index on <code>metadata</code> for the tenant filter.
+<code>Q5</code> — keyword/full-text search — uses a GIN index over a
+generated <code>tsvector</code>. <code>Q6</code> — “all posts tagged #x”
+— uses the reverse index on <code>post_hashtags(hashtag_id)</code>.
+<code>Q7</code> — account dashboards — use
+<code>(account_id, &lt;time&gt;)</code> composites. <code>Q8</code> —
+audit queries — use <code>(account_id, created_at)</code> plus an actor
+index. <code>Q9</code> — asset dedup — uses the
+<code>UNIQUE(account_id, content_hash)</code> already declared on
+<code>assets</code>. The rationale matrix in §3.1 and the DDL in §3 give
+the exact shape of each of these indexes.</p>
+<hr />
+<h2 id="relational-index-catalogue">3. Relational index catalogue</h2>
+<blockquote>
+<p>Applied by <code>0007_secondary_indexes</code> with
+<code>CONCURRENTLY</code> (non-blocking on live tables). On a
+RANGE-partitioned parent, <code>CREATE INDEX</code> (without
+<code>CONCURRENTLY</code>) cascades to all partitions but takes
+<code>ACCESS EXCLUSIVE</code> briefly per partition; use the
+per-partition <code>CONCURRENTLY</code> + <code>ATTACH</code> recipe in
+§7 for zero-downtime on large existing partitions.</p>
+</blockquote>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Ingestion read paths --------------------------------------------------</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Q1 poll: newest posts per channel (partition-pruned by posted_at)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_posts_channel_time</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> posts (channel_id, posted_at <span class="kw">DESC</span>);</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Account-scoped dashboards / exports</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_posts_account_time</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> posts (account_id, posted_at <span class="kw">DESC</span>);</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- Q2 thread assembly: replies of a thread in order</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_replies_thread_time</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> replies (thread_id, posted_at <span class="kw">ASC</span>);</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- reply -&gt; parent post lookups (soft ref)</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_replies_parent</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> replies (parent_post_id);</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- threads by channel + recency</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_threads_channel_activity</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> threads (channel_id, last_activity_at <span class="kw">DESC</span>);</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- active channels due for polling (partial: only active)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_channels_due_poll</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> channels (last_polled_at)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> is_active;</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Classification --------------------------------------------------------</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">-- Q6 posts by hashtag (reverse), and tags of a post (forward via PK)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_post_hashtags_hashtag</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> post_hashtags (hashtag_id);</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_reply_hashtags_hashtag</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> reply_hashtags (hashtag_id);</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co">-- posts of a category</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_post_categories_category</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> post_categories (category_id);</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Processing ------------------------------------------------------------</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co">-- Q3 claim index is created in 0001 (see §6). Observability: failed/stuck rows.</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_processing_status</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> processing_state (status, updated_at);</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_skill_runs_post</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> skill_runs (post_id, skill_id);</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Assets ----------------------------------------------------------------</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co">-- renditions of a raw asset</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_assets_parent</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> assets (parent_asset_id) <span class="kw">WHERE</span> parent_asset_id <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="co">-- links of a subject (three partial indexes keep each small)</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_asset_links_post</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> asset_links (post_id) <span class="kw">WHERE</span> post_id <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_asset_links_reply</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> asset_links (reply_id) <span class="kw">WHERE</span> reply_id <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_asset_links_artifact</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> asset_links (generated_artifact_id) <span class="kw">WHERE</span> generated_artifact_id <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_asset_links_asset</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> asset_links (asset_id);</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Identity / RBAC hot paths --------------------------------------------</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_memberships_account</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> memberships (account_id) <span class="kw">WHERE</span> status <span class="op">=</span> <span class="st">&#39;active&#39;</span>;</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_memberships_user</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> memberships (user_id) <span class="kw">WHERE</span> status <span class="op">=</span> <span class="st">&#39;active&#39;</span>;</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Billing / metering ----------------------------------------------------</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_usage_account_metric</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> usage_records (account_id, metric, window_start <span class="kw">DESC</span>);</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_usage_unbilled</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> usage_records (account_id) <span class="kw">WHERE</span> <span class="kw">NOT</span> billed;</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_subscriptions_account</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> subscriptions (account_id, status);</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="co">-- ---- Events / audit --------------------------------------------------------</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_events_account_time</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> <span class="kw">events</span> (account_id, created_at <span class="kw">DESC</span>);</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="co">-- sticky last-value lookups</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_events_sticky</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> <span class="kw">events</span> (entity_id, created_at <span class="kw">DESC</span>) <span class="kw">WHERE</span> <span class="kw">scope</span> <span class="op">=</span> <span class="st">&#39;sticky&#39;</span> <span class="kw">AND</span> <span class="kw">NOT</span> invalidated;</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_audit_account_time</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> audit_log (account_id, created_at <span class="kw">DESC</span>);</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_audit_actor</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> audit_log (actor_user_id, created_at <span class="kw">DESC</span>);</span></code></pre></div>
+<h3 id="index-rationale-matrix">3.1 Index rationale matrix</h3>
+<p>Every non-structural index, its physical shape, the exact query path
+it serves, and its cost. “Write-amp” is how many of these indexes a
+single insert into the base table must also write (the tax on the 10k+
+posts/day hot path); “Selectivity” is why the index is worth that tax.
+Structural PK/UNIQUE indexes (declared inline in the schema) are listed
+at the bottom for completeness. All secondary indexes below ship in
+migration <a
+href="./migrations/0007_secondary_indexes.sql"><code>0007_secondary_indexes.sql</code></a>
+except the hot claim index (<code>0001</code>).</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 25%" />
+<col style="width: 12%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Index</th>
+<th>Table</th>
+<th>Type</th>
+<th>Key / predicate</th>
+<th>Serves</th>
+<th>Selectivity / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>idx_posts_channel_time</code></td>
+<td>posts</td>
+<td>btree</td>
+<td><code>(channel_id, posted_at DESC)</code></td>
+<td>Q1 poller: new posts in a channel since T</td>
+<td>After partition prune, ranges one channel’s newest rows; DESC
+matches “latest first”</td>
+</tr>
+<tr>
+<td><code>idx_posts_account_time</code></td>
+<td>posts</td>
+<td>btree</td>
+<td><code>(account_id, posted_at DESC)</code></td>
+<td>Q7 tenant dashboards/exports</td>
+<td>Tenant-leading; prune + range scan</td>
+</tr>
+<tr>
+<td><code>idx_posts_fts</code></td>
+<td>posts</td>
+<td>GIN</td>
+<td><code>body_fts</code> (generated tsvector)</td>
+<td>Q5 keyword search</td>
+<td>Complements semantic search for exact terms/code ids</td>
+</tr>
+<tr>
+<td><code>idx_replies_thread_time</code></td>
+<td>replies</td>
+<td>btree</td>
+<td><code>(thread_id, posted_at ASC)</code></td>
+<td>Q2 thread assembly (chronological reply chain)</td>
+<td>ASC = natural reading order; one thread per scan</td>
+</tr>
+<tr>
+<td><code>idx_replies_parent</code></td>
+<td>replies</td>
+<td>btree</td>
+<td><code>(parent_post_id)</code></td>
+<td>reply → parent post (soft ref)</td>
+<td>Resolves the denormalised soft FK</td>
+</tr>
+<tr>
+<td><code>idx_threads_channel_activity</code></td>
+<td>threads</td>
+<td>btree</td>
+<td><code>(channel_id, last_activity_at DESC)</code></td>
+<td>recent active threads per channel</td>
+<td>Powers “most recently active” lists</td>
+</tr>
+<tr>
+<td><code>idx_channels_due_poll</code></td>
+<td>channels</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(last_polled_at) WHERE is_active</code></td>
+<td>poller: which channels are due</td>
+<td>Partial → indexes only pollable channels; tiny</td>
+</tr>
+<tr>
+<td><code>idx_post_hashtags_hashtag</code></td>
+<td>post_hashtags</td>
+<td>btree</td>
+<td><code>(hashtag_id)</code></td>
+<td>Q6 “all posts tagged #x” (reverse)</td>
+<td>Forward direction served by the <code>(post_id,hashtag_id)</code>
+PK</td>
+</tr>
+<tr>
+<td><code>idx_reply_hashtags_hashtag</code></td>
+<td>reply_hashtags</td>
+<td>btree</td>
+<td><code>(hashtag_id)</code></td>
+<td>reply-tag reverse lookup</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_post_categories_category</code></td>
+<td>post_categories</td>
+<td>btree</td>
+<td><code>(category_id)</code></td>
+<td>posts of a content type</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_hashtags_trgm</code></td>
+<td>hashtags</td>
+<td>GIN trigram</td>
+<td><code>(tag gin_trgm_ops)</code></td>
+<td>fuzzy/<code>ILIKE</code> tag autocomplete</td>
+<td>pg_trgm; short-string fuzzy match</td>
+</tr>
+<tr>
+<td><code>idx_threads_title_trgm</code></td>
+<td>threads</td>
+<td>GIN trigram</td>
+<td><code>(title gin_trgm_ops)</code></td>
+<td>fuzzy title search</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_processing_claimable</code></td>
+<td>processing_state</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(visible_at) WHERE status='pending'</code></td>
+<td>Q3 the hot claim (<code>FOR UPDATE SKIP LOCKED</code>)</td>
+<td>Partial → only the backlog is indexed; stays tiny forever (§6)</td>
+</tr>
+<tr>
+<td><code>idx_processing_status</code></td>
+<td>processing_state</td>
+<td>btree</td>
+<td><code>(status, updated_at)</code></td>
+<td>ops: stuck/failed rows, ret/backoff audit</td>
+<td>Observability, not the hot path</td>
+</tr>
+<tr>
+<td><code>idx_skill_runs_post</code></td>
+<td>skill_runs</td>
+<td>btree</td>
+<td><code>(post_id, skill_id)</code></td>
+<td>runs of a post / a (post,skill)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_assets_parent</code></td>
+<td>assets</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(parent_asset_id) WHERE … IS NOT NULL</code></td>
+<td>renditions of a raw asset</td>
+<td>Partial → only renditions indexed</td>
+</tr>
+<tr>
+<td><code>idx_asset_links_post</code></td>
+<td>asset_links</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(post_id) WHERE … IS NOT NULL</code></td>
+<td>assets attached to a post</td>
+<td>3 partial indexes (one per subject) each stay small</td>
+</tr>
+<tr>
+<td><code>idx_asset_links_reply</code></td>
+<td>asset_links</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(reply_id) WHERE … IS NOT NULL</code></td>
+<td>assets attached to a reply</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_asset_links_artifact</code></td>
+<td>asset_links</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(generated_artifact_id) WHERE … IS NOT NULL</code></td>
+<td>assets attached to an artifact</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_asset_links_asset</code></td>
+<td>asset_links</td>
+<td>btree</td>
+<td><code>(asset_id)</code></td>
+<td>reverse: subjects of an asset</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_memberships_account</code></td>
+<td>memberships</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(account_id) WHERE status='active'</code></td>
+<td>RBAC: members of a tenant</td>
+<td>Partial → active grants only; the auth hot path</td>
+</tr>
+<tr>
+<td><code>idx_memberships_user</code></td>
+<td>memberships</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(user_id) WHERE status='active'</code></td>
+<td>RBAC: a user’s tenants</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_usage_account_metric</code></td>
+<td>usage_records</td>
+<td>btree</td>
+<td><code>(account_id, metric, window_start DESC)</code></td>
+<td>metered-usage rollups per tenant/metric</td>
+<td>Billing period aggregation</td>
+</tr>
+<tr>
+<td><code>idx_usage_unbilled</code></td>
+<td>usage_records</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(account_id) WHERE NOT billed</code></td>
+<td>invoicing: open reconciliation set</td>
+<td>Partial → shrinks as rows are billed</td>
+</tr>
+<tr>
+<td><code>idx_subscriptions_account</code></td>
+<td>subscriptions</td>
+<td>btree</td>
+<td><code>(account_id, status)</code></td>
+<td>active subscription of a tenant</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_events_account_time</code></td>
+<td>events</td>
+<td>btree</td>
+<td><code>(account_id, created_at DESC)</code></td>
+<td>event replay per tenant</td>
+<td>Partitioned parent; prune + range</td>
+</tr>
+<tr>
+<td><code>idx_events_sticky</code></td>
+<td>events</td>
+<td>btree <strong>partial</strong></td>
+<td><code>(entity_id, created_at DESC) WHERE scope='sticky' AND NOT invalidated</code></td>
+<td>sticky last-value lookup</td>
+<td>Partial → only live sticky events (§3.4)</td>
+</tr>
+<tr>
+<td><code>idx_audit_account_time</code></td>
+<td>audit_log</td>
+<td>btree</td>
+<td><code>(account_id, created_at DESC)</code></td>
+<td>Q8 audit by tenant</td>
+<td>Partitioned parent</td>
+</tr>
+<tr>
+<td><code>idx_audit_actor</code></td>
+<td>audit_log</td>
+<td>btree</td>
+<td><code>(actor_user_id, created_at DESC)</code></td>
+<td>Q8 audit by actor</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>idx_vec_*_hnsw</code> (×4)</td>
+<td>vectordb_*</td>
+<td>HNSW</td>
+<td><code>(embedding vector_cosine_ops)</code></td>
+<td>Q4 semantic ANN</td>
+<td><code>m=16, ef_construction=64</code>; op class matches
+<code>&lt;=&gt;</code> (§5)</td>
+</tr>
+<tr>
+<td><code>idx_vec_*_meta</code> (×4)</td>
+<td>vectordb_*</td>
+<td>GIN</td>
+<td><code>(metadata jsonb_path_ops)</code></td>
+<td>tenant/kind <code>@&gt;</code> filter on ANN results</td>
+<td>Required because the adapter post-filters app-side (§5)</td>
+</tr>
+<tr>
+<td><strong>Structural</strong> <code>uq_users_single_root</code></td>
+<td>users</td>
+<td>UNIQUE <strong>partial</strong></td>
+<td><code>((is_root)) WHERE is_root</code></td>
+<td>enforce “exactly one root”</td>
+<td>Guarantees ≤1 root admin (§6.1)</td>
+</tr>
+<tr>
+<td><strong>Structural</strong>
+<code>assets_account_content_hash_key</code></td>
+<td>assets</td>
+<td>UNIQUE</td>
+<td><code>(account_id, content_hash)</code></td>
+<td>Q9 per-tenant dedup</td>
+<td>Content-hash idempotency</td>
+</tr>
+<tr>
+<td><strong>Structural</strong> <code>usage_records_*_key</code></td>
+<td>usage_records</td>
+<td>UNIQUE</td>
+<td><code>(account_id, metric, window_start)</code></td>
+<td>idempotent metering</td>
+<td>Upsert-on-conflict target</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Write-amplification budget.</strong> <code>posts</code>
+carries 4 secondary indexes (<code>channel_time</code>,
+<code>account_time</code>, <code>fts</code>, plus the
+<code>(channel_id, external_message_id, posted_at)</code> UNIQUE and the
+PK) — every post insert writes all of them, which is the deliberate
+ceiling: no speculative index is added to the firehose.
+<code>replies</code> carries 2. <code>processing_state</code>’s only
+hot-path index is the tiny partial claim index. Everything heavier
+(GIN/trigram/HNSW) sits on lower-velocity or append-batched tables.</p>
+<p><strong>Covering / <code>INCLUDE</code> option for thread
+assembly.</strong> Q2 reads a thread’s replies and usually needs
+<code>author_ref</code>/<code>raw_text</code> alongside the ordering. An
+index-only scan avoids the heap fetch:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Optional: make thread assembly index-only (Postgres 11+ INCLUDE).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_replies_thread_time_cover</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> replies (thread_id, posted_at <span class="kw">ASC</span>) INCLUDE (author_ref, is_system_reply);</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- Trade-off: wider index (more write cost + bloat on the firehose). Enable only if</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- EXPLAIN shows the heap fetch dominates the thread-assembly path at scale.</span></span></code></pre></div>
+<hr />
+<h2 id="full-text-search-fts">4. Full-text search (FTS)</h2>
+<p>Semantic search is the primary discovery path, but keyword FTS
+complements it for exact terms, code identifiers, and filtering. We add
+a <strong>generated</strong> <code>tsvector</code> column and a GIN
+index; <code>pg_trgm</code> supports fuzzy/<code>ILIKE</code> on short
+fields (titles, hashtags).</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- posts: generated tsvector over the message body (English config; per-lang variants </span><span class="al">TBD</span><span class="co">)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> posts</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> body_fts tsvector</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> (to_tsvector(<span class="st">&#39;english&#39;</span>, <span class="fu">coalesce</span>(raw_text, <span class="st">&#39;&#39;</span>))) STORED;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_posts_fts <span class="kw">ON</span> posts <span class="kw">USING</span> gin (body_fts);</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- fuzzy title/tag search (trigram)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_hashtags_trgm <span class="kw">ON</span> hashtags <span class="kw">USING</span> gin (tag gin_trgm_ops);</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_threads_title_trgm <span class="kw">ON</span> threads <span class="kw">USING</span> gin (title gin_trgm_ops);</span></code></pre></div>
+<blockquote>
+<p><code>[OPEN: fts-multilang]</code> The generated column pins the
+<code>english</code> text-search config. Post content is stored in its
+original language (en/ru/sr-Cyrl — §12). A per-language FTS strategy (a
+<code>lang</code>-driven expression index or <code>simple</code> config
++ language-aware ranking) is tracked as <code>ATM-DB-011</code>.
+Semantic search (which is language-robust via the embedding model) is
+the primary path meanwhile.</p>
+</blockquote>
+<hr />
+<h2 id="vector-ann-indexes-pgvector">5. Vector ANN indexes
+(pgvector)</h2>
+<p><strong>Anti-bluff (VERIFIED):</strong>
+<code>digital.vasic.vectordb</code>’s pgvector
+<code>Client.CreateCollection</code> creates the collection <em>table
+only</em> — it does <strong>not</strong> create an ANN index (source:
+<code>pkg/pgvector/client.go</code>). Without an index every
+<code>Search</code> is a sequential scan and the &lt; 500 ms SLO is
+impossible at scale. The ANN indexes are therefore <strong>owned by our
+migrations</strong>, not the adapter.
+<code>[GAP: vectordb-3.1]</code></p>
+<p><strong>Second VERIFIED finding (Pass 3, source-confirmed):</strong>
+<code>Client.Search</code> emits
+<code>SELECT id, embedding::text, metadata::text, embedding &lt;=&gt; $1::vector AS distance FROM &lt;t&gt; ORDER BY distance LIMIT $2</code>
+— with <strong>no <code>WHERE</code> clause</strong>.
+<code>SearchQuery</code> has a <code>Filter</code> field and
+<code>SearchQuery.Validate()</code> accepts it, but the adapter’s SQL
+never references it, and only <code>ID</code> +
+<code>Score = 1 - distance</code> are returned (metadata is selected
+then discarded). So the ANN index alone cannot enforce tenant isolation,
+and the GIN <code>metadata</code> index only helps a query we issue
+<strong>ourselves</strong> (bypassing <code>Client.Search</code>) or an
+over-fetch we filter in Go. This is
+<code>[OPEN: vector-tenant-isolation]</code> / <code>ATM-DB-013</code>,
+and it is now confirmed at source rather than assumed — see <a
+href="./schema-vector.sql">schema-vector.sql</a> header “VERIFIED
+CAVEAT”.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- HNSW (preferred): cosine op class MUST match the query operator &lt;=&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_vec_posts_hnsw</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> vectordb_posts <span class="kw">USING</span> hnsw (embedding vector_cosine_ops)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WITH</span> (m <span class="op">=</span> <span class="dv">16</span>, ef_construction <span class="op">=</span> <span class="dv">64</span>);</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- (repeat for vectordb_replies / _assets / _generated — see schema-vector.sql)</span></span></code></pre></div>
+<p>Tuning to hit <code>&lt; 500 ms</code>:</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 27%" />
+<col style="width: 21%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Meaning</th>
+<th>Start</th>
+<th>Raise when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m</code></td>
+<td>HNSW graph degree (build)</td>
+<td>16</td>
+<td>recall too low on high-dim (1024) data</td>
+</tr>
+<tr>
+<td><code>ef_construction</code></td>
+<td>build-time candidate list</td>
+<td>64</td>
+<td>recall too low (costs build time/memory)</td>
+</tr>
+<tr>
+<td><code>hnsw.ef_search</code> (session)</td>
+<td>query candidate list</td>
+<td>40</td>
+<td>recall too low; <strong>higher = slower</strong></td>
+</tr>
+<tr>
+<td>topK over-fetch</td>
+<td>fetch <code>topK*4</code>, then metadata-filter</td>
+<td>×4</td>
+<td>tenant filter under-fills topK</td>
+</tr>
+<tr>
+<td><code>maintenance_work_mem</code></td>
+<td>index build memory</td>
+<td>2 GB</td>
+<td>large collections build slowly</td>
+</tr>
+</tbody>
+</table>
+<p>Operational guidance:</p>
+<ul>
+<li>Set <code>SET hnsw.ef_search = 40;</code> per search session; expose
+it as a config so the search service can trade latency for recall under
+the 500 ms budget.</li>
+<li>Build HNSW indexes <strong>after</strong> bulk backfill (faster) but
+keep them present during incremental writes (HNSW tolerates inserts; no
+retrain needed, unlike IVFFlat).</li>
+<li>Pair the ANN scan with <code>idx_vec_*_meta</code> (GIN on
+<code>metadata jsonb_path_ops</code>) for the tenant filter; because
+pgvector post-filters after ANN, over-fetch topK.</li>
+<li><code>[GAP: vectordb-3.1]</code> hardening path: the same
+<code>client.VectorStore</code> interface fronts a
+<strong>Qdrant</strong> backend with native payload filtering — swap by
+config if per-tenant recall or filter selectivity becomes the
+bottleneck. Benchmark both against the 500 ms SLO in the testing pack
+(<code>ATM-DB-012</code>).</li>
+</ul>
+<hr />
+<h2 id="the-hot-claim-index-idempotent-processing">6. The hot claim
+index (idempotent processing)</h2>
+<p>The single most latency-sensitive query is the processing engine
+claiming the next post. It runs continuously across the worker pool (Q4:
+default 32 workers) and MUST stay O(1)ish.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Created in 0001_init (see migrations/0001_init.sql):</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_processing_claimable</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> processing_state (visible_at)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> status <span class="op">=</span> <span class="st">&#39;pending&#39;</span>;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Claim query (one worker, exactly-once via SKIP LOCKED):</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> claimed <span class="kw">AS</span> (</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> post_id</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span>   processing_state</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">&#39;pending&#39;</span> <span class="kw">AND</span> visible_at <span class="op">&lt;=</span> now()</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ORDER</span>  <span class="kw">BY</span> visible_at</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">UPDATE</span> <span class="kw">SKIP</span> <span class="kw">LOCKED</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LIMIT</span>  <span class="dv">1</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> processing_state ps</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span>    status <span class="op">=</span> <span class="st">&#39;claimed&#39;</span>, claimed_by <span class="op">=</span> $<span class="dv">1</span>, claimed_at <span class="op">=</span> now(), attempts <span class="op">=</span> attempts <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span>   claimed</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span>  ps.post_id <span class="op">=</span> claimed.post_id</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> ps.post_id, ps.post_posted_at;</span></code></pre></div>
+<p>Because the index is <strong>partial</strong>
+(<code>WHERE status='pending'</code>), it only ever contains the backlog
+— typically small — so the ordered scan + <code>SKIP LOCKED</code> claim
+is cheap even though <code>processing_state</code> grows to one row per
+post forever. This is the in-house analogue of an exactly-once claim
+registry (final request §3.3, <code>[IN-HOUSE: background]</code>,
+<code>[CONSTITUTION §11.4.176]</code>) and closes
+<code>[GAP: session_orchestrator-2.9]</code> (the design-only atomic
+track-claim registry) <em>for Thready’s per-post claim</em> by reusing
+the Postgres row-lock primitive rather than the unimplemented
+module.</p>
+<hr />
+<h2 id="index-maintenance-on-partitioned-tables">7. Index maintenance on
+partitioned tables</h2>
+<ul>
+<li><strong>New partitions inherit parent indexes automatically</strong>
+when created with <code>PARTITION OF</code> — the maintenance job (see
+<a href="./partitioning.md">partitioning.md</a>) creates partitions
+ahead of time so indexes exist before rows land.</li>
+<li><strong>Adding an index to an existing large partitioned
+table</strong> without downtime:</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 1) create the index on the PARENT as INVALID (no build), then build per partition</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_posts_channel_time <span class="kw">ON</span> <span class="kw">ONLY</span> posts (channel_id, posted_at <span class="kw">DESC</span>);</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2) per existing partition, build CONCURRENTLY then attach</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_posts_channel_time_2026_07</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> posts_2026_07 (channel_id, posted_at <span class="kw">DESC</span>);</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">INDEX</span> idx_posts_channel_time ATTACH <span class="kw">PARTITION</span> idx_posts_channel_time_2026_07;</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- ... repeat per partition; parent index becomes VALID once all children attached.</span></span></code></pre></div>
+<ul>
+<li><strong><code>REINDEX CONCURRENTLY</code></strong> per partition for
+bloat; never on the whole parent at once.</li>
+<li>Keep index count lean on firehose tables — each index is written on
+every insert.</li>
+</ul>
+<hr />
+<h2 id="verification-tdd">8. Verification &amp; TDD</h2>
+<p>Per <code>[CONSTITUTION §11.4.43]</code> (reproduce-first) and
+§11.4.27 (performance/benchmark test types), each index carries an
+<code>EXPLAIN (ANALYZE, BUFFERS)</code> assertion in the DB test
+bank:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED first: assert the claim query is an Index Scan on the partial index, not Seq Scan.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestClaimUsesPartialIndex<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    plan <span class="op">:=</span> explain<span class="op">(</span>t<span class="op">,</span> db<span class="op">,</span> claimSQL<span class="op">,</span> <span class="st">&quot;worker-1&quot;</span><span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Contains<span class="op">(</span>t<span class="op">,</span> plan<span class="op">,</span> <span class="st">&quot;Index Scan using idx_processing_claimable&quot;</span><span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotContains<span class="op">(</span>t<span class="op">,</span> plan<span class="op">,</span> <span class="st">&quot;Seq Scan&quot;</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Semantic search must meet the SLO on a seeded 1e6-vector fixture.</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSemanticSearchP95Under500ms<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    p95 <span class="op">:=</span> benchSearch<span class="op">(</span>t<span class="op">,</span> vec<span class="op">,</span> <span class="dv">200</span> <span class="co">/*queries*/</span><span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Less<span class="op">(</span>t<span class="op">,</span> p95<span class="op">,</span> <span class="dv">500</span><span class="op">*</span>time<span class="op">.</span>Millisecond<span class="op">)</span> <span class="co">// Q14 Aggressive SLO</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>These live in the testing area (<code>testing/</code>) and run
+against a <strong>real</strong> Postgres+pgvector container (mocks are
+unit-only per §11.4.27). Benchmarks feed the scaling/stress test
+types.</p>
+<hr />
+<h2 id="gaps-open-items">9. Gaps &amp; open items</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[GAP: vectordb-3.1]</code> ANN index owned by migrations;
+Qdrant swap benchmarked</td>
+<td>Addressed §5; benchmark <code>ATM-DB-012</code></td>
+</tr>
+<tr>
+<td><code>[GAP: database-3.2]</code> partitioned-index maintenance
+recipe</td>
+<td>Addressed §7</td>
+</tr>
+<tr>
+<td><code>[OPEN: fts-multilang]</code> per-language FTS config</td>
+<td>Tracked <code>ATM-DB-011</code></td>
+</tr>
+<tr>
+<td><code>[OPEN: vector-tenant-isolation]</code> post-filter under-fill
+(<code>ATM-DB-013</code>)</td>
+<td>Addressed via over-fetch §5; Qdrant fallback</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

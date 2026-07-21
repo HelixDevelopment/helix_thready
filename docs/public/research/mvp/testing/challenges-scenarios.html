@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Challenges Scenarios (`digital.vasic.challenges`)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Challenges Scenarios
+(`digital.vasic.challenges`)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#engine-architecture" id="toc-engine-architecture">1.
+Engine architecture</a></li>
+<li><a href="#verified-pkg-surface-from-source"
+id="toc-verified-pkg-surface-from-source">1.1 Verified pkg surface (from
+source)</a></li>
+<li><a href="#defining-a-thready-challenge-go"
+id="toc-defining-a-thready-challenge-go">2. Defining a Thready challenge
+(Go)</a></li>
+<li><a href="#the-challenge.result-contract-anti-bluff-types"
+id="toc-the-challenge.result-contract-anti-bluff-types">2.1 The
+<code>challenge.Result</code> contract &amp; anti-bluff types</a></li>
+<li><a href="#banks-from-yamljson" id="toc-banks-from-yamljson">3. Banks
+from YAML/JSON</a></li>
+<li><a href="#built-in-assertion-evaluators"
+id="toc-built-in-assertion-evaluators">4. Built-in assertion
+evaluators</a></li>
+<li><a href="#user-flow-automation-adapters"
+id="toc-user-flow-automation-adapters">5. User-flow automation
+adapters</a></li>
+<li><a href="#thready-challenge-bank-inventory"
+id="toc-thready-challenge-bank-inventory">6. Thready challenge bank
+inventory</a></li>
+<li><a href="#concrete-bank-definitions-go-yaml"
+id="toc-concrete-bank-definitions-go-yaml">6.1 Concrete bank definitions
+(Go + YAML)</a></li>
+<li><a href="#the-describe-challenge-meta-runner-anti-bluff"
+id="toc-the-describe-challenge-meta-runner-anti-bluff">7. The
+describe-Challenge meta-runner (anti-bluff)</a></li>
+<li><a href="#local-gating-for-the-visual-regression-family"
+id="toc-local-gating-for-the-visual-regression-family">8. Local gating
+for the visual-regression family</a></li>
+<li><a href="#gap-register-items-addressed"
+id="toc-gap-register-items-addressed">9. Gap-register items
+addressed</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Challenges Scenarios (digital.vasic.challenges)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/testing/challenges-scenarios.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (testing)
+  Related         : ./test-strategy.md, ./test-types.md, ./helixqa-banks.md,
+                    ./performance-and-chaos.md, ./acceptance-gates.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (testing)</td>
+<td>Initial draft — challenge engine, Go/YAML banks, userflow adapters,
+describe-Challenge meta-runner</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (testing)</td>
+<td>Pass 3 — verified pkg/{assertion,challenge,registry,runner} surface
+from source; real
+<code>challenge.Result</code>/<code>AssertionResult</code>/<code>ValidateAntiBluff</code>;
+corrected 16 evaluators + real anti-bluff scripts; expanded Thready bank
+definitions</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Challenges</strong> (<code>vasic-digital/challenges</code>,
+module <code>digital.vasic.challenges</code>) is the generic, reusable
+Go module for defining, registering, executing and reporting on
+<strong>structured test scenarios</strong> — the constitution’s
+per-feature <strong>real-use-case test bank</strong>
+<code>[IN-HOUSE: challenges]</code>
+<code>[CONSTITUTION §11.4.27]</code>. It is test type
+<strong>#14</strong> and the execution substrate HelixQA reuses.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-engine-architecture">1. Engine architecture</a></li>
+<li><a href="#11-verified-pkg-surface-from-source">1.1 Verified pkg
+surface (from source)</a></li>
+<li><a href="#2-defining-a-thready-challenge-go">2. Defining a Thready
+challenge (Go)</a></li>
+<li><a href="#21-the-challengeresult-contract--anti-bluff-types">2.1 The
+<code>challenge.Result</code> contract &amp; anti-bluff types</a></li>
+<li><a href="#3-banks-from-yamljson">3. Banks from YAML/JSON</a></li>
+<li><a href="#4-built-in-assertion-evaluators">4. Built-in assertion
+evaluators</a></li>
+<li><a href="#5-user-flow-automation-adapters">5. User-flow automation
+adapters</a></li>
+<li><a href="#6-thready-challenge-bank-inventory">6. Thready challenge
+bank inventory</a></li>
+<li><a href="#61-concrete-bank-definitions-go--yaml">6.1 Concrete bank
+definitions (Go + YAML)</a></li>
+<li><a href="#7-the-describe-challenge-meta-runner-anti-bluff">7. The
+describe-Challenge meta-runner (anti-bluff)</a></li>
+<li><a href="#8-local-gating-for-the-visual-regression-family">8. Local
+gating for the visual-regression family</a></li>
+<li><a href="#9-gap-register-items-addressed">9. Gap-register items
+addressed</a></li>
+</ul>
+<h2 id="engine-architecture">1. Engine architecture</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 3424px; background-color: white;" viewBox="0 0 3424 691.7999877929688" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Challenges" data-look="classic"><rect style="" x="8" y="411.99999237060547" width="1985" height="132.1999969482422"/><g class="cluster-label" transform="translate(866, 411.99999237060547)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">challenge.Challenge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> implementations</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Runner" data-look="classic"><rect style="" x="2013" y="254.79999542236328" width="1137" height="428.99999237060547"/><g class="cluster-label" transform="translate(2530, 254.79999542236328)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">runner.Runner</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M2581.5,204.8L2581.5,208.967C2581.5,213.133,2581.5,221.467,2581.5,229.8C2581.5,238.133,2581.5,246.467,2581.5,254.133C2581.5,261.8,2581.5,268.8,2581.5,272.3L2581.5,275.8" id="my-svg-L_BANK_REG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BANK_REG_0" data-points="W3sieCI6MjU4MS41LCJ5IjoyMDQuNzk5OTk1NDIyMzYzMjh9LHsieCI6MjU4MS41LCJ5IjoyMjkuNzk5OTk1NDIyMzYzMjh9LHsieCI6MjU4MS41LCJ5IjoyNTQuNzk5OTk1NDIyMzYzMjh9LHsieCI6MjU4MS41LCJ5IjoyNzkuNzk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2641.191,362L2647.243,366.167C2653.294,370.333,2665.397,378.667,2671.449,387C2677.5,395.333,2677.5,403.667,2765.004,417.117C2852.507,430.568,3027.515,449.136,3115.019,458.421L3202.522,467.705" id="my-svg-L_REG_RUN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_RUN_0" data-points="W3sieCI6MjY0MS4xOTEzNzU4NjM4MDQsInkiOjM2MS45OTk5OTIzNzA2MDU0N30seyJ4IjoyNjc3LjUsInkiOjM4Ni45OTk5OTIzNzA2MDU0N30seyJ4IjoyNjc3LjUsInkiOjQxMS45OTk5OTIzNzA2MDU0N30seyJ4IjozMjA2LjUsInkiOjQ2OC4xMjY2MzYzMzk4MDN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M3206.5,483.51L3030.75,493.625C2855,503.74,2503.5,523.97,2327.75,538.252C2152,552.533,2152,560.867,2152,568.533C2152,576.2,2152,583.2,2152,586.7L2152,590.2" id="my-svg-L_RUN_ENG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RUN_ENG_0" data-points="W3sieCI6MzIwNi41LCJ5Ijo0ODMuNTEwMDAzNzgwMzUzNH0seyJ4IjoyMTUyLCJ5Ijo1NDQuMTk5OTg5MzE4ODQ3N30seyJ4IjoyMTUyLCJ5Ijo1NjkuMTk5OTg5MzE4ODQ3N30seyJ4IjoyMTUyLCJ5Ijo1OTQuMTk5OTg5MzE4ODQ3N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M3206.5,488.925L3126.5,498.137C3046.5,507.35,2886.5,525.775,2806.5,539.154C2726.5,552.533,2726.5,560.867,2726.5,568.533C2726.5,576.2,2726.5,583.2,2726.5,586.7L2726.5,590.2" id="my-svg-L_RUN_MON_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RUN_MON_0" data-points="W3sieCI6MzIwNi41LCJ5Ijo0ODguOTI0NzI5MjcwODAyMX0seyJ4IjoyNzI2LjUsInkiOjU0NC4xOTk5ODkzMTg4NDc3fSx7IngiOjI3MjYuNSwieSI6NTY5LjE5OTk4OTMxODg0Nzd9LHsieCI6MjcyNi41LCJ5Ijo1OTQuMTk5OTg5MzE4ODQ3N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M3206.5,485.225L3076.833,495.055C2947.167,504.884,2687.833,524.542,2558.167,538.538C2428.5,552.533,2428.5,560.867,2428.5,568.533C2428.5,576.2,2428.5,583.2,2428.5,586.7L2428.5,590.2" id="my-svg-L_RUN_REP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RUN_REP_0" data-points="W3sieCI6MzIwNi41LCJ5Ijo0ODUuMjI1NDQ5Mzk1ODM1OTR9LHsieCI6MjQyOC41LCJ5Ijo1NDQuMTk5OTg5MzE4ODQ3N30seyJ4IjoyNDI4LjUsInkiOjU2OS4xOTk5ODkzMTg4NDc3fSx7IngiOjI0MjguNSwieSI6NTk0LjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2521.809,362L2515.757,366.167C2509.706,370.333,2497.603,378.667,2491.551,387C2485.5,395.333,2485.5,403.667,2107.583,418.432C1729.666,433.197,973.832,454.393,595.915,464.992L217.998,475.59" id="my-svg-L_REG_BASE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_BASE_0" data-points="W3sieCI6MjUyMS44MDg2MjQxMzYxOTYsInkiOjM2MS45OTk5OTIzNzA2MDU0N30seyJ4IjoyNDg1LjUsInkiOjM4Ni45OTk5OTIzNzA2MDU0N30seyJ4IjoyNDg1LjUsInkiOjQxMS45OTk5OTIzNzA2MDU0N30seyJ4IjoyMTQsInkiOjQ3NS43MDIyMTgzMDc3OTk0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2534.244,362L2529.454,366.167C2524.663,370.333,2515.081,378.667,2510.291,387C2505.5,395.333,2505.5,403.667,2161.083,418.393C1816.666,433.119,1127.832,454.237,783.415,464.797L438.998,475.356" id="my-svg-L_REG_SHELL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_SHELL_0" data-points="W3sieCI6MjUzNC4yNDQzMjc0NDExNTUzLCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjUwNS41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjUwNS41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6NDM1LCJ5Ijo0NzUuNDc4Njc4Mjg5MjgyNX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2546.68,362L2543.15,366.167C2539.62,370.333,2532.56,378.667,2529.03,387C2525.5,395.333,2525.5,403.667,2229.083,418.083C1932.666,432.5,1339.832,453.001,1043.415,463.251L746.998,473.501" id="my-svg-L_REG_API_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_API_0" data-points="W3sieCI6MjU0Ni42ODAwMzA3NDYxMTQ0LCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjUyNS41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjUyNS41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6NzQzLCJ5Ijo0NzMuNjM5MTQ4Njc3MjM0MjN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2559.116,362L2556.846,366.167C2554.577,370.333,2550.039,378.667,2547.769,387C2545.5,395.333,2545.5,403.667,2296.083,417.969C2046.666,432.272,1547.831,452.545,1298.414,462.681L1048.997,472.817" id="my-svg-L_REG_WS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_WS_0" data-points="W3sieCI6MjU1OS4xMTU3MzQwNTEwNzM2LCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjU0NS41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjU0NS41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MTA0NSwieSI6NDcyLjk3OTQyNTMzMTIwNzJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2603.884,362L2606.154,366.167C2608.423,370.333,2612.961,378.667,2615.231,387C2617.5,395.333,2617.5,403.667,2406.916,417.812C2196.332,431.956,1775.164,451.913,1564.58,461.891L1353.996,471.869" id="my-svg-L_REG_BR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_BR_0" data-points="W3sieCI6MjYwMy44ODQyNjU5NDg5MjY0LCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjYxNy41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjYxNy41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MTM1MCwieSI6NDcyLjA1ODU5MzEzNDcyNjI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2616.32,362L2619.85,366.167C2623.38,370.333,2630.44,378.667,2633.97,387C2637.5,395.333,2637.5,403.667,2474.415,417.545C2311.331,431.423,1985.162,450.846,1822.077,460.558L1658.993,470.27" id="my-svg-L_REG_DESK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_DESK_0" data-points="W3sieCI6MjYxNi4zMTk5NjkyNTM4ODU2LCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjYzNy41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjYzNy41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MTY1NSwieSI6NDcwLjUwNzQyMzQ1MjQyODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2628.756,362L2633.546,366.167C2638.337,370.333,2647.919,378.667,2652.709,387C2657.5,395.333,2657.5,403.667,2541.581,417.11C2425.662,430.553,2193.825,449.105,2077.906,458.382L1961.987,467.658" id="my-svg-L_REG_MOB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_MOB_0" data-points="W3sieCI6MjYyOC43NTU2NzI1NTg4NDQ3LCJ5IjozNjEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjY1Ny41LCJ5IjozODYuOTk5OTkyMzcwNjA1NDd9LHsieCI6MjY1Ny41LCJ5Ijo0MTEuOTk5OTkyMzcwNjA1NDd9LHsieCI6MTk1OCwieSI6NDY3Ljk3NjkyODEyNDQxNjI1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M3300.5,353.2L3300.5,358.833C3300.5,364.467,3300.5,375.733,3300.5,385.533C3300.5,395.333,3300.5,403.667,3300.5,414.267C3300.5,424.867,3300.5,437.733,3300.5,444.167L3300.5,450.6" id="my-svg-L_INFRA_RUN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_INFRA_RUN_0" data-points="W3sieCI6MzMwMC41LCJ5IjozNTMuMTk5OTkzMTMzNTQ0OX0seyJ4IjozMzAwLjUsInkiOjM4Ni45OTk5OTIzNzA2MDU0N30seyJ4IjozMzAwLjUsInkiOjQxMS45OTk5OTIzNzA2MDU0N30seyJ4IjozMzAwLjUsInkiOjQ1NC41OTk5OTA4NDQ3MjY1Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M2581.5,90.2L2581.5,94.367C2581.5,98.533,2581.5,106.867,2581.5,114.533C2581.5,122.2,2581.5,129.2,2581.5,132.7L2581.5,136.2" id="my-svg-L_META_BANK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_META_BANK_0" data-points="W3sieCI6MjU4MS41LCJ5Ijo5MC4xOTk5OTY5NDgyNDIxOX0seyJ4IjoyNTgxLjUsInkiOjExNS4xOTk5OTY5NDgyNDIxOX0seyJ4IjoyNTgxLjUsInkiOjE0MC4xOTk5OTY5NDgyNDIyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_BANK_REG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_RUN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RUN_ENG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RUN_MON_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RUN_REP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_BASE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_SHELL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_API_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_WS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_BR_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_DESK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_REG_MOB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_INFRA_RUN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_META_BANK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-REG-0" data-look="classic" transform="translate(2581.5, 320.8999938964844)"><rect class="basic label-container" style="" x="-117" y="-41.099998474121094" width="234" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registry.Registry</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registration</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> topological</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">order</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ENG-1" data-look="classic" transform="translate(2152, 626.4999885559082)"><rect class="basic label-container" style="" x="-104" y="-32.29999923706055" width="208" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">assertion.Engine</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">16</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> built-in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evaluators</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REP-2" data-look="classic" transform="translate(2428.5, 626.4999885559082)"><rect class="basic label-container" style="" x="-122.5" y="-32.29999923706055" width="245" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">report.Reporter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Markdown</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JSON</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HTML</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MON-3" data-look="classic" transform="translate(2726.5, 626.4999885559082)"><rect class="basic label-container" style="" x="-125.5" y="-32.29999923706055" width="251" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">monitor.EventCollector</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">live</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> WebSocket</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dashboard</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PLG-4" data-look="classic" transform="translate(3008.5, 626.4999885559082)"><rect class="basic label-container" style="" x="-106.5" y="-23.5" width="213" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">plugin.PluginRegistry</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BANK-5" data-look="classic" transform="translate(2581.5, 172.49999618530273)"><rect class="basic label-container" style="" x="-109.5" y="-32.29999923706055" width="219" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">banks/*.yaml</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> or</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> *.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> feature</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> banks</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RUN-8" data-look="classic" transform="translate(3300.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-94" y="-23.5" width="188" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">RunAll</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ctx,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Config</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BASE-15" data-look="classic" transform="translate(128.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-85.5" y="-23.5" width="171" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BaseChallenge</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SHELL-16" data-look="classic" transform="translate(349.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-85.5" y="-32.29999923706055" width="171" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ShellChallenge</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">wrap</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bash</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-API-17" data-look="classic" transform="translate(614, 478.09999084472656)"><rect class="basic label-container" style="" x="-129" y="-23.5" width="258" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">userflow.APIFlowChallenge</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WS-18" data-look="classic" transform="translate(919, 478.09999084472656)"><rect class="basic label-container" style="" x="-126" y="-32.29999923706055" width="252" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">userflow.WebSocketFlowC</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">hallenge</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BR-19" data-look="classic" transform="translate(1222.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-127.5" y="-32.29999923706055" width="255" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">userflow.BrowserFlowChall</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">enge</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DESK-20" data-look="classic" transform="translate(1527.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-127.5" y="-41.099998474121094" width="255" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">userflow.DesktopFlowChall</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">enge</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tauri</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> WebDriver</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-MOB-21" data-look="classic" transform="translate(1831.5, 478.09999084472656)"><rect class="basic label-container" style="" x="-126.5" y="-41.099998474121094" width="253" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">userflow.MobileFlowChalle</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nge</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ADB/Appium/Maestro</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-INFRA-30" data-look="classic" transform="translate(3300.5, 320.8999938964844)"><rect class="basic label-container" style="" x="-115.5" y="-32.29999923706055" width="231" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">infra.ContainersAdapter</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">-</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> digital.vasic.containers</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-META-32" data-look="classic" transform="translate(2581.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-100" y="-41.099998474121094" width="200" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">describe-Challenge</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">meta-runner</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">--anti-bluff-mutate</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/challenges-runner-arch.mmd"><code>diagrams/challenges-runner-arch.mmd</code></a>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The <code>runner.Runner</code> is the core; it
+composes a <code>registry.Registry</code> (challenge registration with
+automatic topological ordering by Kahn’s algorithm over dependency
+edges), an <code>assertion.Engine</code> (16 built-in evaluators plus
+custom ones), a <code>report.Reporter</code> (Markdown/JSON/HTML), a
+<code>monitor.EventCollector</code> (a live WebSocket dashboard) and a
+<code>plugin.PluginRegistry</code> for extension. Thready feature banks
+— authored as YAML or JSON under <code>banks/</code> — are loaded into
+the registry, and <code>RunAll(ctx, Config)</code> executes them,
+feeding the assertion engine, the live monitor and the reporter.</p>
+<p>Each registered item implements the <code>challenge.Challenge</code>
+interface; Thready uses <code>BaseChallenge</code> (template-method
+base), <code>ShellChallenge</code> (wraps existing bash scripts) and the
+<code>userflow</code> templates (<code>APIFlowChallenge</code>,
+<code>WebSocketFlowChallenge</code>, <code>BrowserFlowChallenge</code>,
+<code>DesktopFlowChallenge</code> via Tauri WebDriver,
+<code>MobileFlowChallenge</code> via ADB/Appium/Maestro). An
+<code>infra.ContainersAdapter</code> bridges to
+<code>digital.vasic.containers</code> so a challenge can stand up real
+dependencies.</p>
+<p>Finally, the <strong>describe-Challenge meta-runner</strong> inspects
+the banks themselves — with a planted inventory mismatch it asserts the
+gate fails (exit 99), so the banks that validate features are themselves
+validated. The verified constructors and the
+<code>challenge.Result</code> shape these components exchange are
+enumerated in §1.1 and §2.1.</p>
+<h2 id="verified-pkg-surface-from-source">1.1 Verified pkg surface (from
+source)</h2>
+<p>The package layout below is read directly from
+<code>vasic-digital/challenges</code> (module
+<code>digital.vasic.challenges</code>, <code>go 1.25.0</code>) so
+Thready skeletons import real symbols, not guesses
+<code>[IN-HOUSE: challenges]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 48%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th>Verified files (excerpt)</th>
+<th>What Thready uses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pkg/challenge</code></td>
+<td><code>base.go</code>, <code>challenge.go</code>,
+<code>result.go</code>, <code>antibluff.go</code>,
+<code>shell.go</code>, <code>progress.go</code>, <code>config.go</code>,
+<code>definition.go</code>, <code>chaos_test.go</code>,
+<code>stress_test.go</code></td>
+<td><code>BaseChallenge</code>, <code>Result</code>,
+<code>ValidateAntiBluff</code>, <code>ShellChallenge</code></td>
+</tr>
+<tr>
+<td><code>pkg/assertion</code></td>
+<td><code>builtin.go</code>, <code>composite.go</code>,
+<code>engine.go</code>, <code>evaluator.go</code>,
+<code>parser.go</code>, <code>definition.go</code></td>
+<td>the 16 built-in evaluators (§4) + composite/parser</td>
+</tr>
+<tr>
+<td><code>pkg/registry</code></td>
+<td><code>registry.go</code>, <code>dependency.go</code>,
+<code>loader.go</code></td>
+<td><code>NewRegistry()</code>, dependency (Kahn topological) ordering,
+bank loader</td>
+</tr>
+<tr>
+<td><code>pkg/runner</code></td>
+<td><code>runner.go</code>, <code>options.go</code>,
+<code>pipeline.go</code>, <code>parallel.go</code>,
+<code>liveness.go</code>, <code>antibluff_runner_test.go</code></td>
+<td><code>NewRunner(opts...)</code>, <code>RunAll</code>, liveness/stuck
+detection, parallel exec</td>
+</tr>
+<tr>
+<td><code>pkg/userflow</code></td>
+<td><code>challenge_api_flow.go</code>,
+<code>challenge_browser.go</code>,
+<code>challenge_websocket_flow.go</code>,
+<code>challenge_desktop.go</code>, <code>challenge_mobile.go</code>,
+<code>http_api_adapter.go</code>,
+<code>playwright_cli_adapter.go</code>,
+<code>tauri_cli_adapter.go</code>, <code>appium_adapter.go</code>,
+<code>maestro_adapter.go</code>, …</td>
+<td>the flow challenges + adapters (§5)</td>
+</tr>
+<tr>
+<td><code>pkg/{infra,monitor,report,panoptic,i18n,container}</code></td>
+<td><code>infra.ContainersAdapter</code>,
+<code>monitor.EventCollector</code>, <code>report.Reporter</code></td>
+<td>real-dep bring-up, live dashboard, reporting</td>
+</tr>
+</tbody>
+</table>
+<p>The verified constructor signatures Thready targets —
+copy-paste-accurate:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/challenge/base.go</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewBaseChallenge<span class="op">(</span>id ID<span class="op">,</span> name<span class="op">,</span> description<span class="op">,</span> category <span class="dt">string</span><span class="op">,</span> deps <span class="op">[]</span>ID<span class="op">)</span> BaseChallenge</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>BaseChallenge<span class="op">)</span> CreateResult<span class="op">()</span> <span class="op">*</span>Result          <span class="co">// pre-populated with id/name/StartTime</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/registry/registry.go</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewRegistry<span class="op">()</span> <span class="op">*</span>DefaultRegistry                       <span class="co">// implements the Registry interface</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/runner/runner.go + options.go</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewRunner<span class="op">(</span>opts <span class="op">...</span>RunnerOption<span class="op">)</span> <span class="op">*</span>DefaultRunner</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>DefaultRunner<span class="op">)</span> RunAll<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> cfg <span class="op">*</span>challenge<span class="op">.</span>Config<span class="op">)</span> <span class="op">([]*</span>challenge<span class="op">.</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// options: WithRegistry, WithLogger, WithTimeout, WithResultsDir, WithPreHook, WithPostHook,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">//          WithStaleThreshold, WithExecuteHook, WithEventCollector</span></span></code></pre></div>
+<p><code>WithStaleThreshold</code> + <code>pkg/runner/liveness.go</code>
+back the <code>StatusStuck</code>/<code>StatusTimedOut</code> outcomes
+(§2.1): a challenge that stops making progress is failed as
+<strong>stuck</strong>, not silently hung — a liveness guarantee the
+anti-bluff posture depends on.</p>
+<h2 id="defining-a-thready-challenge-go">2. Defining a Thready challenge
+(Go)</h2>
+<p>Real API (from the <code>challenges</code> README) — an API-flow
+challenge for the ingest→process→reply path:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> threadybanks</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;time&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.challenges/pkg/challenge&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.challenges/pkg/registry&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;digital.vasic.challenges/pkg/runner&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// IngestProcessReplyChallenge asserts the canonical journey end-to-end (real system).</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IngestProcessReplyChallenge <span class="kw">struct</span><span class="op">{</span> challenge<span class="op">.</span>BaseChallenge <span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewIngestProcessReply<span class="op">()</span> <span class="op">*</span>IngestProcessReplyChallenge <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>IngestProcessReplyChallenge<span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        BaseChallenge<span class="op">:</span> <span class="op">*</span>challenge<span class="op">.</span>NewBaseChallenge<span class="op">(</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;ingest_process_reply&quot;</span><span class="op">,</span> <span class="st">&quot;Ingest → Process → Reply&quot;</span><span class="op">,</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Add a thread, run its Skill(s), post a status reply, embed the result&quot;</span><span class="op">,</span> <span class="st">&quot;thready&quot;</span><span class="op">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">[]</span><span class="dt">string</span><span class="op">{</span> <span class="co">/* deps: */</span> <span class="st">&quot;infra_up&quot;</span><span class="op">},</span> <span class="co">// topological order</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">),</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>IngestProcessReplyChallenge<span class="op">)</span> Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>challenge<span class="op">.</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    result <span class="op">:=</span> c<span class="op">.</span>CreateResult<span class="op">()</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... drive REST /v1 against the running dev. stack, capture timings ...</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    result<span class="op">.</span>Status <span class="op">=</span> challenge<span class="op">.</span>StatusPassed</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    result<span class="op">.</span>Assertions <span class="op">=</span> <span class="op">[]</span>challenge<span class="op">.</span>AssertionResult<span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Type<span class="op">:</span> <span class="st">&quot;not_mock&quot;</span><span class="op">,</span> Target<span class="op">:</span> <span class="st">&quot;status_reply&quot;</span><span class="op">,</span> Passed<span class="op">:</span> <span class="ot">true</span><span class="op">,</span> Message<span class="op">:</span> <span class="st">&quot;real reply posted&quot;</span><span class="op">},</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Type<span class="op">:</span> <span class="st">&quot;max_latency&quot;</span><span class="op">,</span> Target<span class="op">:</span> <span class="st">&quot;search_ms&quot;</span><span class="op">,</span> Passed<span class="op">:</span> <span class="ot">true</span><span class="op">,</span> Message<span class="op">:</span> <span class="st">&quot;search &lt; 500ms&quot;</span><span class="op">},</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Type<span class="op">:</span> <span class="st">&quot;min_count&quot;</span><span class="op">,</span> Target<span class="op">:</span> <span class="st">&quot;embeddings_written&quot;</span><span class="op">,</span> Passed<span class="op">:</span> <span class="ot">true</span><span class="op">,</span> Message<span class="op">:</span> <span class="st">&quot;&gt;=1 vector&quot;</span><span class="op">},</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> RunThreadyBanks<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]*</span>challenge<span class="op">.</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    reg <span class="op">:=</span> registry<span class="op">.</span>NewRegistry<span class="op">()</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    reg<span class="op">.</span>Register<span class="op">(</span>NewIngestProcessReply<span class="op">())</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="co">// reg.Register(NewDownloadCallback()); reg.Register(NewRbacNegative()); ...</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    r <span class="op">:=</span> runner<span class="op">.</span>NewRunner<span class="op">(</span>runner<span class="op">.</span>WithRegistry<span class="op">(</span>reg<span class="op">),</span> runner<span class="op">.</span>WithTimeout<span class="op">(</span><span class="dv">10</span><span class="op">*</span>time<span class="op">.</span>Minute<span class="op">))</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">.</span>RunAll<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>challenge<span class="op">.</span>Config<span class="op">{</span>Verbose<span class="op">:</span> <span class="ot">true</span><span class="op">})</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>not_mock</code> / <code>no_mock_responses</code> are the
+anti-bluff evaluators — they assert a response is not a placeholder,
+enforcing the no-fakes-beyond-unit rule at the challenge layer.</p>
+<h2 id="the-challenge.result-contract-anti-bluff-types">2.1 The
+<code>challenge.Result</code> contract &amp; anti-bluff types</h2>
+<p><code>Execute</code> returns a <code>*challenge.Result</code> whose
+shape is fixed by <code>pkg/challenge/result.go</code>
+<code>[IN-HOUSE: challenges]</code>. Thready banks populate it exactly
+as below so the reporter, the live monitor and the anti-bluff validator
+all read the same structure:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// pkg/challenge/result.go (verbatim field set)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ChallengeID     ID                       <span class="st">`json:&quot;challenge_id&quot;`</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ChallengeName   <span class="dt">string</span>                   <span class="st">`json:&quot;challenge_name&quot;`</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Status          <span class="dt">string</span>                   <span class="st">`json:&quot;status&quot;`</span>           <span class="co">// Status* constant</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    StartTime       time<span class="op">.</span>Time                <span class="st">`json:&quot;start_time&quot;`</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    EndTime         time<span class="op">.</span>Time                <span class="st">`json:&quot;end_time&quot;`</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Duration        time<span class="op">.</span>Duration            <span class="st">`json:&quot;duration&quot;`</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    Assertions      <span class="op">[]</span>AssertionResult        <span class="st">`json:&quot;assertions&quot;`</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    Metrics         <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>MetricValue   <span class="st">`json:&quot;metrics&quot;`</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    Outputs         <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span>        <span class="st">`json:&quot;outputs&quot;`</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    Logs            LogPaths                  <span class="st">`json:&quot;logs&quot;`</span>             <span class="co">// ChallengeLog/OutputLog/APIRequests/APIResponses</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    Error           <span class="dt">string</span>                   <span class="st">`json:&quot;error,omitempty&quot;`</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    RecordedActions <span class="op">[]</span><span class="dt">string</span>                 <span class="st">`json:&quot;recorded_actions,omitempty&quot;`</span> <span class="co">// anti-bluff action trace</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AssertionResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    Type     <span class="dt">string</span> <span class="st">`json:&quot;type&quot;`</span>      <span class="co">// evaluator id, e.g. &quot;max_latency&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    Target   <span class="dt">string</span> <span class="st">`json:&quot;target&quot;`</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    Expected <span class="dt">any</span>    <span class="st">`json:&quot;expected&quot;`</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    Actual   <span class="dt">any</span>    <span class="st">`json:&quot;actual&quot;`</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    Passed   <span class="dt">bool</span>   <span class="st">`json:&quot;passed&quot;`</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    Message  <span class="dt">string</span> <span class="st">`json:&quot;message&quot;`</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Status constants: pending, running, passed, failed, skipped, timed_out, stuck, error.</span></span></code></pre></div>
+<p>The <strong>anti-bluff guarantee is enforced in-engine</strong>, not
+merely by convention. <code>pkg/challenge/antibluff.go</code> provides
+<code>RecordAction</code> and <code>ValidateAntiBluff</code> (verified
+source):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// A Challenge calls RecordAction BEFORE each user-visible action it performs.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>RecordAction<span class="op">(</span><span class="st">&quot;POST /v1/downloads (enqueue big file)&quot;</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>RecordAction<span class="op">(</span><span class="st">&quot;kill worker; resume; await callback&quot;</span><span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ValidateAntiBluff returns ErrBluffPass if a Status=Passed Result lacks:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   - a non-empty RecordedActions trace (the runtime actually DID something), AND</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   - at least one Assertion with Passed==true (something was positively confirmed).</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> challenge<span class="op">.</span>ValidateAntiBluff<span class="op">(</span>result<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err <span class="co">// a metadata-only &quot;pass&quot; is rejected here — CONST-035 / §11.4</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This means a Thready challenge <strong>cannot</strong> report
+<code>StatusPassed</code> from an empty run or a stubbed dependency:
+with no recorded actions or no passing assertion the engine itself
+returns <code>ErrBluffPass</code>. It is the Go-side parallel of the
+on-device <code>tests/lib/anti_bluff.sh</code> covenant and the
+mechanical backing for the <code>G-CHALLENGE</code> acceptance gate (<a
+href="./acceptance-gates.md#5-the-anti-bluff-meta-gate">acceptance-gates.md
+§5</a>).</p>
+<h2 id="banks-from-yamljson">3. Banks from YAML/JSON</h2>
+<p>Challenges also loads bank definitions from files
+(<code>pkg/bank</code>). A Thready download-callback bank:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># banks/thready/download_callback.yaml</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Download Manager callback&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">challenges</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> download_resume_callback</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> api_flow</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Enqueue a large download, kill mid-transfer, resume, receive callback&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">infra_up</span><span class="kw">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">request</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">method</span><span class="kw">:</span><span class="at"> POST</span><span class="kw">,</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/downloads</span><span class="kw">,</span><span class="at"> </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${BIG_FILE_URL}&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http_status_created </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">action</span><span class="kw">:</span><span class="at"> kill_worker</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">action</span><span class="kw">:</span><span class="at"> resume</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">await_callback</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /hooks/download</span><span class="kw">,</span><span class="at"> </span><span class="fu">timeout_s</span><span class="kw">:</span><span class="at"> </span><span class="dv">120</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">assert</span><span class="kw">:</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> contains</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> state</span><span class="kw">,</span><span class="at"> </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;completed&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> not_empty</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> result_asset_ref </span><span class="kw">}</span></span></code></pre></div>
+<h2 id="built-in-assertion-evaluators">4. Built-in assertion
+evaluators</h2>
+<p>The engine ships <strong>exactly 16</strong> built-in evaluators —
+enumerated here from the source (<code>pkg/assertion/builtin.go</code>,
+one <code>evaluate&lt;Name&gt;</code> func each), so the set is
+verified, not paraphrased <code>[IN-HOUSE: challenges]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 40%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Evaluator (<code>type</code>)</th>
+<th>Source func</th>
+<th>Thready use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>not_empty</code></td>
+<td><code>evaluateNotEmpty</code></td>
+<td>status reply / asset ref present</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>not_mock</code></td>
+<td><code>evaluateNotMock</code></td>
+<td><strong>anti-bluff</strong> — rejects
+<code>placeholder</code>/<code>TODO</code>/<code>dummy</code>/mock
+markers</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>contains</code></td>
+<td><code>evaluateContains</code></td>
+<td>callback <code>state=="completed"</code>, hashtag presence</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>contains_any</code></td>
+<td><code>evaluateContainsAny</code></td>
+<td>any-of tag set present</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>min_length</code></td>
+<td><code>evaluateMinLength</code></td>
+<td>OCR text non-trivial</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>quality_score</code></td>
+<td><code>evaluateQualityScore</code></td>
+<td>research-doc quality threshold</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>reasoning_present</code></td>
+<td><code>evaluateReasoningPresent</code></td>
+<td>LLM research output contains reasoning tokens</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>code_valid</code></td>
+<td><code>evaluateCodeValid</code></td>
+<td>generated Skill/plugin code parses</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>min_count</code></td>
+<td><code>evaluateMinCount</code></td>
+<td>embeddings written ≥ 1</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>exact_count</code></td>
+<td><code>evaluateExactCount</code></td>
+<td>replies assembled == N</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>max_latency</code></td>
+<td><code>evaluateMaxLatency</code></td>
+<td><strong>SLO</strong> — search &lt; 500 ms, API p95 &lt; 150 ms</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>all_valid</code></td>
+<td><code>evaluateAllValid</code></td>
+<td>asset set all valid</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>no_duplicates</code></td>
+<td><code>evaluateNoDuplicates</code></td>
+<td>asset dedup, playlist ordering</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>all_pass</code></td>
+<td><code>evaluateAllPass</code></td>
+<td>a set of sub-results each carry <code>passed==true</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>no_mock_responses</code></td>
+<td><code>evaluateNoMockResponses</code></td>
+<td><strong>anti-bluff</strong> — batch form of
+<code>not_mock</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>min_score</code></td>
+<td><code>evaluateMinScore</code></td>
+<td>numeric score ≥ threshold</td>
+</tr>
+</tbody>
+</table>
+<p>Beyond these, <code>pkg/userflow/evaluators.go</code> adds
+flow-specific evaluators
+(<code>http_status_ok</code>/<code>http_status_created</code>/<code>http_status_unauthorized</code>,
+<code>http_json_valid</code>, <code>browser_element_visible</code>,
+<code>browser_url_matches</code>, <code>mobile_activity_visible</code>,
+<code>mobile_element_exists</code>, <code>build_success</code>,
+<code>test_pass_rate</code>) which Thready’s userflow challenges use for
+the Web/API/mobile surfaces. Composite assertions
+(<code>pkg/assertion/composite.go</code>) collapse a group into a single
+<code>AssertionResult</code>, which <code>ValidateAntiBluff</code>
+(§2.1) counts as one passing assertion.</p>
+<h2 id="user-flow-automation-adapters">5. User-flow automation
+adapters</h2>
+<p><code>pkg/userflow</code> provides the adapter-per-platform pattern
+(8 interfaces, 21 implementations) Thready uses for e2e (type #3) and
+full-automation (type #4):</p>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 52%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Adapter Thready uses</th>
+<th>Surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BrowserAdapter</code></td>
+<td>PlaywrightCLI / Cypress</td>
+<td>Angular Web portal</td>
+</tr>
+<tr>
+<td><code>APIAdapter</code></td>
+<td>HTTPAPIAdapter (<code>pkg/httpclient</code>)</td>
+<td>REST <code>/v1</code></td>
+</tr>
+<tr>
+<td><code>WebSocketFlowAdapter</code></td>
+<td>GorillaWebSocket</td>
+<td>live event subscription</td>
+</tr>
+<tr>
+<td><code>GRPCAdapter</code></td>
+<td>GRPCCLIAdapter (<code>grpcurl</code>)</td>
+<td>internal service contracts (if exposed)</td>
+</tr>
+<tr>
+<td><code>DesktopAdapter</code></td>
+<td>TauriCLI (Tauri WebDriver)</td>
+<td>Desktop client</td>
+</tr>
+<tr>
+<td><code>MobileAdapter</code></td>
+<td>ADB / Appium / Maestro</td>
+<td>native mobile (as clients land)</td>
+</tr>
+<tr>
+<td><code>RecorderAdapter</code></td>
+<td>PanopticRecorder (CDP screencast)</td>
+<td>UI video evidence</td>
+</tr>
+<tr>
+<td><code>BuildAdapter</code></td>
+<td>Cargo / NPM / Gradle</td>
+<td>build-as-challenge (Tauri, Angular, Android)</td>
+</tr>
+</tbody>
+</table>
+<p>Challenge templates used: <code>APIFlowChallenge</code>,
+<code>BrowserFlowChallenge</code>, <code>WebSocketFlowChallenge</code>,
+<code>DesktopFlowChallenge</code>, <code>MobileFlowChallenge</code>,
+plus <strong>Recorded</strong> variants with video verification.</p>
+<h2 id="thready-challenge-bank-inventory">6. Thready challenge bank
+inventory</h2>
+<p><code>[GAP: §9.3]</code> One bank per feature; registered for
+topological ordering (infra_up → feature challenges):</p>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Bank</th>
+<th>Type</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>infra_up</code></td>
+<td>shell/infra</td>
+<td>Postgres+pgvector, NATS, MinIO, HelixLLM healthy
+(ContainersAdapter)</td>
+</tr>
+<tr>
+<td><code>ingest_process_reply</code></td>
+<td>api_flow</td>
+<td>canonical journey, real reply (<code>not_mock</code>)</td>
+</tr>
+<tr>
+<td><code>classify_indirect</code></td>
+<td>api_flow</td>
+<td>indirect hashtag determination, never-drop fallback</td>
+</tr>
+<tr>
+<td><code>dispatch_precedence</code></td>
+<td>api_flow</td>
+<td>multi-hashtag additive Skills in precedence order</td>
+</tr>
+<tr>
+<td><code>download_callback</code></td>
+<td>api_flow</td>
+<td>resume + standardized callback (<code>§6.3/§6.5</code>)</td>
+</tr>
+<tr>
+<td><code>search_slo</code></td>
+<td>api_flow</td>
+<td>semantic search <code>max_latency</code> &lt; 500 ms,
+semantic-not-hash</td>
+</tr>
+<tr>
+<td><code>auth_rbac</code></td>
+<td>api_flow</td>
+<td>three-tier RBAC negative cases</td>
+</tr>
+<tr>
+<td><code>events_ws</code></td>
+<td>ws_flow</td>
+<td>sticky/one-time events, durable replay on reconnect</td>
+</tr>
+<tr>
+<td><code>ui_web</code></td>
+<td>browser_flow (recorded)</td>
+<td>key screens render; visual evidence</td>
+</tr>
+</tbody>
+</table>
+<h2 id="concrete-bank-definitions-go-yaml">6.1 Concrete bank definitions
+(Go + YAML)</h2>
+<p>The three banks below complete the inventory the Rev-1 draft only
+named. Each uses the verified API (§1.1, §2.1); each records actions and
+emits ≥1 passing assertion so <code>ValidateAntiBluff</code> accepts the
+PASS.</p>
+<p><strong><code>dispatch_precedence</code> (Go)</strong> — proves
+multi-hashtag additive Skills run in precedence order:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// DispatchPrecedenceChallenge — additive categories, ordered execution (§3.3).</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DispatchPrecedenceChallenge <span class="kw">struct</span><span class="op">{</span> challenge<span class="op">.</span>BaseChallenge <span class="op">}</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewDispatchPrecedence<span class="op">()</span> <span class="op">*</span>DispatchPrecedenceChallenge <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>DispatchPrecedenceChallenge<span class="op">{</span>BaseChallenge<span class="op">:</span> <span class="op">*</span>challenge<span class="op">.</span>NewBaseChallenge<span class="op">(</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;dispatch_precedence&quot;</span><span class="op">,</span> <span class="st">&quot;Multi-hashtag dispatch precedence&quot;</span><span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;A #Research #Video #ToDownload post runs download before research, reply last&quot;</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;thready&quot;</span><span class="op">,</span> <span class="op">[]</span>challenge<span class="op">.</span>ID<span class="op">{</span><span class="st">&quot;infra_up&quot;</span><span class="op">,</span> <span class="st">&quot;ingest_process_reply&quot;</span><span class="op">})}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>DispatchPrecedenceChallenge<span class="op">)</span> Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>challenge<span class="op">.</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    r <span class="op">:=</span> c<span class="op">.</span>CreateResult<span class="op">()</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>RecordAction<span class="op">(</span><span class="st">&quot;POST /v1/posts with #Research #Video #ToDownload&quot;</span><span class="op">)</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    order <span class="op">:=</span> postAndCollectSkillOrder<span class="op">(</span>ctx<span class="op">)</span> <span class="co">// e.g. [&quot;video.download&quot;,&quot;research.deep&quot;,&quot;status.reply&quot;]</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span>RecordAction<span class="op">(</span><span class="st">&quot;collected executed skill order: &quot;</span> <span class="op">+</span> strings<span class="op">.</span>Join<span class="op">(</span>order<span class="op">,</span> <span class="st">&quot;,&quot;</span><span class="op">))</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Assertions <span class="op">=</span> <span class="op">[]</span>challenge<span class="op">.</span>AssertionResult<span class="op">{</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Type<span class="op">:</span> <span class="st">&quot;contains_any&quot;</span><span class="op">,</span> Target<span class="op">:</span> <span class="st">&quot;order&quot;</span><span class="op">,</span> Expected<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;video.download&quot;</span><span class="op">},</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            Actual<span class="op">:</span> order<span class="op">,</span> Passed<span class="op">:</span> contains<span class="op">(</span>order<span class="op">,</span> <span class="st">&quot;video.download&quot;</span><span class="op">),</span> Message<span class="op">:</span> <span class="st">&quot;download skill ran&quot;</span><span class="op">},</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Type<span class="op">:</span> <span class="st">&quot;all_pass&quot;</span><span class="op">,</span> Target<span class="op">:</span> <span class="st">&quot;precedence&quot;</span><span class="op">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            Passed<span class="op">:</span> indexOf<span class="op">(</span>order<span class="op">,</span> <span class="st">&quot;video.download&quot;</span><span class="op">)</span> <span class="op">&lt;</span> indexOf<span class="op">(</span>order<span class="op">,</span> <span class="st">&quot;research.deep&quot;</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                order<span class="op">[</span><span class="bu">len</span><span class="op">(</span>order<span class="op">)-</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">&quot;status.reply&quot;</span><span class="op">,</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>            Message<span class="op">:</span> <span class="st">&quot;download &lt; research; status.reply terminal&quot;</span><span class="op">},</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>Status <span class="op">=</span> challenge<span class="op">.</span>StatusPassed</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">,</span> challenge<span class="op">.</span>ValidateAntiBluff<span class="op">(</span>r<span class="op">)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong><code>auth_rbac</code> (YAML)</strong> — three-tier negative
+RBAC via the api_flow template:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># banks/thready/auth_rbac.yaml</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Auth &amp; RBAC (negative)&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">challenges</span><span class="kw">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> rbac_user_cannot_admin</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> api_flow</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;A plain user is refused account-admin and root actions&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">infra_up</span><span class="kw">]</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">request</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">method</span><span class="kw">:</span><span class="at"> POST</span><span class="kw">,</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/auth/login</span><span class="kw">,</span><span class="at"> </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">user</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${USER_A}&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">pass</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${PW_A}&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http_status_ok </span><span class="kw">},</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> not_empty</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> access_token </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">request</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">method</span><span class="kw">:</span><span class="at"> PUT</span><span class="kw">,</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/account/settings</span><span class="kw">,</span><span class="at"> </span><span class="fu">auth</span><span class="kw">:</span><span class="at"> bearer</span><span class="kw">,</span><span class="at"> </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;x&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http_status_unauthorized </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span><span class="co">      # 403 for a &#39;user&#39; tier</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">request</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">method</span><span class="kw">:</span><span class="at"> POST</span><span class="kw">,</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/system/accounts</span><span class="kw">,</span><span class="at"> </span><span class="fu">auth</span><span class="kw">:</span><span class="at"> bearer</span><span class="kw">,</span><span class="at"> </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;acct2&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http_status_unauthorized </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span><span class="co">      # only root creates accounts</span></span></code></pre></div>
+<p><strong><code>events_ws</code> (YAML)</strong> — sticky + durable
+replay on reconnect via the ws_flow template:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># banks/thready/events_ws.yaml</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Thready — Processing events (WS/SSE)&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">challenges</span><span class="kw">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> events_sticky_durable</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> ws_flow</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Late subscriber gets last-value; reconnect replays missed events&quot;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">infra_up</span><span class="kw">]</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">ws_connect</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/events?topic=post.processing </span><span class="kw">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">trigger</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">method</span><span class="kw">:</span><span class="at"> POST</span><span class="kw">,</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v1/posts</span><span class="kw">,</span><span class="at"> </span><span class="fu">body</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${LINK}&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">await_event</span><span class="kw">:</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">assert</span><span class="kw">:</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> contains</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> event</span><span class="kw">,</span><span class="at"> </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;post.processing&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> contains_any</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> state</span><span class="kw">,</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">received</span><span class="kw">,</span><span class="at"> claimed</span><span class="kw">,</span><span class="at"> downloading</span><span class="kw">,</span><span class="at"> analyzing</span><span class="kw">,</span><span class="at"> replied</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">ws_reconnect_from_cursor</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">await_event</span><span class="kw">:</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">assert</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> not_empty</span><span class="kw">,</span><span class="at"> </span><span class="fu">target</span><span class="kw">:</span><span class="at"> state </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span><span class="co">     # durable replay, no gap</span></span></code></pre></div>
+<h2 id="the-describe-challenge-meta-runner-anti-bluff">7. The
+describe-Challenge meta-runner (anti-bluff)</h2>
+<p><code>[GAP: §12 anti-bluff sweep]</code>. Because the bank is itself
+test infrastructure, its anti-bluff posture is <strong>meta</strong> —
+the bank validates the banks (challenges round-304, CONST-035). The
+meta-runner asserts every Thready bank is present, readable, parseable,
+and (for shell banks) executable with the exec-bit set; a planted
+inventory mismatch (rename a tracked bank in a tmp tree) MUST make the
+gate FAIL with <strong>exit 99</strong>.</p>
+<p>This is <strong>not</strong> a Thready-invented script — it is
+realized by verified in-house tooling
+<code>[IN-HOUSE: challenges, helix_qa]</code>:</p>
+<ul>
+<li><code>challenges</code> ships the anti-bluff harness under
+<strong><code>scripts/anti-bluff/</code></strong> —
+<code>bluff-scanner.sh</code> (scans results/banks for bluff patterns),
+<code>pre-commit-hook.sh</code> (the git-hook), and
+<code>install-hooks.sh</code> (wires the hook into a repo).</li>
+<li><code>helix_qa</code> ships
+<strong><code>challenges/scripts/mutation_ratchet_challenge.sh</code></strong>
+(the mutation-ratchet gate) and
+<strong><code>challenges/scripts/helixqa_orchestrator_challenge.sh</code></strong>
+(an 8-phase orchestrator-surface validator with a built-in §1.1 paired
+mutation).</li>
+</ul>
+<p>Thready registers its bank tree with these and adds a thin driver
+mirroring the exit protocol (<a
+href="./acceptance-gates.md#6-gate-exit-code-protocol">acceptance-gates.md
+§6</a>):</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Thready meta-gate driver (composes the verified in-house scripts)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> challenges/scripts/anti-bluff/bluff-scanner.sh banks/thready/   <span class="kw">;</span> <span class="va">clean</span><span class="op">=</span><span class="va">$?</span>     <span class="co"># -&gt; 0</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="va">THREADY_MUTATE</span><span class="op">=</span>inventory <span class="fu">bash</span> challenges/scripts/mutation_ratchet_challenge.sh <span class="kw">;</span> <span class="va">mut</span><span class="op">=</span><span class="va">$?</span>  <span class="co"># -&gt; 99</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[[</span> <span class="va">$clean</span> <span class="ot">-eq</span> 0 <span class="kw">&amp;&amp;</span> <span class="va">$mut</span> <span class="ot">-eq</span> 99 <span class="kw">]]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">&quot;META anti-bluff FAIL clean=</span><span class="va">$clean</span><span class="st"> mut=</span><span class="va">$mut</span><span class="st">&quot;</span><span class="kw">;</span> <span class="bu">exit</span> 99<span class="kw">;</span> <span class="kw">}</span></span></code></pre></div>
+<p>A clean tree MUST yield exit 0; the mutation MUST yield exit 99. Any
+other outcome is a release blocker
+<code>[CONSTITUTION CONST-035 / Art. XI §11.9]</code>. A 5-locale
+fixture (en/de/es/ja/sr — Latin + German + Spanish + CJK + Cyrillic)
+drives the bank loader so non-ASCII survives load → execute → report —
+matching Thready’s UI locales (en/ru/sr-Cyrl) per
+<code>[RESEARCH: final §18 Q35]</code>.</p>
+<h2 id="local-gating-for-the-visual-regression-family">8. Local gating
+for the visual-regression family</h2>
+<p><code>[GAP: §9.3]</code>. Panoptic / VisualRegression / ScreenDiff
+are library-grade with <strong>no CI</strong>. Thready wraps their
+runners as <code>ShellChallenge</code>s in the <code>ui_web</code> bank
+and runs them in the local <code>pre-commit</code> git-hook for touched
+UI — bringing the visual-regression family under the CI-equivalent gate
+without server-side CI (see <a
+href="./test-strategy.md#8-ci-equivalent-gating-no-server-side-ci">test-strategy.md
+§8</a>).</p>
+<h2 id="gap-register-items-addressed">9. Gap-register items
+addressed</h2>
+<ul>
+<li><code>[GAP: §9.3]</code> author Thready <code>challenges</code>
+scenario banks + wire visual-regression family into local gating — §6,
+§8.</li>
+<li><code>[GAP: §12 anti-bluff sweep]</code> describe-Challenge
+meta-runner (exit 99) — §7.</li>
+<li><code>[GAP: §6.3/§6.5]</code> download-callback bank proves push
+callback + resume — §3, §6.</li>
+<li><code>[GAP: §2.1]</code> <code>search_slo</code> bank asserts
+semantic-not-hash + latency — §6.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

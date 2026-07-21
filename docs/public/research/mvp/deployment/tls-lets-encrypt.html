@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — TLS with `lets_encrypt` (ACME)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — TLS with `lets_encrypt` (ACME)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#module-overview-guarantees"
+id="toc-module-overview-guarantees">1. Module overview &amp;
+guarantees</a></li>
+<li><a href="#the-injection-contract-config"
+id="toc-the-injection-contract-config">2. The injection contract
+(config)</a></li>
+<li><a href="#per-subdomain-certificate-model"
+id="toc-per-subdomain-certificate-model">3. Per-subdomain certificate
+model</a></li>
+<li><a href="#challenge-types-http-01-vs-dns-01"
+id="toc-challenge-types-http-01-vs-dns-01">4. Challenge types: HTTP-01
+vs DNS-01</a>
+<ul>
+<li><a href="#concrete-dns-01-with-the-loopia-hook"
+id="toc-concrete-dns-01-with-the-loopia-hook">4.1 Concrete DNS-01 with
+the Loopia hook</a></li>
+</ul></li>
+<li><a href="#issuance-first-time" id="toc-issuance-first-time">5.
+Issuance (first time)</a></li>
+<li><a href="#renewal-rotation-automated"
+id="toc-renewal-rotation-automated">6. Renewal + rotation
+(automated)</a></li>
+<li><a href="#risk-free-renewal-flow-diagram"
+id="toc-risk-free-renewal-flow-diagram">7. Risk-free renewal flow
+diagram</a>
+<ul>
+<li><a href="#reproduce-first-cert-rollback-test-tdd"
+id="toc-reproduce-first-cert-rollback-test-tdd">7.1 Reproduce-first
+cert-rollback test (TDD)</a></li>
+</ul></li>
+<li><a href="#the-atomic-deploy-hook" id="toc-the-atomic-deploy-hook">8.
+The atomic deploy-hook</a></li>
+<li><a href="#programmatic-json-driver"
+id="toc-programmatic-json-driver">9. Programmatic (JSON) driver</a></li>
+<li><a href="#rootless-systemd-timer-install"
+id="toc-rootless-systemd-timer-install">10. Rootless systemd timer
+install</a></li>
+<li><a href="#revocation" id="toc-revocation">11. Revocation</a></li>
+<li><a href="#verified-vs-assumed" id="toc-verified-vs-assumed">12.
+Verified vs assumed</a></li>
+<li><a href="#open-items" id="toc-open-items">13. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — TLS with lets_encrypt (ACME)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/deployment/tls-lets-encrypt.md
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
+  Author          : Helix Thready documentation swarm (deployment)
+  Related         : ./index.md, ./environments.md, ./deploy-and-rollback.md,
+                    ./hetzner-provisioning.md, ./secrets-and-config.md,
+                    ./operations-runbook.md, ../testing/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (deployment)</td>
+<td>Initial ACME issuance/renewal/rotation, atomic deploy-hook +
+risk-free rollback, per-subdomain certs</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (deployment review)</td>
+<td>Added a reproduce-first (RED) cert-rollback test; split the
+renewal-flow prose into multiple paragraphs</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (deployment)</td>
+<td>Pass 3: narrowed <code>[OPEN: dns-provider]</code> with the verified
+<code>dns_loopia</code> hook + acme.sh env vars; added
+<code>LE_BACKUP_DIR</code>/<code>LE_CA_SERVER</code>/<code>LE_ACME_HOME</code>
+(verified config vars); enriched the <code>status.sh --json</code> field
+list; verified all script/engine names at source</td>
+</tr>
+</tbody>
+</table>
+<p>TLS/HTTPS for all three subdomains is provided by
+<strong><code>vasic-digital/lets_encrypt</code></strong> (Q44), a
+decoupled ACME automation module wired into Thready’s deploy scripts by
+reference. This document specifies how certificates are issued (HTTP-01
+/ DNS-01), renewed, rotated, atomically installed and <strong>rolled
+back on failure</strong>, per subdomain, entirely rootless.</p>
+<blockquote>
+<p>Diagram source: sibling under <a
+href="./diagrams/"><code>diagrams/</code></a>. Rendered PNG/SVG exported
+via Docs Chain (§11.4.65).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-module-overview--guarantees">Module overview &amp;
+guarantees</a></li>
+<li><a href="#2-the-injection-contract-config">The injection contract
+(config)</a></li>
+<li><a href="#3-per-subdomain-certificate-model">Per-subdomain
+certificate model</a></li>
+<li><a href="#4-challenge-types-http-01-vs-dns-01">Challenge types:
+HTTP-01 vs DNS-01</a>
+<ul>
+<li><a href="#41-concrete-dns-01-with-the-loopia-hook">4.1 Concrete
+DNS-01 with the Loopia hook</a></li>
+</ul></li>
+<li><a href="#5-issuance-first-time">Issuance (first time)</a></li>
+<li><a href="#6-renewal--rotation-automated">Renewal + rotation
+(automated)</a></li>
+<li><a href="#7-risk-free-renewal-flow-diagram">Risk-free renewal flow
+diagram</a>
+<ul>
+<li><a href="#71-reproduce-first-cert-rollback-test-tdd">7.1
+Reproduce-first cert-rollback test (TDD)</a></li>
+</ul></li>
+<li><a href="#8-the-atomic-deploy-hook">The atomic deploy-hook</a></li>
+<li><a href="#9-programmatic-json-driver">Programmatic (JSON)
+driver</a></li>
+<li><a href="#10-rootless-systemd-timer-install">Rootless systemd timer
+install</a></li>
+<li><a href="#11-revocation">Revocation</a></li>
+<li><a href="#12-verified-vs-assumed">Verified vs assumed</a></li>
+<li><a href="#13-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="module-overview-guarantees">1. Module overview &amp;
+guarantees</h2>
+<p><code>lets_encrypt</code> carries <strong>zero project
+literals</strong> — every value (domains, email, challenge, cert dir,
+reload command) is injected via a config file or the environment, and it
+is consumed <strong>by reference</strong> as a submodule. It drives
+<code>acme.sh</code> (rootless) and provides (verified from the module
+README + scripts):</p>
+<ul>
+<li><code>issue.sh</code> — first-time issuance.</li>
+<li><code>renew.sh</code> — window-aware renewal (the timer/cron
+target); <strong>no-op until due</strong>.</li>
+<li><code>rotate.sh</code> — force a new cert <strong>and private
+key</strong> on demand.</li>
+<li><code>status.sh</code> — human or JSON status (subject, SANs,
+days-left, due).</li>
+<li><code>revoke.sh</code> — CA revocation (key compromise),
+confirmed.</li>
+<li><code>deploy-hook.sh</code> — atomic install + service reload.</li>
+<li><code>api/le-api</code> — a thin Go JSON wrapper for deploy
+tooling.</li>
+</ul>
+<p><strong>Risk-free guarantee (verified in
+<code>scripts/lib/engine.sh</code>):</strong> every issue/renew/rotate
+runs the gate <em>validate the new cert before it goes live → snapshot
+the current cert → atomically install (<code>mv</code> on the same
+filesystem) → hot-reload the service → optional HTTPS reachability probe
+→ roll back to the previous cert on any failure and reload again.</em>
+The served site never breaks during a cert operation. Rehearse the whole
+flow on the <strong>staging CA</strong> first
+(<code>LE_STAGING=1</code>).</p>
+<blockquote>
+<p><strong>VERIFIED:</strong> everything in this document was read from
+the <code>lets_encrypt</code> source
+(<code>scripts/deploy-hook.sh</code>,
+<code>scripts/lib/engine.sh</code>,
+<code>config/lets_encrypt.conf.example</code>, <code>systemd/*</code>,
+<code>api/main.go</code>). No behaviour is invented.</p>
+</blockquote>
+<h2 id="the-injection-contract-config">2. The injection contract
+(config)</h2>
+<p>Thready owns one config per subdomain (the module owns only the
+mechanism). The load-bearing variables (verified from
+<code>config/lets_encrypt.conf.example</code>):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 23%" />
+<col style="width: 51%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+<th>Thready prod value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LE_DOMAINS</code></td>
+<td>space-separated; first = primary CN, rest = SANs</td>
+<td><code>"thready.hxd3v.com"</code></td>
+</tr>
+<tr>
+<td><code>LE_ACME_EMAIL</code></td>
+<td>ACME account contact</td>
+<td><code>admin@hxd3v.com</code></td>
+</tr>
+<tr>
+<td><code>LE_CHALLENGE</code></td>
+<td><code>webroot</code> (HTTP-01) or <code>dns-01</code></td>
+<td><code>webroot</code></td>
+</tr>
+<tr>
+<td><code>LE_WEBROOT</code></td>
+<td>document root for HTTP-01</td>
+<td><code>/var/www/acme</code> (edge-served)</td>
+</tr>
+<tr>
+<td><code>LE_DNS_PROVIDER</code></td>
+<td>acme.sh DNS hook for DNS-01</td>
+<td><em>(unset by default — see <a
+href="#4-challenge-types-http-01-vs-dns-01">§4</a>)</em></td>
+</tr>
+<tr>
+<td><code>LE_CERT_DIR</code></td>
+<td>where live cert/key/fullchain/chain deploy</td>
+<td><code>/home/thready/edge/certs/prod</code></td>
+</tr>
+<tr>
+<td><code>LE_KEY_TYPE</code></td>
+<td><code>ec-256</code> | <code>ec-384</code> | <code>rsa-2048</code> |
+<code>rsa-4096</code></td>
+<td><code>ec-256</code></td>
+</tr>
+<tr>
+<td><code>LE_RELOAD_CMD</code></td>
+<td>atomic reload after install</td>
+<td><code>podman kill -s HUP caddy</code></td>
+</tr>
+<tr>
+<td><code>LE_VALIDATE_URL</code></td>
+<td>HTTPS probe for the rollback gate</td>
+<td><code>https://thready.hxd3v.com/health/ready</code></td>
+</tr>
+<tr>
+<td><code>LE_STAGING</code></td>
+<td><code>1</code> = staging CA, <code>0</code> = production</td>
+<td><code>0</code> (after staging rehearsal)</td>
+</tr>
+<tr>
+<td><code>LE_RENEW_DAYS</code></td>
+<td>renew when &lt; N days remain</td>
+<td><code>30</code></td>
+</tr>
+<tr>
+<td><code>LE_ROTATE_ALWAYS_NEW_KEY</code></td>
+<td>force new key on rotate</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>LE_BACKUP_DIR</code></td>
+<td>where pre-change cert snapshots are kept for rollback</td>
+<td><em>(default <code>LE_CERT_DIR/.backup</code>)</em></td>
+</tr>
+<tr>
+<td><code>LE_CA_SERVER</code></td>
+<td>override the ACME directory entirely (wins over
+<code>LE_STAGING</code>)</td>
+<td><em>(unset; e.g. <code>letsencrypt_test</code> for
+staging)</em></td>
+</tr>
+<tr>
+<td><code>LE_ACME_HOME</code></td>
+<td>acme.sh state/home (rootless)</td>
+<td><code>/home/thready/.acme.sh</code></td>
+</tr>
+<tr>
+<td><code>LE_CLIENT</code></td>
+<td>ACME client backend</td>
+<td><code>acme.sh</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>All of the above are
+<code>[VERIFIED: config/lets_encrypt.conf.example]</code> — the module
+carries zero project literals; each is injected.
+<code>LE_BACKUP_DIR</code> is the directory the risk-free gate snapshots
+the current cert into before an atomic install (the <code>.backup</code>
+in <a href="#7-risk-free-renewal-flow-diagram">§7</a>), and
+<code>LE_CA_SERVER</code> lets an operator point at an alternate ACME
+directory without touching <code>LE_STAGING</code>.</p>
+</blockquote>
+<p>Config files live at
+<code>/home/thready/&lt;env&gt;/config/lets_encrypt.conf</code>,
+<code>chmod 600</code>. <strong>DNS-01 secrets</strong> (if used) are
+read from the <strong>environment</strong> by acme.sh — exported from
+the gitignored <code>api_keys.sh</code>, never written into the config
+(<code>[CONSTITUTION §11.4.10]</code>, see <a
+href="./secrets-and-config.md">secrets-and-config.md</a>).</p>
+<h2 id="per-subdomain-certificate-model">3. Per-subdomain certificate
+model</h2>
+<p><code>§21.5</code> mandates that each subdomain has <strong>its
+own</strong> Let’s Encrypt certificate — matching the full environment
+separation. Thready therefore runs three independent cert
+lifecycles:</p>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 26%" />
+<col style="width: 28%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Env</th>
+<th><code>LE_DOMAINS</code></th>
+<th><code>LE_CERT_DIR</code></th>
+<th><code>LE_VALIDATE_URL</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dev</td>
+<td><code>dev.thready.hxd3v.com</code></td>
+<td><code>/home/thready/edge/certs/dev</code></td>
+<td><code>https://dev.thready.hxd3v.com/health/ready</code></td>
+</tr>
+<tr>
+<td>sta</td>
+<td><code>sta.thready.hxd3v.com</code></td>
+<td><code>/home/thready/edge/certs/sta</code></td>
+<td><code>https://sta.thready.hxd3v.com/health/ready</code></td>
+</tr>
+<tr>
+<td>prod</td>
+<td><code>thready.hxd3v.com</code></td>
+<td><code>/home/thready/edge/certs/prod</code></td>
+<td><code>https://thready.hxd3v.com/health/ready</code></td>
+</tr>
+</tbody>
+</table>
+<p>The edge Caddy loads all three cert directories (see <a
+href="./environments.md#4-the-edge-reverse-proxy">environments.md
+§4</a>). Each renewal reloads the <em>same</em> edge but only rewrites
+<em>its</em> subdomain’s cert files, so a dev renewal cannot disturb the
+prod cert.</p>
+<p><strong>Alternative (optional):</strong> a single DNS-01 wildcard
+<code>*.thready.hxd3v.com</code> (+ apex) covering all three, which
+reduces to one lifecycle. This trades strict per-subdomain separation
+for fewer ACME operations; it is documented in <a
+href="#4-challenge-types-http-01-vs-dns-01">§4</a> but
+<strong>not</strong> the default, because the operator chose
+per-subdomain certs.</p>
+<h2 id="challenge-types-http-01-vs-dns-01">4. Challenge types: HTTP-01
+vs DNS-01</h2>
+<p><code>lets_encrypt</code> supports both (verified). Thready default =
+<strong>HTTP-01 (<code>webroot</code>)</strong>:</p>
+<ul>
+<li><strong>HTTP-01 (<code>LE_CHALLENGE=webroot</code>)</strong> —
+acme.sh writes tokens under <code>LE_WEBROOT</code>; the edge Caddy
+serves <code>/.well-known/acme-challenge/</code> on port 80 for all
+three subdomains (see the Caddyfile in <a
+href="./environments.md#4-the-edge-reverse-proxy">environments.md</a>).
+Requires port 80 reachable from the internet — which the <a
+href="./hetzner-provisioning.md">firewall</a> allows. This is the
+simplest, works per-subdomain, and needs no DNS API credentials.</li>
+<li><strong>DNS-01 (<code>LE_CHALLENGE=dns-01</code>)</strong> — acme.sh
+drives <code>LE_DNS_PROVIDER</code>’s API and supports
+<strong>wildcards</strong>. Use this if port 80 is ever blocked or a
+single <code>*.thready.hxd3v.com</code> cert is preferred. It needs the
+DNS provider’s acme.sh hook name and its secrets (exported from
+<code>api_keys.sh</code>).</li>
+</ul>
+<blockquote>
+<p><code>[OPEN: dns-provider]</code> (<strong>narrowed, Rev 3</strong>)
+— the acme.sh DNS hook for the <code>hxd3v.com</code> zone is not
+formally confirmed by the operator, but two independent in-repo signals
+point at <strong>Loopia</strong>: the <code>lets_encrypt</code> config
+example ships <code>LE_DNS_PROVIDER=dns_loopia</code> as its documented
+example <code>[VERIFIED: config/lets_encrypt.conf.example]</code>, and
+<a
+href="./secrets-and-config.md#4-file-conventions--permissions">secrets-and-config.md
+§4</a> already reserves <code>LOOPIA_*</code> keys in
+<code>api_keys.sh</code>. The concrete DNS-01 path is therefore
+documented in <a
+href="#41-concrete-dns-01-with-the-loopia-hook">§4.1</a>; HTTP-01
+remains the working default, and this item closes fully once the
+operator confirms the registrar of the <code>hxd3v.com</code> zone.</p>
+</blockquote>
+<h3 id="concrete-dns-01-with-the-loopia-hook">4.1 Concrete DNS-01 with
+the Loopia hook</h3>
+<p>When DNS-01/wildcard is wanted (port 80 blocked, or a single
+<code>*.thready.hxd3v.com</code> cert), Thready’s strongly-indicated
+provider is <strong>Loopia</strong>, driven by acme.sh’s built-in
+<code>dns_loopia</code> hook. The config sets the challenge + hook name;
+the <strong>secrets stay in the environment</strong> (from
+<code>api_keys.sh</code>), never in the config file
+<code>[CONSTITUTION §11.4.10]</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /home/thready/prod/config/lets_encrypt.conf  (DNS-01 variant — chmod 600)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_CHALLENGE</span><span class="ot">=</span><span class="st">dns-01</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_DNS_PROVIDER</span><span class="ot">=</span><span class="st">dns_loopia          # acme.sh built-in hook (VERIFIED as the config-example provider)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_DOMAINS</span><span class="ot">=</span><span class="st">&quot;thready.hxd3v.com *.thready.hxd3v.com&quot;   # wildcard covers dev./sta. in one cert (optional)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_KEY_TYPE</span><span class="ot">=</span><span class="st">ec-256</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_RELOAD_CMD</span><span class="ot">=</span><span class="st">&quot;podman kill -s HUP caddy&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">LE_VALIDATE_URL</span><span class="ot">=</span><span class="st">&quot;https://thready.hxd3v.com/health/ready&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /home/thready/secrets/api_keys.sh  (chmod 600, sourced at runtime — NEVER committed)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># acme.sh dns_loopia reads these from the environment:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOOPIA_User</span><span class="op">=</span><span class="st">&quot;apiuser@loopiaapi&quot;</span>      <span class="co"># Loopia API sub-account user</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOOPIA_Password</span><span class="op">=</span><span class="st">&quot;__from_private_repo__&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># export LOOPIA_Api=&quot;https://api.loopia.se/RPCSERV&quot;   # default endpoint; override only if needed</span></span></code></pre></div>
+<p>The issuance/renewal commands are <strong>identical</strong> to the
+HTTP-01 flow (<a href="#5-issuance-first-time">§5</a>, <a
+href="#6-renewal--rotation-automated">§6</a>) — only the config
+challenge differs — because <code>lets_encrypt</code> injects the
+challenge type and lets acme.sh drive the provider API. This means
+switching an env to DNS-01 is a config-file change plus two exported
+secrets, with <strong>no</strong> change to the deploy scripts, the
+renewal timer, or the risk-free gate. A wildcard cert collapses the
+three per-subdomain lifecycles into one; whether to keep strict
+per-subdomain certs (the <a
+href="#3-per-subdomain-certificate-model">operator default</a>) or adopt
+the wildcard is the operator’s call.</p>
+<blockquote>
+<p><code>[RESEARCH]</code> The
+<code>LOOPIA_User</code>/<code>LOOPIA_Password</code>/<code>LOOPIA_Api</code>
+variable names are acme.sh’s documented <code>dns_loopia</code>
+contract; the <em>values</em> live only in the private repo. If the
+operator confirms a different registrar, only
+<code>LE_DNS_PROVIDER</code> and the two exported secret names change —
+the rest of this section is provider-agnostic.</p>
+</blockquote>
+<h2 id="issuance-first-time">5. Issuance (first time)</h2>
+<p>Run <strong>as the <code>thready</code> user</strong>, staging first,
+then production. Wired via the submodule by reference:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">LE</span><span class="op">=</span>/home/thready/submodules/lets_encrypt</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">CFG</span><span class="op">=</span>/home/thready/prod/config/lets_encrypt.conf</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 0. one-time: install acme.sh (rootless) + register the ACME account (STAGING)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/setup.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span> <span class="at">--install</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. rehearse on the staging CA (LE_STAGING=1 in the config)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/issue.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>          <span class="co"># staging cert, high rate limits</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. flip LE_STAGING=0 and issue the real certificate</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/issue.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>          <span class="co"># production cert</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. confirm</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/status.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span>         <span class="co"># subject, SANs, days-left</span></span></code></pre></div>
+<p>Repeat per environment with each env’s config. The first successful
+issue installs the cert into <code>LE_CERT_DIR</code> and reloads the
+edge.</p>
+<h2 id="renewal-rotation-automated">6. Renewal + rotation
+(automated)</h2>
+<ul>
+<li><strong>Renewal</strong> — <code>renew.sh</code> is
+<strong>window-aware</strong>: it is a no-op until the cert has fewer
+than <code>LE_RENEW_DAYS</code> (30) of validity left, so running it
+twice a day is cheap and safe. It is the target of the systemd timer (<a
+href="#10-rootless-systemd-timer-install">§10</a>).</li>
+<li><strong>Rotation</strong> — <code>rotate.sh</code> forces a
+brand-new <strong>private key</strong>
+(<code>LE_ROTATE_ALWAYS_NEW_KEY=1</code>) plus a new cert on demand —
+used on suspected key compromise or scheduled key hygiene.</li>
+</ul>
+<p>Both go through the same risk-free gate as issuance.</p>
+<h2 id="risk-free-renewal-flow-diagram">7. Risk-free renewal flow
+diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="max-width: 2279px; background-color: white;" viewBox="-50 -10 2279 1171" role="graphics-document document" aria-roledescription="sequence"><g><rect x="1994" y="1085" fill="#eaeaea" stroke="#666" width="185" height="65" name="Edge" rx="3" ry="3" class="actor actor-bottom"/><text x="2086.5" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2086.5" dy="0">Caddy edge (HUP reload)</tspan></text></g><g><rect x="1672" y="1085" fill="#eaeaea" stroke="#666" width="272" height="65" name="P" rx="3" ry="3" class="actor actor-bottom"/><text x="1808" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1808" dy="0">le_probe_url (LE_VALIDATE_URL)</tspan></text></g><g><rect x="1424" y="1085" fill="#eaeaea" stroke="#666" width="198" height="65" name="H" rx="3" ry="3" class="actor actor-bottom"/><text x="1523" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1523" dy="0">deploy-hook.sh (atomic mv)</tspan></text></g><g><rect x="1224" y="1085" fill="#eaeaea" stroke="#666" width="150" height="65" name="B" rx="3" ry="3" class="actor actor-bottom"/><text x="1299" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1299" dy="0">le_backup_certs</tspan></text></g><g><rect x="971" y="1085" fill="#eaeaea" stroke="#666" width="203" height="65" name="V" rx="3" ry="3" class="actor actor-bottom"/><text x="1072.5" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1072.5" dy="0">le_validate_cert (openssl)</tspan></text></g><g><rect x="715" y="1085" fill="#eaeaea" stroke="#666" width="206" height="65" name="ACME" rx="3" ry="3" class="actor actor-bottom"/><text x="818" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="818" dy="0">acme.sh → Let's Encrypt CA</tspan></text></g><g><rect x="356" y="1085" fill="#eaeaea" stroke="#666" width="150" height="65" name="R" rx="3" ry="3" class="actor actor-bottom"/><text x="431" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="431" dy="0">renew.sh (engine.sh)</tspan></text></g><g><rect x="0" y="1085" fill="#eaeaea" stroke="#666" width="230" height="65" name="T" rx="3" ry="3" class="actor actor-bottom"/><text x="115" y="1117.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="115" dy="0">systemd --user timer (twice daily)</tspan></text></g><g><line id="actor7" x1="2086.5" y1="65" x2="2086.5" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="Edge" data-et="life-line" data-id="Edge"/><g id="root-7" data-et="participant" data-type="participant" data-id="Edge"><rect x="1994" y="0" fill="#eaeaea" stroke="#666" width="185" height="65" name="Edge" rx="3" ry="3" class="actor actor-top"/><text x="2086.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="2086.5" dy="0">Caddy edge (HUP reload)</tspan></text></g></g><g><line id="actor6" x1="1808" y1="65" x2="1808" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="P" data-et="life-line" data-id="P"/><g id="root-6" data-et="participant" data-type="participant" data-id="P"><rect x="1672" y="0" fill="#eaeaea" stroke="#666" width="272" height="65" name="P" rx="3" ry="3" class="actor actor-top"/><text x="1808" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1808" dy="0">le_probe_url (LE_VALIDATE_URL)</tspan></text></g></g><g><line id="actor5" x1="1523" y1="65" x2="1523" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="H" data-et="life-line" data-id="H"/><g id="root-5" data-et="participant" data-type="participant" data-id="H"><rect x="1424" y="0" fill="#eaeaea" stroke="#666" width="198" height="65" name="H" rx="3" ry="3" class="actor actor-top"/><text x="1523" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1523" dy="0">deploy-hook.sh (atomic mv)</tspan></text></g></g><g><line id="actor4" x1="1299" y1="65" x2="1299" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="B" data-et="life-line" data-id="B"/><g id="root-4" data-et="participant" data-type="participant" data-id="B"><rect x="1224" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="B" rx="3" ry="3" class="actor actor-top"/><text x="1299" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1299" dy="0">le_backup_certs</tspan></text></g></g><g><line id="actor3" x1="1072.5" y1="65" x2="1072.5" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="V" data-et="life-line" data-id="V"/><g id="root-3" data-et="participant" data-type="participant" data-id="V"><rect x="971" y="0" fill="#eaeaea" stroke="#666" width="203" height="65" name="V" rx="3" ry="3" class="actor actor-top"/><text x="1072.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1072.5" dy="0">le_validate_cert (openssl)</tspan></text></g></g><g><line id="actor2" x1="818" y1="65" x2="818" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="ACME" data-et="life-line" data-id="ACME"/><g id="root-2" data-et="participant" data-type="participant" data-id="ACME"><rect x="715" y="0" fill="#eaeaea" stroke="#666" width="206" height="65" name="ACME" rx="3" ry="3" class="actor actor-top"/><text x="818" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="818" dy="0">acme.sh → Let's Encrypt CA</tspan></text></g></g><g><line id="actor1" x1="431" y1="65" x2="431" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="R" data-et="life-line" data-id="R"/><g id="root-1" data-et="participant" data-type="participant" data-id="R"><rect x="356" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="R" rx="3" ry="3" class="actor actor-top"/><text x="431" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="431" dy="0">renew.sh (engine.sh)</tspan></text></g></g><g><line id="actor0" x1="115" y1="65" x2="115" y2="1085" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="T" data-et="life-line" data-id="T"/><g id="root-0" data-et="participant" data-type="participant" data-id="T"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="230" height="65" name="T" rx="3" ry="3" class="actor actor-top"/><text x="115" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="115" dy="0">systemd --user timer (twice daily)</tspan></text></g></g><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .actor{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:1;}#my-svg rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg rect.note[data-look="neo"]{stroke:#999;fill:#666;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg text.actor&gt;tspan{fill:#333;stroke:none;}#my-svg .actor-line{stroke:hsl(0, 0%, 83%);}#my-svg .innerArc{stroke-width:1.5;stroke-dasharray:none;}#my-svg .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#my-svg .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#my-svg [id$="-arrowhead"] path{fill:#333;stroke:#333;}#my-svg .sequenceNumber{fill:white;}#my-svg [id$="-sequencenumber"]{fill:#333;}#my-svg [id$="-crosshead"] path{fill:#333;stroke:#333;}#my-svg .messageText{fill:#333;stroke:none;}#my-svg .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;filter:none;}#my-svg .labelText,#my-svg .labelText&gt;tspan{fill:#333;stroke:none;}#my-svg .loopText,#my-svg .loopText&gt;tspan{fill:#333;stroke:none;}#my-svg .sectionTitle,#my-svg .sectionTitle&gt;tspan{fill:#333;stroke:none;}#my-svg .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#my-svg .note{stroke:#999;fill:#666;}#my-svg .noteText,#my-svg .noteText&gt;tspan{fill:#fff;stroke:none;font-weight:normal;}#my-svg .activation0{fill:#f4f4f4;stroke:#666;}#my-svg .activation1{fill:#f4f4f4;stroke:#666;}#my-svg .activation2{fill:#f4f4f4;stroke:#666;}#my-svg .actorPopupMenu{position:absolute;}#my-svg .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#my-svg .actor-man circle,#my-svg line{fill:#eee;stroke-width:2px;}#my-svg g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#999;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g/><defs><symbol id="my-svg-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"/></symbol></defs><defs><symbol id="my-svg-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"/></symbol></defs><defs><symbol id="my-svg-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"/></symbol></defs><defs><marker id="my-svg-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"/></marker></defs><defs><marker id="my-svg-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"/></marker></defs><defs><marker id="my-svg-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"/></marker></defs><defs><marker id="my-svg-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"/></marker></defs><defs><marker id="my-svg-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"/></marker></defs><defs><marker id="my-svg-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"/></marker></defs><defs><marker id="my-svg-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><defs><marker id="my-svg-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"/></marker></defs><g data-et="control-structure" data-id="i21"><line x1="104" y1="821" x2="1310" y2="821" class="loopLine"/><line x1="1310" y1="821" x2="1310" y2="1045" class="loopLine"/><line x1="104" y1="1045" x2="1310" y2="1045" class="loopLine"/><line x1="104" y1="821" x2="104" y2="1045" class="loopLine"/><line x1="104" y1="961" x2="1310" y2="961" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="104,821 154,821 154,834 145.6,841 104,841" class="labelBox"/><text x="129" y="834" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="732" y="839" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="732">[probe fails]</tspan></text><text x="707" y="979" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[probe ok]</text></g><g data-et="control-structure" data-id="i22"><line x1="94" y1="465" x2="2097.5" y2="465" class="loopLine"/><line x1="2097.5" y1="465" x2="2097.5" y2="1055" class="loopLine"/><line x1="94" y1="1055" x2="2097.5" y2="1055" class="loopLine"/><line x1="94" y1="465" x2="94" y2="1055" class="loopLine"/><line x1="94" y1="603" x2="2097.5" y2="603" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="94,465 144,465 144,478 135.6,485 94,485" class="labelBox"/><text x="119" y="478" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="1120.75" y="483" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="1120.75">[invalid]</tspan></text><text x="1095.75" y="621" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[valid]</text></g><g data-et="control-structure" data-id="i23"><line x1="84" y1="197" x2="2107.5" y2="197" class="loopLine"/><line x1="2107.5" y1="197" x2="2107.5" y2="1065" class="loopLine"/><line x1="84" y1="1065" x2="2107.5" y2="1065" class="loopLine"/><line x1="84" y1="197" x2="84" y2="1065" class="loopLine"/><line x1="84" y1="291" x2="2107.5" y2="291" class="loopLine" style="stroke-dasharray: 3, 3;"/><polygon points="84,197 134,197 134,210 125.6,217 84,217" class="labelBox"/><text x="109" y="210" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="1120.75" y="215" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="1120.75">[outside renewal window]</tspan></text><text x="1095.75" y="309" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[inside window]</text></g><text x="272" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">renew --config lets_encrypt.conf</text><line x1="116" y1="111" x2="427" y2="111" class="messageLine0" data-et="message" data-id="i0" data-from="T" data-to="R" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="432" y="126" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">window check (LE_RENEW_DAYS)</text><path d="M 432,157 C 492,147 492,187 432,177" class="messageLine0" data-et="message" data-id="i1" data-from="R" data-to="R" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="275" y="247" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">no-op (exit 0)</text><line x1="430" y1="276" x2="119" y2="276" class="messageLine1" data-et="message" data-id="i3" data-from="R" data-to="T" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="623" y="336" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">issue/renew (HTTP-01 webroot | DNS-01)</text><line x1="432" y1="365" x2="814" y2="365" class="messageLine0" data-et="message" data-id="i5" data-from="R" data-to="ACME" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="626" y="380" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">new cert staged in LE_CERT_DIR/.incoming</text><line x1="817" y1="411" x2="435" y2="411" class="messageLine1" data-et="message" data-id="i6" data-from="ACME" data-to="R" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="750" y="426" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">validate new fullchain (dates, chain, key match)</text><line x1="432" y1="455" x2="1068.5" y2="455" class="messageLine0" data-et="message" data-id="i7" data-from="R" data-to="V" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="753" y="515" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">fail → discard .incoming, keep current cert</text><line x1="1071.5" y1="544" x2="435" y2="544" class="messageLine1" data-et="message" data-id="i9" data-from="V" data-to="R" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="275" y="559" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">error (served site untouched)</text><line x1="430" y1="588" x2="119" y2="588" class="messageLine1" data-et="message" data-id="i10" data-from="R" data-to="T" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="864" y="648" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">snapshot current live cert → .backup</text><line x1="432" y1="677" x2="1295" y2="677" class="messageLine0" data-et="message" data-id="i12" data-from="R" data-to="B" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="976" y="692" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">atomic install (.incoming/*.pem → live) + LE_RELOAD_CMD</text><line x1="432" y1="723" x2="1519" y2="723" class="messageLine0" data-et="message" data-id="i13" data-from="R" data-to="H" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1803" y="738" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">podman kill -s HUP caddy</text><line x1="1524" y1="767" x2="2082.5" y2="767" class="messageLine0" data-et="message" data-id="i14" data-from="H" data-to="Edge" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="1118" y="782" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">HTTPS reachability probe (&lt; 500?)</text><line x1="432" y1="811" x2="1804" y2="811" class="messageLine0" data-et="message" data-id="i15" data-from="R" data-to="P" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="864" y="871" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">le_restore_certs(.backup) + reload again</text><line x1="432" y1="902" x2="1295" y2="902" class="messageLine0" data-et="message" data-id="i17" data-from="R" data-to="B" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="fill: none;"/><text x="275" y="917" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">die "rolled back to previous certificate"</text><line x1="430" y1="946" x2="119" y2="946" class="messageLine1" data-et="message" data-id="i18" data-from="R" data-to="T" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/><text x="275" y="1006" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">success (new cert live)</text><line x1="430" y1="1035" x2="119" y2="1035" class="messageLine1" data-et="message" data-id="i20" data-from="R" data-to="T" stroke-width="2" stroke="none" marker-end="url(#my-svg-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"/></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Twice a day the rootless systemd timer runs
+<code>renew.sh</code>. The script first checks the <strong>renewal
+window</strong>: if the current certificate still has more than
+<code>LE_RENEW_DAYS</code> of validity, it exits immediately as a no-op
+— this is why frequent runs are harmless. Inside the window, it asks
+<code>acme.sh</code> to obtain a new certificate using the configured
+challenge (HTTP-01 webroot or DNS-01); acme.sh stages the fresh cert
+into <code>LE_CERT_DIR/.incoming</code>.</p>
+<p>The engine then <strong>validates</strong> the staged cert with
+openssl (dates, chain, key-match); if it is invalid the
+<code>.incoming</code> is discarded and the live site is left completely
+untouched. If valid, the engine <strong>snapshots</strong> the current
+live cert to a <code>.backup</code> directory, then invokes
+<code>deploy-hook.sh</code> which <strong>atomically</strong>
+<code>mv</code>s each staged <code>*.pem</code> into place (so a reader
+never sees a torn key/cert pair) and runs <code>LE_RELOAD_CMD</code> —
+for Thready, <code>podman kill -s HUP caddy</code>, a zero-downtime hot
+reload.</p>
+<p>Finally, if <code>LE_VALIDATE_URL</code> is set, the engine
+<strong>probes</strong> the live HTTPS endpoint; if the probe fails (no
+answer under 500 over TLS), it <strong>restores the previous cert from
+the backup and reloads again</strong>, then dies with a clear “rolled
+back to the previous certificate” message. The net effect: the served
+site is never left on a broken certificate, and a bad renewal self-heals
+to the last known-good cert — the behaviour the reproduce-first test in
+<a href="#71-reproduce-first-cert-rollback-test-tdd">§7.1</a> provokes
+and asserts.</p>
+<h3 id="reproduce-first-cert-rollback-test-tdd">7.1 Reproduce-first
+cert-rollback test (TDD)</h3>
+<p><code>[CONVENTIONS §6]</code> <code>[CONSTITUTION §11.4.27]</code> —
+the risk-free guarantee is only real if a test <strong>forces a bad
+renewal</strong> and proves the served site is unharmed. This
+<strong>reproduce-first (RED)</strong> test rehearses on the staging CA
+and is written to fail against any engine that installs a new cert
+without the probe-and-rollback gate. It covers the regression + chaos
+test types and is authored in <a
+href="../testing/index.md">testing</a>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tls_rollback_test.sh — RED first. Rehearse on the STAGING CA (LE_STAGING=1).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduces &quot;the renewed cert fails the HTTPS probe&quot; and asserts self-heal to the previous cert.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_renew_probe_fail_rolls_back()</span> <span class="kw">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">before</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">fingerprint</span> /home/thready/edge/certs/prod/fullchain.pem<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Force the post-install probe to fail (unreachable URL) so the gate MUST roll back.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">LE_VALIDATE_URL</span><span class="op">=</span><span class="st">&quot;https://127.0.0.1:1/never&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">run</span> <span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/renew.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span> <span class="kw">&amp;&amp;</span> <span class="ex">fail</span> <span class="st">&quot;renew must exit non-zero on probe failure&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="va">after</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">fingerprint</span> /home/thready/edge/certs/prod/fullchain.pem<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="ex">assert_equal</span> <span class="st">&quot;</span><span class="va">$before</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$after</span><span class="st">&quot;</span> <span class="st">&quot;cert must be rolled back to the previous fingerprint&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">assert_https_2xx</span> <span class="st">&quot;https://thready.hxd3v.com/health/ready&quot;</span> <span class="st">&quot;served site must stay up throughout&quot;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># GREEN counterpart — a healthy renewal installs the new cert and the probe passes.</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">test_renew_healthy_installs_new_cert()</span> <span class="kw">{</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="va">before</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">fingerprint</span> /home/thready/edge/certs/prod/fullchain.pem<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="ex">run</span> <span class="st">&quot;</span><span class="va">$LE</span><span class="st">/scripts/rotate.sh&quot;</span> <span class="at">--config</span> <span class="st">&quot;</span><span class="va">$CFG</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">fail</span> <span class="st">&quot;healthy rotate should succeed&quot;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="va">after</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">fingerprint</span> /home/thready/edge/certs/prod/fullchain.pem<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="ex">assert_not_equal</span> <span class="st">&quot;</span><span class="va">$before</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$after</span><span class="st">&quot;</span> <span class="st">&quot;a healthy rotate must install a new cert+key&quot;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<h2 id="the-atomic-deploy-hook">8. The atomic deploy-hook</h2>
+<p>Verified from <code>scripts/deploy-hook.sh</code>. It is reusable by
+any ACME client that can call a post-issue command
+(<code>acme.sh --reloadcmd</code>, <code>certbot --deploy-hook</code>).
+Behaviour:</p>
+<ol type="1">
+<li>Requires <code>LE_CERT_DIR</code> with an <code>.incoming/</code>
+staging dir.</li>
+<li>For each of <code>privkey.pem</code>, <code>cert.pem</code>,
+<code>fullchain.pem</code>, <code>chain.pem</code> that exists in
+<code>.incoming/</code>, runs <code>mv -f</code> into
+<code>LE_CERT_DIR</code> — <strong>atomic on the same
+filesystem</strong>, so the cert and key swap instantaneously and no
+reader ever sees a half-updated pair.</li>
+<li>Removes the now-empty <code>.incoming/</code>.</li>
+<li>Runs <code>LE_RELOAD_CMD</code> (Thready:
+<code>podman kill -s HUP caddy</code>); if the reload command fails, the
+hook dies loudly (the engine’s rollback then restores the previous
+cert).</li>
+</ol>
+<p>For Thready the <code>LE_RELOAD_CMD</code> targets the
+<strong>rootless</strong> edge container — the module’s own docs list
+<code>podman kill -s HUP &lt;container&gt;</code> as the rootless reload
+idiom, which is exactly our case.</p>
+<h2 id="programmatic-json-driver">9. Programmatic (JSON) driver</h2>
+<p>The Go <code>api/le-api</code> wrapper lets the <a
+href="./deploy-and-rollback.md">deploy script</a> drive certs
+programmatically and parse structured results (verified from
+<code>api/main.go</code>):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/thready/submodules/lets_encrypt/api <span class="kw">&amp;&amp;</span> <span class="ex">go</span> build <span class="at">-o</span> le-api .</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./le-api</span> status <span class="at">--config</span> /home/thready/prod/config/lets_encrypt.conf</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → the parsed status.sh --json (subject, SANs, days-left, due)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./le-api</span> renew <span class="at">--config</span> /home/thready/prod/config/lets_encrypt.conf</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># → {&quot;command&quot;:&quot;renew&quot;,&quot;ok&quot;:true,&quot;exit_code&quot;:0}</span></span></code></pre></div>
+<p>The result shape is
+<code>{command, ok, exit_code, message?, status?}</code>
+<code>[VERIFIED: api/main.go]</code>; commands are
+<code>status|issue|renew|rotate|revoke</code> (flags
+<code>--config</code>, <code>--scripts</code>, <code>--force</code>,
+<code>--yes</code>). For <code>status</code>, the embedded
+<code>status</code> object is the parsed <code>status.sh --json</code>,
+whose <strong>verified</strong> fields are:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;present&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;primary_domain&quot;</span><span class="fu">:</span> <span class="st">&quot;thready.hxd3v.com&quot;</span><span class="fu">,</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;subject&quot;</span><span class="fu">:</span> <span class="st">&quot;CN=thready.hxd3v.com&quot;</span><span class="fu">,</span> <span class="dt">&quot;issuer&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span> <span class="dt">&quot;not_before&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span> <span class="dt">&quot;not_after&quot;</span><span class="fu">:</span> <span class="st">&quot;…&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sans&quot;</span><span class="fu">:</span> <span class="st">&quot;thready.hxd3v.com&quot;</span><span class="fu">,</span> <span class="dt">&quot;days_left&quot;</span><span class="fu">:</span> <span class="dv">63</span><span class="fu">,</span> <span class="dt">&quot;renew_days&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;renew_due&quot;</span><span class="fu">:</span> <span class="kw">false</span> <span class="fu">}</span></span></code></pre></div>
+<p>Thready’s deploy verification calls <code>le-api status</code> and
+asserts <code>present==true</code>, <code>renew_due==false</code> and
+<code>days_left &gt; 0</code> before promoting — a cert that is absent
+or already inside its renewal window is a pre-flight signal, not a
+surprise at expiry. <code>[VERIFIED: scripts/status.sh]</code></p>
+<h2 id="rootless-systemd-timer-install">10. Rootless systemd timer
+install</h2>
+<p>The module ships a <code>systemd/</code> unit set. Install
+<strong>rootless</strong> (per the mandate — no sudo). Verified from
+<code>systemd/lets-encrypt-renew.{service,timer}</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">LE</span><span class="op">=</span>/home/thready/submodules/lets_encrypt</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/systemd/user</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Substitute the two @TOKENS@ for Thready&#39;s paths and install per env (prod shown)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-e</span> <span class="st">&quot;s#@LE_DIR@#</span><span class="va">$LE</span><span class="st">#&quot;</span> <span class="at">-e</span> <span class="st">&quot;s#@LE_CONFIG@#/home/thready/prod/config/lets_encrypt.conf#&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">$LE</span><span class="st">/systemd/lets-encrypt-renew.service&quot;</span> <span class="op">&gt;</span> ~/.config/systemd/user/le-renew-prod.service</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">&quot;s#@LE_DIR@##&quot;</span> <span class="st">&quot;</span><span class="va">$LE</span><span class="st">/systemd/lets-encrypt-renew.timer&quot;</span> <span class="op">&gt;</span> ~/.config/systemd/user/le-renew-prod.timer</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> daemon-reload</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> enable <span class="at">--now</span> le-renew-prod.timer</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># CRITICAL: keep the timer running while logged out</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> enable-linger thready</span></code></pre></div>
+<ul>
+<li>The timer fires <strong>twice daily</strong>
+(<code>OnCalendar=*-*-* 03,15:00:00</code>) with up to a 1 h randomized
+delay (<code>RandomizedDelaySec=3600</code>) — the ACME best practice of
+renewing often with jitter so many hosts don’t hammer the CA at once.
+<code>renew.sh</code> being a no-op outside the window makes this
+safe.</li>
+<li>The service is a <code>oneshot</code> with hardening
+(<code>NoNewPrivileges</code>, <code>ProtectSystem=full</code>,
+<code>PrivateTmp</code>).</li>
+<li>Install <strong>three</strong> timers (<code>le-renew-dev</code>,
+<code>le-renew-sta</code>, <code>le-renew-prod</code>), one per env
+config.</li>
+<li>A <strong>cron fallback</strong>
+(<code>systemd/lets-encrypt-renew.cron</code>) is available for hosts
+without systemd.</li>
+</ul>
+<h2 id="revocation">11. Revocation</h2>
+<p><code>revoke.sh</code> revokes at the CA on key compromise
+(confirmed, not silent). After revocation, run <code>rotate.sh</code> to
+issue a fresh key+cert. This is part of the <a
+href="./secrets-and-config.md#6-leak-audit--rotation">secret
+rotation</a> runbook.</p>
+<h2 id="verified-vs-assumed">12. Verified vs assumed</h2>
+<ul>
+<li><strong>VERIFIED (read at source):</strong> the risk-free
+validate→backup→atomic-deploy→probe→rollback flow in
+<code>engine.sh</code>; the atomic <code>mv</code> deploy-hook; the
+config injection contract; the twice-daily jittered timer; the
+<code>le-api</code> JSON shape; rootless install; HTTP-01/DNS-01
+support; staging-first.</li>
+<li><strong>ASSUMED / <code>[DEFAULT — adjustable]</code>:</strong>
+<code>ec-256</code> key type; <code>LE_RENEW_DAYS=30</code>; ACME email
+<code>admin@hxd3v.com</code>; Caddy <code>HUP</code> as the reload
+target; per-subdomain (not wildcard) certs.</li>
+</ul>
+<h2 id="open-items">13. Open items</h2>
+<ul>
+<li><code>[OPEN: dns-provider]</code> (<strong>narrowed, Rev 3</strong>)
+— the concrete DNS-01 path is now documented against the verified
+<code>dns_loopia</code> hook + <code>LOOPIA_*</code> env secrets (<a
+href="#41-concrete-dns-01-with-the-loopia-hook">§4.1</a>), consistent
+with the <code>LOOPIA_*</code> keys already reserved in
+<code>api_keys.sh</code>. It <strong>fully</strong> closes once the
+operator confirms the <code>hxd3v.com</code> registrar; HTTP-01 is the
+working default meanwhile, so nothing is blocked.</li>
+<li><code>[OPEN: acme-email]</code> — confirm the ACME account contact
+email for expiry notices (<code>LE_ACME_EMAIL</code>;
+<code>admin@hxd3v.com</code> is the working default).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

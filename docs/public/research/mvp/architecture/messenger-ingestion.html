@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Messenger Ingestion</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Messenger Ingestion</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#responsibility" id="toc-responsibility">1.
+Responsibility</a></li>
+<li><a href="#herald-as-the-base-verified-interface-gaps"
+id="toc-herald-as-the-base-verified-interface-gaps">2. Herald as the
+base (verified interface + gaps)</a></li>
+<li><a href="#telegram-via-gotdtd-mtproto-user-client"
+id="toc-telegram-via-gotdtd-mtproto-user-client">3. Telegram via gotd/td
+MTProto user client</a></li>
+<li><a href="#max-adapter-build-new" id="toc-max-adapter-build-new">4.
+Max adapter (BUILD-NEW)</a></li>
+<li><a href="#the-threadreader-abstraction"
+id="toc-the-threadreader-abstraction">5. The ThreadReader
+abstraction</a></li>
+<li><a href="#thread-assembly-diagram"
+id="toc-thread-assembly-diagram">6. Thread-assembly diagram</a></li>
+<li><a href="#accounts-sign-in-service"
+id="toc-accounts-sign-in-service">7. Accounts (sign-in) service</a></li>
+<li><a href="#ingestion-persistence-event"
+id="toc-ingestion-persistence-event">8. Ingestion → persistence →
+event</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">9.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Messenger Ingestion (Herald, Telegram gotd/td, Max, ThreadReader)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/messenger-ingestion.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./system-overview.md, ./data-flow.md, ./event-model.md,
+                    ./concurrency-and-idempotency.md, ./processing-pipeline.md, ./security-model.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — Herald, gotd/td, Max adapter, ThreadReader</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Close ING-2 — verified CURRENT herald
+<code>commons_messaging/channels.Channel</code> (Wave 7) + self-filter
+<code>IsSelfEcho</code>/<code>StampSender</code>/<code>BotSelfIdentity</code>/<code>SelfIdentity</code>/<code>IdentityKind</code>
+read at source;
+<code>SendReplyGeneric</code>/<code>DownloadAttachment</code> back
+Reply/attachment fetch; deepen thread-assembly explanation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-responsibility">Responsibility</a></li>
+<li><a href="#2-herald-as-the-base-verified-interface--gaps">Herald as
+the base (verified interface + gaps)</a></li>
+<li><a href="#3-telegram-via-gotdtd-mtproto-user-client">Telegram via
+gotd/td MTProto user client</a></li>
+<li><a href="#4-max-adapter-build-new">Max adapter (BUILD-NEW)</a></li>
+<li><a href="#5-the-threadreader-abstraction">The ThreadReader
+abstraction</a></li>
+<li><a href="#6-thread-assembly-diagram">Thread-assembly
+diagram</a></li>
+<li><a href="#7-accounts-sign-in-service">Accounts (sign-in)
+service</a></li>
+<li><a href="#8-ingestion--persistence--event">Ingestion → persistence →
+event</a></li>
+<li><a href="#9-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#10-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="responsibility">1. Responsibility</h2>
+<p>The Ingestion service connects to configured messengers with the
+operator’s private accounts, reads chosen channels/groups on a
+configurable schedule <strong>and</strong> on push triggers, assembles
+the <strong>complete post</strong> (root + full organic reply chain,
+excluding Thready’s own status replies), persists raw data to the
+relational store, and emits <code>post.received</code>
+<code>[research_request_final §3.1]</code>. It also posts the status
+reply back to the source thread at the end of processing.</p>
+<p>The <strong>critical</strong> requirement (called out in the original
+request in bold) is thread assembly: hashtags are frequently added as a
+<em>reply</em> to a link-only or text-only root post, so a “post” is the
+root plus its organic replies — never a single message
+<code>[research_request_final §3.2.1, request "IMPORTANT: To form full post"]</code>.</p>
+<h2 id="herald-as-the-base-verified-interface-gaps">2. Herald as the
+base (verified interface + gaps)</h2>
+<p>Ingestion extends <code>vasic-digital/herald</code>
+<code>[IN-HOUSE: herald]</code>. The <code>Messenger</code> seam is
+<strong>VERIFIED</strong> at source
+(<code>herald/pkg/messenger/messenger.go</code>):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// vasic-digital/herald/pkg/messenger — VERIFIED</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Messenger <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Connect<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Disconnect<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    SendMessage<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> message <span class="op">*</span>Message<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    ReceiveMessages<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> <span class="op">*</span>Message<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    GetChannels<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]*</span>Channel<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    HealthCheck<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Factory <span class="kw">interface</span> <span class="op">{</span> CreateMessenger<span class="op">(</span>config <span class="op">*</span>Config<span class="op">)</span> <span class="op">(</span>Messenger<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">}</span></span></code></pre></div>
+<p>Existing adapters (VERIFIED files, earlier <code>pkg/messenger</code>
+layout): <code>telegram.go</code>, <code>telegram_bot.go</code>,
+<code>mtproto.go</code>, <code>slack.go</code>, <code>max.go</code>,
+<code>registry.go</code>, <code>factory.go</code>,
+<code>types.go</code>, <code>config.go</code>.</p>
+<p><strong>ING-2 closure — the CURRENT verified messaging seam (Wave
+7).</strong> The herald repo has since evolved; the
+<strong>current</strong> channel model was re-read at source this pass
+under <code>commons_messaging/channels</code> (<code>channel.go</code>,
+<code>selffilter.go</code>, <code>registry.go</code>,
+<code>inbox.go</code>, plus <code>tgram</code>/<code>slack</code>
+adapters). The live adapter interface is a <em>richer</em>
+<code>Channel</code> that embeds the §11.0 <code>commons.Channel</code>
+(<code>Name</code>/<code>Capabilities</code>/<code>Send</code>/<code>Subscribe</code>/<code>HealthCheck</code>)
+and adds three inbound-runtime methods — <strong>VERIFIED
+verbatim</strong>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// vasic-digital/herald · commons_messaging/channels/channel.go — VERIFIED (Pass 3)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IdentityKind <span class="dt">string</span> <span class="co">// &quot;username&quot; (Telegram @handle) | &quot;user_id&quot; (Slack) | &quot;address&quot; (email)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SelfIdentity <span class="kw">struct</span> <span class="op">{</span> Kind IdentityKind<span class="op">;</span> Value <span class="dt">string</span> <span class="op">}</span> <span class="co">// username(no @) | user-id | address</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Channel <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    commons<span class="op">.</span>Channel <span class="co">// Name / Capabilities / Send / Subscribe / HealthCheck</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SendReplyGeneric posts a reply quoting replyToID, then fans out each attachment as its own</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// reply at the same thread depth. replyToID==&quot;&quot; =&gt; fresh message. Returns native message id.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    SendReplyGeneric<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> recipient commons<span class="op">.</span>Recipient<span class="op">,</span> body <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        replyToID <span class="dt">string</span><span class="op">,</span> attachments <span class="op">[]</span>commons<span class="op">.</span>Attachment<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// BotSelfIdentity returns the channel-native bot identity; MUST cross the wire on first call</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (getMe / auth.test); Subscribe refuses to boot without it (echo-loop hazard).</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    BotSelfIdentity<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(</span>SelfIdentity<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// DownloadAttachment streams the channel file into ~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// while hashing inline; returns (finalPath, sha256Hex, error). Idempotent.</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    DownloadAttachment<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> externalID <span class="dt">string</span><span class="op">,</span> mime <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Three verified facts here directly satisfy Thready requirements
+without new code: (1) <strong><code>SendReplyGeneric</code></strong> is
+exactly the status-reply-quoting-the-root mechanism Thready’s Reply step
+needs (§9 of <a
+href="./processing-pipeline.md">processing-pipeline.md</a>);
+<code>replyToID=""</code> is the fresh-post sentinel. (2)
+<strong><code>DownloadAttachment</code></strong> already returns a
+content-addressed
+<code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>
+path with the sha256 inline and is <strong>idempotent</strong> (“content
+== proof of presence”) — this is the ingestion side of the content-hash
+dedup the Asset Service relies on. (3)
+<strong><code>BotSelfIdentity</code></strong> + the self-filter below
+are the verified primitive for “never re-ingest our own status replies”
+(§5).</p>
+<blockquote>
+<p><strong><code>[GAP: 5.1]</code> Herald gaps (all addressed
+below).</strong> 1. <strong><code>[GAP: 5.1.1]</code> MTProto thread
+reader trapped in a QA harness</strong> — the real <code>gotd/td</code>
+user client (reads history via
+<code>messages.getHistory</code>/<code>getDialogs</code>) lives in
+<code>qaherald/internal/mtproto</code> as a QA tool, not a first-class
+channel. The Bot-API adapter (<code>telebot.v3</code>) <strong>cannot
+backfill channel/group history</strong>. 2.
+<strong><code>[GAP: 5.1.2]</code> Max is an empty stub</strong> —
+VERIFIED at source: <code>herald/pkg/messenger/max.go</code> is a
+placeholder
+(<code>// TODO: MAX platform - awaiting API specifications</code>,
+reference <code>https://dev.max.ru/</code>, no client). Only reserved
+env vars exist. 3. <strong><code>[GAP: 5.1.3]</code> No generic
+thread-reader abstraction</strong> for root + organic reply chain, forum
+topics, and reply threads — Thready’s core requirement.</p>
+</blockquote>
+<p>The <code>Messenger</code> interface above is fine for
+<em>bot-style</em> send/receive but does <strong>not</strong> expose
+history backfill or thread assembly. Thready therefore (a) promotes the
+MTProto client to a first-class channel, (b) builds the Max adapter, and
+(c) introduces a <strong>ThreadReader</strong> abstraction on top of
+<code>Messenger</code>.</p>
+<h2 id="telegram-via-gotdtd-mtproto-user-client">3. Telegram via gotd/td
+MTProto user client</h2>
+<p>Telegram is read with the <strong><code>github.com/gotd/td</code>
+MTProto user client</strong> (already vendored and exercised in Herald’s
+<code>qaherald</code>) <code>[IN-HOUSE: herald]</code>
+<code>[RESEARCH]</code>. A user client (not a bot) is mandatory because
+bots cannot backfill arbitrary channel/group history. The promotion plan
+<code>[GAP: 5.1.1]</code>:</p>
+<ul>
+<li>Promote <code>qaherald/internal/mtproto</code> into a first-class
+<code>TelegramThreadReader</code> behind the
+<code>Messenger</code>/ThreadReader seam.</li>
+<li>Forum topics via <code>channels.getForumTopics</code>; reply threads
+via <code>messages.getReplies</code>; history via
+<code>messages.getHistory</code> /
+<code>messages.getDialogs</code>.</li>
+<li>Full attachment / forwarded-message / link extraction; resolve
+<code>access_hash</code>.</li>
+<li>Auth: <code>api_id</code>/<code>api_hash</code> + phone + login code
++ optional 2FA, stored via <code>security/pkg/securestorage</code> (<a
+href="./security-model.md">security-model.md</a>).</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Illustrative: promoted MTProto reader implementing the ThreadReader seam.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TelegramThreadReader <span class="kw">struct</span> <span class="op">{</span> client <span class="op">*</span>telegram<span class="op">.</span>Client <span class="co">/* gotd/td */</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>TelegramThreadReader<span class="op">)</span> ReadThread<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ch ChannelRef<span class="op">,</span> rootID <span class="dt">int</span><span class="op">)</span> <span class="op">(*</span>Thread<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    root<span class="op">,</span> err <span class="op">:=</span> r<span class="op">.</span>getMessage<span class="op">(</span>ctx<span class="op">,</span> ch<span class="op">,</span> rootID<span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    replies<span class="op">,</span> err <span class="op">:=</span> r<span class="op">.</span>getReplies<span class="op">(</span>ctx<span class="op">,</span> ch<span class="op">,</span> rootID<span class="op">)</span> <span class="co">// messages.getReplies</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assemble<span class="op">(</span>root<span class="op">,</span> replies<span class="op">),</span> <span class="ot">nil</span>           <span class="co">// → ThreadReader.Assemble</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="max-adapter-build-new">4. Max adapter (BUILD-NEW)</h2>
+<p>Max has <strong>no Go client and no Herald code</strong>
+<code>[GAP: 5.1.2]</code>. The adapter is <code>[BUILD-NEW]</code>
+<code>[RESEARCH]</code>:</p>
+<ul>
+<li><strong>Bot API</strong> (Go SDK, <code>dev.max.ru</code>) for
+bot-scoped access.</li>
+<li><strong>A Go port of the OneMe user-WebSocket protocol</strong> for
+full channel/thread history (reference implementations
+<code>vkmax</code> / <code>max-mcp</code> / <code>MaxAPI</code> are
+Python; Thready ports the protocol to Go).</li>
+</ul>
+<p>The adapter implements the same <code>Messenger</code> + ThreadReader
+seams so the rest of the pipeline is messenger-agnostic. Until the OneMe
+port lands, Max ingestion is <strong>explicitly incomplete</strong> and
+must not be claimed as working — the current <code>max.go</code> stub is
+the honest baseline.</p>
+<h2 id="the-threadreader-abstraction">5. The ThreadReader
+abstraction</h2>
+<p><code>[BUILD-NEW]</code> (gap register §11,
+<code>[GAP: 5.1.3]</code>). A reusable, decoupled abstraction that
+assembles the <strong>root + organic replies</strong>, excludes system
+replies, resolves access hashes, and normalizes forum topics / reply
+threads across messengers. It is the seam that makes the processing
+pipeline platform-independent.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ThreadReader — messenger-agnostic thread assembly (BUILD-NEW, own submodule).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ThreadReader <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ListChannels returns configured channels for the account.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ListChannels<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]</span>ChannelRef<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Poll returns new root posts since the last cursor (schedule path).</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Poll<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ch ChannelRef<span class="op">,</span> since Cursor<span class="op">)</span> <span class="op">([]</span>RootRef<span class="op">,</span> Cursor<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ReadThread assembles a complete post: root + full organic reply chain.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    ReadThread<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ch ChannelRef<span class="op">,</span> rootID MessageID<span class="op">)</span> <span class="op">(*</span>Thread<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reply posts a status reply back to the source thread (Robot/User account).</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    Reply<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> ch ChannelRef<span class="op">,</span> rootID MessageID<span class="op">,</span> body StatusReply<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Thread <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    Root      Message</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    Replies   <span class="op">[]</span>Message      <span class="co">// organic only — system replies filtered out</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    Hashtags  <span class="op">[]</span><span class="dt">string</span>       <span class="co">// union across root + replies</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    Attachments <span class="op">[]</span>Attachment <span class="co">// files, media, forwards, links</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    Forwards  <span class="op">[]</span>Forward</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    Links     <span class="op">[]</span>Link         <span class="co">// github, youtube, torrent/magnet, protocol URLs</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>System-reply exclusion</strong> is by author identity — and
+this is a <strong>VERIFIED herald primitive</strong>, not Thready-new
+code (<code>[GAP: 5.1]</code> closure detail).
+<code>commons_messaging/channels/selffilter.go</code> (read at source)
+implements the channel-agnostic anti-echo-loop guard:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// vasic-digital/herald · commons_messaging/channels/selffilter.go — VERIFIED (Pass 3)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// StampSender records the sender&#39;s native identity into ev.Raw so the generalized filter can</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// compare it against the bot&#39;s SelfIdentity WITHOUT channel-specific knowledge.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> StampSender<span class="op">(</span>raw <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span><span class="op">,</span> isBot <span class="dt">bool</span><span class="op">,</span> kind IdentityKind<span class="op">,</span> value <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">// IsSelfEcho reports whether ev originates from THIS bot (self-echo) so the inbound runtime drops</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">// it before re-dispatching its own reply. A DIFFERENT bot in the same conversation is KEPT.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> IsSelfEcho<span class="op">(</span>ev commons<span class="op">.</span>InboundEvent<span class="op">,</span> self SelfIdentity<span class="op">)</span> <span class="dt">bool</span></span></code></pre></div>
+<p>Each adapter calls <code>StampSender</code> when it builds an
+<code>InboundEvent</code> (stamping the raw keys
+<code>sender_is_bot</code>, <code>sender_identity_kind</code>,
+<code>sender_identity</code>); the runtime then drops any event for
+which <code>IsSelfEcho(ev, self)</code> is true, where <code>self</code>
+comes from <code>BotSelfIdentity</code>. The design is deliberately
+narrow and correct: an <strong>empty</strong> self-identity never
+classifies as echo (and <code>Subscribe</code> refuses to boot without
+one, so the hazard cannot go unnoticed), and a
+<strong>different</strong> bot in the same channel is <em>kept</em>
+(multi-bot collaboration is real traffic). Thready sets its Robot/User
+account as the channel’s <code>SelfIdentity</code> and inherits this
+filter unchanged, so it never processes its own status replies
+<code>[research_request_final §3.2.3 "Processing skips the system's own replies"]</code>.</p>
+<h2 id="thread-assembly-diagram">6. Thread-assembly diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 811.5px; background-color: white;" viewBox="0 0 811.5 1213.953857421875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .m rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .m polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .m ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .m circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .m path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .m tspan{fill:rgb(230, 246, 255)!important;}#my-svg .sys rect{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .sys polygon{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .sys ellipse{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .sys circle{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .sys path{fill:rgb(122, 47, 47)!important;stroke:rgb(60, 20, 20)!important;color:rgb(255, 236, 236)!important;}#my-svg .sys tspan{fill:rgb(255, 236, 236)!important;}#my-svg .c rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c tspan{fill:rgb(234, 255, 240)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-TR" data-look="classic"><rect style="" x="69.25" y="498.7999954223633" width="667" height="458.3999938964844"/><g class="cluster-label" transform="translate(350.25, 498.7999954223633)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ThreadReader</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Source" data-look="classic"><rect style="" x="8" y="8" width="795.5" height="440.7999954223633"/><g class="cluster-label" transform="translate(321.25, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Telegram</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Max</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> channel</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M426.75,92.831L441.708,97.792C456.667,102.754,486.583,112.677,501.542,121.138C516.5,129.6,516.5,136.6,516.5,140.1L516.5,143.6" id="my-svg-L_ROOT_R1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_R1_0" data-points="W3sieCI6NDI2Ljc1LCJ5Ijo5Mi44MzA1MzQzMjYzNTczN30seyJ4Ijo1MTYuNSwieSI6MTIyLjU5OTk5ODQ3NDEyMTF9LHsieCI6NTE2LjUsInkiOjE0Ny41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M545.451,194.6L550.584,198.767C555.717,202.933,565.984,211.267,571.117,218.933C576.25,226.6,576.25,233.6,576.25,237.1L576.25,240.6" id="my-svg-L_R1_R2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R1_R2_0" data-points="W3sieCI6NTQ1LjQ1MTAzMDkyNzgzNTEsInkiOjE5NC41OTk5OTg0NzQxMjExfSx7IngiOjU3Ni4yNSwieSI6MjE5LjU5OTk5ODQ3NDEyMTF9LHsieCI6NTc2LjI1LCJ5IjoyNDQuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M618.246,309.2L623.663,313.367C629.08,317.533,639.915,325.867,645.333,333.533C650.75,341.2,650.75,348.2,650.75,351.7L650.75,355.2" id="my-svg-L_R2_R3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R2_R3_0" data-points="W3sieCI6NjE4LjI0NTYzNjU2NTQ2NDksInkiOjMwOS4xOTk5OTY5NDgyNDIyfSx7IngiOjY1MC43NSwieSI6MzM0LjE5OTk5Njk0ODI0MjJ9LHsieCI6NjUwLjc1LCJ5IjozNTkuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M260.75,92.672L245.625,97.66C230.5,102.648,200.25,112.624,185.125,125.695C170,138.767,170,154.933,170,171.1C170,187.267,170,203.433,170,221.067C170,238.7,170,257.8,170,276.9C170,296,170,315.1,170,329.617C170,344.133,170,354.067,170,359.033L170,364" id="my-svg-L_ROOT_SYS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_SYS_0" data-points="W3sieCI6MjYwLjc1LCJ5Ijo5Mi42NzIwODUyMDM1NDEyN30seyJ4IjoxNzAsInkiOjEyMi41OTk5OTg0NzQxMjExfSx7IngiOjE3MCwieSI6MTcxLjA5OTk5ODQ3NDEyMTF9LHsieCI6MTcwLCJ5IjoyMTkuNTk5OTk4NDc0MTIxMX0seyJ4IjoxNzAsInkiOjI3Ni44OTk5OTc3MTExODE2NH0seyJ4IjoxNzAsInkiOjMzNC4xOTk5OTY5NDgyNDIyfSx7IngiOjE3MCwieSI6MzY3Ljk5OTk5NjE4NTMwMjczfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M337.127,97.6L336.272,101.767C335.418,105.933,333.709,114.267,332.854,126.517C332,138.767,332,154.933,332,171.1C332,187.267,332,203.433,332,221.067C332,238.7,332,257.8,332,276.9C332,296,332,315.1,332,334.2C332,353.3,332,372.4,332,391.5C332,410.6,332,429.7,332,443.417C332,457.133,332,465.467,332,473.8C332,482.133,332,490.467,338.569,498.464C345.137,506.462,358.274,514.123,364.843,517.954L371.411,521.785" id="my-svg-L_ROOT_ASM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROOT_ASM_0" data-points="W3sieCI6MzM3LjEyNjUyNzExODg2OTYsInkiOjk3LjU5OTk5ODQ3NDEyMTF9LHsieCI6MzMyLCJ5IjoxMjIuNTk5OTk4NDc0MTIxMX0seyJ4IjozMzIsInkiOjE3MS4wOTk5OTg0NzQxMjExfSx7IngiOjMzMiwieSI6MjE5LjU5OTk5ODQ3NDEyMTF9LHsieCI6MzMyLCJ5IjoyNzYuODk5OTk3NzExMTgxNjR9LHsieCI6MzMyLCJ5IjozMzQuMTk5OTk2OTQ4MjQyMn0seyJ4IjozMzIsInkiOjM5MS40OTk5OTYxODUzMDI3M30seyJ4IjozMzIsInkiOjQ0OC43OTk5OTU0MjIzNjMzfSx7IngiOjMzMiwieSI6NDczLjc5OTk5NTQyMjM2MzN9LHsieCI6MzMyLCJ5Ijo0OTguNzk5OTk1NDIyMzYzM30seyJ4IjozNzQuODY2NDkyNzE3MzU2NjYsInkiOjUyMy43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M469.863,194.6L461.595,198.767C453.326,202.933,436.788,211.267,428.519,224.983C420.25,238.7,420.25,257.8,420.25,276.9C420.25,296,420.25,315.1,420.25,334.2C420.25,353.3,420.25,372.4,420.25,391.5C420.25,410.6,420.25,429.7,420.25,443.417C420.25,457.133,420.25,465.467,420.25,473.8C420.25,482.133,420.25,490.467,420.863,498.143C421.475,505.82,422.7,512.84,423.313,516.35L423.925,519.86" id="my-svg-L_R1_ASM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R1_ASM_0" data-points="W3sieCI6NDY5Ljg2MzQwMjA2MTg1NTY1LCJ5IjoxOTQuNTk5OTk4NDc0MTIxMX0seyJ4Ijo0MjAuMjUsInkiOjIxOS41OTk5OTg0NzQxMjExfSx7IngiOjQyMC4yNSwieSI6Mjc2Ljg5OTk5NzcxMTE4MTY0fSx7IngiOjQyMC4yNSwieSI6MzM0LjE5OTk5Njk0ODI0MjJ9LHsieCI6NDIwLjI1LCJ5IjozOTEuNDk5OTk2MTg1MzAyNzN9LHsieCI6NDIwLjI1LCJ5Ijo0NDguNzk5OTk1NDIyMzYzM30seyJ4Ijo0MjAuMjUsInkiOjQ3My43OTk5OTU0MjIzNjMzfSx7IngiOjQyMC4yNSwieSI6NDk4Ljc5OTk5NTQyMjM2MzN9LHsieCI6NDI0LjYxMzAwMTgwMzI5MzMsInkiOjUyMy43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M534.254,309.2L528.837,313.367C523.42,317.533,512.585,325.867,507.167,339.583C501.75,353.3,501.75,372.4,501.75,391.5C501.75,410.6,501.75,429.7,501.75,443.417C501.75,457.133,501.75,465.467,501.75,473.8C501.75,482.133,501.75,490.467,497.071,498.383C492.392,506.3,483.034,513.799,478.355,517.549L473.676,521.299" id="my-svg-L_R2_ASM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R2_ASM_0" data-points="W3sieCI6NTM0LjI1NDM2MzQzNDUzNTEsInkiOjMwOS4xOTk5OTY5NDgyNDIyfSx7IngiOjUwMS43NSwieSI6MzM0LjE5OTk5Njk0ODI0MjJ9LHsieCI6NTAxLjc1LCJ5IjozOTEuNDk5OTk2MTg1MzAyNzN9LHsieCI6NTAxLjc1LCJ5Ijo0NDguNzk5OTk1NDIyMzYzM30seyJ4Ijo1MDEuNzUsInkiOjQ3My43OTk5OTU0MjIzNjMzfSx7IngiOjUwMS43NSwieSI6NDk4Ljc5OTk5NTQyMjM2MzN9LHsieCI6NDcwLjU1NDUzNzEwNjQ1Mjg3LCJ5Ijo1MjMuNzk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M650.75,423.8L650.75,427.967C650.75,432.133,650.75,440.467,650.75,448.8C650.75,457.133,650.75,465.467,650.75,473.8C650.75,482.133,650.75,490.467,633.979,498.992C617.207,507.517,583.664,516.233,566.893,520.591L550.121,524.95" id="my-svg-L_R3_ASM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R3_ASM_0" data-points="W3sieCI6NjUwLjc1LCJ5Ijo0MjMuNzk5OTk1NDIyMzYzM30seyJ4Ijo2NTAuNzUsInkiOjQ0OC43OTk5OTU0MjIzNjMzfSx7IngiOjY1MC43NSwieSI6NDczLjc5OTk5NTQyMjM2MzN9LHsieCI6NjUwLjc1LCJ5Ijo0OTguNzk5OTk1NDIyMzYzM30seyJ4Ijo1NDYuMjUsInkiOjUyNS45NTU3NzczNzM3MTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M170,415L170,420.633C170,426.267,170,437.533,170,447.333C170,457.133,170,465.467,170,473.8C170,482.133,170,490.467,170,504.183C170,517.9,170,537,170,556.1C170,575.2,170,594.3,176.765,607.688C183.529,621.075,197.058,628.751,203.823,632.589L210.587,636.426" id="my-svg-L_SYS_FILT_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SYS_FILT_0" data-points="W3sieCI6MTcwLCJ5Ijo0MTQuOTk5OTk2MTg1MzAyNzN9LHsieCI6MTcwLCJ5Ijo0NDguNzk5OTk1NDIyMzYzM30seyJ4IjoxNzAsInkiOjQ3My43OTk5OTU0MjIzNjMzfSx7IngiOjE3MCwieSI6NDk4Ljc5OTk5NTQyMjM2MzN9LHsieCI6MTcwLCJ5Ijo1NTYuMDk5OTk0NjU5NDIzOH0seyJ4IjoxNzAsInkiOjYxMy4zOTk5OTM4OTY0ODQ0fSx7IngiOjIxNC4wNjYzMTgyMTMyNjIzNSwieSI6NjM4LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M430.25,588.4L430.25,592.567C430.25,596.733,430.25,605.067,419.297,613.174C408.344,621.282,386.439,629.164,375.486,633.105L364.533,637.046" id="my-svg-L_ASM_FILT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASM_FILT_0" data-points="W3sieCI6NDMwLjI1LCJ5Ijo1ODguMzk5OTkzODk2NDg0NH0seyJ4Ijo0MzAuMjUsInkiOjYxMy4zOTk5OTM4OTY0ODQ0fSx7IngiOjM2MC43NjkxOTYyODI1NTQxNiwieSI6NjM4LjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271,703L271,707.167C271,711.333,271,719.667,271,727.333C271,735,271,742,271,745.5L271,749" id="my-svg-L_FILT_HASH_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FILT_HASH_0" data-points="W3sieCI6MjcxLCJ5Ijo3MDIuOTk5OTkyMzcwNjA1NX0seyJ4IjoyNzEsInkiOjcyNy45OTk5OTIzNzA2MDU1fSx7IngiOjI3MSwieSI6NzUyLjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271,817.6L271,821.767C271,825.933,271,834.267,271,841.933C271,849.6,271,856.6,271,860.1L271,863.6" id="my-svg-L_HASH_ATT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_HASH_ATT_0" data-points="W3sieCI6MjcxLCJ5Ijo4MTcuNTk5OTkwODQ0NzI2Nn0seyJ4IjoyNzEsInkiOjg0Mi41OTk5OTA4NDQ3MjY2fSx7IngiOjI3MSwieSI6ODY3LjU5OTk5MDg0NDcyNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271,932.2L271,936.367C271,940.533,271,948.867,271,957.2C271,965.533,271,973.867,271,981.533C271,989.2,271,996.2,271,999.7L271,1003.2" id="my-svg-L_ATT_POST_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ATT_POST_0" data-points="W3sieCI6MjcxLCJ5Ijo5MzIuMTk5OTg5MzE4ODQ3N30seyJ4IjoyNzEsInkiOjk1Ny4xOTk5ODkzMTg4NDc3fSx7IngiOjI3MSwieSI6OTgyLjE5OTk4OTMxODg0Nzd9LHsieCI6MjcxLCJ5IjoxMDA3LjE5OTk4OTMxODg0Nzd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M271,1102.954L271,1108.871C271,1114.787,271,1126.621,271.074,1137.871C271.148,1149.121,271.296,1159.787,271.37,1165.121L271.444,1170.454" id="my-svg-L_POST_BUS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_POST_BUS_0" data-points="W3sieCI6MjcxLCJ5IjoxMTAyLjk1MzgzNDUzMzY5MTR9LHsieCI6MjcxLCJ5IjoxMTM4LjQ1MzgzNDUzMzY5MTR9LHsieCI6MjcxLjUsInkiOjExNzQuNDUzODM0NTMzNjkxNH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_ROOT_R1_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_R1_R2_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_R2_R3_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ROOT_SYS_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ROOT_ASM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_R1_ASM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_R2_ASM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_R3_ASM_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(170, 556.0999946594238)"><g class="label" data-id="L_SYS_FILT_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-34.5" y="0" width="69" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">excluded</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_ASM_FILT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_FILT_HASH_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_HASH_ATT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ATT_POST_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(271, 1138.4538345336914)"><g class="label" data-id="L_POST_BUS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-49.5" y="0" width="99" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post.received</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default m" id="my-svg-flowchart-ROOT-0" data-look="classic" transform="translate(343.75, 65.29999923706055)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-83" y="-32.29999923706055" width="166" height="64.5999984741211"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">link</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> or</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> text</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> only</tspan></tspan></text></g></g></g><g class="node default m" id="my-svg-flowchart-R1-1" data-look="classic" transform="translate(516.5, 171.0999984741211)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-121.5" y="-23.5" width="243" height="47"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Reply:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #Research</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> #Video</tspan></tspan></text></g></g></g><g class="node default m" id="my-svg-flowchart-R2-2" data-look="classic" transform="translate(576.25, 276.89999771118164)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-108" y="-32.29999923706055" width="216" height="64.5999984741211"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Reply:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> organic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> human</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">comment</tspan></tspan></text></g></g></g><g class="node default sys" id="my-svg-flowchart-SYS-3" data-look="classic" transform="translate(170, 391.49999618530273)"><rect class="basic label-container" style="fill:#7a2f2f !important;stroke:#3c1414 !important" x="-127" y="-23.5" width="254" height="47"/><g class="label" style="color:#ffecec !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#ffecec !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Reply:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Thready</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> status</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reply</tspan></tspan></text></g></g></g><g class="node default m" id="my-svg-flowchart-R3-4" data-look="classic" transform="translate(650.75, 391.49999618530273)"><rect class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important" x="-114" y="-32.29999923706055" width="228" height="64.5999984741211"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Reply:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> forwarded</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">attachment</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-ASM-11" data-look="classic" transform="translate(430.25, 556.0999946594238)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-116" y="-32.29999923706055" width="232" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Assemble</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> root</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> organic</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">replies</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-FILT-12" data-look="classic" transform="translate(271, 670.6999931335449)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-112" y="-32.29999923706055" width="224" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Exclude</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> system</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> replies</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bot/user</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> id</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-HASH-13" data-look="classic" transform="translate(271, 785.299991607666)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-111.5" y="-32.29999923706055" width="223" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Union</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hashtags</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> across</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">chain</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-ATT-14" data-look="classic" transform="translate(271, 899.8999900817871)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-101.5" y="-32.29999923706055" width="203" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Extract</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> attachments,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">forwards,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> links</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-POST-26" data-look="classic" transform="translate(271, 1055.0769119262695)"><path d="M0,15.384615384615385 a100,15.384615384615385 0,0,0 200,0 a100,15.384615384615385 0,0,0 -200,0 l0,64.98461385873648 a100,15.384615384615385 0,0,0 200,0 l0,-64.98461385873648" class="basic label-container outer-path" style="" transform="translate(-100, -47.87692231398363)"/><g class="label" style="" transform="translate(0, -9.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Complete</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Post</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">posts</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> replies</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hashtags</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-BUS-28" data-look="classic" transform="translate(271, 1189.9538345336914)"><polygon points="8,0 92,0 100,-16 92,-32 8,-32 0,-16" class="label-container" transform="translate(-50,16)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">EventBus</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/thread-assembly.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram exists to make one non-obvious claim
+concrete: in these messengers “a post” is a <em>composite</em>, and
+collapsing it to the single root message would silently drop the very
+hashtags and attachments that decide how it is processed. Reading it top
+to bottom shows the assembly and the two filters that make the composite
+trustworthy.</p>
+<p>At the top is the source channel. A root post — often just a link or
+a single line of text — has a chain of replies hanging off it: one reply
+carries the hashtags (<code>#Research #Video</code>), another is an
+organic human comment, another is a forwarded post with an attachment.
+Separately, Thready’s own earlier status reply also hangs off the root.
+That last one is the trap the design must avoid: if the system
+re-ingested its own replies it would loop, reprocess, and pollute the
+thread.</p>
+<p>The middle band is the ThreadReader. It assembles the root together
+with its organic replies, then applies the <strong>self-filter</strong>
+— and, as §5 now documents, this is the <em>verified herald
+primitive</em> <code>IsSelfEcho(ev, SelfIdentity)</code> fed by
+<code>StampSender</code>, not a bespoke id comparison — so the system
+reply is dropped by matching the bot’s channel-native identity, while a
+different bot’s reply would be kept. It then <strong>unions all hashtags
+found anywhere in the chain</strong>, which is precisely why a link-only
+root still classifies: the tags lived on a reply, not the root. Finally
+it extracts every attachment, forwarded message, and link
+(torrent/magnet, GitHub, YouTube, protocol URLs), using the verified
+<code>DownloadAttachment</code> for channel-hosted files so each arrives
+content-addressed by sha256.</p>
+<p>The bottom is the persisted result: one <strong>Complete
+Post</strong> row set (post + replies + hashtags + attachments) written
+to the relational system of record, which emits
+<code>post.received</code> onto the EventBus keyed by
+<code>post_id</code>. Everything downstream — classification, dispatch,
+dedup — operates on this composite, which is the architectural reason
+the whole pipeline can be messenger-agnostic: the ThreadReader is the
+single place that knows a post is more than its first message.</p>
+<h2 id="accounts-sign-in-service">7. Accounts (sign-in) service</h2>
+<p>A decoupled Accounts-management sub-system handles
+<strong>interactive and non-interactive</strong> sign-in to each
+messenger
+<code>[request "Note: System MUST PROVIDE Accounts management Service"]</code>:</p>
+<ul>
+<li><strong>Interactive</strong> — operator enters phone + login code (+
+2FA) for Telegram; Max bot token / OneMe session.</li>
+<li><strong>Non-interactive</strong> — credentials from env vars
+(<code>.env</code> / host <code>~/api_keys.sh</code>), runtime-load
+only, <code>chmod 600/700</code>, SKIP-if-missing, never logged
+<code>[CONSTITUTION §11.4.10]</code>.</li>
+<li>Sessions and tokens are stored via
+<code>security/pkg/securestorage</code> (AES-256-GCM), keyed per
+account+messenger. The service is reusable/decoupled so any project can
+adopt it.</li>
+</ul>
+<h2 id="ingestion-persistence-event">8. Ingestion → persistence →
+event</h2>
+<ol type="1">
+<li>Poll (configurable, reasonable frequency) <strong>and</strong> honor
+push triggers (new-post events).</li>
+<li>For each new root, <code>ReadThread</code> assembles root + organic
+replies.</li>
+<li>Extract all hashtags (union across chain); classify (indirect
+determination where tags are absent — see <a
+href="./processing-pipeline.md">processing-pipeline.md</a>).</li>
+<li>Persist the complete post (posts/replies/hashtags/attachments) to
+PostgreSQL — the system of record (<a
+href="./data-flow.md">data-flow.md</a>).</li>
+<li>Emit <code>post.received</code> (with
+<code>idempotency_key = post_id</code>) onto the EventBus; downstream
+claim is exactly-once (<a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</li>
+</ol>
+<p>Health of each channel is a <strong>sticky</strong>
+<code>channel.health</code> event (reachability + lag), surfaced to
+dashboards (<a href="./event-model.md">event-model.md</a>); a channel
+that flaps is guarded by a circuit breaker honoring Telegram
+<code>FLOOD_WAIT</code>.</p>
+<h2 id="gap-register-coverage">9. Gap-register coverage</h2>
+<ul>
+<li><code>[GAP: 5.1.1]</code> MTProto in QA harness → promote to
+first-class <code>TelegramThreadReader</code> (§3).</li>
+<li><code>[GAP: 5.1.2]</code> Max empty stub (VERIFIED
+<code>max.go</code> TODO) → build Max adapter, Bot API + OneMe WebSocket
+Go port (§4); ingestion marked incomplete until it lands
+(anti-bluff).</li>
+<li><code>[GAP: 5.1.3]</code> No thread-reader abstraction → the
+ThreadReader submodule (§5).</li>
+<li>Sensitive session storage → <code>security/pkg/securestorage</code>
+(§7, <a href="./security-model.md">security-model.md</a>).</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: hashtags on a reply must classify a link-only root.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestThreadAssembly_HashtagsFromReply<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    thr <span class="op">:=</span> fixtureThread<span class="op">(</span>root<span class="op">=</span><span class="st">&quot;https://youtu.be/x&quot;</span><span class="op">,</span> replies<span class="op">=[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;#Video #ToDownload&quot;</span><span class="op">})</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    post <span class="op">:=</span> assemble<span class="op">(</span>thr<span class="op">)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>ElementsMatch<span class="op">(</span>t<span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;Video&quot;</span><span class="op">,</span> <span class="st">&quot;ToDownload&quot;</span><span class="op">},</span> post<span class="op">.</span>Hashtags<span class="op">)</span> <span class="co">// FAILS if only root parsed</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: system status replies must be excluded.</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestThreadAssembly_ExcludesSystemReply<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    thr <span class="op">:=</span> fixtureThread<span class="op">(</span>root<span class="op">=</span><span class="st">&quot;text&quot;</span><span class="op">,</span> replies<span class="op">=</span>withSystemReply<span class="op">(</span>botID<span class="op">=</span><span class="st">&quot;thready-bot&quot;</span><span class="op">))</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    post <span class="op">:=</span> assemble<span class="op">(</span>thr<span class="op">,</span> systemAuthor<span class="op">=</span><span class="st">&quot;thready-bot&quot;</span><span class="op">)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotContains<span class="op">(</span>t<span class="op">,</span> authorIDs<span class="op">(</span>post<span class="op">.</span>Replies<span class="op">),</span> <span class="st">&quot;thready-bot&quot;</span><span class="op">)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: Max adapter is not silently &quot;working&quot; — must report unimplemented until built.</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMax_NotBluffed<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    m <span class="op">:=</span> newMaxMessenger<span class="op">(</span>cfg<span class="op">)</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> m<span class="op">.</span>ReceiveMessages<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>ErrorIs<span class="op">(</span>t<span class="op">,</span> err<span class="op">,</span> ErrMaxAdapterNotImplemented<span class="op">)</span> <span class="co">// honest until OneMe port lands</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: ING-1]</code> The Max OneMe WebSocket protocol must be
+reverse-engineered from the Python references
+(<code>vkmax</code>/<code>max-mcp</code>/<code>MaxAPI</code>) and ported
+to Go; frame formats and auth handshake are <code>[RESEARCH]</code> and
+not yet source-verified. Tracked as a P0 workable item.</li>
+<li><code>[CLOSED: ING-2]</code> (was: herald
+<code>Message</code>/<code>Channel</code> fields unread).
+<strong>Source-verified this pass</strong> — the current herald
+messaging model is <code>commons_messaging/channels</code>: the
+<code>Channel</code> interface (embedding <code>commons.Channel</code> +
+<code>SendReplyGeneric</code>/<code>BotSelfIdentity</code>/<code>DownloadAttachment</code>),
+<code>SelfIdentity{Kind,Value}</code>, <code>IdentityKind</code>
+(<code>username</code>/<code>user_id</code>/<code>address</code>), and
+the self-filter <code>IsSelfEcho</code>/<code>StampSender</code> over
+<code>commons.InboundEvent{Sender, Raw}</code> (§2, §5). Thready’s
+<code>Thread</code>/<code>Message</code> shapes remain the
+ThreadReader’s own assembly model and map onto these verified types
+(inbound <code>InboundEvent</code> → <code>Message</code>;
+<code>Channel.Subscribe</code> feeds <code>Poll</code>;
+<code>Channel</code> exposes no history-backfill, which is exactly why
+the MTProto reader promotion of §3 and the ThreadReader of §5 are still
+<code>[BUILD-NEW]</code>).</li>
+<li><code>[OPEN: ING-3]</code> Forum-topic vs linear-thread
+normalization across Telegram and Max needs a concrete mapping table
+(Telegram forum topics ↔︎ Max thread model); tracked with the
+ThreadReader build.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

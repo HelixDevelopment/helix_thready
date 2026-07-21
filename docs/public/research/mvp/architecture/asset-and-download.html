@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Asset Service &amp; Download Subsystem</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Asset Service &amp; Download
+Subsystem</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#two-separate-concerns-fetch-vs-storeserve"
+id="toc-two-separate-concerns-fetch-vs-storeserve">1. Two separate
+concerns: fetch vs store/serve</a></li>
+<li><a href="#asset-service-decouple-catalogizer"
+id="toc-asset-service-decouple-catalogizer">2. Asset Service (decouple
+Catalogizer)</a></li>
+<li><a href="#download-manager-build-new"
+id="toc-download-manager-build-new">3. Download Manager
+(BUILD-NEW)</a></li>
+<li><a href="#delegated-systems-boba-metube"
+id="toc-delegated-systems-boba-metube">4. Delegated systems: Boba &amp;
+MeTube</a></li>
+<li><a href="#standardized-callbacktask-contract-build-new"
+id="toc-standardized-callbacktask-contract-build-new">5. Standardized
+callback/task contract (BUILD-NEW)</a></li>
+<li><a href="#asset-download-diagram" id="toc-asset-download-diagram">6.
+Asset &amp; download diagram</a></li>
+<li><a href="#renditions-dedup-integrity-retention"
+id="toc-renditions-dedup-integrity-retention">7. Renditions, dedup,
+integrity, retention</a></li>
+<li><a href="#serving-never-a-direct-file-path"
+id="toc-serving-never-a-direct-file-path">8. Serving: never a direct
+file path</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">9.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Asset Service & Download Subsystem
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/asset-and-download.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./processing-pipeline.md, ./event-model.md, ./data-flow.md,
+                    ./security-model.md, ./semantic-search.md, ./component-catalog.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — Asset Service, Download Manager, Boba/MeTube
+callbacks</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (review pass)</td>
+<td>Add OpenAPI 3.1 asset-serving contract (§8) per CONVENTIONS §6</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Split the §6 asset/download-diagram explanation into true
+multi-paragraph form (single-callback fan-in intent → routing →
+standardized callback → Asset Service store/serve → never-a-direct-path
+payoff) per CONVENTIONS §4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-two-separate-concerns-fetch-vs-storeserve">Two separate
+concerns: fetch vs store/serve</a></li>
+<li><a href="#2-asset-service-decouple-catalogizer">Asset Service
+(decouple Catalogizer)</a></li>
+<li><a href="#3-download-manager-build-new">Download Manager
+(BUILD-NEW)</a></li>
+<li><a href="#4-delegated-systems-boba--metube">Delegated systems: Boba
+&amp; MeTube</a></li>
+<li><a
+href="#5-standardized-callbacktask-contract-build-new">Standardized
+callback/task contract (BUILD-NEW)</a></li>
+<li><a href="#6-asset--download-diagram">Asset &amp; download
+diagram</a></li>
+<li><a href="#7-renditions-dedup-integrity-retention">Renditions, dedup,
+integrity, retention</a></li>
+<li><a href="#8-serving-never-a-direct-file-path">Serving: never a
+direct file path</a></li>
+<li><a href="#9-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#10-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="two-separate-concerns-fetch-vs-storeserve">1. Two separate
+concerns: fetch vs store/serve</h2>
+<p>Resolving progress-doc inconsistency #3
+<code>[research_request_final §20.3]</code>: the <strong>Download
+Manager fetches bytes</strong>, the <strong>Asset Service stores,
+secures and serves them</strong>. They are separate submodules joined by
+the <strong>standardized callback contract</strong>. This separation is
+why the download layer can be swapped or scaled independently of the
+asset store.</p>
+<h2 id="asset-service-decouple-catalogizer">2. Asset Service (decouple
+Catalogizer)</h2>
+<p>The Asset Service is built on <code>vasic-digital/Catalogizer</code>
+<code>[IN-HOUSE: Catalogizer]</code> (VERIFIED PRODUCTION), which
+already provides multi-protocol access, SQLCipher-at-rest, JWT+RBAC, and
+a WebSocket surface.</p>
+<blockquote>
+<p><strong><code>[GAP: 6.1]</code> Not decoupled; <code>Streaming</code>
+is a WS hub.</strong> Catalogizer is not yet decoupled into a standalone
+Asset Service submodule, and its <code>Streaming</code> submodule is a
+<strong>WebSocket hub, not media byte/transcode streaming</strong>
+(media serving is a Gin API + a separate transcoder). <strong>Plan
+<code>[BUILD-NEW]</code>:</strong> decouple the Asset Service
+(multi-protocol access, SQLCipher-at-rest, JWT+RBAC, WebSocket,
+Range/<code>OpenSeekable</code>) into its own reusable submodule; add
+HLS/DASH + transcoder integration; content-hash dedup + integrity
+checksums; the <code>…-web</code> rendition convention; virtual-blob
+resolvers. Media byte-streaming is explicitly a new capability, not an
+existing one — not claimed to work today.</p>
+</blockquote>
+<p>Responsibilities <code>[research_request_final §7.1]</code>:</p>
+<ul>
+<li>Physical <strong>and</strong> virtual (blob) assets; object tier on
+MinIO/S3 (<code>digital.vasic.storage</code>) for the 50 TB+ scale,
+local FS fallback.</li>
+<li>Encryption at rest (SQLCipher / encrypted-Postgres + AES-256-GCM
+asset dirs); the specially encrypted directory for credit cards /
+contracts / signed docs decrypts <strong>only</strong> through the Asset
+Service (<a href="./security-model.md">security-model.md</a> §7).</li>
+<li>Multi-protocol access (SMB/FTP/NFS/WebDAV/local via
+<code>digital.vasic.filesystem</code>, with <code>OpenSeekable</code>
+for HTTP Range serving).</li>
+<li>Post↔︎asset relationships, checksums, <code>…-web</code> renditions,
+retention policy (per-account).</li>
+</ul>
+<h2 id="download-manager-build-new">3. Download Manager (BUILD-NEW)</h2>
+<p>A generic multi-protocol download engine in Go — the confirmed gap
+<code>[GAP: 6.3]</code> <code>[research_request_final §7.2]</code>.</p>
+<blockquote>
+<p><strong><code>[GAP: 6.2]</code> filesystem has no HTTP source and no
+download-manager semantics.</strong>
+<code>digital.vasic.filesystem</code> supports SMB/FTP/NFS/WebDAV/local
+(VERIFIED) but <strong>no HTTP(S) source</strong> and no
+queue/resume/segment/progress/callback. NFS errors on non-Linux yet is
+still listed in <code>SupportedProtocols</code>. <strong>Plan:</strong>
+the new Download Manager <strong>reuses <code>filesystem</code></strong>
+for FTP/SMB/NFS/WebDAV and <strong>adds</strong> the HTTP(S) source
+(HTTP/2+3, QUIC, Brotli via <code>vasic-digital/http3</code>) plus job
+semantics; fix the NFS platform listing; expose
+<code>OpenSeekable</code> uniformly for Range.</p>
+</blockquote>
+<p>Capabilities: HTTP/1.1/2/3+QUIC+Brotli, FTP, SMB, NFS, WebDAV;
+<strong>queue, resumable + segmented transfer, progress, retry/back-off,
+and a standardized completion callback</strong>. Concurrency is its own
+pool (does not consume the processing worker pool — long downloads must
+not hold a processing slot, see <a
+href="./concurrency-and-idempotency.md">concurrency-and-idempotency.md</a>).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Download Manager job API (BUILD-NEW; reuses filesystem for non-HTTP protocols).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DownloadJob <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    ID          <span class="dt">string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Source      <span class="dt">string</span>            <span class="co">// http(s):// | ftp:// | smb:// | nfs:// | webdav://</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Dest        <span class="dt">string</span>            <span class="co">// Asset Service staging path</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Segments    <span class="dt">int</span>               <span class="co">// segmented transfer</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    Resume      <span class="dt">bool</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Callback    CallbackTarget    <span class="co">// standardized completion callback (§5)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DownloadManager <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    Enqueue<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> job DownloadJob<span class="op">)</span> <span class="op">(</span>jobID <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    Status<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> jobID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>JobStatus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// progress/state</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    Cancel<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> jobID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="delegated-systems-boba-metube">4. Delegated systems: Boba &amp;
+MeTube</h2>
+<p>Long/specialized downloads are delegated to 3rd-party owned systems
+with callbacks, so they run independently and don’t hold a processing
+slot <code>[research_request_final §8.1]</code>:</p>
+<ul>
+<li><strong>Boba</strong> (<code>milos85vasic/Boba-Base</code>) —
+torrent/magnet search + download. Already has SSE +
+<code>POST /api/v1/hooks</code> (VERIFIED). <code>[GAP: 6.4]</code> its
+callback contract is <strong>bespoke</strong>; <strong>plan:</strong>
+standardize it to the shared callback schema (§5) and integrate with the
+Asset Service.</li>
+<li><strong>MeTube</strong> (<code>milos85vasic/YT-DLP</code>) —
+YouTube/streaming download. <code>[GAP: 6.5]</code> <strong>no outbound
+completion webhook</strong> — VERIFIED it has a postprocessor sidecar
+(SQLite jobs + watchdog) with <strong>poll-only</strong> endpoints
+(<code>GET /api/postprocess/status|jobs</code>); nothing pushes
+completion. <strong>Plan <code>[BUILD-NEW: callback]</code>:</strong>
+add an <strong>outbound completion webhook</strong> (shared callback
+schema) + Asset Service integration + conversion-profile config
+(<code>…-web</code> renditions). MeTube is <strong>not</strong> claimed
+to push callbacks today.</li>
+</ul>
+<p>Routing: torrent/magnet → Boba; YouTube/streaming → MeTube; direct
+protocol URLs → Download Manager. A channel/playlist expands to many
+jobs (grouped with ordering-number prefixes for watch order)
+<code>[research_request_final §7.3]</code>.</p>
+<h2 id="standardized-callbacktask-contract-build-new">5. Standardized
+callback/task contract (BUILD-NEW)</h2>
+<p>Every 3rd-party system accepts a task via API, processes async,
+provides status, calls back on completion, handles errors, and supports
+retry <code>[research_request_final §8.1]</code>. Because the mechanism
+must be standardized and decoupled, it is extracted into a
+<strong>reusable callback/task submodule</strong>
+<code>[GAP: 6.6]</code> and applied uniformly to Boba, MeTube and the
+Download Manager.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardized callback schema (job id, state, progress, result-asset-ref, error).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Applied uniformly across Boba / MeTube / Download Manager.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">callback</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">job_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;6f1c…&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">system</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;metube&quot;</span><span class="at"> </span><span class="er">|</span><span class="at"> </span><span class="er">&quot;boba&quot;</span><span class="at"> </span><span class="er">|</span><span class="at"> </span><span class="er">&quot;download-manager&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">state</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;queued&quot;</span><span class="at"> </span><span class="er">|</span><span class="at"> </span><span class="er">&quot;running&quot;</span><span class="at"> </span><span class="er">|</span><span class="at"> </span><span class="er">&quot;completed&quot;</span><span class="at"> </span><span class="er">|</span><span class="at"> </span><span class="er">&quot;failed&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">progress</span><span class="kw">:</span><span class="at"> 0.0 - 1.0</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">result</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">asset_ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;asset://acct/9c1e…/raw/video.mp4&quot;</span><span class="co">   # Asset Service reference</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">renditions</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;asset://…/video-web.mp4&quot;</span><span class="kw">]</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">checksum</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;sha256:…&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">error</span><span class="kw">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">code</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;SOURCE_UNAVAILABLE&quot;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">message</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;…&quot;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retriable</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ts</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2026-07-21T21:00:00Z&quot;</span></span></code></pre></div>
+<p>The callback is delivered to Thready’s callback endpoint, which
+verifies it (HMAC-signed), records job state, emits
+<code>asset.download.progress</code> / <code>asset.stored</code> (<a
+href="./event-model.md">event-model.md</a>), and hands the artifact to
+the Asset Service. Retriable failures re-enqueue the delegated job with
+back-off; exhausted failures surface <code>post.failed</code>.</p>
+<h2 id="asset-download-diagram">6. Asset &amp; download diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 895px; background-color: white;" viewBox="0 0 895 927.6058349609375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .c rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c tspan{fill:rgb(234, 255, 240)!important;}#my-svg .db rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db tspan{fill:rgb(230, 246, 255)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M379.25,72.6L379.25,76.767C379.25,80.933,379.25,89.267,379.25,96.933C379.25,104.6,379.25,111.6,379.25,115.1L379.25,118.6" id="my-svg-L_DISP_ROUTE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DISP_ROUTE_0" data-points="W3sieCI6Mzc5LjI1LCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjM3OS4yNSwieSI6OTcuNTk5OTk4NDc0MTIxMX0seyJ4IjozNzkuMjUsInkiOjEyMi41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M341.248,190.598L310.206,202.848C279.165,215.098,217.083,239.599,186.041,258.566C155,277.533,155,290.967,155,297.683L155,304.4" id="my-svg-L_ROUTE_BOBA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROUTE_BOBA_0" data-points="W3sieCI6MzQxLjI0NzYwMTkxODQ2NTI1LCJ5IjoxOTAuNTk3NjAwMzkyNTg2MzJ9LHsieCI6MTU1LCJ5IjoyNjQuMDk5OTk4NDc0MTIxMX0seyJ4IjoxNTUsInkiOjMwOC4zOTk5OTc3MTExODE2NH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M399.957,207.893L405.965,217.26C411.972,226.628,423.986,245.364,429.993,259.982C436,274.6,436,285.1,436,290.35L436,295.6" id="my-svg-L_ROUTE_METUBE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROUTE_METUBE_0" data-points="W3sieCI6Mzk5Ljk1NzQwMTAzMjcwMjI1LCJ5IjoyMDcuODkyNTk3NDQxNDE4ODR9LHsieCI6NDM2LCJ5IjoyNjQuMDk5OTk4NDc0MTIxMX0seyJ4Ijo0MzYsInkiOjI5OS41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M420.589,187.261L465.991,200.067C511.393,212.874,602.196,238.487,647.598,256.543C693,274.6,693,285.1,693,290.35L693,295.6" id="my-svg-L_ROUTE_DLM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ROUTE_DLM_0" data-points="W3sieCI6NDIwLjU4OTM0MTIwNTcxNzg2LCJ5IjoxODcuMjYwNjU3MjY4NDAzMjZ9LHsieCI6NjkzLCJ5IjoyNjQuMDk5OTk4NDc0MTIxMX0seyJ4Ijo2OTMsInkiOjI5OS41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M155,373L155,384.783C155,396.567,155,420.133,178.945,441.975C202.89,463.817,250.78,483.934,274.725,493.992L298.67,504.051" id="my-svg-L_BOBA_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_BOBA_CB_0" data-points="W3sieCI6MTU1LCJ5IjozNzIuOTk5OTk2MTg1MzAyNzN9LHsieCI6MTU1LCJ5Ijo0NDMuNjk5OTk2OTQ4MjQyMn0seyJ4IjozMDIuMzU3NDg2NTE1NDI5OTcsInkiOjUwNS41OTk5OTg0NzQxMjExfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M436,381.8L436,392.117C436,402.433,436,423.067,430.129,443.129C424.258,463.191,412.515,482.682,406.644,492.428L400.773,502.174" id="my-svg-L_METUBE_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_METUBE_CB_0" data-points="W3sieCI6NDM2LCJ5IjozODEuNzk5OTk1NDIyMzYzM30seyJ4Ijo0MzYsInkiOjQ0My42OTk5OTY5NDgyNDIyfSx7IngiOjM5OC43MDg4NjM1MDE2NjkzLCJ5Ijo1MDUuNTk5OTk4NDc0MTIxMX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M693,381.8L693,392.117C693,402.433,693,423.067,656.347,444.388C619.694,465.709,546.387,487.719,509.734,498.724L473.081,509.728" id="my-svg-L_DLM_CB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_DLM_CB_0" data-points="W3sieCI6NjkzLCJ5IjozODEuNzk5OTk1NDIyMzYzM30seyJ4Ijo2OTMsInkiOjQ0My42OTk5OTY5NDgyNDIyfSx7IngiOjQ2OS4yNSwieSI6NTEwLjg3ODQ4MzU0ODEwNzR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M379.25,570.2L379.25,577.583C379.25,584.967,379.25,599.733,382.91,613.913C386.57,628.093,393.89,641.685,397.55,648.482L401.21,655.278" id="my-svg-L_CB_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CB_ASSET_0" data-points="W3sieCI6Mzc5LjI1LCJ5Ijo1NzAuMTk5OTk2OTQ4MjQyMn0seyJ4IjozNzkuMjUsInkiOjYxNC40OTk5OTYxODUzMDI3fSx7IngiOjQwMy4xMDYwNzA1NjA0NDY3NywieSI6NjU4Ljc5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M314.5,713.437L271.583,722.481C228.667,731.525,142.833,749.612,99.917,768.927C57,788.241,57,808.782,57,819.053L57,829.323" id="my-svg-L_ASSET_RAW_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_RAW_0" data-points="W3sieCI6MzE0LjUsInkiOjcxMy40MzcyNzA2OTMxNDI4fSx7IngiOjU3LCJ5Ijo3NjcuNjk5OTkzMTMzNTQ0OX0seyJ4Ijo1NywieSI6ODMzLjMyMzEyMzkzMTg4NDh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M339.75,723.4L321.292,730.783C302.833,738.167,265.917,752.933,247.458,767.033C229,781.133,229,794.567,229,801.283L229,808" id="my-svg-L_ASSET_WEB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_WEB_0" data-points="W3sieCI6MzM5Ljc1MDAwMDI5ODgwMTM1LCJ5Ijo3MjMuMzk5OTkzODk2NDg0NH0seyJ4IjoyMjksInkiOjc2Ny42OTk5OTMxMzM1NDQ5fSx7IngiOjIyOSwieSI6ODExLjk5OTk5MjM3MDYwNTV9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M420.5,723.4L420.5,730.783C420.5,738.167,420.5,752.933,420.5,770.066C420.5,787.198,420.5,806.696,420.5,816.445L420.5,826.194" id="my-svg-L_ASSET_OBJ_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_OBJ_0" data-points="W3sieCI6NDIwLjUsInkiOjcyMy4zOTk5OTM4OTY0ODQ0fSx7IngiOjQyMC41LCJ5Ijo3NjcuNjk5OTkzMTMzNTQ0OX0seyJ4Ijo0MjAuNSwieSI6ODMwLjE5NDE2ODA5MDgyMDN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M495.136,723.4L512.196,730.783C529.257,738.167,563.379,752.933,580.439,770.312C597.5,787.691,597.5,807.682,597.5,817.677L597.5,827.673" id="my-svg-L_ASSET_PG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_PG_0" data-points="W3sieCI6NDk1LjEzNTc2OTk1ODgxMDIsInkiOjcyMy4zOTk5OTM4OTY0ODQ0fSx7IngiOjU5Ny41LCJ5Ijo3NjcuNjk5OTkzMTMzNTQ0OX0seyJ4Ijo1OTcuNSwieSI6ODMxLjY3Mjc3OTA4MzI1Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M526.5,713.015L570.583,722.129C614.667,731.243,702.833,749.472,746.917,770.353C791,791.234,791,814.769,791,826.536L791,838.303" id="my-svg-L_ASSET_SEM_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ASSET_SEM_0" data-points="W3sieCI6NTI2LjUsInkiOjcxMy4wMTUyNDM4ODU0ODgyfSx7IngiOjc5MSwieSI6NzY3LjY5OTk5MzEzMzU0NDl9LHsieCI6NzkxLCJ5Ijo4NDIuMzAyOTQ0MTgzMzQ5Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M570.75,561.4L570.75,570.25C570.75,579.1,570.75,596.8,556.862,612.731C542.973,628.661,515.196,642.822,501.308,649.903L487.42,656.983" id="my-svg-L_CL_ASSET_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CL_ASSET_0" data-points="W3sieCI6NTcwLjc1LCJ5Ijo1NjEuMzk5OTk3NzExMTgxNn0seyJ4Ijo1NzAuNzUsInkiOjYxNC40OTk5OTYxODUzMDI3fSx7IngiOjQ4My44NTYwNzAyNjE2NDU0LCJ5Ijo2NTguNzk5OTk1NDIyMzYzM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_DISP_ROUTE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(155, 264.0999984741211)"><g class="label" data-id="L_ROUTE_BOBA_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-53" y="0" width="107" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">torrent/magnet</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(436, 264.0999984741211)"><g class="label" data-id="L_ROUTE_METUBE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-67.5" y="0" width="135" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">youtube/streaming</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(693, 264.0999984741211)"><g class="label" data-id="L_ROUTE_DLM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-85" y="0" width="170" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">http/ftp/smb/nfs/webdav</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(155, 443.6999969482422)"><g class="label" data-id="L_BOBA_CB_0" transform="translate(-0.5, -36.900001525878906)"><g><rect class="background" style="" x="-102" y="0" width="205" height="73.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">standardized</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> callback</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">job</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">id/state/progress/asset-ref/er</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ror</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(436, 443.6999969482422)"><g class="label" data-id="L_METUBE_CB_0" transform="translate(-0.5, -36.900001525878906)"><g><rect class="background" style="" x="-102" y="0" width="205" height="73.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">standardized</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> callback</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">job</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">id/state/progress/asset-ref/er</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ror</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(693, 443.6999969482422)"><g class="label" data-id="L_DLM_CB_0" transform="translate(-0.5, -36.900001525878906)"><g><rect class="background" style="" x="-102" y="0" width="205" height="73.80000305175781"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">standardized</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> callback</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">job</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">id/state/progress/asset-ref/er</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ror</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_CB_ASSET_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_RAW_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_WEB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_ASSET_OBJ_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(597.5, 767.6999931335449)"><g class="label" data-id="L_ASSET_PG_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-69" y="0" width="138" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">checksum</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> dedup</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">post↔asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> link</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(791, 767.6999931335449)"><g class="label" data-id="L_ASSET_SEM_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-96" y="0" width="192" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">embed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> transcript/metadata</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(570.75, 614.4999961853027)"><g class="label" data-id="L_CL_ASSET_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-80" y="0" width="160" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/v1/assets/:id</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">never</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> a</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> direct</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> file</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> path</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default c" id="my-svg-flowchart-DISP-0" data-look="classic" transform="translate(379.25, 40.29999923706055)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-86.5" y="-32.29999923706055" width="173" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Skill</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Dispatch</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stage</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ROUTE-1" data-look="classic" transform="translate(379.25, 175.5999984741211)"><polygon points="53,0 106,-53 53,-106 0,-53" class="label-container" transform="translate(-52.5, 53)"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">link</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> type</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-BOBA-3" data-look="classic" transform="translate(155, 340.6999969482422)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-126" y="-32.29999923706055" width="252" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Boba</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SSE</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> POST</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /api/v1/hooks</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-METUBE-5" data-look="classic" transform="translate(436, 340.6999969482422)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-105" y="-41.099998474121094" width="210" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MeTube</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> outbound</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> webhook</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BUILD-NEW</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-DLM-7" data-look="classic" transform="translate(693, 340.6999969482422)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-102" y="-41.099998474121094" width="204" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Download</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Manager</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BUILD-NEW</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reuse</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">filesystem</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-CB-11" data-look="classic" transform="translate(379.25, 537.8999977111816)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-90" y="-32.29999923706055" width="180" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Callback</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> module</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">BUILD-NEW</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-ASSET-13" data-look="classic" transform="translate(420.5, 691.0999946594238)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Catalogizer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> storage</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-RAW-15" data-look="classic" transform="translate(57, 865.8029441833496)"><path d="M0,10.986547085201794 a49,10.986547085201794 0,0,0 98,0 a49,10.986547085201794 0,0,0 -98,0 l0,42.98654708520179 a49,10.986547085201794 0,0,0 98,0 l0,-42.98654708520179" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-49, -32.47982062780269)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">raw</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> original</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-WEB-17" data-look="classic" transform="translate(229, 865.8029441833496)"><path d="M0,13.468634686346864 a73,13.468634686346864 0,0,0 146,0 a73,13.468634686346864 0,0,0 -146,0 l0,80.66863163458905 a73,13.468634686346864 0,0,0 146,0 l0,-80.66863163458905" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-73, -53.802950503641384)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -18.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">…-web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rendition</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">H.264/AAC</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fMP4</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ·</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HLS/DASH</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-OBJ-19" data-look="classic" transform="translate(420.5, 865.8029441833496)"><path d="M0,13.072519083969466 a68.5,13.072519083969466 0,0,0 137,0 a68.5,13.072519083969466 0,0,0 -137,0 l0,45.07251908396947 a68.5,13.072519083969466 0,0,0 137,0 l0,-45.07251908396947" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-68.5, -35.6087786259542)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">MinIO/S3</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 50</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> TB+</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-PG-21" data-look="classic" transform="translate(597.5, 865.8029441833496)"><path d="M0,12.086776859504132 a58.5,12.086776859504132 0,0,0 117,0 a58.5,12.086776859504132 0,0,0 -117,0 l0,44.086776859504134 a58.5,12.086776859504132 0,0,0 117,0 l0,-44.086776859504134" class="basic label-container outer-path" style="fill:#124a63 !important;stroke:#062634 !important" transform="translate(-58.5, -34.1301652892562)"/><g class="label" style="color:#e6f6ff !important" transform="translate(0, -0.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">relational</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SoR</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-SEM-23" data-look="classic" transform="translate(791, 865.8029441833496)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-85" y="-23.5" width="170" height="47"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Semantic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> index</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CL-24" data-look="classic" transform="translate(570.75, 537.8999977111816)"><rect class="basic label-container" style="" x="-51.5" y="-23.5" width="103" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Client</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/asset-download.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram’s whole point is the fan-in shape: three
+heterogeneous downloaders on the left collapse into a <em>single</em>
+callback edge in the middle, and only past that edge does the Asset
+Service appear. That shape is the visual proof of the fetch-vs-store
+separation of §1 — the system integrates three very different
+acquisition backends exactly once, through one contract, instead of
+teaching the Asset Service three download protocols.</p>
+<p>The download stage of the Skill Dispatch engine routes by link type:
+torrent/magnet links go to Boba (which already speaks SSE +
+<code>POST /api/v1/hooks</code>), YouTube/streaming links go to MeTube
+(which needs the new outbound webhook, <code>[GAP: 6.5]</code>), and
+direct protocol URLs (HTTP/FTP/SMB/NFS/WebDAV) go to the new Download
+Manager (which reuses <code>filesystem</code> for the non-HTTP protocols
+and adds the HTTP source, <code>[GAP: 6.2/6.3]</code>). All three report
+completion through <strong>one standardized callback</strong> — job id,
+state, progress, an asset reference, and an error block — to a shared
+callback module, so the rest of the system does not care which
+downloader ran.</p>
+<p>The callback module hands the artifact to the Asset Service, which
+keeps the raw original, generates the <code>…-web</code> rendition
+(H.264/AAC fMP4, HLS/DASH), stores bytes in the MinIO/S3 tier, records
+the checksum and the post↔︎asset link in the relational system of record
+(deduping by content hash), and embeds any transcript/metadata into the
+semantic index.</p>
+<p>Finally, clients fetch assets only through
+<code>/v1/assets/:id</code> — <strong>never</strong> a direct file path
+— so auth/RBAC and virtual-blob resolution always apply. The diagram’s
+single-callback fan-in is the architectural payoff of the standardized
+contract: three heterogeneous downloaders, one uniform integration.</p>
+<h2 id="renditions-dedup-integrity-retention">7. Renditions, dedup,
+integrity, retention</h2>
+<p><code>[research_request_final §7.1, §7.3, Q36, §19.3]</code>:</p>
+<ul>
+<li><strong>Raw preserved</strong> + <strong>web-optimized
+<code>…-web</code></strong> version (suffix before the extension).
+Video: H.264 High + AAC in fMP4 baseline, plus H.265/HEVC and AV1 for
+bandwidth; adaptive 1080p/720p/480p via HLS + DASH. Audio: MP3 320k +
+Opus 128k + FLAC archival.</li>
+<li><strong>Content-hash dedup</strong> — identical bytes stored once;
+integrity checksums (sha256) on every asset.</li>
+<li><strong>Structured directories</strong> + numeric ordering prefixes
+for series/playlists (watch order).</li>
+<li><strong>Broken physical link → re-downloadable</strong> via REST
+(<code>POST /v1/assets/{id}/redownload</code>).</li>
+<li><strong>Retention</strong> — per-account policy (indefinite default,
+per-account overrides <code>[OPERATOR]</code>); cleanup governed by that
+policy; assets snapshot/dedup daily for DR (RPO ≈ 1 h)
+<code>[OPERATOR]</code>.</li>
+</ul>
+<h2 id="serving-never-a-direct-file-path">8. Serving: never a direct
+file path</h2>
+<p>Client links are <strong>never</strong> direct file paths — they
+resolve through the Asset Service, which maps to real or virtual content
+and enforces auth/RBAC <code>[research_request_final §7.1]</code>. The
+service serves via Range (<code>OpenSeekable</code>) for seekable media
+and HLS/DASH for adaptive streaming; the specially encrypted directory
+(sensitive scans) decrypts only inside the Asset Service after an RBAC
+check. Virtual assets (blobs from DBs or other sources) resolve through
+blob resolvers.</p>
+<pre><code>GET /v1/assets/{id}                 → 302/stream (RBAC-gated, Range-capable)
+GET /v1/assets/{id}/manifest.m3u8   → HLS manifest (adaptive)
+POST /v1/assets/{id}/redownload     → re-fetch broken physical link</code></pre>
+<p>The architecture-level serving contract as <strong>OpenAPI
+3.1</strong> <code>[CONVENTIONS §6]</code> (the exhaustive schema set
+lives in the <a href="../api/index.md">api/</a> pack; this excerpt fixes
+the never-a-direct-path boundary):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openapi</span><span class="kw">:</span><span class="at"> </span><span class="fl">3.1.0</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">info</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Helix Thready — Asset serving (architecture excerpt)</span><span class="kw">,</span><span class="at"> </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0.0&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/assets/{id}</span><span class="kw">:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> getAsset</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Stream an asset by id — RBAC-gated, Range-capable; never a direct file path.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> id</span><span class="kw">,</span><span class="at"> </span><span class="fu">in</span><span class="kw">:</span><span class="at"> path</span><span class="kw">,</span><span class="at"> </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="kw">,</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Range</span><span class="kw">,</span><span class="at"> </span><span class="fu">in</span><span class="kw">:</span><span class="at"> header</span><span class="kw">,</span><span class="at"> </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="kw">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Byte-range for seekable media (OpenSeekable)</span><span class="kw">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">examples</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;bytes=0-1048575&quot;</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;200&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Full body (small assets)</span><span class="kw">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/octet-stream</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> binary </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;206&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Partial content (Range satisfied)</span><span class="kw">,</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">headers</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">Content-Range</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">},</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/octet-stream</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> binary </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;302&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Signed redirect to the object tier (still RBAC-gated)</span><span class="kw">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">headers</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">Location</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uri </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;401&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Missing/invalid credentials </span><span class="kw">}</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;403&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> RBAC denies cross-account/asset access </span><span class="kw">}</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;404&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Unknown asset id </span><span class="kw">}</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/assets/{id}/manifest.m3u8</span><span class="kw">:</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> getAssetHlsManifest</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Adaptive HLS manifest for the asset&#39;s …-web renditions.</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> id</span><span class="kw">,</span><span class="at"> </span><span class="fu">in</span><span class="kw">:</span><span class="at"> path</span><span class="kw">,</span><span class="at"> </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="kw">,</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;200&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> HLS manifest</span><span class="kw">,</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/vnd.apple.mpegurl</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;403&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> RBAC denied </span><span class="kw">}</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;404&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> No renditions for this asset </span><span class="kw">}</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">/v1/assets/{id}/redownload</span><span class="kw">:</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">post</span><span class="kw">:</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">operationId</span><span class="kw">:</span><span class="at"> redownloadAsset</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">summary</span><span class="kw">:</span><span class="at"> Re-fetch a broken physical link; re-enqueues a delegated download job.</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">security</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> id</span><span class="kw">,</span><span class="at"> </span><span class="fu">in</span><span class="kw">:</span><span class="at"> path</span><span class="kw">,</span><span class="at"> </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="kw">,</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">format</span><span class="kw">:</span><span class="at"> uuid </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">responses</span><span class="kw">:</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;202&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Accepted; a DownloadJob was enqueued</span><span class="kw">,</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="at">                 </span><span class="fu">content</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">application/json</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">$ref</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#/components/schemas/JobAccepted&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;403&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> RBAC denied </span><span class="kw">}</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">&quot;404&quot;</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Unknown asset id </span><span class="kw">}</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">securitySchemes</span><span class="kw">:</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">bearerAuth</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> http</span><span class="kw">,</span><span class="at"> </span><span class="fu">scheme</span><span class="kw">:</span><span class="at"> bearer</span><span class="kw">,</span><span class="at"> </span><span class="fu">bearerFormat</span><span class="kw">:</span><span class="at"> JWT </span><span class="kw">}</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schemas</span><span class="kw">:</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">JobAccepted</span><span class="kw">:</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> object</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">job_id</span><span class="kw">,</span><span class="at"> state</span><span class="kw">]</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">properties</span><span class="kw">:</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">job_id</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string </span><span class="kw">}</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">state</span><span class="kw">:</span><span class="at">  </span><span class="kw">{</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span><span class="kw">,</span><span class="at"> </span><span class="fu">enum</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">queued</span><span class="kw">,</span><span class="at"> running</span><span class="kw">,</span><span class="at"> completed</span><span class="kw">,</span><span class="at"> failed</span><span class="kw">]</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<h2 id="gap-register-coverage">9. Gap-register coverage</h2>
+<ul>
+<li><code>[GAP: 6.1]</code> Catalogizer not decoupled; Streaming=WS hub
+→ decouple Asset Service + add HLS/DASH transcoder + dedup/checksums +
+<code>…-web</code> + virtual blobs (§2, §7).</li>
+<li><code>[GAP: 6.2]</code> filesystem no HTTP source / no download
+semantics → Download Manager reuses filesystem + adds HTTP source + job
+semantics; fix NFS listing (§3).</li>
+<li><code>[GAP: 6.3]</code> Download Manager does not exist → BUILD-NEW
+(§3).</li>
+<li><code>[GAP: 6.4]</code> Boba callback bespoke → standardize to
+shared schema (§4–5).</li>
+<li><code>[GAP: 6.5]</code> MeTube poll-only → add outbound completion
+webhook (§4–5).</li>
+<li><code>[GAP: 6.6]</code> No standardized callback module → BUILD-NEW
+reusable submodule (§5).</li>
+<li><code>[GAP: 3.2]</code> storage MinIO signed-URL parity → validate
+against self-hosted MinIO (Hetzner); tracked with the deployment
+pack.</li>
+</ul>
+<h2 id="tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: MeTube completion must push a callback (not require polling).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMeTube_OutboundWebhook<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    got <span class="op">:=</span> captureCallback<span class="op">(</span>t<span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    triggerMeTubeComplete<span class="op">(</span>t<span class="op">,</span> jobID<span class="op">=</span><span class="st">&quot;j1&quot;</span><span class="op">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Eventually<span class="op">(</span>t<span class="op">,</span> <span class="kw">func</span><span class="op">()</span> <span class="dt">bool</span> <span class="op">{</span> <span class="cf">return</span> got<span class="op">.</span>Received<span class="op">(</span><span class="st">&quot;j1&quot;</span><span class="op">,</span> <span class="st">&quot;completed&quot;</span><span class="op">)</span> <span class="op">},</span> <span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">,</span> <span class="dv">50</span><span class="op">*</span>time<span class="op">.</span>Millisecond<span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// FAILS today — MeTube is poll-only (GAP 6.5)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: web rendition must be produced with the …-web suffix, raw preserved.</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAsset_WebRenditionAndRaw<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    a <span class="op">:=</span> store<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;video.mp4&quot;</span><span class="op">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>True<span class="op">(</span>t<span class="op">,</span> a<span class="op">.</span>HasRaw<span class="op">())</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Contains<span class="op">(</span>t<span class="op">,</span> a<span class="op">.</span>RenditionNames<span class="op">(),</span> <span class="st">&quot;video-web.mp4&quot;</span><span class="op">)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: identical bytes must dedup by content hash.</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAsset_ContentHashDedup<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    a <span class="op">:=</span> store<span class="op">(</span>t<span class="op">,</span> bytesA<span class="op">);</span> b <span class="op">:=</span> store<span class="op">(</span>t<span class="op">,</span> bytesA<span class="op">)</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> a<span class="op">.</span>StoragePath<span class="op">,</span> b<span class="op">.</span>StoragePath<span class="op">)</span> <span class="co">// one physical copy</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: client cannot obtain a direct file path.</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAsset_NoDirectPath<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    ref <span class="op">:=</span> clientAssetRef<span class="op">(</span>t<span class="op">,</span> assetID<span class="op">)</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>False<span class="op">(</span>t<span class="op">,</span> isFilesystemPath<span class="op">(</span>ref<span class="op">))</span> <span class="co">// must be asset:// or /v1/assets/:id</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: ASSET-1]</code> The decoupling boundary of the Asset
+Service vs Catalogizer’s existing Gin API + transcoder needs a concrete
+extraction plan (which packages move to the new submodule); tracked as a
+P1 workable item <code>[GAP: 6.1]</code>.</li>
+<li><code>[OPEN: ASSET-2]</code> The transcoder engine (ffmpeg wrapper
+vs an existing <code>vasic-digital</code> component) for HLS/DASH +
+H.265/AV1 is unspecified; <code>[RESEARCH]</code> + decision
+tracked.</li>
+<li><code>[OPEN: ASSET-3]</code> Callback authentication (HMAC signing
+scheme + replay protection) for the standardized callback module needs a
+concrete spec; tracked with the BUILD-NEW callback submodule
+<code>[GAP: 6.6]</code>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

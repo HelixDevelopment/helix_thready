@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/api/materials/codegen/README.md
   Status          : Active — v1.0
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (API & SDKs — materials)
   Related         : ./Makefile, ./buf.gen.yaml, ./buf.yaml, ../../sdk-strategy.md,
                     ../../openapi.yaml, ../../versioning.md, ../validation.md
@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (API & SDKs — materials) | Initial Makefile + buf config scaffolds implementing the helix_proto pattern from sdk-strategy.md |
+| 2 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 ## Table of Contents
 
@@ -55,7 +56,7 @@ flowchart LR
   end
   PROTO -->|buf generate: protocolbuffers/go + connectrpc/go| GO["gen/go (Go + Connect)"]
   PROTO -->|protoc-gen-prost + protoc-gen-tonic| RUST["gen/rust (Rust + tonic)"]
-  PROTO -.->|protoc-gen-dart (commented)| DARTP["gen/dart (proto msgs)"]
+  PROTO -.->|"protoc-gen-dart (commented)"| DARTP["gen/dart (proto msgs)"]
   OAPI -->|openapi-generator typescript-fetch| TS["gen/ts"]
   OAPI -->|openapi-generator dart-dio| DART["gen/dart"]
   OAPI -->|openapi-generator python/kotlin/swift/cpp/csharp/ruby/php| REST["gen/<lang>"]

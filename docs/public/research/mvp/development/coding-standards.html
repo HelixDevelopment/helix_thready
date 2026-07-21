@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Coding Standards</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Coding Standards</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#language-toolchain" id="toc-language-toolchain">1.
+Language &amp; toolchain</a></li>
+<li><a href="#tdd-reproduce-first-11.4.43"
+id="toc-tdd-reproduce-first-11.4.43">2. TDD — reproduce-first
+<code>[§11.4.43]</code></a></li>
+<li><a href="#design-patterns" id="toc-design-patterns">3. Design
+patterns</a></li>
+<li><a href="#solid-core-principles" id="toc-solid-core-principles">4.
+SOLID &amp; core principles</a></li>
+<li><a href="#decoupling-11.4.28" id="toc-decoupling-11.4.28">5.
+Decoupling <code>[§11.4.28]</code></a></li>
+<li><a href="#concurrency" id="toc-concurrency">6. Concurrency</a></li>
+<li><a href="#error-handling-observability"
+id="toc-error-handling-observability">7. Error handling &amp;
+observability</a></li>
+<li><a href="#anti-bluff-discipline-11.4.27"
+id="toc-anti-bluff-discipline-11.4.27">8. Anti-bluff discipline
+<code>[§11.4.27]</code></a></li>
+<li><a href="#naming-layout-formatting"
+id="toc-naming-layout-formatting">9. Naming, layout, formatting</a></li>
+<li><a href="#non-go-surfaces" id="toc-non-go-surfaces">10. Non-Go
+surfaces</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Coding Standards
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/development/coding-standards.md
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
+  Author          : Helix Thready documentation swarm (development)
+  Related         : ./index.md, ./contribution-guidelines.md, ./workable-items.md,
+                    ./workable-items-detail.md, ../testing/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (development)</td>
+<td>Initial draft — Go 1.26, TDD, patterns, SOLID, decoupling,
+concurrency</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (development, review)</td>
+<td>Review pass — clarified operator precedence in the anti-bluff
+embedder guard</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (development, pass 3)</td>
+<td>Anchored the anti-bluff embedder guard to the VERIFIED
+<code>HelixLLM.NewEmbedder</code> source signature (the exact
+silent-fallback trap it defends against)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (development, critic pass)</td>
+<td>Completeness fix — enumerated the <strong>canonical 15 mandated test
+types</strong> (authoritative final request §9.1) in §8 so every item’s
+<code>test_types</code> field is verifiable against a self-contained
+reference; clarified sub-variants (mutation/contract/race/…) are
+refinements, not a 16th type</td>
+</tr>
+</tbody>
+</table>
+<p>These are the engineering standards every <code>ATM-NNN</code>
+implementation must meet. They implement the final request §5.2
+development principles and the Constitution’s TDD
+<code>[§11.4.43]</code>, decoupling <code>[§11.4.28]</code>, and
+anti-bluff <code>[§11.4.27]</code> mandates.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-language--toolchain">1. Language &amp;
+toolchain</a></li>
+<li><a href="#2-tdd--reproduce-first-114-43">2. TDD — reproduce-first
+<code>[§11.4.43]</code></a></li>
+<li><a href="#3-design-patterns">3. Design patterns</a></li>
+<li><a href="#4-solid--core-principles">4. SOLID &amp; core
+principles</a></li>
+<li><a href="#5-decoupling-114-28">5. Decoupling
+<code>[§11.4.28]</code></a></li>
+<li><a href="#6-concurrency">6. Concurrency</a></li>
+<li><a href="#7-error-handling--observability">7. Error handling &amp;
+observability</a></li>
+<li><a href="#8-anti-bluff-discipline-114-27">8. Anti-bluff discipline
+<code>[§11.4.27]</code></a></li>
+<li><a href="#9-naming-layout-formatting">9. Naming, layout,
+formatting</a></li>
+<li><a href="#10-non-go-surfaces">10. Non-Go surfaces</a></li>
+</ul>
+<h2 id="language-toolchain">1. Language &amp; toolchain</h2>
+<ul>
+<li><strong>Primary language: Go 1.26.x</strong>
+<code>[CONSTITUTION silent → project pins latest stable]</code>. The
+Constitution does not pin a Go version; the project pins the latest
+stable, matching org tooling (1.25/1.26). <code>go.mod</code> declares
+<code>go 1.26</code>.</li>
+<li><strong>Formatting/vetting (mandatory):</strong>
+<code>gofmt -s</code>, <code>go vet</code>, <code>staticcheck</code>,
+<code>golangci-lint</code> (with <code>errcheck</code>,
+<code>govet</code>, <code>staticcheck</code>, <code>ineffassign</code>,
+<code>revive</code>). CI-equivalent enforcement runs in the local git
+hooks <code>[§11.4.75/156]</code> — there is no server CI.</li>
+<li><strong>Race + mutation:</strong> <code>go test -race</code> on
+every package; <code>go-mutesting</code> mutation testing plus
+paired-mutation anti-bluff gates (§8).</li>
+<li><strong>No cgo unless required:</strong> dev uses cgo-free
+<code>modernc.org/sqlite</code>; cgo is allowed only where a capability
+demands it (e.g. <code>gosseract</code>/Tesseract in the OCR adapter
+<code>ATM-033</code>), gated behind a build tag and documented.</li>
+</ul>
+<h2 id="tdd-reproduce-first-11.4.43">2. TDD — reproduce-first
+<code>[§11.4.43]</code></h2>
+<p>Every change is <strong>reproduce-first</strong>: write the failing
+(RED) test that reproduces the requirement or bug
+<strong>before</strong> any fix; the same test asserts the fix (GREEN);
+then extend to all cases. Iron Law <code>[§11.4.102]</code>: <strong>no
+fix without root-cause investigation first</strong> — no
+guess-and-retry, no “probably flaky” reruns without captured forensic
+evidence.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1797px; background-color: white;" viewBox="0 0 1797 98.19999694824219" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M199,49.1L203.167,49.1C207.333,49.1,215.667,49.1,223.333,49.1C231,49.1,238,49.1,241.5,49.1L245,49.1" id="my-svg-L_REQ_RED_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REQ_RED_0" data-points="W3sieCI6MTk5LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6MjI0LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6MjQ5LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M462,49.1L466.167,49.1C470.333,49.1,478.667,49.1,486.333,49.1C494,49.1,501,49.1,504.5,49.1L508,49.1" id="my-svg-L_RED_RC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RED_RC_0" data-points="W3sieCI6NDYyLCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6NDg3LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6NTEyLCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M748,49.1L752.167,49.1C756.333,49.1,764.667,49.1,772.333,49.1C780,49.1,787,49.1,790.5,49.1L794,49.1" id="my-svg-L_RC_IMPL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RC_IMPL_0" data-points="W3sieCI6NzQ4LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6NzczLCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9LHsieCI6Nzk4LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1012,49.1L1016.167,49.1C1020.333,49.1,1028.667,49.1,1036.333,49.1C1044,49.1,1051,49.1,1054.5,49.1L1058,49.1" id="my-svg-L_IMPL_GREEN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IMPL_GREEN_0" data-points="W3sieCI6MTAxMiwieSI6NDkuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjEwMzcsInkiOjQ5LjA5OTk5ODQ3NDEyMTA5NH0seyJ4IjoxMDYyLCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1264,49.1L1268.167,49.1C1272.333,49.1,1280.667,49.1,1288.333,49.1C1296,49.1,1303,49.1,1306.5,49.1L1310,49.1" id="my-svg-L_GREEN_EXT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_GREEN_EXT_0" data-points="W3sieCI6MTI2NCwieSI6NDkuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjEyODksInkiOjQ5LjA5OTk5ODQ3NDEyMTA5NH0seyJ4IjoxMzE0LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1524,49.1L1528.167,49.1C1532.333,49.1,1540.667,49.1,1548.333,49.1C1556,49.1,1563,49.1,1566.5,49.1L1570,49.1" id="my-svg-L_EXT_REV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_EXT_REV_0" data-points="W3sieCI6MTUyNCwieSI6NDkuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjE1NDksInkiOjQ5LjA5OTk5ODQ3NDEyMTA5NH0seyJ4IjoxNTc0LCJ5Ijo0OS4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_REQ_RED_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RED_RC_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_RC_IMPL_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IMPL_GREEN_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_GREEN_EXT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_EXT_REV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-REQ-0" data-look="classic" transform="translate(103.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-95.5" y="-23.5" width="191" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Requirement</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bug</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RED-1" data-look="classic" transform="translate(355.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-106.5" y="-32.29999923706055" width="213" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Write</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> failing</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> RED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reproduces</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> exactly</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RC-3" data-look="classic" transform="translate(630, 49.099998474121094)"><rect class="basic label-container" style="" x="-118" y="-32.29999923706055" width="236" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Root-cause</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> investigation</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.102</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Iron</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Law</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IMPL-5" data-look="classic" transform="translate(905, 49.099998474121094)"><rect class="basic label-container" style="" x="-107" y="-23.5" width="214" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Implement</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> minimal</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fix</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-GREEN-7" data-look="classic" transform="translate(1163, 49.099998474121094)"><rect class="basic label-container" style="" x="-101" y="-23.5" width="202" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Same</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> -</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> GREEN</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-EXT-9" data-look="classic" transform="translate(1419, 49.099998474121094)"><rect class="basic label-container" style="" x="-105" y="-41.099998474121094" width="210" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Extend</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> to</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> all</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> cases</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 15</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> test</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> types</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> where</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">applicable</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REV-11" data-look="classic" transform="translate(1681.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-107.5" y="-32.29999923706055" width="215" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Fable</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> @</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> xhigh</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> review</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">§11.4.209</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The first two nodes are the discipline’s hard order.
+A requirement or bug becomes a RED test that reproduces it precisely —
+never a fix attempt — and only <em>after</em> a completed root-cause
+investigation (the §11.4.102 Iron Law forbids fixing before
+understanding) does the minimal implementation follow, turning the same
+test GREEN. The edge from <code>RED</code> to <code>RC</code> to
+<code>IMPL</code> is deliberately not a shortcut: you may not skip the
+investigation node and jump straight to a patch.</p>
+<p>The tail of the flow is where a single passing test becomes
+releasable evidence. Once GREEN, the work extends to all edge cases and
+adds the applicable mandated test types (the 15-type set where
+relevant), and finally passes the independent Fable review
+<code>[§11.4.209]</code>. The RED test is the contract throughout: it
+must fail <em>for the right reason</em> before it is allowed to pass,
+which is what distinguishes a real reproduction from a test that would
+pass against a stub — the same anti-bluff property the paired-mutation
+gates (§8) enforce mechanically.</p>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: <a
+href="./diagrams/tdd-reproduce-first.mmd">diagrams/tdd-reproduce-first.mmd</a>.</p>
+</blockquote>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// reproduce-first: the RED test is written and MUST fail before the dispatcher exists.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDispatcher_MultiHashtag_DownloadBeforeResearch<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    post <span class="op">:=</span> Post<span class="op">{</span>Hashtags<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;#Video&quot;</span><span class="op">,</span> <span class="st">&quot;#Research&quot;</span><span class="op">}}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    got <span class="op">:=</span> NewDispatcher<span class="op">(</span>testGraph<span class="op">).</span>Plan<span class="op">(</span>post<span class="op">)</span>          <span class="co">// Plan() not yet implemented -&gt; RED</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    want <span class="op">:=</span> <span class="op">[]</span>SkillStep<span class="op">{{</span>Skill<span class="op">:</span> <span class="st">&quot;video-download&quot;</span><span class="op">,</span> Order<span class="op">:</span> <span class="dv">10</span><span class="op">},</span> <span class="op">{</span>Skill<span class="op">:</span> <span class="st">&quot;deep-research&quot;</span><span class="op">,</span> Order<span class="op">:</span> <span class="dv">40</span><span class="op">}}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>reflect<span class="op">.</span>DeepEqual<span class="op">(</span>got<span class="op">,</span> want<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Fatalf<span class="op">(</span><span class="st">&quot;precedence violated: download must precede research</span><span class="ch">\n</span><span class="st"> got=%v</span><span class="ch">\n</span><span class="st">want=%v&quot;</span><span class="op">,</span> got<span class="op">,</span> want<span class="op">)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="design-patterns">3. Design patterns</h2>
+<p>The Constitution does not mandate specific GoF patterns; they are
+adopted as <strong>project engineering standards</strong> per final
+request §5.2. Standard patterns and where they apply:</p>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Thready usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Adapter</strong></td>
+<td><code>OCRProvider</code> (Tesseract/PaddleOCR), messenger channels
+(Telegram/Max), download sources (HTTP/FTP/SMB)</td>
+</tr>
+<tr>
+<td><strong>Factory / Factory-of-Factories</strong></td>
+<td><code>VectorStore</code> (pgvector/Qdrant), embedding-provider
+selection, download-source construction</td>
+</tr>
+<tr>
+<td><strong>Strategy</strong></td>
+<td>Retry/back-off policies, transcode profiles, embedding-model
+choice</td>
+</tr>
+<tr>
+<td><strong>Circuit-Breaker</strong></td>
+<td>Guarding flapping external systems (present in
+<code>LLMProvider</code>/<code>filesystem</code>/<code>lets_encrypt</code>)</td>
+</tr>
+<tr>
+<td><strong>Observer</strong></td>
+<td>Event Bus subscriptions; processing progress events</td>
+</tr>
+<tr>
+<td><strong>Facade</strong></td>
+<td>The SDK surface over the REST/Protobuf core; the Asset Service over
+storage+filesystem</td>
+</tr>
+<tr>
+<td><strong>Mediator</strong></td>
+<td>The Skill-dispatch engine coordinating
+download/convert/analyze/research steps</td>
+</tr>
+<tr>
+<td><strong>Proxy</strong></td>
+<td>Asset links that resolve through the Asset Service, never direct
+file paths</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Adapter + Factory: a first-class OCRProvider seam (closes VisionEngine&#39;s no-OCR gap, ATM-033).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OCRProvider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Recognize<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> img image<span class="op">.</span>Image<span class="op">)</span> <span class="op">(</span>OCRResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// per-word boxes + text</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OCRResult <span class="kw">struct</span><span class="op">{</span> Text <span class="dt">string</span><span class="op">;</span> Words <span class="op">[]</span>WordBox <span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> WordBox <span class="kw">struct</span><span class="op">{</span> Text <span class="dt">string</span><span class="op">;</span> Rect image<span class="op">.</span>Rectangle<span class="op">;</span> Conf <span class="dt">float64</span> <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewOCRProvider<span class="op">(</span>cfg OCRConfig<span class="op">)</span> <span class="op">(</span>OCRProvider<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span> <span class="co">// Factory selects the concrete adapter</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> cfg<span class="op">.</span>Engine <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;tesseract&quot;</span><span class="op">:</span> <span class="cf">return</span> newTesseractAdapter<span class="op">(</span>cfg<span class="op">)</span>     <span class="co">// cgo gosseract or subprocess</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;paddle&quot;</span><span class="op">:</span>    <span class="cf">return</span> newPaddleAdapter<span class="op">(</span>cfg<span class="op">)</span>         <span class="co">// hard/multilingual scans</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span>          <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;ocr: unknown engine %q&quot;</span><span class="op">,</span> cfg<span class="op">.</span>Engine<span class="op">)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="solid-core-principles">4. SOLID &amp; core principles</h2>
+<ul>
+<li><strong>S</strong>ingle-Responsibility — one reason to change per
+type; the dispatch engine dispatches, it does not embed nor
+transcode.</li>
+<li><strong>O</strong>pen-Closed — extend via new adapters/strategies,
+not by editing existing switch bodies; register new providers through
+the factory.</li>
+<li><strong>L</strong>iskov — every
+<code>OCRProvider</code>/<code>VectorStore</code>/<code>Channel</code>
+implementation is substitutable; contract tests assert this
+(<code>ATM-064</code>).</li>
+<li><strong>I</strong>nterface-Segregation — small, purpose-built
+interfaces (<code>Recognize</code>, <code>OpenSeekable</code>), not
+god-interfaces.</li>
+<li><strong>D</strong>ependency-Inversion — depend on interfaces, inject
+concretes via config (<code>[§11.4.28]</code>).</li>
+<li>Plus <strong>DRY</strong>, <strong>KISS</strong>, heavy decoupling
+and reuse. Prefer composition over inheritance.</li>
+</ul>
+<h2 id="decoupling-11.4.28">5. Decoupling <code>[§11.4.28]</code></h2>
+<p>VERIFIED at source (Constitution §11.4.28 / CONST-051). Rules for
+every Thready module:</p>
+<ul>
+<li><strong>Project-not-aware + config-injected.</strong> A module never
+hardcodes Thready specifics; it takes a <code>Config</code> and
+dependencies via constructor injection.</li>
+<li><strong>Generic interfaces + abstract factories</strong> for
+variants; no hard coupling to a concrete backend.</li>
+<li><strong>Dependency layout</strong>
+<code>&lt;root&gt;/&lt;name&gt;/</code> or
+<code>&lt;root&gt;/submodules/&lt;name&gt;/</code>; <strong>no nested
+own-org submodule chains</strong> (depth-1 exception only for
+constitution-anchored engines with <code>helix-deps.yaml</code>).</li>
+<li>New capabilities become their <strong>own repo</strong> (see <a
+href="./build-new-subsystems.md">build-new-subsystems.md</a>), never a
+vendored copy.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Dependency inversion + config injection: the dispatcher depends on interfaces it does not construct.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Dispatcher <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    graph   SkillGraph      <span class="co">// read-only knowledge source (helix_skills)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    queue   TaskQueue       <span class="co">// digital.vasic.background</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    bus     EventPublisher  <span class="co">// digital.vasic.eventbus</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewDispatcher<span class="op">(</span>cfg Config<span class="op">,</span> graph SkillGraph<span class="op">,</span> queue TaskQueue<span class="op">,</span> bus EventPublisher<span class="op">)</span> <span class="op">*</span>Dispatcher <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>Dispatcher<span class="op">{</span>graph<span class="op">:</span> graph<span class="op">,</span> queue<span class="op">:</span> queue<span class="op">,</span> bus<span class="op">:</span> bus<span class="op">}</span> <span class="co">// nothing project-specific hardcoded</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="concurrency">6. Concurrency</h2>
+<p>Final request §5.2: “heavy use of atomic, non-blocking operations,
+correct data structures and synchronization.” Standards:</p>
+<ul>
+<li>Prefer <strong>channels</strong> and <code>context.Context</code>
+for cancellation/deadlines; every exported blocking call takes a
+<code>ctx</code>.</li>
+<li>Use <code>sync/atomic</code> and
+<code>sync.Once</code>/<code>sync.Map</code> where a mutex would be a
+bottleneck; document the invariant each atomic protects.</li>
+<li><strong>Idempotent single-claim</strong> for the per-post processor
+(<code>ATM-023</code>) via Postgres advisory locks — the runtime
+analogue of the §11.4.176 exactly-once claim.</li>
+<li>Bound concurrency: the BackgroundTasks worker pool
+(<code>[DEFAULT — adjustable]</code> 32 workers), per-Skill concurrency
+caps, download concurrency delegated to Boba/MeTube/Download-Manager
+pools (Q4).</li>
+<li>Always <code>go test -race</code>; a data race is a release
+blocker.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Non-blocking exactly-once claim: TryAcquire returns false if another worker already holds the post.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>Processor<span class="op">)</span> TryClaim<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> postID <span class="dt">int64</span><span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// pg_try_advisory_xact_lock is non-blocking: it returns immediately, no goroutine parks.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> ok <span class="dt">bool</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> p<span class="op">.</span>db<span class="op">.</span>QueryRowContext<span class="op">(</span>ctx<span class="op">,</span> <span class="st">`SELECT pg_try_advisory_xact_lock($1)`</span><span class="op">,</span> postID<span class="op">).</span>Scan<span class="op">(&amp;</span>ok<span class="op">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ok<span class="op">,</span> err <span class="co">// ok==false =&gt; another worker owns this post; skip without blocking</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="error-handling-observability">7. Error handling &amp;
+observability</h2>
+<ul>
+<li><strong>Wrap, don’t swallow:</strong>
+<code>fmt.Errorf("dispatch %d: %w", id, err)</code>; never discard an
+error without a logged reason (<code>errcheck</code> enforces).</li>
+<li><strong>Typed sentinels</strong> for control flow
+(<code>errors.Is</code>/<code>errors.As</code>); no string-matching on
+messages.</li>
+<li><strong>Structured logging</strong> via
+<code>digital.vasic.observability</code> (logrus + correlation ids);
+OTel spans on every cross-service call; Prometheus metrics on queues,
+latencies, retries.</li>
+<li><strong>Honest SKIP</strong> <code>[§11.4.3/52]</code>: when a
+capability is genuinely unavailable (e.g. <code>pandoc</code> missing
+for Docs Chain, credentials absent), SKIP with a logged reason — never
+fake success.</li>
+<li><strong>Never log secrets</strong> <code>[§11.4.10]</code>;
+credentials are runtime-load-only and redacted in logs.</li>
+</ul>
+<h2 id="anti-bluff-discipline-11.4.27">8. Anti-bluff discipline
+<code>[§11.4.27]</code></h2>
+<p><strong>The 15 mandated test types (canonical, VERIFIED — final
+request §9.1 / <code>[§11.4.27]</code>).</strong> Every
+<code>ATM-NNN</code> names the <em>applicable subset</em> of these; the
+target is <strong>100% test-type coverage per feature × platform
+cell</strong> (every applicable type present), not a line-percentage.
+The testing area (<a href="../testing/index.md">../testing/index.md</a>)
+expands each into runnable banks; this is the reference list every
+item’s <code>test_types</code> field is checked against:</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 37%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>unit</strong></td>
+<td>the only tier where mocks/stubs/TODO are permitted
+<code>[§11.4.27]</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>integration</strong></td>
+<td>real cross-module contracts; no fakes beyond unit</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>e2e</strong></td>
+<td>full user-journey against the real system</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>full-automation</strong></td>
+<td>end-to-end automated flows (no manual steps)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>security</strong></td>
+<td>authn/authz, secret-leak, fuzzing, dependency-CVE, attack sims</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>DDoS</strong></td>
+<td>flood/abuse simulation</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>scaling</strong></td>
+<td>horizontal/fan-out behavior under growth</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>chaos</strong></td>
+<td>fault injection (container/broker/transfer kill → recover)</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>stress</strong></td>
+<td>load beyond nominal to find the breaking point</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>performance</strong></td>
+<td>SLO validation (API p95 &lt; 150 ms, search &lt; 500 ms)</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>benchmarking</strong></td>
+<td>quantified throughput/latency baselines + regression tracking</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>UI</strong></td>
+<td>rendering/interaction correctness (client surfaces)</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>UX</strong></td>
+<td>usability/accuracy (e.g. OCR transcription fidelity, a11y)</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>Challenges</strong></td>
+<td><code>vasic-digital/challenges</code> per-feature real-use-case
+scenario banks</td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>HelixQA</strong></td>
+<td><code>HelixDevelopment/helix_qa</code> YAML banks with
+<strong>mandatory runtime evidence</strong>
+(screenshots/logcat/video/stacktrace) — the org anti-bluff rule</td>
+</tr>
+</tbody>
+</table>
+<p>Sub-variants an item may additionally cite —
+<code>mutation</code>/<code>paired-mutation</code> (§8 below),
+<code>contract</code> (Liskov substitutability, <code>ATM-064</code>),
+<code>race</code> (<code>go test -race</code>),
+<code>migration round-trip</code> (expand-contract, §10),
+<code>penetration</code>/<code>fuzzing</code> (rolled under
+<strong>security</strong>), <code>visual-regression</code>
+(Panoptic/<code>VisualRegression</code>/<code>ScreenDiff</code>, rolled
+under <strong>UI</strong>) — are refinements of the 15, not a 16th
+category. An item that omits an <em>applicable</em> type is incomplete,
+not merely thin.</p>
+<p>A green test must prove <strong>real behavior</strong>, not a stub.
+This is the single most important standard for Thready because the gap
+register flags several dependencies as scaffolds:</p>
+<ul>
+<li><strong>No mocks beyond unit tests.</strong>
+Integration/e2e/system/security/performance/etc. exercise the real
+system <code>[§11.4.27]</code>. Mocks/stubs/TODOs are unit-only.</li>
+<li><strong>Paired-mutation gates</strong> <code>[CONST-035]</code>: for
+any module the gap register flags SCAFFOLD/DESIGN-ONLY (HelixLLM
+embedder, TOON, session_orchestrator, Security-KMP), add a gate that
+mutates the implementation and asserts the test <strong>FAILs</strong>,
+then restores and asserts it <strong>PASSes</strong> — proving the test
+detects real behavior. <code>ATM-058</code> runs this sweep before
+reliance.</li>
+<li><strong>Never claim a stub works.</strong> If
+<code>HELIX_EMBEDDING_PROVIDER</code> is the <code>HashEmbedder</code>,
+the code <strong>fails loudly</strong> in a RAG/search context
+(<code>ATM-040</code>), it does not warn-and-continue.</li>
+</ul>
+<blockquote>
+<p><strong>The exact trap this guard defends against
+<code>[VERIFIED-SOURCE]</code>.</strong> Read at source —
+<code>HelixLLM/internal/knowledge/embedding_providers.go</code>:
+<code>func NewEmbedder(provider, apiKey, model string, dimension int) (Embedder, error)</code>
+maps <code>"llama"</code> → the real <code>LlamaEmbedder</code>, but
+<code>"hash"</code>, <code>"local"</code> <strong>and any unrecognised
+provider name</strong> → <code>NewHashEmbedder(dimension)</code> — a
+deterministic non-semantic stub, today with only a startup WARNING
+(<code>cmd/helixllm/embedder_warning_test.go</code>). A typo in
+<code>HELIX_EMBEDDING_PROVIDER</code> therefore silently yields garbage
+relevance. The <code>RequireSemanticEmbedder</code> guard below rejects
+<code>hash</code>/<code>local</code>/unknown in any semantic context,
+and <code>ATM-040</code> converts the WARNING into a hard fail; a
+paired-mutation gate proves the guard actually fires.</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Anti-bluff guard: refuse the non-semantic hash embedder in any semantic context (closes GAP 2.1).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> RequireSemanticEmbedder<span class="op">(</span>cfg EmbedConfig<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Explicit parens: reject the hash provider outright, OR a &quot;local&quot; provider with no model loaded</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (the HashEmbedder trap). Parenthesized so precedence is unmistakable, not relying on &amp;&amp; &gt; ||.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>Provider <span class="op">==</span> <span class="st">&quot;hash&quot;</span> <span class="op">||</span> <span class="op">(</span>cfg<span class="op">.</span>Provider <span class="op">==</span> <span class="st">&quot;local&quot;</span> <span class="op">&amp;&amp;</span> cfg<span class="op">.</span>Model <span class="op">==</span> <span class="st">&quot;&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;refusing HashEmbedder in semantic context: set HELIX_EMBEDDING_PROVIDER=llama&quot;</span><span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="naming-layout-formatting">9. Naming, layout, formatting</h2>
+<ul>
+<li><strong>Lowercase snake_case</strong> for repo/dir/file names
+<code>[§11.4.29 / CONST-052]</code>; Go identifiers follow standard Go
+casing.</li>
+<li>Package layout: <code>cmd/</code> (entrypoints), <code>pkg/</code>
+(public), <code>internal/</code> (private), <code>test/</code>
+(fixtures); one responsibility per package.</li>
+<li>Every exported symbol has a doc comment; every package has a
+<code>doc.go</code> or package comment.</li>
+<li>Every <code>.md</code> gets HTML/PDF/DOCX siblings via Docs Chain
+<code>[§11.4.65]</code>.</li>
+</ul>
+<h2 id="non-go-surfaces">10. Non-Go surfaces</h2>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Standard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TypeScript/Angular</td>
+<td>Angular 19 (product) / 22 (marketing) on <code>design_system</code>;
+Jasmine+Karma unit, Cypress e2e (<code>cypress-axe</code>),
+Prettier+ESLint</td>
+</tr>
+<tr>
+<td>Rust (Tauri)</td>
+<td><code>cargo fmt</code>, <code>cargo clippy -D warnings</code>,
+<code>cargo test</code></td>
+</tr>
+<tr>
+<td>Kotlin/KMP</td>
+<td>ktlint/detekt; Kotest/kotlin-test; JUnit + Compose instrumented
+tests</td>
+</tr>
+<tr>
+<td>Swift</td>
+<td>swiftformat/swiftlint; XCTest</td>
+</tr>
+<tr>
+<td>SQL</td>
+<td>PostgreSQL DDL; migrations up/down via
+<code>migration.Runner</code>; expand-contract</td>
+</tr>
+<tr>
+<td>YAML/Proto</td>
+<td>OpenAPI 3.1 + Protobuf via the <code>helix_proto</code> pattern
+(<code>buf</code>, <code>openapi-generator</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

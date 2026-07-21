@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Service Discovery &amp; Dynamic Ports</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Service Discovery &amp; Dynamic
+Ports</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#requirement" id="toc-requirement">1. Requirement</a></li>
+<li><a href="#three-collaborating-submodules"
+id="toc-three-collaborating-submodules">2. Three collaborating
+submodules</a></li>
+<li><a href="#deterministic-dynamic-ports-port_prefix-verified"
+id="toc-deterministic-dynamic-ports-port_prefix-verified">3.
+Deterministic dynamic ports (<code>port_prefix</code>,
+verified)</a></li>
+<li><a href="#registration-resolution-discovery-mdns"
+id="toc-registration-resolution-discovery-mdns">4. Registration &amp;
+resolution (<code>discovery</code> + <code>mdns</code>)</a></li>
+<li><a href="#discovery-diagram" id="toc-discovery-diagram">5. Discovery
+diagram</a></li>
+<li><a href="#health-checks" id="toc-health-checks">6. Health
+checks</a></li>
+<li><a href="#subdomain-routing-across-three-environments"
+id="toc-subdomain-routing-across-three-environments">7. Subdomain
+routing across three environments</a></li>
+<li><a href="#config-surface" id="toc-config-surface">8. Config
+surface</a></li>
+<li><a href="#gap-register-coverage" id="toc-gap-register-coverage">9.
+Gap-register coverage</a></li>
+<li><a href="#tdd-reproduce-first-skeletons"
+id="toc-tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Service Discovery & Dynamic Ports
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/architecture/service-discovery.md
+  Status          : Draft — v0.1
+  Revision        : 4 (2026-07-22)
+  Author          : Helix Thready documentation swarm (System Architecture)
+  Related         : ./system-overview.md, ./component-catalog.md, ./security-model.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (System Architecture)</td>
+<td>Initial draft — discovery, mDNS, port_prefix, health</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (Pass 3 depth)</td>
+<td>Close DISC-1 — real <code>discovery/pkg/broadcast</code>
+(<code>Announcer</code>/<code>Listener</code>/<code>Responder</code>/<code>ServiceInfo</code>)
++
+<code>pkg/scanner</code>/<code>pkg/report</code>/<code>pkg/resilience</code>
+verified; no central <code>Registry.Resolve</code>; deepen discovery
+diagram explanation</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (critic consistency)</td>
+<td>Fix residual central-registry model still drawn in the §5 diagram +
+<code>discovery.mmd</code> sibling (now
+<code>broadcast.Announcer</code>/<code>Listener</code> multicast, no
+<code>register</code>/<code>resolve</code> edges — matches the DISC-1
+correction &amp; the prose); rewrite the §10 TDD skeleton off the
+non-existent
+<code>Registry</code>/<code>Resolve</code>/<code>ErrNoHealthyInstance</code>
+API onto <code>broadcast.Listener</code>+<code>pickHealthy</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>swarm (docs export)</td>
+<td>Fixed inline mermaid syntax so diagram renders</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-requirement">Requirement</a></li>
+<li><a href="#2-three-collaborating-submodules">Three collaborating
+submodules</a></li>
+<li><a
+href="#3-deterministic-dynamic-ports-port_prefix-verified">Deterministic
+dynamic ports (<code>port_prefix</code>, verified)</a></li>
+<li><a href="#4-registration--resolution-discovery--mdns">Registration
+&amp; resolution (<code>discovery</code> + <code>mdns</code>)</a></li>
+<li><a href="#5-discovery-diagram">Discovery diagram</a></li>
+<li><a href="#6-health-checks">Health checks</a></li>
+<li><a href="#7-subdomain-routing-across-three-environments">Subdomain
+routing across three environments</a></li>
+<li><a href="#8-config-surface">Config surface</a></li>
+<li><a href="#9-gap-register-coverage">Gap-register coverage</a></li>
+<li><a href="#10-tdd-reproduce-first-skeletons">TDD reproduce-first
+skeletons</a></li>
+<li><a href="#11-open-items">Open items</a></li>
+</ol>
+<hr />
+<h2 id="requirement">1. Requirement</h2>
+<p>The system must support <strong>dynamic port assignment with
+predefined defaults</strong>, <strong>service discovery</strong> so
+every micro-service and infrastructure part finds the others
+consistently, and <strong>domain/subdomain binding</strong> so publicly
+exposed services answer on the right host+port
+<code>[research_request_final §14.3, §8.2]</code>
+<code>[request "Services discovery", "Dynamic ports"]</code>. All three
+environments (dev/sta/prod) run as fully separated container stacks on
+one Hetzner host under rootless Podman Compose
+<code>[CONSTITUTION §11.4.76]</code>.</p>
+<h2 id="three-collaborating-submodules">2. Three collaborating
+submodules</h2>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 20%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>Role</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>port_prefix</code></td>
+<td>Deterministic, overflow-safe host-port bands per environment</td>
+<td><code>[IN-HOUSE: port_prefix]</code> VERIFIED</td>
+</tr>
+<tr>
+<td><code>digital.vasic.discovery</code></td>
+<td>Service advertise/discover + scan + resilience —
+<code>pkg/broadcast</code>
+(<code>Announcer</code>/<code>Listener</code>/<code>Responder</code>/<code>ServiceInfo</code>),
+<code>pkg/scanner</code>, <code>pkg/report</code>,
+<code>pkg/resilience</code>, <code>pkg/smb</code></td>
+<td><code>[IN-HOUSE: discovery]</code> VERIFIED (packages re-read at
+source Pass 3)</td>
+</tr>
+<tr>
+<td><code>digital.vasic.mdns</code></td>
+<td>mDNS advertise/browse for LAN/in-host resolution</td>
+<td><code>[IN-HOUSE: mdns]</code> VERIFIED</td>
+</tr>
+</tbody>
+</table>
+<p>Health is provided by <code>observability/pkg/health</code>; TLS per
+subdomain by <code>lets_encrypt</code>.</p>
+<h2 id="deterministic-dynamic-ports-port_prefix-verified">3.
+Deterministic dynamic ports (<code>port_prefix</code>, verified)</h2>
+<p><code>port_prefix</code> maps each service’s internal port onto a
+<strong>numeric band</strong> so ports are dynamic but
+<em>predictable</em>, never random. Read at source (README,
+VERIFIED):</p>
+<pre><code>API: portprefix.Exposed(prefix, internalPort int, taken map[int]bool) (int, error)
+
+For prefix 52, every exposed port is in 52000–52999 (always starts with &quot;52&quot;,
+always &lt;= 65535); collisions resolved by linear probe within the band.
+  443 -&gt; 52443,  80 -&gt; 52080,  8080 -&gt; 52080(taken)-&gt;52081,  3000 -&gt; 52000</code></pre>
+<p>Thready assigns one <strong>prefix band per environment</strong> so
+the three stacks never collide on the host:</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Prefix band</th>
+<th>Example: REST(:8443) → host</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Development</td>
+<td><code>52</code> (52000–52999)</td>
+<td>52443</td>
+</tr>
+<tr>
+<td>Staging</td>
+<td><code>53</code> (53000–53999)</td>
+<td>53443</td>
+</tr>
+<tr>
+<td>Production</td>
+<td><code>54</code> (54000–54999)</td>
+<td>54443</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Allocate host ports for a service, deterministically, within the env band.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>taken <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">int</span><span class="op">]</span><span class="dt">bool</span><span class="op">{}</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>band <span class="op">:=</span> <span class="dv">54</span> <span class="co">// prod</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>restHost<span class="op">,</span> _ <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span>band<span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> taken<span class="op">);</span> taken<span class="op">[</span>restHost<span class="op">]</span> <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wsHost<span class="op">,</span>  _  <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span>band<span class="op">,</span> <span class="dv">8080</span><span class="op">,</span> taken<span class="op">);</span> taken<span class="op">[</span>wsHost<span class="op">]</span>  <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// restHost=54443, wsHost=54080 — stable across restarts, no clashes with dev/sta bands.</span></span></code></pre></div>
+<p>Because the mapping is a pure function of
+<code>(prefix, internalPort, taken)</code>, a service’s host port is
+reproducible from config alone — the deployment scripts and the reverse
+proxy compute the same numbers without a lookup, which is what
+“predefined defaults + dynamic” means here.</p>
+<h2 id="registration-resolution-discovery-mdns">4. Registration &amp;
+resolution (<code>discovery</code> + <code>mdns</code>)</h2>
+<p><strong>DISC-1 correction (source-verified this pass).</strong> There
+is <strong>no</strong> central
+<code>discovery.NewRegistry/Register/Resolve</code> API.
+<code>digital.vasic.discovery</code> implements discovery as
+<strong>UDP-multicast advertise/discover</strong> in
+<code>pkg/broadcast</code> plus network <strong>scan</strong> in
+<code>pkg/scanner</code>→<code>pkg/report</code>, with
+<code>pkg/resilience</code> tracking per-source availability. The
+verified surfaces:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// digital.vasic.discovery/pkg/broadcast — VERIFIED at source (Pass 3)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ServiceInfo <span class="kw">struct</span> <span class="op">{</span> <span class="co">/* name, endpoint, metadata the service advertises */</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Config <span class="kw">struct</span> <span class="op">{</span> <span class="co">/* multicast addr/port, interval, MessageType … */</span> <span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> DefaultConfig<span class="op">()</span> Config</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Announcer — proactively multicasts this service&#39;s presence on an interval.</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewAnnouncer<span class="op">(</span>info ServiceInfo<span class="op">,</span> cfg Config<span class="op">)</span> <span class="op">*</span>Announcer</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>Announcer<span class="op">)</span> Start<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>Announcer<span class="op">)</span> Stop<span class="op">()</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>Announcer<span class="op">)</span> UpdateInfo<span class="op">(</span>info ServiceInfo<span class="op">)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Listener — discovers peers by collecting multicast announcements.</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewListener<span class="op">(</span>cfg Config<span class="op">)</span> <span class="op">*</span>Listener</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>l <span class="op">*</span>Listener<span class="op">)</span> Discover<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]</span>ServiceInfo<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>l <span class="op">*</span>Listener<span class="op">)</span> DiscoverOne<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>ServiceInfo<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Responder — passively answers discovery queries (unlike the proactive Announcer).</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewResponder<span class="op">(</span>info ServiceInfo<span class="op">,</span> port <span class="dt">int</span><span class="op">)</span> <span class="op">*</span>Responder</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// digital.vasic.discovery/pkg/report — VERIFIED at source</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Report <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ScanTime   time<span class="op">.</span>Time</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Duration   time<span class="op">.</span>Duration</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Network    <span class="dt">string</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Services   <span class="op">[]*</span>scanner<span class="op">.</span>Service</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    TotalFound <span class="dt">int</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>So Thready’s model is <strong>advertise + discover</strong>, not
+register-and-resolve-through-a-registry: on startup each service
+constructs a <code>ServiceInfo</code> (logical name, host:port from
+<code>port_prefix</code>, health URL, <code>env</code>/<code>role</code>
+metadata) and runs an <code>Announcer</code> on the environment’s
+multicast group; peers run a <code>Listener</code> to build a live view
+and pick a healthy instance by name. mDNS
+(<code>digital.vasic.mdns</code>, <code>_thready._tcp</code>) is the
+LAN/in-host equivalent for tools that browse.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Thready service self-advertisement (composition over the verified broadcast API).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>info <span class="op">:=</span> broadcast<span class="op">.</span>ServiceInfo<span class="op">{</span> <span class="co">/* Name:&quot;semantic-search&quot;, Endpoint: host:restHost,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Metadata:{&quot;env&quot;:&quot;prod&quot;,&quot;role&quot;:&quot;search&quot;,&quot;health&quot;:&quot;/health/ready&quot;} */</span> <span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>ann <span class="op">:=</span> broadcast<span class="op">.</span>NewAnnouncer<span class="op">(</span>info<span class="op">,</span> broadcast<span class="op">.</span>DefaultConfig<span class="op">())</span> <span class="co">// env-scoped multicast group</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ann<span class="op">.</span>Start<span class="op">();</span> <span class="cf">defer</span> ann<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>mdns<span class="op">.</span>Advertise<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;_thready._tcp&quot;</span><span class="op">,</span> <span class="st">&quot;semantic-search&quot;</span><span class="op">,</span> restHost<span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;env&quot;</span><span class="op">:</span> <span class="st">&quot;prod&quot;</span><span class="op">,</span> <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;search&quot;</span><span class="op">})</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolve a dependency by name (Processing → Semantic-search):</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>lis <span class="op">:=</span> broadcast<span class="op">.</span>NewListener<span class="op">(</span>broadcast<span class="op">.</span>DefaultConfig<span class="op">())</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>peers<span class="op">,</span> _ <span class="op">:=</span> lis<span class="op">.</span>Discover<span class="op">(</span>ctx<span class="op">)</span>                       <span class="co">// []ServiceInfo advertised this window</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>svc <span class="op">:=</span> pickHealthy<span class="op">(</span>peers<span class="op">,</span> <span class="st">&quot;semantic-search&quot;</span><span class="op">,</span> <span class="st">&quot;prod&quot;</span><span class="op">)</span><span class="co">// name+env filter over discovered set</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>client <span class="op">:=</span> searchclient<span class="op">.</span>New<span class="op">(</span>svc<span class="op">.</span>Endpoint<span class="op">)</span></span></code></pre></div>
+<p>The <code>pickHealthy</code>/name-filter step (choosing one healthy
+<code>ServiceInfo</code> from the discovered set, gated on the readiness
+probe of §6) is the thin Thready-side helper that replaces the imagined
+<code>Resolve</code>; it is deliberately small because the multicast set
+is already scoped by the environment’s multicast group and the
+<code>env</code>/<code>role</code> metadata.</p>
+<h2 id="discovery-diagram">5. Discovery diagram</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1791.25px; background-color: white;" viewBox="0 0 1791.25 701.199951171875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#my-svg .c rect{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c polygon{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c ellipse{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c circle{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c path{fill:rgb(31, 111, 67)!important;stroke:rgb(12, 59, 34)!important;color:rgb(234, 255, 240)!important;}#my-svg .c tspan{fill:rgb(234, 255, 240)!important;}#my-svg .db rect{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db polygon{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db ellipse{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db circle{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db path{fill:rgb(18, 74, 99)!important;stroke:rgb(6, 38, 52)!important;color:rgb(230, 246, 255)!important;}#my-svg .db tspan{fill:rgb(230, 246, 255)!important;}#my-svg .b rect{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 93, 11)!important;color:rgb(18, 33, 10)!important;}#my-svg .b polygon{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 93, 11)!important;color:rgb(18, 33, 10)!important;}#my-svg .b ellipse{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 93, 11)!important;color:rgb(18, 33, 10)!important;}#my-svg .b circle{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 93, 11)!important;color:rgb(18, 33, 10)!important;}#my-svg .b path{fill:rgb(182, 227, 118)!important;stroke:rgb(47, 93, 11)!important;color:rgb(18, 33, 10)!important;}#my-svg .b tspan{fill:rgb(18, 33, 10)!important;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-Host" data-look="classic"><rect style="" x="8" y="196.39999389648438" width="1703.75" height="496.7999954223633"/><g class="cluster-label" transform="translate(666.375, 196.39999389648438)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Hetzner</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> host</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> rootless</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Podman</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Compose</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band)</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-Envs" data-look="classic"><rect style="" x="28" y="553.5999908447266" width="627" height="114.5999984741211"/><g class="cluster-label" transform="translate(277, 553.5999908447266)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> prefix</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> band</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M621.5,58.357L525.917,72.514C430.333,86.671,239.167,114.986,143.583,137.993C48,161,48,178.7,80.957,203.411C113.915,228.122,179.829,259.844,212.787,275.704L245.744,291.565" id="my-svg-L_SVC1_PP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC1_PP_0" data-points="W3sieCI6NjIxLjUsInkiOjU4LjM1NzA3MzY0NTkyMTYyfSx7IngiOjQ4LCJ5IjoxNDMuMjk5OTk1NDIyMzYzMjh9LHsieCI6NDgsInkiOjE5Ni4zOTk5OTM4OTY0ODQzOH0seyJ4IjoyNDkuMzQ4MzcyNzM1ODM4OTUsInkiOjI5My4yOTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M796.5,62.816L728.042,76.23C659.583,89.644,522.667,116.472,454.208,138.736C385.75,161,385.75,178.7,380.013,203.075C374.275,227.449,362.8,258.499,357.063,274.023L351.326,289.548" id="my-svg-L_SVC2_PP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC2_PP_0" data-points="W3sieCI6Nzk2LjUsInkiOjYyLjgxNjA2NjY3MjUxMzA5fSx7IngiOjM4NS43NSwieSI6MTQzLjI5OTk5NTQyMjM2MzI4fSx7IngiOjM4NS43NSwieSI6MTk2LjM5OTk5Mzg5NjQ4NDM4fSx7IngiOjM0OS45MzkxMjk4NzA4NzA4MywieSI6MjkzLjI5OTk5NTQyMjM2MzN9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M986.5,68.096L934.375,80.63C882.25,93.164,778,118.232,725.875,139.616C673.75,161,673.75,178.7,634.034,203.718C594.318,228.735,514.887,261.07,475.171,277.238L435.455,293.405" id="my-svg-L_SVC3_PP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC3_PP_0" data-points="W3sieCI6OTg2LjUsInkiOjY4LjA5NjI5NjUxODU2NTZ9LHsieCI6NjczLjc1LCJ5IjoxNDMuMjk5OTk1NDIyMzYzMjh9LHsieCI6NjczLjc1LCJ5IjoxOTYuMzk5OTkzODk2NDg0Mzh9LHsieCI6NDMxLjc1LCJ5IjoyOTQuOTEzMjY4MjMyNzY3NTZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M286.313,375.5L261.761,396.333C237.209,417.167,188.104,458.833,163.552,488.517C139,518.2,139,535.9,139,549.717C139,563.533,139,573.467,139,578.433L139,583.4" id="my-svg-L_PP_DEV_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_DEV_0" data-points="W3sieCI6Mjg2LjMxMzM2Njc5NTc5OTksInkiOjM3NS40OTk5OTIzNzA2MDU0N30seyJ4IjoxMzksInkiOjUwMC40OTk5OTIzNzA2MDU0N30seyJ4IjoxMzksInkiOjU1My41OTk5OTA4NDQ3MjY2fSx7IngiOjEzOSwieSI6NTg3LjM5OTk5MDA4MTc4NzF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M335.678,375.5L336.148,396.333C336.619,417.167,337.559,458.833,338.03,488.517C338.5,518.2,338.5,535.9,338.5,549.717C338.5,563.533,338.5,573.467,338.5,578.433L338.5,583.4" id="my-svg-L_PP_STA_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_STA_0" data-points="W3sieCI6MzM1LjY3NzkwNDg1MDY1NTIsInkiOjM3NS40OTk5OTIzNzA2MDU0N30seyJ4IjozMzguNSwieSI6NTAwLjQ5OTk5MjM3MDYwNTQ3fSx7IngiOjMzOC41LCJ5Ijo1NTMuNTk5OTkwODQ0NzI2Nn0seyJ4IjozMzguNSwieSI6NTg3LjM5OTk5MDA4MTc4NzF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M385.785,375.5L411.654,396.333C437.523,417.167,489.262,458.833,515.131,488.517C541,518.2,541,535.9,541,549.717C541,563.533,541,573.467,541,578.433L541,583.4" id="my-svg-L_PP_PRD_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PP_PRD_0" data-points="W3sieCI6Mzg1Ljc4NDc2Njc4NjAzNDYsInkiOjM3NS40OTk5OTIzNzA2MDU0N30seyJ4Ijo1NDEsInkiOjUwMC40OTk5OTIzNzA2MDU0N30seyJ4Ijo1NDEsInkiOjU1My41OTk5OTA4NDQ3MjY2fSx7IngiOjU0MSwieSI6NTg3LjM5OTk5MDA4MTc4NzF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M746.5,64.737L798.833,77.831C851.167,90.925,955.833,117.112,1008.167,139.056C1060.5,161,1060.5,178.7,1093.058,202.44C1125.616,226.18,1190.733,255.96,1223.291,270.85L1255.849,285.739" id="my-svg-L_SVC1_MC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC1_MC_0" data-points="W3sieCI6NzQ2LjUsInkiOjY0LjczNzQ0ODE2NjcyNDM4fSx7IngiOjEwNjAuNSwieSI6MTQzLjI5OTk5NTQyMjM2MzI4fSx7IngiOjEwNjAuNSwieSI6MTk2LjM5OTk5Mzg5NjQ4NDM4fSx7IngiOjEyNTkuNDg2NzQzOTU1MDQ3MSwieSI6Mjg3LjQwMzA0NDk4NDQ1OTU0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1110.155,72.6L1132.546,84.383C1154.937,96.167,1199.718,119.733,1222.109,140.367C1244.5,161,1244.5,178.7,1251.468,195.716C1258.436,212.732,1272.371,229.064,1279.339,237.23L1286.307,245.396" id="my-svg-L_SVC3_MC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC3_MC_0" data-points="W3sieCI6MTExMC4xNTQ5OTA4MzA5NTc4LCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjEyNDQuNSwieSI6MTQzLjI5OTk5NTQyMjM2MzI4fSx7IngiOjEyNDQuNSwieSI6MTk2LjM5OTk5Mzg5NjQ4NDM4fSx7IngiOjEyODguOTAzMTI2ODY5ODc5NSwieSI6MjQ4LjQzOTMyNzI5ODEyNjY3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M701.4,72.6L710.125,84.383C718.85,96.167,736.3,119.733,745.025,140.367C753.75,161,753.75,178.7,753.75,210.55C753.75,242.4,753.75,288.4,753.75,339.083C753.75,389.767,753.75,445.133,753.75,481.667C753.75,518.2,753.75,535.9,763.945,548.677C774.139,561.454,794.528,569.308,804.723,573.235L814.917,577.162" id="my-svg-L_SVC1_HC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC1_HC_0" data-points="W3sieCI6NzAxLjQwMDQ3ODI3MDcyMjQsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6NzUzLjc1LCJ5IjoxNDMuMjk5OTk1NDIyMzYzMjh9LHsieCI6NzUzLjc1LCJ5IjoxOTYuMzk5OTkzODk2NDg0Mzh9LHsieCI6NzUzLjc1LCJ5IjozMzQuMzk5OTkzODk2NDg0NH0seyJ4Ijo3NTMuNzUsInkiOjUwMC40OTk5OTIzNzA2MDU0N30seyJ4Ijo3NTMuNzUsInkiOjU1My41OTk5OTA4NDQ3MjY2fSx7IngiOjgxOC42NDk2NTE4MjM5ODc4LCJ5Ijo1NzguNTk5OTkwODQ0NzI2Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M859.265,72.6L855.638,84.383C852.01,96.167,844.755,119.733,841.128,140.367C837.5,161,837.5,178.7,837.5,210.55C837.5,242.4,837.5,288.4,837.5,339.083C837.5,389.767,837.5,445.133,837.5,481.667C837.5,518.2,837.5,535.9,841.726,548.476C845.953,561.052,854.406,568.503,858.632,572.229L862.859,575.955" id="my-svg-L_SVC2_HC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC2_HC_0" data-points="W3sieCI6ODU5LjI2NTM5MjU0NjkzOTgsInkiOjcyLjU5OTk5ODQ3NDEyMTF9LHsieCI6ODM3LjUsInkiOjE0My4yOTk5OTU0MjIzNjMyOH0seyJ4Ijo4MzcuNSwieSI6MTk2LjM5OTk5Mzg5NjQ4NDM4fSx7IngiOjgzNy41LCJ5IjozMzQuMzk5OTkzODk2NDg0NH0seyJ4Ijo4MzcuNSwieSI6NTAwLjQ5OTk5MjM3MDYwNTQ3fSx7IngiOjgzNy41LCJ5Ijo1NTMuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo4NjUuODU5NTExNzIxNDA2NCwieSI6NTc4LjU5OTk5MDg0NDcyNjZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1038.807,72.6L1025.422,84.383C1012.038,96.167,985.269,119.733,971.884,140.367C958.5,161,958.5,178.7,958.5,210.55C958.5,242.4,958.5,288.4,958.5,339.083C958.5,389.767,958.5,445.133,958.5,481.667C958.5,518.2,958.5,535.9,954.894,548.44C951.288,560.98,944.075,568.36,940.469,572.049L936.863,575.739" id="my-svg-L_SVC3_HC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC3_HC_0" data-points="W3sieCI6MTAzOC44MDY3OTMxOTA0MzMyLCJ5Ijo3Mi41OTk5OTg0NzQxMjExfSx7IngiOjk1OC41LCJ5IjoxNDMuMjk5OTk1NDIyMzYzMjh9LHsieCI6OTU4LjUsInkiOjE5Ni4zOTk5OTM4OTY0ODQzOH0seyJ4Ijo5NTguNSwieSI6MzM0LjM5OTk5Mzg5NjQ4NDR9LHsieCI6OTU4LjUsInkiOjUwMC40OTk5OTIzNzA2MDU0N30seyJ4Ijo5NTguNSwieSI6NTUzLjU5OTk5MDg0NDcyNjZ9LHsieCI6OTM0LjA2NzE4OTkwMTU1NzUsInkiOjU3OC41OTk5OTA4NDQ3MjY2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M936.5,60.791L1018.833,74.543C1101.167,88.294,1265.833,115.797,1348.167,138.399C1430.5,161,1430.5,178.7,1427.77,193.071C1425.039,207.442,1419.578,218.483,1416.848,224.004L1414.118,229.525" id="my-svg-L_SVC2_MC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SVC2_MC_0" data-points="W3sieCI6OTM2LjUsInkiOjYwLjc5MTQ4NzQ1NzA1ODk1Nn0seyJ4IjoxNDMwLjUsInkiOjE0My4yOTk5OTU0MjIzNjMyOH0seyJ4IjoxNDMwLjUsInkiOjE5Ni4zOTk5OTM4OTY0ODQzOH0seyJ4IjoxNDEyLjM0NDI2NzQwMzAzMTQsInkiOjIzMy4xMTA0ODYxODA0NjQ4Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1362.25,447.4L1362.25,456.25C1362.25,465.1,1362.25,482.8,1362.25,500.5C1362.25,518.2,1362.25,535.9,1305.703,551.798C1249.156,567.695,1136.063,581.79,1079.516,588.838L1022.969,595.886" id="my-svg-L_MC_HC_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_MC_HC_0" data-points="W3sieCI6MTM2Mi4yNSwieSI6NDQ3LjM5OTk5Mzg5NjQ4NDR9LHsieCI6MTM2Mi4yNSwieSI6NTAwLjQ5OTk5MjM3MDYwNTQ3fSx7IngiOjEzNjIuMjUsInkiOjU1My41OTk5OTA4NDQ3MjY2fSx7IngiOjEwMTksInkiOjU5Ni4zODAyNTEyODY1MzQyfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1691.75,90.2L1691.75,99.05C1691.75,107.9,1691.75,125.6,1691.75,143.3C1691.75,161,1691.75,178.7,1654.82,203.017C1617.889,227.334,1544.028,258.268,1507.098,273.735L1470.167,289.202" id="my-svg-L_RP_MC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_RP_MC_0" data-points="W3sieCI6MTY5MS43NSwieSI6OTAuMTk5OTk2OTQ4MjQyMTl9LHsieCI6MTY5MS43NSwieSI6MTQzLjI5OTk5NTQyMjM2MzI4fSx7IngiOjE2OTEuNzUsInkiOjE5Ni4zOTk5OTM4OTY0ODQzOH0seyJ4IjoxNDY2LjQ3Nzk2OTI1NjM0NzUsInkiOjI5MC43NDc2MTIyMzUyNTIzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_SVC1_PP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SVC2_PP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_SVC3_PP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_DEV_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_STA_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_PP_PRD_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(1060.5, 143.29999542236328)"><g class="label" data-id="L_SVC1_MC_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-82" y="0" width="164" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">broadcast.Announcer</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">multicast</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ServiceInfo</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mDNS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> advertise</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1244.5, 143.29999542236328)"><g class="label" data-id="L_SVC3_MC_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-82" y="0" width="164" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">broadcast.Announcer</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">multicast</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ServiceInfo</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">mDNS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> advertise</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(753.75, 334.3999938964844)"><g class="label" data-id="L_SVC1_HC_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-28" y="0" width="56" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">expose</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(837.5, 334.3999938964844)"><g class="label" data-id="L_SVC2_HC_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-28" y="0" width="56" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">expose</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(958.5, 334.3999938964844)"><g class="label" data-id="L_SVC3_HC_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-28" y="0" width="56" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">expose</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1430.5, 143.29999542236328)"><g class="label" data-id="L_SVC2_MC_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-84" y="0" width="168" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">broadcast.Listener</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Discover</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pickHealthy</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">name/env</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1362.25, 500.49999237060547)"><g class="label" data-id="L_MC_HC_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-84.5" y="0" width="169" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">discovered</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> set</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gated</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> by</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pkg/scanner</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pkg/resilience</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1691.75, 143.29999542236328)"><g class="label" data-id="L_RP_MC_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-91.5" y="0" width="183" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">health-filtered</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> discovered</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">view</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default c" id="my-svg-flowchart-PP-0" data-look="classic" transform="translate(334.75, 334.3999938964844)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-97" y="-41.099998474121094" width="194" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">port_prefix</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Exposed(prefix,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">internalPort,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> taken)</tspan></tspan></text></g></g></g><g class="node default b" id="my-svg-flowchart-DEV-1" data-look="classic" transform="translate(139, 610.8999900817871)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f5d0b !important" x="-76" y="-23.5" width="152" height="47"/><g class="label" style="color:#12210a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12210a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dev</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 52xxx</tspan></tspan></text></g></g></g><g class="node default b" id="my-svg-flowchart-STA-2" data-look="classic" transform="translate(338.5, 610.8999900817871)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f5d0b !important" x="-73.5" y="-23.5" width="147" height="47"/><g class="label" style="color:#12210a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12210a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sta</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 53xxx</tspan></tspan></text></g></g></g><g class="node default b" id="my-svg-flowchart-PRD-3" data-look="classic" transform="translate(541, 610.8999900817871)"><rect class="basic label-container" style="fill:#B6E376 !important;stroke:#2f5d0b !important" x="-79" y="-23.5" width="158" height="47"/><g class="label" style="color:#12210a !important" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#12210a !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">prod</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> →</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 54xxx</tspan></tspan></text></g></g></g><g class="node default db" id="my-svg-flowchart-MC-4" data-look="classic" transform="translate(1362.25, 334.3999938964844)"><g class="basic label-container" style="fill:#124a63 !important;stroke:#062634 !important"><circle class="outer-circle" style="fill:#124a63 !important;stroke:#062634 !important" r="113" cx="0" cy="0"/><circle class="inner-circle" style="fill:#124a63 !important;stroke:#062634 !important" r="108" cx="0" cy="0"/></g><g class="label" style="color:#e6f6ff !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#e6f6ff !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">env</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> multicast</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> group</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">_thready._tcp</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> NO</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> central</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registry</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-HC-5" data-look="classic" transform="translate(902.5, 610.8999900817871)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-116.5" y="-32.29999923706055" width="233" height="64.5999984741211"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">observability/pkg/health</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">/health/live</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /health/ready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SVC1-6" data-look="classic" transform="translate(684, 49.099998474121094)"><rect class="basic label-container" style="" x="-62.5" y="-23.5" width="125" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Ingestion</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SVC2-8" data-look="classic" transform="translate(866.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-70" y="-23.5" width="140" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Processing</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SVC3-10" data-look="classic" transform="translate(1065.5, 49.099998474121094)"><rect class="basic label-container" style="" x="-79" y="-23.5" width="158" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Asset</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Service</tspan></tspan></text></g></g></g><g class="node default c" id="my-svg-flowchart-RP-27" data-look="classic" transform="translate(1691.75, 49.099998474121094)"><rect class="basic label-container" style="fill:#1f6f43 !important;stroke:#0c3b22 !important" x="-89" y="-41.099998474121094" width="178" height="82.19999694824219"/><g class="label" style="color:#eafff0 !important" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style="fill:#eafff0 !important"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Reverse</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> proxy</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">dev./sta./thready.</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">subdomains</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/discovery.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram closes a loop that turns “where is
+service X?” into a question answerable from config plus a short runtime
+lookup, across three co-tenant stacks on one host. It has three moving
+parts — deterministic ports, a discovery fabric, and a health gate — and
+the arrows show how a service becomes reachable.</p>
+<p>First, ports. Every service (Ingestion, Processing, Asset Service, …)
+asks <code>port_prefix</code> for its host port;
+<code>port_prefix</code> maps each internal port into the band for the
+service’s environment — dev into 52xxx, staging into 53xxx, production
+into 54xxx — guaranteeing the three stacks never fight over a host port.
+Because <code>Exposed(prefix, internalPort, taken)</code> is a pure
+function, the very same number is recomputable by the deploy scripts and
+the reverse proxy without any lookup, which is what “predefined defaults
++ dynamic” means: the port is <em>derived</em>, not
+<em>discovered</em>.</p>
+<p>Second, discovery. Each service builds a
+<code>broadcast.ServiceInfo</code> (logical name, the
+<code>port_prefix</code> host:port, health URL, and
+<code>env</code>/<code>role</code> metadata) and runs a
+<code>broadcast.Announcer</code> that multicasts its presence on the
+environment’s group, and advertises the same over mDNS. A dependent
+service — here Processing resolving Semantic-search — runs a
+<code>broadcast.Listener</code>, collects the advertised
+<code>ServiceInfo</code> set, and filters by logical name +
+<code>env</code> (the <code>pickHealthy</code> helper), never a
+hard-coded address. This is the corrected mental model from DISC-1:
+<em>advertise + discover</em>, not a central registry with
+<code>Resolve</code>.</p>
+<p>Third, the health gate. Every service exposes
+<code>/health/live</code> and <code>/health/ready</code> via
+<code>observability/pkg/health</code>; <code>pickHealthy</code> and the
+reverse proxy only ever route to an instance whose readiness probe
+passes, and <code>pkg/scanner</code>→<code>pkg/report</code> periodic
+scans plus <code>pkg/resilience</code>’s
+<code>Connected/Disconnected/Reconnecting/Offline</code> state drive a
+service out of the pool when it flaps. The reverse proxy at the host
+edge uses the discovered, health-filtered view to route the three public
+subdomains (<code>dev.</code>/<code>sta.</code>/<code>thready.</code>)
+to the correct stack. The net effect: a service’s address is derivable
+from config, discoverable at runtime, and health-gated before any
+traffic reaches it — and because ports are stable by construction, a
+container restart changes nothing the proxy has to re-learn.</p>
+<h2 id="health-checks">6. Health checks</h2>
+<p>Each container exposes liveness and readiness via
+<code>observability/pkg/health</code>
+<code>[research_request_final §22.10]</code>:</p>
+<ul>
+<li><code>GET /health/live</code> — process is up (cheap; used by Podman
+restart policy).</li>
+<li><code>GET /health/ready</code> — dependencies reachable (DB,
+JetStream, storage); gates the service’s
+<code>broadcast.Announcer</code> advertisement and reverse-proxy
+routing. A service that fails <code>ready</code> stops announcing (and
+is dropped by <code>pickHealthy</code>), so it falls out of the
+discovered set and the proxy pool (failover).</li>
+</ul>
+<p>A periodic scan (<code>discovery/pkg/scanner</code> →
+<code>pkg/report</code>), with <code>pkg/resilience</code> tracking
+per-source availability, marks a service unreachable after N failed
+probes and emits the sticky <code>channel.health</code>/service-health
+event (<a href="./event-model.md">event-model.md</a>) so dashboards
+reflect it in real time. There is no central registry to deregister from
+— availability is a property of the live multicast/announce view plus
+the readiness gate.</p>
+<h2 id="subdomain-routing-across-three-environments">7. Subdomain
+routing across three environments</h2>
+<p>One host, one reverse proxy, three isolated container stacks
+<code>[research_request_final §21.5]</code>:</p>
+<pre><code>dev.thready.hxd3v.com  → dev  stack  (band 52xxx)  — Let&#39;s Encrypt cert #1
+sta.thready.hxd3v.com  → sta  stack  (band 53xxx)  — Let&#39;s Encrypt cert #2
+thready.hxd3v.com      → prod stack  (band 54xxx)  — Let&#39;s Encrypt cert #3</code></pre>
+<p>Each subdomain has its own <code>lets_encrypt</code> certificate
+(HTTP-01/DNS-01, auto-renew, atomic deploy-hook + rollback)
+<code>[IN-HOUSE: lets_encrypt]</code>. The proxy resolves the upstream
+host:port from the <strong>discovered, health-filtered
+<code>broadcast.Listener</code> view</strong> for that env (not a
+central registry — DISC-1), so a container restart (nothing changes —
+the port is stable by <code>port_prefix</code>) or a scale event is
+transparent.</p>
+<h2 id="config-surface">8. Config surface</h2>
+<p>Discovery/ports are env-driven (documented in the dedicated env-vars
+doc):</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># per-environment (illustrative)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_ENV</span><span class="kw">:</span><span class="at"> prod</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_PORT_PREFIX</span><span class="kw">:</span><span class="at"> </span><span class="dv">54</span><span class="co">          # port_prefix band</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_DISCOVERY_ADDR</span><span class="kw">:</span><span class="at"> 127.0.0.1:5400</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_MDNS_SERVICE</span><span class="kw">:</span><span class="at"> _thready._tcp</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_HEALTH_PATH</span><span class="kw">:</span><span class="at"> /health/ready</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">THREADY_PUBLIC_DOMAIN</span><span class="kw">:</span><span class="at"> thready.hxd3v.com</span></span></code></pre></div>
+<h2 id="gap-register-coverage">9. Gap-register coverage</h2>
+<p>No <code>[GAP: …]</code> items are owned by discovery/ports directly
+(the register flags no discovery gaps). The relevant cross-cutting item
+is <code>[GAP: 3.2]</code> (database partitioning at scale), which is a
+data-plane concern handled in <a href="./data-flow.md">data-flow.md</a>,
+not discovery. The constitution’s decoupling-audit
+<code>[CONSTITUTION §11.4.28]</code> applies: <code>discovery</code>,
+<code>mdns</code>, <code>port_prefix</code> are consumed
+config-injected, never forked.</p>
+<h2 id="tdd-reproduce-first-skeletons">10. TDD reproduce-first
+skeletons</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: port_prefix must be deterministic and collision-free within a band.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPortPrefix_Deterministic<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    taken <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">int</span><span class="op">]</span><span class="dt">bool</span><span class="op">{}</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    a<span class="op">,</span> _ <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span><span class="dv">54</span><span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> taken<span class="op">);</span> taken<span class="op">[</span>a<span class="op">]</span> <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    b<span class="op">,</span> _ <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span><span class="dv">54</span><span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">int</span><span class="op">]</span><span class="dt">bool</span><span class="op">{</span>a<span class="op">:</span> <span class="ot">true</span><span class="op">})</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">54443</span><span class="op">,</span> a<span class="op">)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotEqual<span class="op">(</span>t<span class="op">,</span> a<span class="op">,</span> b<span class="op">)</span> <span class="co">// second caller probes to next free</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: a service failing readiness must not be picked from the discovered set.</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">NOTE</span><span class="co"> (anti-bluff): there is NO discovery.Registry/Resolve/ErrNoHealthyInstance API</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">// (DISC-1, verified). The real surface is broadcast.Announcer/Listener + the Thready-side</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">// pickHealthy name/env filter gated on /health/ready — this test exercises exactly that.</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDiscovery_UnhealthyNotPicked<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    unhealthy <span class="op">:=</span> broadcast<span class="op">.</span>ServiceInfo<span class="op">{</span> <span class="co">/* Name:&quot;semantic-search&quot;, Endpoint:…, Metadata:{&quot;env&quot;:&quot;prod&quot;} */</span> <span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    lis <span class="op">:=</span> stubListener<span class="op">(</span>t<span class="op">,</span> <span class="op">[]</span>broadcast<span class="op">.</span>ServiceInfo<span class="op">{</span>unhealthy<span class="op">})</span> <span class="co">// announced but /health/ready fails</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    peers<span class="op">,</span> _ <span class="op">:=</span> lis<span class="op">.</span>Discover<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    _<span class="op">,</span> err <span class="op">:=</span> pickHealthy<span class="op">(</span>peers<span class="op">,</span> <span class="st">&quot;semantic-search&quot;</span><span class="op">,</span> <span class="st">&quot;prod&quot;</span><span class="op">)</span>    <span class="co">// readiness-gated selection helper</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>ErrorIs<span class="op">(</span>t<span class="op">,</span> err<span class="op">,</span> ErrNoHealthyInstance<span class="op">)</span>              <span class="co">// Thready-side sentinel, not discovery&#39;s</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">// RED: two envs must not collide on a host port.</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestBands_NoCrossEnvCollision<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    dev<span class="op">,</span> _ <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span><span class="dv">52</span><span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">int</span><span class="op">]</span><span class="dt">bool</span><span class="op">{})</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    prod<span class="op">,</span> _ <span class="op">:=</span> portprefix<span class="op">.</span>Exposed<span class="op">(</span><span class="dv">54</span><span class="op">,</span> <span class="dv">8443</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">int</span><span class="op">]</span><span class="dt">bool</span><span class="op">{})</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NotEqual<span class="op">(</span>t<span class="op">,</span> dev<span class="op">,</span> prod<span class="op">)</span> <span class="co">// 52443 vs 54443</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[CLOSED: DISC-1]</code> (was: exact
+<code>discovery.Registry</code> API). <strong>Source-verified this
+pass</strong> — there is no <code>Registry</code>/<code>Resolve</code>;
+the real API is <code>pkg/broadcast</code> (<code>Announcer</code> with
+<code>NewAnnouncer</code>/<code>Start</code>/<code>Stop</code>/<code>UpdateInfo</code>;
+<code>Listener</code> with
+<code>Discover</code>/<code>DiscoverOne</code>; <code>Responder</code>;
+<code>ServiceInfo</code>;
+<code>Config</code>/<code>DefaultConfig</code>) over UDP multicast, plus
+<code>pkg/scanner</code>→ <code>pkg/report</code> scan and
+<code>pkg/resilience</code> availability state. §4 now shows the
+verified surface; the only Thready-side glue is the
+<code>pickHealthy</code> name/env filter over the discovered set.</li>
+<li><code>[OPEN: DISC-2]</code> Whether the reverse proxy is
+Caddy/nginx/Traefik or a <code>vasic-digital</code> component is a
+deployment-pack decision; the discovery contract above is
+proxy-agnostic.</li>
+<li><code>[NOTE: DISC-3]</code> <code>pkg/broadcast</code> is
+UDP-multicast; on the single Hetzner host all three stacks share the
+loopback/host network so multicast discovery works in-host. If a future
+multi-host topology blocks multicast, the <code>Responder</code>
+(unicast query/answer) or the <code>pkg/scanner</code> sweep is the
+fallback — both verified present. Tracked with the deployment pack.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

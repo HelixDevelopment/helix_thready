@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Database Area (Index)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Database Area (Index)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#upstream-downstream-dependencies"
+id="toc-upstream-downstream-dependencies">1. Upstream / Downstream
+dependencies</a></li>
+<li><a href="#documents-in-this-area" id="toc-documents-in-this-area">2.
+Documents in this area</a></li>
+<li><a href="#decision-snapshot-from-the-matrix"
+id="toc-decision-snapshot-from-the-matrix">3. Decision snapshot (from
+the matrix)</a></li>
+<li><a href="#provenance-verification-summary"
+id="toc-provenance-verification-summary">4. Provenance &amp;
+verification summary</a></li>
+<li><a href="#gaps-addressed" id="toc-gaps-addressed">5. Gaps
+addressed</a></li>
+<li><a href="#open-items" id="toc-open-items">6. Open items</a></li>
+<li><a href="#entity-coverage-checklist"
+id="toc-entity-coverage-checklist">7. Entity coverage checklist</a></li>
+<li><a href="#database-test-type-coverage-15-mandated-types"
+id="toc-database-test-type-coverage-15-mandated-types">8. Database
+test-type coverage (15 mandated types)</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Database Area (Index)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/database/index.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (database)
+  Related         : ../index.md ../CONVENTIONS.md
+                    ../architecture/index.md ../api/index.md ../deployment/index.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (database)</td>
+<td>Initial database pack: ERD, relational + vector DDL, indexing,
+partitioning, retention/archive, migrations</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>reviewer (database)</td>
+<td>Review pass: registered <code>ATM-DB-033</code> (MinIO signed-URL
+parity); diagram-consistency fixes across the pack</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (database, Pass 3)</td>
+<td>Depth pass: shipped runnable migrations
+<code>0002</code>–<code>0007</code>; full column-level data dictionary
+in the relational DDL; per-index rationale matrix; HASH/LIST partition
+DDL; new <code>constraints-and-integrity.md</code>; source-confirmed
+that the pgvector adapter’s <code>Search</code> emits no tenant filter
+(strengthens <code>ATM-DB-013</code>)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2026-07-22</td>
+<td>critic (database, Pass 4)</td>
+<td>Completeness pass: added §8 the consolidated <strong>15-test-type
+coverage matrix</strong> (every mandated type mapped to a concrete DB
+test bank or explicitly marked delegated/N-A with rationale — closes the
+CONVENTIONS §6 test-coverage requirement for the data layer); backed the
+previously-asserted <code>security-7.1</code> “encrypted-yet-searchable”
+claim with a concrete redacted-embedding spec in
+<code>schema-vector.sql</code></td>
+</tr>
+</tbody>
+</table>
+<p>This is the canonical entry point for the Helix Thready
+<strong>Database</strong> area. It specifies the complete,
+implementation-ready data layer: the entity model, PostgreSQL + pgvector
+DDL, indexing, partitioning/scaling, retention/archive, and the
+migration strategy — all grounded in the authoritative research (final
+request §2.1, §3, §6, §7, §14, Q1–Q45) and the in-house
+<code>digital.vasic.database</code> /
+<code>digital.vasic.vectordb</code> /
+<code>digital.vasic.embeddings</code> modules.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-upstream--downstream-dependencies">Upstream / Downstream
+dependencies</a></li>
+<li><a href="#2-documents-in-this-area">Documents in this area</a></li>
+<li><a href="#3-decision-snapshot-from-the-matrix">Decision snapshot
+(from the matrix)</a></li>
+<li><a href="#4-provenance--verification-summary">Provenance &amp;
+verification summary</a></li>
+<li><a href="#5-gaps-addressed">Gaps addressed</a></li>
+<li><a href="#6-open-items">Open items</a></li>
+<li><a href="#7-entity-coverage-checklist">Entity coverage
+checklist</a></li>
+<li><a href="#8-database-test-type-coverage-15-mandated-types">Database
+test-type coverage (15 mandated types)</a></li>
+</ol>
+<hr />
+<h2 id="upstream-downstream-dependencies">1. Upstream / Downstream
+dependencies</h2>
+<p><strong>Upstream (this area consumes):</strong></p>
+<ul>
+<li><strong>Architecture</strong> (<a
+href="../architecture/index.md"><code>../architecture/</code></a>) —
+component boundaries, the relational↔︎semantic split, event model, and
+concurrency model that the schema realises.</li>
+<li><strong>Authoritative research</strong> —
+<code>helix_thready_research_request_final.md</code> (decision matrix,
+§2.1 data layer, §3 workflow, §6 users, §7 assets,
+Q1/Q2/Q11/Q12/Q14/Q30/Q40/Q41),
+<code>helix_thready_subsystem_gaps_and_improvements.md</code> (P0/P1/P2
+gap register).</li>
+<li><strong>In-house modules</strong> —
+<code>digital.vasic.database</code> (<code>pkg/migration.Runner</code>,
+<code>Config</code>, drivers), <code>digital.vasic.vectordb</code>
+(pgvector <code>Client</code>), <code>digital.vasic.embeddings</code>
+(<code>Dimensions()</code> per provider),
+<code>digital.vasic.background</code> (claim queue),
+<code>digital.vasic.storage</code> (cold tier),
+<code>digital.vasic.security</code> (column encryption).</li>
+</ul>
+<p><strong>Downstream (these areas consume this one):</strong></p>
+<ul>
+<li><strong>API</strong> (<a
+href="../api/index.md"><code>../api/</code></a>) — OpenAPI resources map
+1:1 to these entities; <code>/v1/search</code> uses the vector reference
+model; pagination uses the time-partition keys.</li>
+<li><strong>Deployment</strong> (<a
+href="../deployment/index.md"><code>../deployment/</code></a>) — runs
+migrations at deploy, provisions read replicas, backup/DR (RPO 1 h / RTO
+4 h), MinIO/S3 cold tier.</li>
+<li><strong>Testing</strong> (<a
+href="../testing/index.md"><code>../testing/</code></a>) — DB test bank:
+migration apply/rollback on real Postgres, <code>EXPLAIN</code> index
+assertions, search p95 &lt; 500 ms, archive chaos tests.</li>
+<li><strong>Development</strong> (<a
+href="../development/index.md"><code>../development/</code></a>) — the
+<code>ATM-DB-*</code> workable items tracked below.</li>
+</ul>
+<hr />
+<h2 id="documents-in-this-area">2. Documents in this area</h2>
+<table>
+<colgroup>
+<col style="width: 52%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr>
+<th>Document</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./erd.md"><code>erd.md</code></a></td>
+<td>Full entity-relationship model: master ERD + 5 domain ERDs (Mermaid
++ prose) + entity dictionary + referential-integrity strategy</td>
+</tr>
+<tr>
+<td><a
+href="./schema-relational.sql"><code>schema-relational.sql</code></a></td>
+<td>Production PostgreSQL DDL for every entity (extensions, tables,
+constraints, triggers, partition parents)</td>
+</tr>
+<tr>
+<td><a
+href="./schema-vector.sql"><code>schema-vector.sql</code></a></td>
+<td>pgvector DDL: collections referencing relational PKs, cosine ANN
+indexes, dimension policy</td>
+</tr>
+<tr>
+<td><a href="./indexing.md"><code>indexing.md</code></a></td>
+<td>Index catalogue (btree/GIN/trigram/FTS/partial/ANN), query-path map,
+SLO tuning, hot claim index</td>
+</tr>
+<tr>
+<td><a href="./partitioning.md"><code>partitioning.md</code></a></td>
+<td>Time-partitioned firehose tables, read replicas, maintenance job,
+pooling &amp; pgvector co-location tuning</td>
+</tr>
+<tr>
+<td><a
+href="./retention-archive.md"><code>retention-archive.md</code></a></td>
+<td>Keep-indefinitely + per-account overrides, archive lifecycle,
+GDPR-aware erasure/export</td>
+</tr>
+<tr>
+<td><a
+href="./migration-strategy.md"><code>migration-strategy.md</code></a></td>
+<td><code>migration.Runner</code> contract, expand-contract, rollback,
+advisory lock, verified caveats, roadmap</td>
+</tr>
+<tr>
+<td><a
+href="./constraints-and-integrity.md"><code>constraints-and-integrity.md</code></a></td>
+<td>Enforcement-layer model, CHECK-domain catalogue, FK on-delete
+matrix, append-only audit + soft-ref validation triggers (closes
+<code>ATM-DB-004</code>)</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0001_init.sql"><code>migrations/0001_init.sql</code></a></td>
+<td>Runnable migration (Up/Down): tenancy + ingestion + processing
+core</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0002_classification.sql"><code>migrations/0002_classification.sql</code></a></td>
+<td>Runnable migration: hashtags, categories, join tables</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0003_assets.sql"><code>migrations/0003_assets.sql</code></a></td>
+<td>Runnable migration: skills, skill_runs, generated_artifacts, assets,
+asset_links</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0004_billing.sql"><code>migrations/0004_billing.sql</code></a></td>
+<td>Runnable migration: plans, subscriptions, usage_records,
+invoices</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0005_events_audit.sql"><code>migrations/0005_events_audit.sql</code></a></td>
+<td>Runnable migration: events (partitioned), event_subscriptions,
+audit_log (partitioned), archived_partitions</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0006_vector_collections.sql"><code>migrations/0006_vector_collections.sql</code></a></td>
+<td>Runnable migration: <code>vectordb_*</code> collection tables
+(adapter-parity DDL)</td>
+</tr>
+<tr>
+<td><a
+href="./migrations/0007_secondary_indexes.sql"><code>migrations/0007_secondary_indexes.sql</code></a></td>
+<td>Runnable migration (non-transactional path): all secondary + FTS +
+vector ANN indexes</td>
+</tr>
+<tr>
+<td><a href="./diagrams/"><code>diagrams/</code></a></td>
+<td>Mermaid <code>.mmd</code> sources (siblings of every embedded
+diagram)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Every diagram in
+this area has a sibling <code>.mmd</code> in <a
+href="./diagrams/"><code>diagrams/</code></a> and an immediate
+multi-paragraph prose explanation per <a
+href="../CONVENTIONS.md">CONVENTIONS.md §4</a>.</p>
+</blockquote>
+<hr />
+<h2 id="decision-snapshot-from-the-matrix">3. Decision snapshot (from
+the matrix)</h2>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 32%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Decision</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Relational DB</td>
+<td><code>digital.vasic.database</code> — SQLite dev / PostgreSQL prod;
+<code>pkg/migration.Runner</code></td>
+<td><code>[IN-HOUSE: database]</code></td>
+</tr>
+<tr>
+<td>Vector DB</td>
+<td><code>digital.vasic.vectordb</code> pgvector backend,
+<strong>cosine</strong> <code>&lt;=&gt;</code>; Qdrant swap by
+config</td>
+<td><code>[IN-HOUSE: vectordb]</code> Q1</td>
+</tr>
+<tr>
+<td>Embeddings</td>
+<td><code>digital.vasic.embeddings</code> → HelixLLM
+<code>/v1/embeddings</code>; <code>voyage-code-3</code> (1024) /
+<code>jina-embeddings-v2-base-code</code> (768)</td>
+<td><code>[IN-HOUSE]</code> Q15</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>Large / multi-tenant; 10k+ posts/day, 50 TB+ assets → partition +
+replicas from day one</td>
+<td><code>[OPERATOR]</code> Q2</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td>Keep indefinitely + per-account overrides</td>
+<td><code>[OPERATOR]</code> Q12</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Subscription + metered from day one</td>
+<td><code>[OPERATOR]</code> Q11</td>
+</tr>
+<tr>
+<td>SLO</td>
+<td>Search &lt; 500 ms, API p95 &lt; 150 ms</td>
+<td><code>[OPERATOR]</code> Q14</td>
+</tr>
+<tr>
+<td>Backup/DR</td>
+<td>Daily full + hourly DB incrementals; RPO ≈ 1 h, RTO ≈ 4 h</td>
+<td><code>[OPERATOR]</code> Q41/Q45</td>
+</tr>
+<tr>
+<td>Migrations</td>
+<td><code>pkg/migration.Runner</code> (up/down), expand-contract, tested
+rollback</td>
+<td><code>[IN-HOUSE]</code> Q30</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="provenance-verification-summary">4. Provenance &amp;
+verification summary</h2>
+<p>Following the anti-bluff quality bar (<a
+href="../CONVENTIONS.md">CONVENTIONS.md §7</a>), claims are tagged
+VERIFIED (read at source) vs ASSUMPTION.</p>
+<p><strong>VERIFIED (read at module source under
+<code>/home/milos/Factory/projects/tools_and_research/helix_code/submodules/</code>):</strong></p>
+<ul>
+<li><code>migration.Migration{Version,Name,Up,Down}</code>,
+<code>NewRunner(db, "schema_migrations")</code>,
+<code>Init/Applied/Apply/Rollback/RollbackWith</code>; each migration
+applied in one transaction; <code>Rollback</code> is inert and instructs
+<code>RollbackWith</code>
+(<code>database/pkg/migration/migration.go</code>).</li>
+<li>The runner’s tracking-table writes use <code>?</code> placeholders;
+the pgx transport (<code>postgres.Client.Exec</code> /
+<code>pgTx.Exec</code>) does <strong>not</strong> rewrite them — a real
+Postgres-path caveat (<code>ATM-DB-001</code>, see <a
+href="./migration-strategy.md#8-verified-caveats--required-fixes-anti-bluff">migration-strategy.md
+§8</a>).</li>
+<li>pgvector <code>Client.CreateCollection</code> creates the table with
+<code>id TEXT PK, embedding vector(N), metadata JSONB, created_at, updated_at</code>
+and <strong>no ANN index</strong>; <code>Search</code> uses cosine
+<code>&lt;=&gt;</code> returning <code>score = 1 - distance</code>
+(<code>vector_db/pkg/pgvector/client.go</code>). ANN indexes are
+therefore owned by our migrations.</li>
+<li><strong>(Pass 3, source-confirmed)</strong>
+<code>Client.Search</code> emits
+<code>SELECT id, … , embedding &lt;=&gt; $1 ORDER BY distance LIMIT $2</code>
+with <strong>no <code>WHERE</code> clause</strong> —
+<code>SearchQuery.Filter</code> is accepted by <code>Validate()</code>
+but <strong>never used</strong> in the adapter SQL, and only
+<code>id</code>+<code>score</code> are returned. So tenant isolation
+cannot be delegated to the shipped adapter; it is app-side over-fetch,
+per-tenant collections, or a Qdrant swap (<code>ATM-DB-013</code>, now
+verified not assumed).</li>
+<li><strong>(Pass 3)</strong> <code>DistanceOperator(metric)</code> maps
+<code>cosine→&lt;=&gt;</code> / <code>dot_product→&lt;#&gt;</code> /
+<code>euclidean→&lt;-&gt;</code>; <code>CollectionConfig.Validate</code>
+rejects <code>Dimension &lt; 1</code>; <code>Upsert</code> serialises
+all metadata values as JSON <strong>strings</strong> (naive encoder) —
+the tenant filter is string-typed
+(<code>vector_db/pkg/pgvector/client.go</code>,
+<code>pkg/client/client.go</code>).</li>
+<li><code>database.Config</code> exposes <code>Driver</code> + pooling
+knobs; <code>digital.vasic.database</code> has <strong>no</strong>
+partition/retention/archive package (<code>database/pkg/</code> set
+inspected).</li>
+<li><code>embeddings</code> providers expose <code>Dimensions()</code>
+(jina v2 = 768; voyage-code-3 = 1024) — the dimension is model-driven,
+not hardcoded.</li>
+</ul>
+<p><strong>ASSUMPTION / DEFAULT (adjustable, flagged inline):</strong>
+monthly partition granularity; HNSW
+<code>m=16 / ef_construction=64 / ef_search=40</code> starting points;
+retry defaults (5, 2 s, ×2, 5 min cap); audit retention 1 year;
+plan/limit shapes; the <code>-- +thready Up/Down</code> migration file
+format.</p>
+<hr />
+<h2 id="gaps-addressed">5. Gaps addressed</h2>
+<p>Every database-relevant item from
+<code>helix_thready_subsystem_gaps_and_improvements.md</code> is
+addressed with a design plan or a tracked workable item.</p>
+<table>
+<colgroup>
+<col style="width: 61%" />
+<col style="width: 28%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap-register item (priority)</th>
+<th>Addressed in</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[GAP: vectordb-3.1]</code> pgvector-only; Qdrant unverified;
+ANN tuning for &lt; 500 ms (P1)</td>
+<td><a href="./schema-vector.sql">schema-vector.sql</a>, <a
+href="./indexing.md#5-vector-ann-indexes-pgvector">indexing.md
+§5</a></td>
+<td>ANN indexes owned by migrations (adapter creates none); HNSW tuning
+table; Qdrant swap behind <code>VectorStore</code> interface; benchmark
+<code>ATM-DB-012</code></td>
+</tr>
+<tr>
+<td><code>[GAP: database-3.2]</code> no partitioning/retention helpers;
+pooling + pgvector co-location tuning (P1)</td>
+<td><a href="./partitioning.md">partitioning.md</a>, <a
+href="./retention-archive.md">retention-archive.md</a></td>
+<td>Native RANGE partitions + <code>pkg/partition</code> helper
+proposal; pooling &amp; co-location §7; retention resolution + archive
+job</td>
+</tr>
+<tr>
+<td><code>[GAP: HelixLLM-1]</code> default <code>HashEmbedder</code> is
+non-semantic; RAG 768 hardcode (P0)</td>
+<td><a href="./schema-vector.sql">schema-vector.sql</a> dimension
+policy</td>
+<td>Dimension discovered via <code>Dimensions()</code> (no hardcode);
+explicit “set <code>HELIX_EMBEDDING_PROVIDER=llama</code>, never
+HashEmbedder” warning</td>
+</tr>
+<tr>
+<td><code>[GAP: helix_skills-4.1]</code> no execution engine (P0)</td>
+<td><a href="./erd.md#5-domain-c--processing-skills--assets">erd.md
+§5</a></td>
+<td><code>skills</code> mirror + <code>skill_runs</code> execution
+ledger backing the BUILD-NEW dispatch engine</td>
+</tr>
+<tr>
+<td><code>[GAP: auth-7.2]</code> HMAC→RS256/EdDSA + RBAC (P1)</td>
+<td><a href="./erd.md#3-domain-a--tenancy--identity">erd.md §3</a>, <a
+href="./schema-relational.sql">schema-relational.sql</a></td>
+<td>Full RBAC tables (roles/permissions/role_permissions/memberships)
+back the User Service; signing handled in API/security area</td>
+</tr>
+<tr>
+<td><code>[GAP: session_orchestrator-2.9]</code> design-only claim
+registry (P1)</td>
+<td><a
+href="./indexing.md#6-the-hot-claim-index-idempotent-processing">indexing.md
+§6</a>, <a
+href="./migration-strategy.md#7-concurrency-advisory-lock">migration-strategy.md
+§7</a></td>
+<td>Postgres <code>FOR UPDATE SKIP LOCKED</code> partial-index claim +
+advisory lock replace the unimplemented module for Thready’s per-post
+claim</td>
+</tr>
+<tr>
+<td><code>[GAP: security-7.1]</code> encrypted-yet-searchable sensitive
+data (P2)</td>
+<td><a href="./schema-vector.sql">schema-vector.sql</a>
+(sensitive-content spec), <a
+href="./erd.md#4-domain-b--messenger--ingestion">erd.md §4/§5</a>, <a
+href="./retention-archive.md#6-gdpr-aware-erasure--export">retention-archive.md
+§6</a></td>
+<td>Sealed <code>bytea</code> columns (<code>session_enc</code>,
+<code>access_hash_enc</code>, <code>totp_secret_enc</code>);
+<code>sensitivity</code>/<code>is_encrypted</code> on assets;
+<strong>concrete redacted/tokenized-embedding mechanism</strong> now
+specified in <code>schema-vector.sql</code> (redact via
+<code>security/pkg/pii</code> → embed only the non-identifying form;
+typed-not-valued metadata; ids-only search + RBAC re-check on hydrate);
+exact-recall searchable-encryption explicitly out-of-MVP-scope</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="open-items">6. Open items</h2>
+<p>Tracked as <code>ATM-DB-*</code> workable items; none is papered
+over.</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 40%" />
+<col style="width: 28%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th><code>[OPEN: …]</code></th>
+<th>Summary</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ATM-DB-001</code></td>
+<td><code>migration-runner-pg-placeholders</code></td>
+<td>Runner tracking writes use <code>?</code>; pgx needs
+<code>$n</code></td>
+<td>Dialect decorator or upstream fix; guarded by a real-Postgres
+apply/rollback test (<a
+href="./migration-strategy.md#8-verified-caveats--required-fixes-anti-bluff">migration-strategy.md
+§8.1</a>)</td>
+</tr>
+<tr>
+<td><code>ATM-DB-002</code></td>
+<td><code>migration-concurrently</code></td>
+<td><code>CREATE INDEX CONCURRENTLY</code> can’t run in runner tx</td>
+<td>Non-transactional path for <code>0007_secondary_indexes</code></td>
+</tr>
+<tr>
+<td><code>ATM-DB-004</code></td>
+<td><code>db-partition-fk</code></td>
+<td>App- vs DB-enforced FK into partitioned tables</td>
+<td>Decide per env; optional composite FK for
+<code>processing_state</code></td>
+</tr>
+<tr>
+<td><code>ATM-DB-011</code></td>
+<td><code>fts-multilang</code></td>
+<td>Per-language FTS (en/ru/sr-Cyrl)</td>
+<td>Lang-driven expression index; semantic search is primary
+meanwhile</td>
+</tr>
+<tr>
+<td><code>ATM-DB-012</code></td>
+<td>(benchmark)</td>
+<td>pgvector vs Qdrant against 500 ms SLO</td>
+<td>Scaling/benchmark test bank</td>
+</tr>
+<tr>
+<td><code>ATM-DB-013</code></td>
+<td><code>vector-tenant-isolation</code></td>
+<td><strong>Source-confirmed:</strong> the pgvector adapter’s
+<code>Search</code> emits no <code>WHERE</code>/<code>Filter</code>;
+metadata post-filter after ANN can under-fill topK for small tenants
+sharing a large index</td>
+<td>Over-fetch (topK×4) + GIN metadata filter (issued by our own SQL,
+not <code>Client.Search</code>); per-large-tenant collections; Qdrant
+payload-filter fallback (<a
+href="./schema-vector.sql">schema-vector.sql</a> header, <a
+href="./indexing.md#5-vector-ann-indexes-pgvector">indexing.md
+§5</a>)</td>
+</tr>
+<tr>
+<td><code>ATM-DB-031</code></td>
+<td>keep-archived-vectors-searchable</td>
+<td>Per-account flag to retain vectors of archived content</td>
+<td>Retention policy flag</td>
+</tr>
+<tr>
+<td><code>ATM-DB-032</code></td>
+<td><code>gdpr-cold-erasure</code></td>
+<td>Erasure/anonymisation of cold-tier dumps</td>
+<td>Depends on archive format choice</td>
+</tr>
+<tr>
+<td><code>ATM-DB-033</code></td>
+<td><code>minio-signed-url-parity</code></td>
+<td><code>storage</code> signed URLs are CloudFront/AWS-specific; verify
+MinIO parity</td>
+<td>Storage/deployment concern (schema stores opaque
+<code>storage_key</code>); <a
+href="./retention-archive.md#5-vector--asset-retention">retention-archive.md
+§5</a></td>
+</tr>
+<tr>
+<td><code>ATM-DB-021</code></td>
+<td>account sub-partitioning</td>
+<td>HASH sub-partition for whale tenants</td>
+<td>Not MVP; escalation path</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="entity-coverage-checklist">7. Entity coverage checklist</h2>
+<p>All entities mandated by the area scope are modelled (see <a
+href="./erd.md#8-entity-dictionary">erd.md §8</a>):</p>
+<p><code>messengers</code> ✓ · <code>accounts</code> ✓ ·
+<code>channels</code>/groups ✓ · <code>posts</code> ✓ ·
+<code>threads</code> ✓ · <code>replies</code> ✓ · <code>hashtags</code>
+✓ · <code>categories</code> ✓ · <code>assets</code> ✓ ·
+<code>asset_links</code> ✓ · <code>processing_state</code> ✓ ·
+<code>skills</code> ✓ · <code>users</code> ✓ · <code>roles</code> ✓ ·
+<code>permissions</code> ✓ · <code>memberships</code> ✓ ·
+<code>events</code> ✓ · <code>subscriptions</code> ✓ · billing/metering
+(<code>plans</code>, <code>usage_records</code>, <code>invoices</code>)
+✓ · <code>audit_log</code> ✓. Supporting:
+<code>messenger_accounts</code>, <code>post_hashtags</code>,
+<code>reply_hashtags</code>, <code>post_categories</code>,
+<code>hashtag_categories</code>, <code>skill_runs</code>,
+<code>generated_artifacts</code>, <code>event_subscriptions</code>,
+<code>archived_partitions</code>, and the four <code>vectordb_*</code>
+collections ✓.</p>
+<hr />
+<h2 id="database-test-type-coverage-15-mandated-types">8. Database
+test-type coverage (15 mandated types)</h2>
+<p><a href="../CONVENTIONS.md">CONVENTIONS.md §6</a> requires the pack
+to cover the <strong>15 mandated test types</strong>
+<code>[CONSTITUTION §11.4.27]</code> (final request §9.1): <em>unit,
+integration, e2e, full-automation, security, DDoS, scaling, chaos,
+stress, performance, benchmarking, UI, UX, Challenges, HelixQA</em>. The
+individual docs ship the RED-first skeletons; this matrix is the
+<strong>single auditable map</strong> of every type to where the data
+layer exercises it. Per the anti-bluff rule, mocks/stubs are allowed
+<strong>only in unit tests</strong> — every other row runs against a
+<strong>real</strong> Postgres 16 + pgvector container (SKIP-OK if no
+engine, <code>CONST-035</code>). Types with no data-layer surface are
+marked <strong>N-A (delegated)</strong> with the owning area and the
+DB-side facet they feed — they are <em>not</em> silently claimed as
+covered.</p>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 26%" />
+<col style="width: 50%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Test type</th>
+<th>Data-layer coverage</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Unit</strong></td>
+<td>Migration <code>splitMarkers</code> loader parse; retention
+<code>effective_retention</code> resolution;
+<code>asset_links_one_subject</code> CHECK arithmetic; CHECK-domain
+widening logic. Mocks allowed here only.</td>
+<td><a
+href="./migration-strategy.md#3-loading-sql-files-into-migrationmigration">migration-strategy.md
+§3</a>, <a
+href="./retention-archive.md#2-retention-resolution-model">retention-archive.md
+§2</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Integration</strong></td>
+<td>Full migration <code>Apply</code>/<code>RollbackWith</code> on
+<strong>real</strong> Postgres <em>and</em> SQLite; pgvector
+<code>Upsert</code>+<code>Search</code> adapter contract; FK cascade +
+soft-ref <code>CONSTRAINT TRIGGER</code> accept/reject.</td>
+<td><a
+href="./migration-strategy.md#10-ci-less-enforcement--tdd">migration-strategy.md
+§10</a>, <a
+href="./constraints-and-integrity.md#8-verification--open-items">constraints-and-integrity.md
+§8</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>e2e</strong></td>
+<td>Ingest → classify → claim → embed → <code>/v1/search</code> hydrate
+over a live DB; asserts vectors reference rows and search returns ids
+that hydrate. DB supplies deterministic seed + partition fixtures; the
+full flow lives in <a
+href="../testing/index.md"><code>../testing/</code></a>.</td>
+<td><a href="./erd.md#7-relational--vector-reference-model">erd.md
+§7</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Full-automation</strong></td>
+<td>Seeded multi-month corpus replayed through the whole pipeline
+against a real DB, unattended; partition create-ahead + age-out run on
+the maintenance cadence. DB supplies the reproducible seed +
+<code>MonthlyRange</code> job.</td>
+<td><a
+href="./partitioning.md#5-partition-maintenance-create-ahead--detach-old">partitioning.md
+§5</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Security</strong></td>
+<td><code>audit_log</code> append-only trigger rejects UPDATE/DELETE
+(defence-in-depth over least-privilege grants); GDPR erasure reaches
+relational + vector + cold-tier; sealed <code>bytea</code>
+(<code>session_enc</code>/<code>access_hash_enc</code>/<code>totp_secret_enc</code>)
+never logged; tenant-isolation over-fetch filter correctness.</td>
+<td><a
+href="./constraints-and-integrity.md#6-append-only-audit-log-enforcement">constraints-and-integrity.md
+§6</a>, <a
+href="./retention-archive.md#6-gdpr-aware-erasure--export">retention-archive.md
+§6</a>, <a href="./schema-vector.sql">schema-vector.sql</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>DDoS</strong></td>
+<td>Data-layer facet: a <code>post.received</code> <strong>claim
+storm</strong> processes exactly-once via
+<code>FOR UPDATE SKIP LOCKED</code> (no thundering-herd double-work);
+bounded PgBouncer/pgx pool caps connection-exhaustion blast radius.
+<strong>N-A (delegated)</strong> for network-edge DDoS → <a
+href="../api/index.md"><code>../api/</code></a> / <a
+href="../deployment/index.md"><code>../deployment/</code></a>.</td>
+<td><a
+href="./indexing.md#6-the-hot-claim-index-idempotent-processing">indexing.md
+§6</a>, <a
+href="./partitioning.md#7-connection-pooling--pgvector-co-location-tuning">partitioning.md
+§7</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Scaling</strong></td>
+<td>≥10k posts/day ingestion with search p95 &lt; 500 ms
+<strong>concurrently</strong>; month-boundary inserts land in the right
+partition and prune in <code>EXPLAIN</code>; ANN over a seeded
+1e6-vector fixture.</td>
+<td><a
+href="./partitioning.md#9-gaps-verification--open-items">partitioning.md
+§9</a>, <a href="./indexing.md#8-verification--tdd">indexing.md
+§8</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Chaos</strong></td>
+<td>Crash mid-archive never drops un-copied data (archive-before-drop
+invariant); maintenance-job-skipped → rows fall into
+<code>*_default</code> and the alert fires; strongly-consistent reads
+never routed to a lagging replica.</td>
+<td><a
+href="./retention-archive.md#4-archive-pipeline-detach--cold--drop">retention-archive.md
+§4/§8</a>, <a
+href="./partitioning.md#3-topology-diagram">partitioning.md
+§3/§9</a></td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Stress</strong></td>
+<td>Sustained firehose insert with per-partition aggressive autovacuum
+(<code>scale_factor=0.02</code>) keeping bloat bounded; the partial
+claim index stays O(1)-ish under a deep pending backlog.</td>
+<td><a
+href="./partitioning.md#7-connection-pooling--pgvector-co-location-tuning">partitioning.md
+§7</a>, <a
+href="./indexing.md#6-the-hot-claim-index-idempotent-processing">indexing.md
+§6</a></td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Performance</strong></td>
+<td>Read SLO p95 &lt; 150 ms: <code>EXPLAIN (ANALYZE, BUFFERS)</code>
+asserts each hot path is Index/Index-Only Scan, never Seq Scan; the
+claim query uses <code>idx_processing_claimable</code>.</td>
+<td><a href="./indexing.md#8-verification--tdd">indexing.md §8</a></td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Benchmarking</strong></td>
+<td>pgvector vs <strong>Qdrant</strong> against the 500 ms search SLO
+(<code>ATM-DB-012</code>); HNSW <code>ef_search</code> recall/latency
+curve; write-amplification budget per firehose insert.</td>
+<td><a href="./indexing.md#5-vector-ann-indexes-pgvector">indexing.md
+§5/§8</a></td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>UI</strong></td>
+<td><strong>N-A (delegated)</strong> — the data layer has no UI surface.
+DB owns no <code>.ds-*</code>/screen assets → <a
+href="../design/index.md"><code>../design/</code></a>, client
+areas.</td>
+<td>—</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>UX</strong></td>
+<td><strong>N-A (delegated)</strong> — no direct UX surface; the DB’s
+Aggressive latency SLOs (Q14: search &lt; 500 ms, API p95 &lt; 150 ms)
+are the <strong>budget</strong> UX tests spend against → client/API
+areas.</td>
+<td><a href="#3-decision-snapshot-from-the-matrix">index §3</a></td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>Challenges</strong></td>
+<td><code>vasic-digital/challenges</code> scenario bank — DB scenarios:
+retention-override resolution (channel &gt; account &gt; global),
+partition age-out + re-attach, tenant-isolation ANN under-fill
+(<code>ATM-DB-013</code>), CHECK-domain expand widening.</td>
+<td>register §9.3, <a
+href="./constraints-and-integrity.md#2-check-domain-catalogue-enum-like-columns">constraints-and-integrity.md
+§2</a></td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>HelixQA</strong></td>
+<td><code>HelixDevelopment/helix_qa</code> YAML banks with
+<strong>mandatory runtime evidence</strong> — migration apply/rollback
+transcripts + <code>EXPLAIN</code> output + partition-listing captured
+as evidence artifacts (the org anti-bluff rule; a green SQLite-only run
+does not satisfy the Postgres-path caveats
+<code>ATM-DB-001/002</code>).</td>
+<td><a
+href="./migration-strategy.md#8-verified-caveats--required-fixes-anti-bluff">migration-strategy.md
+§8/§10</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Anti-bluff note.</strong> Rows 6/12/13 are honestly scoped:
+DDoS at the network edge, and all UI/UX, are owned by the
+API/deployment/client areas — the database area covers only the facets a
+data layer actually owns and names the delegate. The 13 covered types
+each cite a runnable skeleton; none is asserted without a concrete test
+location. The Postgres-path caveats (<code>ATM-DB-001</code> placeholder
+rewrite, <code>ATM-DB-002</code> <code>CONCURRENTLY</code>) are the
+paired-mutation gates that make a green run <em>prove real
+behaviour</em> rather than a SQLite-only false pass.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

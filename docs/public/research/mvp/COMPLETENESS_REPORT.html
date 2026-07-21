@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — MVP Documentation Completeness Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — MVP Documentation Completeness
+Report</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#summary" id="toc-summary">1. Summary</a></li>
+<li><a href="#final-documentation-tree-per-area-file-counts"
+id="toc-final-documentation-tree-per-area-file-counts">2. Final
+documentation tree &amp; per-area file counts</a></li>
+<li><a href="#consistency-findings-fixes-applied"
+id="toc-consistency-findings-fixes-applied">3. Consistency findings
+&amp; fixes applied</a></li>
+<li><a href="#success-criteria-checklist"
+id="toc-success-criteria-checklist">4. Success-criteria
+checklist</a></li>
+<li><a href="#consolidated-remaining-open-items"
+id="toc-consolidated-remaining-open-items">5. Consolidated remaining
+open items</a></li>
+<li><a href="#readiness-statement" id="toc-readiness-statement">6.
+Readiness statement</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — MVP Documentation Completeness Report
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/COMPLETENESS_REPORT.md
+  Status          : Active — v1.0
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (completeness critic)
+  Related         : ./index.md, ./CONVENTIONS.md, ./INTEGRATION_REPORT.md,
+                    ./diagrams-render-status.md,
+                    ../../../private/research/mvp/helix_thready_research_request_final.md,
+                    ../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (completeness critic)</td>
+<td>Final completeness pass: full-tree link sweep + fixes, cross-area
+decision-matrix reconciliation, success-criteria audit, Pass-3 sign-off,
+consolidated open-item roll-up</td>
+</tr>
+</tbody>
+</table>
+<p>This is the <strong>final completeness critique</strong> of the
+entire Helix Thready MVP documentation tree under
+<code>docs/public/research/mvp/</code>. It closes the loop opened by <a
+href="./INTEGRATION_REPORT.md">INTEGRATION_REPORT.md</a>: it re-swept
+every cross-area link, verified the <a
+href="../../../private/research/mvp/helix_thready_research_request_final.md#02-canonical-technology-decision-matrix">technology
+decision matrix</a> is reflected without contradiction across all eight
+areas, audited each success criterion from the authoritative request,
+patched the residual gaps found, and states an honest readiness verdict
+for implementation agents. All content follows <a
+href="./CONVENTIONS.md">CONVENTIONS.md</a>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-summary">Summary</a></li>
+<li><a href="#2-final-documentation-tree--per-area-file-counts">Final
+documentation tree &amp; per-area file counts</a></li>
+<li><a href="#3-consistency-findings--fixes-applied">Consistency
+findings &amp; fixes applied</a></li>
+<li><a href="#4-success-criteria-checklist">Success-criteria
+checklist</a></li>
+<li><a href="#5-consolidated-remaining-open-items">Consolidated
+remaining open items</a></li>
+<li><a href="#6-readiness-statement">Readiness statement</a></li>
+</ol>
+<hr />
+<h2 id="summary">1. Summary</h2>
+<ul>
+<li><strong>Tree:</strong> 8 areas + 4 root docs = <strong>370
+files</strong> — <strong>95 Markdown</strong>, <strong>105 Mermaid
+<code>.mmd</code></strong> sources, <strong>111
+<code>.svg</code></strong> (104 real diagram renders + 7 authored brand
+assets), <strong>13 <code>.sql</code></strong> (2 schema DDL files + 9
+migrations + 2 materials DDL), plus OpenAPI/config/SDK-skeleton
+materials.</li>
+<li><strong>Links: PASS.</strong> <strong>1314</strong> file-targeted
+Markdown links swept; <strong>2 real breakages fixed</strong> (depth-4
+<code>materials/*/README.md</code> pointing at
+<code>../../CONVENTIONS.md</code> instead of
+<code>../../../CONVENTIONS.md</code>); the one remaining regex hit is
+the inline-code link <em>example</em> in <code>CONVENTIONS.md §5</code>
+(never rendered). <strong>0 broken links remain.</strong></li>
+<li><strong>Decision matrix: CONSISTENT.</strong> The single cross-area
+contradiction — the product web client labelled <em>“Angular 22
+Web”</em> in two API diagram nodes while every prose reference says
+<strong>Angular 19 (product) / Angular 22 (marketing)</strong> — was
+reconciled to <strong>Angular 19 Web</strong>.</li>
+<li><strong>Diagrams: PASS.</strong> Every embedded <code>mermaid</code>
+block is followed by a multi-paragraph prose explanation; all 104
+<code>.mmd</code> sources have real mermaid-cli <code>.svg</code>
+renders (see <a
+href="./diagrams-render-status.md">diagrams-render-status.md</a>).</li>
+<li><strong>Gap register: COVERED.</strong> All <strong>8 P0</strong>
+traps from the private gap register are owned by a design plan or
+<code>[BUILD-NEW]</code> item (none claimed to “work”); P1/P2 items each
+carry a <code>[GAP: …]</code> tag and a tracked plan; <strong>85
+<code>ATM-*</code></strong> workable-item ids and <strong>151
+<code>[OPEN: …]</code></strong> markers are tracked, none papered
+over.</li>
+<li><strong>Pass 3</strong> is marked <strong>done for all eight
+areas</strong> in <a href="./index.md">index.md</a>: each now carries
+executable/reference materials beyond prose (OpenAPI + codegen, DDL +
+migrations, deploy configs, SDK skeletons, brand-asset SVGs, 15 test
+types with TDD skeletons, per-role/surface guides).</li>
+</ul>
+<h2 id="final-documentation-tree-per-area-file-counts">2. Final
+documentation tree &amp; per-area file counts</h2>
+<pre><code>docs/public/research/mvp/
+├── index.md · CONVENTIONS.md · INTEGRATION_REPORT.md · COMPLETENESS_REPORT.md
+├── diagrams-render-status.md · scripts/render-diagrams.sh
+├── architecture/   13 md · 18 mmd · diagrams/
+├── api/            13 md · 8 mmd · openapi.yaml (3.1) · materials/{codegen,examples} (28 files)
+├── database/        8 md · 12 mmd · 13 sql (schema-relational, schema-vector, 7 migrations) · materials/{migrations,templates,diagrams} (7)
+├── deployment/     15 md · 15 mmd · materials/{config/prometheus,systemd,diagrams} (18)
+├── development/    10 md · 12 mmd · materials/sdk/{go,ts} (6)
+├── testing/         9 md · 9 mmd  (15 test types + TDD reproduce-first skeletons + acceptance gates)
+├── design/          9 md · 18 mmd · assets/ (10: logo-full, logo-mark, launcher-icon{,-dark,-light,-mono}, footer-slogan + generators)
+└── user-guides/    14 md · 13 mmd  (install, config, root-admin, account-admin, end-user, cli, tui, web, mobile, sdk, faq, troubleshooting)</code></pre>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr>
+<th>Area</th>
+<th style="text-align: center;">Markdown</th>
+<th style="text-align: center;"><code>.mmd</code></th>
+<th style="text-align: center;"><code>.sql</code></th>
+<th style="text-align: center;">materials files</th>
+<th>Area assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>architecture</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">18</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td>Deep — 11 subsystem docs + overview, every P0 trap owned</td>
+</tr>
+<tr>
+<td>api</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">28</td>
+<td>Deep — OpenAPI 3.1 + codegen/examples materials</td>
+</tr>
+<tr>
+<td>database</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">7</td>
+<td>Deep — relational + vector DDL + 7 forward migrations</td>
+</tr>
+<tr>
+<td>deployment</td>
+<td style="text-align: center;">15</td>
+<td style="text-align: center;">15</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">18</td>
+<td>Deep — Compose/systemd/Prometheus configs, backup/DR</td>
+</tr>
+<tr>
+<td>development</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">6</td>
+<td>Deep — ATM backlog + Go/TS SDK skeletons</td>
+</tr>
+<tr>
+<td>testing</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td>Deep — 15 test types + TDD skeletons + gates</td>
+</tr>
+<tr>
+<td>design</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">18</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0 (10 in assets/)</td>
+<td>Deep — OpenDesign linkage + brand-asset SVGs</td>
+</tr>
+<tr>
+<td>user-guides</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">13</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td>Deep — every consumer role × every surface</td>
+</tr>
+</tbody>
+</table>
+<p><em>(<code>materials files</code> counts files under each area’s
+<code>materials/</code> subtree; design’s authored brand assets live
+under <code>design/assets/</code> and are counted there.)</em></p>
+<h2 id="consistency-findings-fixes-applied">3. Consistency findings
+&amp; fixes applied</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 30%" />
+<col style="width: 33%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Finding</th>
+<th>Severity</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>development/materials/sdk/README.md</code> linked
+<code>../../CONVENTIONS.md</code> (resolves to non-existent
+<code>development/CONVENTIONS.md</code>) — depth-4 file needs three
+<code>../</code></td>
+<td>Broken link</td>
+<td><strong>Fixed</strong> → <code>../../../CONVENTIONS.md</code>
+(header + body)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>api/materials/codegen/README.md</code> linked
+<code>../../CONVENTIONS.md</code> (resolves to non-existent
+<code>api/CONVENTIONS.md</code>)</td>
+<td>Broken link</td>
+<td><strong>Fixed</strong> → <code>../../../CONVENTIONS.md</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Product web client labelled <em>“Angular 22 Web”</em> in
+<code>api/index.md</code> and <code>api/diagrams/api-surface.mmd</code>,
+contradicting the canonical <strong>Angular 19 = product / Angular 22 =
+marketing</strong> split used everywhere else</td>
+<td>Cross-area contradiction</td>
+<td><strong>Fixed</strong> → both nodes now
+<code>Angular 19 Web</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>CONVENTIONS.md §5</code> shows
+<code>[Event model](../architecture/event-model.md)</code> as a
+link-syntax <em>example</em> (inline code)</td>
+<td>False positive</td>
+<td>No change — illustrative, never rendered</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Mobile client labelling (<code>Native Mobile</code> / “native per
+platform”)</td>
+<td>Verified consistent</td>
+<td>No change — architecture/design/user-guides/api all agree; Flutter
+appears only correctly as the Dart SDK codegen target and the documented
+alternative-only family</td>
+</tr>
+</tbody>
+</table>
+<p>No Upstream/Downstream directional note required correction; the
+reconciliation in <a
+href="./INTEGRATION_REPORT.md#5-upstreamdownstream-reconciliation-with-the-master-map">INTEGRATION_REPORT.md
+§5</a> still holds.</p>
+<h2 id="success-criteria-checklist">4. Success-criteria checklist</h2>
+<p>Legend: <strong>MET</strong> — fully satisfied in docs ·
+<strong>PARTIAL</strong> — satisfied with a tracked residual ·
+<strong>DELEGATED</strong> — correctly deferred to
+implementation/tooling (cannot be closed inside documentation).</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 63%" />
+<col style="width: 15%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Success criterion (from the request)</th>
+<th style="text-align: center;">Verdict</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>All sections detailed (no skinny docs / danger zones)</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td>8 areas, 95 md; every subsystem + P0 trap has an owning doc;
+<code>[OPEN]</code>/<code>ATM</code> used, never papered over
+<code>[CONVENTIONS §7]</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Every diagram has a multi-paragraph prose explanation</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td>Each embedded <code>mermaid</code> block followed by an “Explanation
+…” section; 104/104 <code>.mmd</code> rendered to real
+<code>.svg</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>DB schemas as DDL + migrations</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td><code>database/schema-relational.sql</code>,
+<code>schema-vector.sql</code> (pgvector DDL);
+<code>migrations/0001…0007</code> forward scripts +
+<code>materials/migrations/{0002,0003}</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>API defined as OpenAPI 3.1</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td><code>api/openapi.yaml</code> → <code>openapi: 3.1.0</code>; WS/SSE
+event contract in <code>api/event-bus-contract.md</code>; codegen
+materials</td>
+</tr>
+<tr>
+<td>5</td>
+<td>15 mandated test types + TDD reproduce-first</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td><code>testing/test-types.md</code> enumerates all 15 (unit…HelixQA)
+with acceptance gates; <code>testing/tdd-skeletons.md</code> RED-first
+skeletons</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Design linked to OpenDesign + brand assets exist</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td><code>design/design-system.md</code> derives from OpenDesign
+(<code>nexu-io/open-design</code>); <code>design/assets/</code> holds
+logo, launcher icons (light/dark/mono), footer slogan SVGs + raster
+generator</td>
+</tr>
+<tr>
+<td>7</td>
+<td>User manuals per role <strong>and</strong> per surface</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td>Roles: root-admin, account-admin, end-user. Surfaces: CLI, TUI, web
+portal, mobile, SDK quickstart + install/config/FAQ/troubleshooting</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Every gap-register item resolved or tracked</td>
+<td style="text-align: center;"><strong>MET</strong></td>
+<td>8/8 P0 gaps referenced across owning areas; P1/P2 each
+<code>[GAP: …]</code>-tagged; BUILD-NEW set declared in deployment +
+designed in <code>development/build-new-subsystems.md</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>md ↔︎ HTML/PDF sibling generation (Docs Chain,
+<code>§11.4.65</code>)</td>
+<td style="text-align: center;"><strong>DELEGATED</strong></td>
+<td>Markdown is source-of-truth; <code>.svg</code> diagram renders done;
+HTML/PDF export gated on <code>pandoc</code>/<code>weasyprint</code>
+provisioning (<code>[GAP: 19]</code>)</td>
+</tr>
+<tr>
+<td>—</td>
+<td>Source-verification of <code>FLAGGED</code> upstream interfaces</td>
+<td style="text-align: center;"><strong>DELEGATED</strong></td>
+<td>Re-verification backlog belongs to implementation; docs mark each
+<code>FLAGGED</code> and never assert a stub “works”</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>.proto</code> DTO/event files, per-language SDK code</td>
+<td style="text-align: center;"><strong>DELEGATED</strong></td>
+<td>SDK <strong>skeletons</strong>
+(<code>development/materials/sdk/{go,ts}</code>) + codegen strategy
+present; generated artifacts produced with code
+(<code>[OPEN: api-1]</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="consolidated-remaining-open-items">5. Consolidated remaining
+open items</h2>
+<p>All residual items are <strong>tracked</strong>
+(<code>[OPEN: id]</code> + an <code>ATM-*</code> / gap plan) and fall
+into five deferral classes. None is a documentation deficiency; each is
+work that can only complete outside the docs (source verification, code,
+or host tooling).</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 42%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Class</th>
+<th>Representative items</th>
+<th>Why deferred (honest)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Source-verification of FLAGGED upstreams</strong></td>
+<td><code>flagged-modules-verify</code>,
+<code>constitution-anchor-verify</code> (<code>ATM-066</code>),
+<code>agentpool-contract</code> (<code>ATM-067</code>), architecture
+<code>CAT-*</code>/<code>EVT-*</code>/<code>ING-*</code>/<code>PROC-*</code>/<code>SEM-*</code>/<code>ASSET-*</code>/<code>DF-*</code></td>
+<td>The private gap register marks these <code>FLAGGED</code>
+(README/metadata-only). Per the anti-bluff rule they must be re-read at
+source before code — a docs pass cannot and must not assert them
+verified.</td>
+</tr>
+<tr>
+<td><strong>B. BUILD-NEW subsystems (design complete, code
+pending)</strong></td>
+<td><code>max-oneme-go-port</code> (<code>ATM-018</code>),
+<code>buildnew-images</code>, <code>buildnew-ports</code>, Download
+Manager / Asset Service / User Service / OCR adapter / MeTube webhook /
+callback module / Event Bus service / ThreadReader / Semantic-search
+service</td>
+<td>These do not exist yet (<code>[BUILD-NEW]</code>). Docs specify the
+contract, seam and plan; the repos/code are implementation-phase
+deliverables.</td>
+</tr>
+<tr>
+<td><strong>C. Scale/perf tuning needing a running system</strong></td>
+<td><code>ATM-DB-012</code> (pgvector-vs-Qdrant benchmark),
+<code>ATM-DB-002</code> (<code>CREATE INDEX CONCURRENTLY</code>),
+<code>ATM-DB-032</code> (sub-partitioning), <code>host-sizing</code>,
+<code>gpu-perf-baseline</code>, <code>db-partition-fk</code></td>
+<td>Values (index build strategy, partition fan-out, host sizing, ANN
+recall/latency) require measurement against real data volume; documented
+as <code>[DEFAULT — adjustable]</code> with the tuning method.</td>
+</tr>
+<tr>
+<td><strong>D. Host/tooling provisioning</strong></td>
+<td><code>docs-chain-tooling</code> (pandoc/weasyprint),
+<code>mmd-md-sync</code>, <code>commit-artifacts</code>,
+<code>dns-provider</code>, <code>acme-email</code>,
+<code>minio-digest</code>, <code>secondary-store</code></td>
+<td>Depend on the Hetzner host / operator secrets / installed binaries
+not present at authoring time; the doc records the exact command and
+fallback.</td>
+</tr>
+<tr>
+<td><strong>E. Contract-convergence to close before GA</strong></td>
+<td><code>THREADY-DES-14</code> (design <code>account_branding</code>
+table vs canonical <code>accounts.branding</code> JSONB +
+<code>setBranding</code> contract), <code>ATM-DB-033</code> (MinIO
+signed-URL parity), <code>api-2</code> (rate-limit tiers pending
+billing), <code>api-3</code> (Zig hand-written SDK),
+<code>fts-multilang</code>, <code>gdpr-cold-erasure</code></td>
+<td>Cross-area contracts intentionally converge on the canonical DB/API
+schema; design MUST NOT diverge. Tracked so the divergence is closed
+deliberately, not silently.</td>
+</tr>
+</tbody>
+</table>
+<p>P0 register traps (all owned, none claimed working): HelixLLM
+<code>HashEmbedder</code> default (<code>[GAP: 2.1]</code>),
+VisionEngine no-OCR (<code>[GAP: 2.6]</code>), helix_skills no execution
+engine (<code>[GAP: 4.1]</code>), Herald Telegram-in-QA-harness / Max
+empty stub (<code>[GAP: 5.1]</code>), filesystem no HTTP source
+(<code>[GAP: 6.2]</code>), Download Manager absent
+(<code>[GAP: 6.3]</code>), MeTube poll-only (<code>[GAP: 6.5]</code>),
+Security-KMP in-memory secure-storage stub
+(<code>[GAP: 7.3]</code>).</p>
+<h2 id="readiness-statement">6. Readiness statement</h2>
+<p>The Helix Thready MVP documentation tree is
+<strong>implementation-ready</strong>. An implementation agent can pick
+up any of the four phases and find: an architecture with every component
+and P0 trap owned by a named design plan; a complete <code>/v1</code>
+<strong>OpenAPI 3.1</strong> contract plus WebSocket/SSE event contract
+and per-language codegen strategy; a relational +
+<strong>pgvector</strong> schema expressed as executable DDL with seven
+forward migrations; rootless-Podman deployment, TLS, backup/DR and
+secrets procedures with real config materials; a development backlog of
+85 decoupled <code>ATM-*</code> workable items with Go/TS SDK skeletons;
+all <strong>15 mandated test types</strong> with TDD reproduce-first
+skeletons and acceptance gates; an OpenDesign-anchored design system
+with real brand-asset SVGs; and user manuals for every role across every
+surface. Cross-references resolve (0 broken of 1314), the technology
+decision matrix is reflected without contradiction, and every diagram
+carries a prose explanation. The remaining
+<code>[OPEN: …]</code>/<code>ATM-*</code> items are <strong>honestly
+scoped deferrals</strong> — source-verification of <code>FLAGGED</code>
+upstreams, <code>[BUILD-NEW]</code> code, measurement-dependent tuning,
+host tooling, and deliberate contract convergence — not gaps papered
+over. The one hard prerequisite before relying on any reused subsystem
+remains the register’s <strong>anti-bluff rule</strong>: re-verify each
+<code>FLAGGED</code> interface at source, and treat each P0 trap as
+unbuilt until its owning plan is implemented and covered by the test
+banks.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

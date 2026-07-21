@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/database/constraints-and-integrity.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (database, Pass 3)
   Related         : ./schema-relational.sql ./erd.md ./partitioning.md
                     ./indexing.md ./migration-strategy.md
@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (database, Pass 3) | New doc: enforcement-layer model, CHECK-domain catalogue, FK on-delete matrix, append-only audit trigger DDL, and the opt-in soft-ref validation triggers that close `ATM-DB-004` for the safety-critical links |
+| 2 | 2026-07-22 | swarm (docs export) | Fixed inline mermaid syntax so diagram renders |
 
 This document consolidates the data-integrity rules that were previously scattered across
 [`schema-relational.sql`](./schema-relational.sql), [`erd.md`](./erd.md), and
@@ -55,7 +56,7 @@ flowchart TB
     FK[Real FKs\nCASCADE / RESTRICT / SET NULL]
     UQ[UNIQUE natural keys\ndedup + idempotency]
     CK[CHECK domains\nenum-like TEXT + ranges]
-    PK[Composite PKs\n(id, posted_at) on firehoses]
+    PK["Composite PKs\n(id, posted_at) on firehoses"]
   end
   subgraph TRG["Trigger layer (optional / enforced)"]
     UPD[trg_*_updated\nmaintain updated_at]

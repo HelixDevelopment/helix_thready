@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Design System</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Design System</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#position-and-nonnegotiables"
+id="toc-position-and-nonnegotiables">1. Position and
+non‑negotiables</a></li>
+<li><a href="#source-opendesign-the-shared-design_system"
+id="toc-source-opendesign-the-shared-design_system">2. Source:
+OpenDesign + the shared design_system</a></li>
+<li><a href="#token-architecture" id="toc-token-architecture">3. Token
+architecture</a>
+<ul>
+<li><a href="#themeinvariant-core-tokens-verbatim"
+id="toc-themeinvariant-core-tokens-verbatim">3.1 Theme‑invariant core
+tokens (verbatim)</a></li>
+<li><a href="#the-thready-brand-theme"
+id="toc-the-thready-brand-theme">3.2 The Thready brand theme</a></li>
+<li><a href="#import-order-and-entry"
+id="toc-import-order-and-entry">3.3 Import order and entry</a></li>
+<li><a href="#shipped-brand-themes-adding-a-theme"
+id="toc-shipped-brand-themes-adding-a-theme">3.4 Shipped brand themes
+&amp; adding a theme</a></li>
+</ul></li>
+<li><a href="#typography" id="toc-typography">4. Typography</a></li>
+<li><a href="#spacing-radius-elevation-motion"
+id="toc-spacing-radius-elevation-motion">5. Spacing, radius, elevation,
+motion</a></li>
+<li><a href="#accessibility-contract" id="toc-accessibility-contract">6.
+Accessibility contract</a></li>
+<li><a href="#perplatform-fanout" id="toc-perplatform-fanout">7.
+Per‑platform fan‑out</a></li>
+<li><a href="#visualregression-a11y-testing"
+id="toc-visualregression-a11y-testing">8. Visual‑regression &amp; a11y
+testing</a></li>
+<li><a href="#gaps-addressed-tracked-workable-items"
+id="toc-gaps-addressed-tracked-workable-items">9. Gaps addressed &amp;
+tracked workable items</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Design System
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/design-system.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./index.md, ./theming.md, ./brand-assets.md,
+                    ./component-library.md, ../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-21</td>
+<td>swarm (design)</td>
+<td>Initial complete draft: token architecture, Thready theme, platform
+fan‑out, typography/spacing/motion, a11y contract, visual‑regression
+testing</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-21</td>
+<td>swarm (design · review)</td>
+<td>Second-pass review: clarified Angular 19 (product) vs 22 (marketing)
+per Q17; added the mandated <strong>Challenges</strong> scenario‑bank
+test type to §8/§9 (<code>[GAP: 9.3]</code> second half)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026-07-22</td>
+<td>swarm (design · Pass 3)</td>
+<td>Depth pass: re-verified every token name at source
+(<code>gh</code>); added the remaining verified core token
+(<code>--elev-flat</code>) and theme aliases
+(<code>--fg-2</code>/<code>--meta</code>/<code>--border-soft</code>);
+shipped-brand-themes reference table + measured contrasts
+(helix-green/vasic-red/helix-ota-blue) + the 4-step “add a theme”
+process (§3.4); typography weight/variable-axis detail + exact i18n
+keys</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-position-and-non-negotiables">1. Position and
+non‑negotiables</a></li>
+<li><a href="#2-source-opendesign--the-shared-design_system">2. Source:
+OpenDesign + the shared design_system</a></li>
+<li><a href="#3-token-architecture">3. Token architecture</a>
+<ul>
+<li><a href="#31-theme-invariant-core-tokens-verbatim">3.1
+Theme‑invariant core tokens (verbatim)</a></li>
+<li><a href="#32-the-thready-brand-theme">3.2 The Thready brand
+theme</a></li>
+<li><a href="#33-import-order-and-entry">3.3 Import order and
+entry</a></li>
+<li><a href="#34-shipped-brand-themes--adding-a-theme">3.4 Shipped brand
+themes &amp; adding a theme</a></li>
+</ul></li>
+<li><a href="#4-typography">4. Typography</a></li>
+<li><a href="#5-spacing-radius-elevation-motion">5. Spacing, radius,
+elevation, motion</a></li>
+<li><a href="#6-accessibility-contract">6. Accessibility
+contract</a></li>
+<li><a href="#7-per-platform-fan-out">7. Per‑platform fan‑out</a></li>
+<li><a href="#8-visual-regression--a11y-testing">8. Visual‑regression
+&amp; a11y testing</a></li>
+<li><a href="#9-gaps-addressed--tracked-workable-items">9. Gaps
+addressed &amp; tracked workable items</a></li>
+<li><a href="#10-open-items">10. Open items</a></li>
+</ul>
+<h2 id="position-and-nonnegotiables">1. Position and
+non‑negotiables</h2>
+<p>The Thready design system is <strong>not a new system</strong>. It is
+a <strong>brand theme + Thready‑specific component set layered on the
+shared, in‑house <code>vasic-digital/design_system</code></strong>,
+which is itself extracted from OpenDesign
+<code>[CONSTITUTION §11.4.162]</code>
+<code>[IN-HOUSE: design_system]</code>. This is mandated:</p>
+<ul>
+<li><strong>Consume, never fork.</strong> The design system is a
+dependency; Thready extends it upstream, never vendors or forks it
+(decision matrix §10.2, <code>[CONSTITUTION §11.4.28]</code>).</li>
+<li><strong>Light + dark are both first‑class</strong>, with explicit
+choice and a system default (§Frontends, Q‑theming)
+<code>[OPERATOR]</code>.</li>
+<li><strong>One design system for every surface</strong> — Web, Desktop,
+Mobile, <strong>and TUI</strong> — every widget comes from the design
+system (§Frontends: “All widgets MUST BE created from our Design System
+… TUI included”).</li>
+<li><strong>Default theme derived from <code>Logo.png</code></strong>
+(§Frontends) — the Thready theme.</li>
+<li><strong>No invented values</strong>
+<code>[CONSTITUTION §11.4.6]</code>: structural tokens come from the
+OpenDesign schema defaults; brand color comes from captured pixel
+evidence of the logo.</li>
+</ul>
+<blockquote>
+<p><strong>Verified status.</strong> <code>design_system</code> is
+<code>FOUNDATION</code> (real, extracted from HelixOTA, web‑only)
+<code>[GAP: 8.1 design_system]</code>. The web/CSS + Angular layer is
+production‑usable today; the non‑web arms (<code>helix_design</code> for
+Flutter/Qt, <code>UI-Components-KMP</code>) are
+<strong>scaffolds</strong> and are tracked in §7 and §9. We do
+<strong>not</strong> claim the non‑web variants work.</p>
+</blockquote>
+<h2 id="source-opendesign-the-shared-design_system">2. Source:
+OpenDesign + the shared design_system</h2>
+<p><strong>OpenDesign</strong> (<code>nexu-io/open-design</code>,
+release <code>0.13.0</code> at time of writing <code>[VERIFIED]</code>)
+is an agent‑driven design‑system daemon. Its <code>brands/engine</code>
+derives a token set from brand inputs (logo, seed color,
+<code>DESIGN.md</code>) and its <code>export.ts</code> emits the
+canonical artifacts:</p>
+<pre class="text"><code>DesignTokens ── tokensToJson      ──▶  tokens.json   (raw, inspectable)
+DesignTokens ── tokensToCssVars   ──▶  :root { --… }  (CSS custom properties)
+SeedToken    ── tokensToThemeJson ──▶  theme.json    (Ant Design ConfigProvider)
+                                       + screenshot‑backed PPTX / PDF</code></pre>
+<p><code>[VERIFIED]</code> from
+<code>apps/daemon/src/brands/engine/export.ts</code>. <strong>PenPot and
+Lottie are not native OpenDesign export targets</strong> — see <a
+href="./prototypes.md">prototypes.md</a> and
+<code>[OPEN: THREADY-DES-02]</code>.</p>
+<p>The shared <strong><code>vasic-digital/design_system</code></strong>
+package is the normalized output of that pipeline for the Helix web
+surfaces. Its layers (<code>[VERIFIED]</code> from the repo
+<code>manifest.json</code>):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 30%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Path</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Theme‑invariant core tokens</td>
+<td><code>tokens/core.css</code></td>
+<td>type scale, spacing, radius, elevation, focus, motion, layout —
+<strong>no brand color</strong></td>
+</tr>
+<tr>
+<td>Brand themes (light + dark)</td>
+<td><code>tokens/themes/*.css</code></td>
+<td><code>helix-green</code> (default), <code>vasic-red</code>,
+<code>helix-ota-blue</code></td>
+</tr>
+<tr>
+<td>Default entry</td>
+<td><code>tokens/index.css</code></td>
+<td><code>core.css</code> + default green theme</td>
+</tr>
+<tr>
+<td>Tailwind v4 layer</td>
+<td><code>tailwind/tailwind-v4.css</code></td>
+<td>token‑bound utility layer</td>
+</tr>
+<tr>
+<td>Fonts</td>
+<td><code>fonts/fonts.css</code></td>
+<td>Space Grotesk / Hanken Grotesk / JetBrains Mono (variable)</td>
+</tr>
+<tr>
+<td>Universal components (CSS)</td>
+<td><code>components/css/components.css</code></td>
+<td>framework‑agnostic <code>.ds-*</code></td>
+</tr>
+<tr>
+<td>Angular adapters</td>
+<td><code>components/angular/*</code></td>
+<td><code>ThemeService</code>, <code>I18nService</code>,
+<code>ThemeToggle</code>, <code>LanguagePicker</code>,
+<code>DS_CONFIG</code></td>
+</tr>
+<tr>
+<td>i18n base</td>
+<td><code>i18n/en.json</code></td>
+<td>English shipped; +1 locale = 1 JSON + 1 <code>DS_LOCALES</code>
+row</td>
+</tr>
+</tbody>
+</table>
+<p>Thready adds exactly one theme file
+(<code>tokens/themes/thready.css</code>), a Thready
+<code>DS_CONFIG</code> at app bootstrap, and the Thready‑specific
+components that the shared <code>.ds-*</code> base does not yet cover
+(see <a href="./component-library.md">component-library.md</a>).</p>
+<h2 id="token-architecture">3. Token architecture</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1261px; background-color: white;" viewBox="0 0 1261 775" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-SRC" data-look="classic"><rect style="" x="410.25" y="8" width="627.75" height="133.1999969482422"/><g class="cluster-label" transform="translate(672.625, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Source</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> of</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> truth</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M522.148,116.2L518.332,120.367C514.515,124.533,506.883,132.867,503.066,141.2C499.25,149.533,499.25,157.867,499.25,171.583C499.25,185.3,499.25,204.4,499.25,223.5C499.25,242.6,499.25,261.7,499.25,274.75C499.25,287.8,499.25,294.8,499.25,298.3L499.25,301.8" id="my-svg-L_OD_CORE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OD_CORE_0" data-points="W3sieCI6NTIyLjE0Nzg5ODQyMjUxMzgsInkiOjExNi4xOTk5OTY5NDgyNDIxOX0seyJ4Ijo0OTkuMjUsInkiOjE0MS4xOTk5OTY5NDgyNDIyfSx7IngiOjQ5OS4yNSwieSI6MTY2LjE5OTk5Njk0ODI0MjJ9LHsieCI6NDk5LjI1LCJ5IjoyMjMuNDk5OTk2MTg1MzAyNzN9LHsieCI6NDk5LjI1LCJ5IjoyODAuNzk5OTk1NDIyMzYzM30seyJ4Ijo0OTkuMjUsInkiOjMwNS43OTk5OTU0MjIzNjMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M629.583,116.2L636.528,120.367C643.472,124.533,657.361,132.867,664.306,141.2C671.25,149.533,671.25,157.867,671.25,165.533C671.25,173.2,671.25,180.2,671.25,183.7L671.25,187.2" id="my-svg-L_OD_THEMES_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_OD_THEMES_0" data-points="W3sieCI6NjI5LjU4MzMzMjM3ODcwNDQsInkiOjExNi4xOTk5OTY5NDgyNDIxOX0seyJ4Ijo2NzEuMjUsInkiOjE0MS4xOTk5OTY5NDgyNDIyfSx7IngiOjY3MS4yNSwieSI6MTY2LjE5OTk5Njk0ODI0MjJ9LHsieCI6NjcxLjI1LCJ5IjoxOTEuMTk5OTk2OTQ4MjQyMn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M898.5,106.9L898.5,112.617C898.5,118.333,898.5,129.767,898.5,139.65C898.5,149.533,898.5,157.867,898.5,171.583C898.5,185.3,898.5,204.4,898.5,223.5C898.5,242.6,898.5,261.7,893.753,276.393C889.007,291.087,879.514,301.374,874.767,306.517L870.021,311.66" id="my-svg-L_LOGO_THREADY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_LOGO_THREADY_0" data-points="W3sieCI6ODk4LjUsInkiOjEwNi44OTk5OTc3MTExODE2NH0seyJ4Ijo4OTguNSwieSI6MTQxLjE5OTk5Njk0ODI0MjJ9LHsieCI6ODk4LjUsInkiOjE2Ni4xOTk5OTY5NDgyNDIyfSx7IngiOjg5OC41LCJ5IjoyMjMuNDk5OTk2MTg1MzAyNzN9LHsieCI6ODk4LjUsInkiOjI4MC43OTk5OTU0MjIzNjMzfSx7IngiOjg2Ny4zMDc4NjY4NTI0MDM4LCJ5IjozMTQuNTk5OTk0NjU5NDIzOH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M671.25,255.8L671.25,259.967C671.25,264.133,671.25,272.467,684.799,282.02C698.348,291.574,725.446,302.348,738.995,307.735L752.544,313.122" id="my-svg-L_THEMES_THREADY_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_THEMES_THREADY_0" data-points="W3sieCI6NjcxLjI1LCJ5IjoyNTUuNzk5OTk1NDIyMzYzMjh9LHsieCI6NjcxLjI1LCJ5IjoyODAuNzk5OTk1NDIyMzYzM30seyJ4Ijo3NTYuMjYxMzQ2NDg4MzI1OCwieSI6MzE0LjU5OTk5NDY1OTQyMzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M499.25,388L499.25,392.167C499.25,396.333,499.25,404.667,513.237,413.057C527.224,421.447,555.197,429.895,569.184,434.118L583.171,438.342" id="my-svg-L_CORE_IDX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_CORE_IDX_0" data-points="W3sieCI6NDk5LjI1LCJ5IjozODcuOTk5OTkyMzcwNjA1NDd9LHsieCI6NDk5LjI1LCJ5Ijo0MTIuOTk5OTkyMzcwNjA1NDd9LHsieCI6NTg3LCJ5Ijo0MzkuNDk4NDEwOTkwMTE1N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M837.5,379.2L837.5,384.833C837.5,390.467,837.5,401.733,827.324,411.293C817.147,420.853,796.794,428.707,786.618,432.633L776.441,436.56" id="my-svg-L_THREADY_IDX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_THREADY_IDX_0" data-points="W3sieCI6ODM3LjUsInkiOjM3OS4xOTk5OTMxMzM1NDQ5fSx7IngiOjgzNy41LCJ5Ijo0MTIuOTk5OTkyMzcwNjA1NDd9LHsieCI6NzcyLjcwOTQyMzIyMTA5NDQsInkiOjQzNy45OTk5OTIzNzA2MDU0N31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M587,480.859L511.75,488.649C436.5,496.44,286,512.02,210.75,523.31C135.5,534.6,135.5,541.6,135.5,545.1L135.5,548.6" id="my-svg-L_IDX_WEB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IDX_WEB_0" data-points="W3sieCI6NTg3LCJ5Ijo0ODAuODU5MzQxMDYwNTY2MDd9LHsieCI6MTM1LjUsInkiOjUyNy41OTk5OTA4NDQ3MjY2fSx7IngiOjEzNS41LCJ5Ijo1NTIuNTk5OTkwODQ0NzI2Nn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M587,492.272L559.667,498.16C532.333,504.048,477.667,515.824,450.333,528.145C423,540.467,423,553.333,423,559.767L423,566.2" id="my-svg-L_IDX_REACT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IDX_REACT_0" data-points="W3sieCI6NTg3LCJ5Ijo0OTIuMjcyMTcxNzY2MjM4MX0seyJ4Ijo0MjMsInkiOjUyNy41OTk5OTA4NDQ3MjY2fSx7IngiOjQyMywieSI6NTcwLjE5OTk5MzEzMzU0NDl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M689,502.6L689,506.767C689,510.933,689,519.267,689,529.867C689,540.467,689,553.333,689,559.767L689,566.2" id="my-svg-L_IDX_KMP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IDX_KMP_0" data-points="W3sieCI6Njg5LCJ5Ijo1MDIuNTk5OTkwODQ0NzI2NTZ9LHsieCI6Njg5LCJ5Ijo1MjcuNTk5OTkwODQ0NzI2Nn0seyJ4Ijo2ODksInkiOjU3MC4xOTk5OTMxMzM1NDQ5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M791,493.585L815.833,499.254C840.667,504.923,890.333,516.262,915.167,528.281C940,540.3,940,553,940,559.35L940,565.7" id="my-svg-L_IDX_FLUT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IDX_FLUT_0" data-points="W3sieCI6NzkxLCJ5Ijo0OTMuNTg1MjUwMjYxNzcwM30seyJ4Ijo5NDAsInkiOjUyNy41OTk5OTA4NDQ3MjY2fSx7IngiOjk0MCwieSI6NTY5LjY5OTk5MzEzMzU0NDl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M791,482.476L854,489.997C917,497.517,1043,512.559,1106,526.513C1169,540.467,1169,553.333,1169,559.767L1169,566.2" id="my-svg-L_IDX_TUI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_IDX_TUI_0" data-points="W3sieCI6NzkxLCJ5Ijo0ODIuNDc2MjQxNDQ1NTQxNH0seyJ4IjoxMTY5LCJ5Ijo1MjcuNTk5OTkwODQ0NzI2Nn0seyJ4IjoxMTY5LCJ5Ijo1NzAuMTk5OTkzMTMzNTQ0OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M135.5,652.4L135.5,656.567C135.5,660.733,135.5,669.067,135.5,676.733C135.5,684.4,135.5,691.4,135.5,694.9L135.5,698.4" id="my-svg-L_WEB_DESK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_WEB_DESK_0" data-points="W3sieCI6MTM1LjUsInkiOjY1Mi4zOTk5OTM4OTY0ODQ0fSx7IngiOjEzNS41LCJ5Ijo2NzcuMzk5OTkzODk2NDg0NH0seyJ4IjoxMzUuNSwieSI6NzAyLjM5OTk5Mzg5NjQ4NDR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M689,634.8L689,641.9C689,649,689,663.2,689,675.267C689,687.333,689,697.267,689,702.233L689,707.2" id="my-svg-L_KMP_AND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_KMP_AND_0" data-points="W3sieCI6Njg5LCJ5Ijo2MzQuNzk5OTkxNjA3NjY2fSx7IngiOjY4OSwieSI6Njc3LjM5OTk5Mzg5NjQ4NDR9LHsieCI6Njg5LCJ5Ijo3MTEuMTk5OTkzMTMzNTQ0OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M940,635.3L940,642.317C940,649.333,940,663.367,940,675.35C940,687.333,940,697.267,940,702.233L940,707.2" id="my-svg-L_FLUT_ALT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FLUT_ALT_0" data-points="W3sieCI6OTQwLCJ5Ijo2MzUuMjk5OTkxNjA3NjY2fSx7IngiOjk0MCwieSI6Njc3LjM5OTk5Mzg5NjQ4NDR9LHsieCI6OTQwLCJ5Ijo3MTEuMTk5OTkzMTMzNTQ0OX1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_OD_CORE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_OD_THEMES_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_LOGO_THREADY_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_THEMES_THREADY_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_CORE_IDX_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_THREADY_IDX_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IDX_WEB_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IDX_REACT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IDX_KMP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IDX_FLUT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_IDX_TUI_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_WEB_DESK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_KMP_AND_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_FLUT_ALT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-OD-0" data-look="classic" transform="translate(560.25, 74.5999984741211)"><rect class="basic label-container" style="" x="-103" y="-41.599998474121094" width="206" height="83.19999694824219"/><g class="label" style="" transform="translate(0, -26.599998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">OpenDesign</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">nexu-io/open-design</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TOKEN_SCHEMA</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-LOGO-1" data-look="classic" transform="translate(898.5, 74.5999984741211)"><rect class="basic label-container" style="" x="-104.5" y="-32.29999923706055" width="209" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">assets/Logo.png</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">brand</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> color</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> evidence</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CORE-3" data-look="classic" transform="translate(499.25, 346.8999938964844)"><rect class="basic label-container" style="" x="-118.5" y="-41.099998474121094" width="237" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">core.css</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">theme-invariant</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tokens</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">type/space/radius/motion</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THEMES-5" data-look="classic" transform="translate(671.25, 223.49999618530273)"><rect class="basic label-container" style="" x="-87" y="-32.29999923706055" width="174" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">themes/*.css</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">brand</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> color</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> only</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-THREADY-7" data-look="classic" transform="translate(837.5, 346.8999938964844)"><rect class="basic label-container" style="" x="-128.5" y="-32.29999923706055" width="257" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">themes/thready.css</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">helix-green</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> base</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> logo</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> teal</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IDX-11" data-look="classic" transform="translate(689, 470.299991607666)"><rect class="basic label-container" style="" x="-102" y="-32.29999923706055" width="204" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tokens/index.css</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">core</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> theme</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WEB-15" data-look="classic" transform="translate(135.5, 602.4999923706055)"><rect class="basic label-container" style="" x="-127.5" y="-49.900001525878906" width="255" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Web/CSS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Angular</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 19/22</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">@vasic-digital/design-syste</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">m</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.ds-*</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> adapters</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-REACT-17" data-look="classic" transform="translate(423, 602.4999923706055)"><rect class="basic label-container" style="" x="-110" y="-32.29999923706055" width="220" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">React</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UI-Components-React</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-KMP-19" data-look="classic" transform="translate(689, 602.4999923706055)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">KMP/Compose</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UI-Components-KMP</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FLUT-21" data-look="classic" transform="translate(940, 602.4999923706055)"><rect class="basic label-container" style="" x="-95" y="-32.79999923706055" width="190" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Flutter</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Qt/Aurora</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">helix_design</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TUI-23" data-look="classic" transform="translate(1169, 602.4999923706055)"><rect class="basic label-container" style="" x="-84" y="-32.29999923706055" width="168" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TUI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Lipgloss</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> theme</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-DESK-25" data-look="classic" transform="translate(135.5, 734.6999931335449)"><rect class="basic label-container" style="" x="-85.5" y="-32.29999923706055" width="171" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tauri</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Desktop</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">wraps</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Angular</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AND-27" data-look="classic" transform="translate(689, 734.6999931335449)"><rect class="basic label-container" style="" x="-97" y="-23.5" width="194" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Android/iOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> native</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ALT-29" data-look="classic" transform="translate(940, 734.6999931335449)"><rect class="basic label-container" style="" x="-61.5" y="-23.5" width="123" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">alt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> family</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/token-fan-out.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> Two inputs sit at the top: the OpenDesign
+TOKEN_SCHEMA (which fixes the <em>structural</em> tokens — type scale,
+spacing, radius, elevation, focus, motion, layout) and
+<code>assets/Logo.png</code> (which supplies the <em>brand color</em>
+evidence). OpenDesign produces two independent things:
+<code>core.css</code> (theme‑invariant, carries no brand color) and the
+per‑brand <code>themes/*.css</code> (brand color only). The Thready
+theme (<code>themes/thready.css</code>) is derived from the existing
+<code>helix-green</code> theme plus a teal secondary captured from the
+logo. <code>core.css</code> and the Thready theme combine in
+<code>tokens/index.css</code>, the single entry a consumer imports. From
+that entry the tokens fan out to every platform variant: the Web/CSS +
+Angular package (which the Tauri 2 desktop client wraps directly), a
+React variant, a KMP/Compose variant (the source for the Android/iOS
+native clients), a Flutter+Qt/Aurora variant (<code>helix_design</code>,
+the alternative family), and a Lipgloss theme for the TUI. Because brand
+color is isolated in one file, a white‑label swap (see <a
+href="./theming.md">theming.md</a>) re‑tints every platform without
+touching structure.</p>
+<h3 id="themeinvariant-core-tokens-verbatim">3.1 Theme‑invariant core
+tokens (verbatim)</h3>
+<p>Reproduced from <code>tokens/core.css</code>
+<code>[VERIFIED — IN-HOUSE: design_system]</code>. These are declared
+once and <strong>never re‑bound per theme</strong>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="in">:root</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Fonts */</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">--font-display</span><span class="ch">:</span> <span class="st">&quot;Space Grotesk Variable&quot;</span><span class="op">,</span> <span class="dv">ui-sans-serif</span><span class="op">,</span> <span class="dv">system-ui</span><span class="op">,</span> <span class="dv">sans-serif</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">--font-body</span><span class="ch">:</span>    <span class="st">&quot;Hanken Grotesk Variable&quot;</span><span class="op">,</span> <span class="dv">ui-sans-serif</span><span class="op">,</span> <span class="dv">system-ui</span><span class="op">,</span> <span class="dv">sans-serif</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">--font-mono</span><span class="ch">:</span>    <span class="st">&quot;JetBrains Mono&quot;</span><span class="op">,</span> <span class="dv">ui-monospace</span><span class="op">,</span> <span class="st">&quot;SF Mono&quot;</span><span class="op">,</span> <span class="dv">Menlo</span><span class="op">,</span> <span class="dv">monospace</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Type scale (OpenDesign `default` A1-structure, Tailwind-aligned) */</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">--text-xs</span><span class="ch">:</span> <span class="dv">12</span><span class="dt">px</span><span class="op">;</span>  <span class="va">--text-sm</span><span class="ch">:</span> <span class="dv">14</span><span class="dt">px</span><span class="op">;</span>  <span class="va">--text-base</span><span class="ch">:</span> <span class="dv">16</span><span class="dt">px</span><span class="op">;</span> <span class="va">--text-lg</span><span class="ch">:</span> <span class="dv">20</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">--text-xl</span><span class="ch">:</span> <span class="dv">24</span><span class="dt">px</span><span class="op">;</span>  <span class="va">--text-2xl</span><span class="ch">:</span> <span class="dv">32</span><span class="dt">px</span><span class="op">;</span> <span class="va">--text-3xl</span><span class="ch">:</span> <span class="dv">48</span><span class="dt">px</span><span class="op">;</span>  <span class="va">--text-4xl</span><span class="ch">:</span> <span class="dv">64</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="va">--leading-body</span><span class="ch">:</span> <span class="dv">1.5</span><span class="op">;</span> <span class="va">--leading-tight</span><span class="ch">:</span> <span class="dv">1.2</span><span class="op">;</span> <span class="va">--tracking-display</span><span class="ch">:</span> <span class="dv">-0.01</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Spacing (4px base) */</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="va">--space-1</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-2</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-3</span><span class="ch">:</span> <span class="dv">12</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-4</span><span class="ch">:</span> <span class="dv">16</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="va">--space-5</span><span class="ch">:</span> <span class="dv">20</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-6</span><span class="ch">:</span> <span class="dv">24</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-8</span><span class="ch">:</span> <span class="dv">32</span><span class="dt">px</span><span class="op">;</span> <span class="va">--space-12</span><span class="ch">:</span> <span class="dv">48</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">--section-y-desktop</span><span class="ch">:</span> <span class="dv">80</span><span class="dt">px</span><span class="op">;</span> <span class="va">--section-y-tablet</span><span class="ch">:</span> <span class="dv">48</span><span class="dt">px</span><span class="op">;</span> <span class="va">--section-y-phone</span><span class="ch">:</span> <span class="dv">32</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Radius */</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="va">--radius-sm</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span> <span class="va">--radius-md</span><span class="ch">:</span> <span class="dv">12</span><span class="dt">px</span><span class="op">;</span> <span class="va">--radius-lg</span><span class="ch">:</span> <span class="dv">16</span><span class="dt">px</span><span class="op">;</span> <span class="va">--radius-pill</span><span class="ch">:</span> <span class="dv">9999</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Elevation &amp; accent formula tokens (reference per-theme --fg/--border/--accent) */</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="va">--elev-flat</span><span class="ch">:</span>   <span class="dv">none</span><span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="va">--elev-ring</span><span class="ch">:</span>   <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span><span class="dt">px</span> <span class="fu">var(</span><span class="va">--border</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="va">--elev-raised</span><span class="ch">:</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">px</span> <span class="dv">8</span><span class="dt">px</span> <span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--fg</span><span class="fu">)</span><span class="op">,</span> <span class="dv">transparent</span> <span class="dv">92</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent-hover</span><span class="ch">:</span>  <span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">,</span> <span class="cn">black</span> <span class="dv">8</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent-active</span><span class="ch">:</span> <span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">,</span> <span class="cn">black</span> <span class="dv">14</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="va">--focus-ring</span><span class="ch">:</span>    <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">3</span><span class="dt">px</span> <span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">,</span> <span class="dv">transparent</span> <span class="dv">70</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Motion */</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="va">--motion-fast</span><span class="ch">:</span> <span class="dv">150</span><span class="dt">ms</span><span class="op">;</span> <span class="va">--motion-base</span><span class="ch">:</span> <span class="dv">200</span><span class="dt">ms</span><span class="op">;</span> <span class="va">--ease-standard</span><span class="ch">:</span> cubic-bezier<span class="fu">(</span><span class="dv">0.2</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Layout */</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="va">--container-max</span><span class="ch">:</span> <span class="dv">1200</span><span class="dt">px</span><span class="op">;</span> <span class="va">--container-gutter-desktop</span><span class="ch">:</span> <span class="dv">24</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="va">--container-gutter-tablet</span><span class="ch">:</span> <span class="dv">16</span><span class="dt">px</span><span class="op">;</span> <span class="va">--container-gutter-phone</span><span class="ch">:</span> <span class="dv">12</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="the-thready-brand-theme">3.2 The Thready brand theme</h3>
+<p>The Thready theme extends the <strong>verified</strong>
+<code>helix-green</code> theme. <code>helix-green</code>’s brand color
+<code>#B6E376</code> was captured as the eyedrop <strong>mean of
+1,625,855 green‑dominant saturated pixels</strong> of the Helix
+Development logo, and its accessible accent is pinned to WCAG‑AA
+(<code>#446E12</code> = 6.03:1 on white for light; <code>#B6E376</code>
+= 13.56:1 on <code>#020817</code> for dark)
+<code>[VERIFIED — design_system/docs/THEMES.md]</code>.</p>
+<p>Thready’s own <code>Logo.png</code> is a <strong>spiral/thread mark
+in chartreuse‑green flowing to a mint/teal</strong> (see <a
+href="./brand-assets.md">brand-assets.md</a>). The Thready theme
+therefore keeps the AA‑verified helix‑green accents and adds a
+<strong>secondary teal</strong> for the second brand color the spiral
+introduces:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* tokens/themes/thready.css — import AFTER tokens/core.css */</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">/* [DEFAULT — adjustable] — extends the VERIFIED helix-green theme */</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="in">:root</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">--theme-id</span><span class="ch">:</span> <span class="st">&quot;thready&quot;</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Brand identity (decorative — logo marks / one focal element, NOT body text) */</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand</span><span class="ch">:</span>    <span class="cn">#b6e376</span><span class="op">;</span>   <span class="co">/* helix-green base [VERIFIED] — 1.47:1 on white, decorative only */</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand-2</span><span class="ch">:</span>  <span class="cn">#abddc9</span><span class="op">;</span>   <span class="co">/* Thready teal/mint secondary [VERIFIED — eyedrop mean of assets/Logo.png, see §3.2] */</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand-ink</span><span class="ch">:</span><span class="cn">#0a0f04</span><span class="op">;</span>   <span class="co">/* readable ink on a --brand fill (13.15:1) [VERIFIED] */</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Surface / foreground / border — brand-neutral slate, carried from helix-green [VERIFIED] */</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="va">--bg</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span> <span class="va">--surface</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span> <span class="va">--surface-warm</span><span class="ch">:</span> <span class="cn">#f1f5f9</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="va">--fg</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span> <span class="va">--muted</span><span class="ch">:</span> <span class="cn">#475569</span><span class="op">;</span> <span class="va">--border</span><span class="ch">:</span> <span class="cn">#e2e8f0</span><span class="op">;</span> <span class="va">--border-strong</span><span class="ch">:</span> <span class="cn">#64748b</span><span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Accent — LIGHT (helix-green, AA text on white) [VERIFIED] */</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent</span><span class="ch">:</span> <span class="cn">#446e12</span><span class="op">;</span> <span class="va">--accent-on</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Semantic — LIGHT (AA) [VERIFIED] */</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="va">--success</span><span class="ch">:</span> <span class="cn">#166534</span><span class="op">;</span> <span class="va">--warn</span><span class="ch">:</span> <span class="cn">#854d0e</span><span class="op">;</span> <span class="va">--danger</span><span class="ch">:</span> <span class="cn">#dc2626</span><span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Footer heart (see brand-assets.md) — brand accent by in-house precedent */</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="va">--ds-heart</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span>   <span class="co">/* [OPEN: THREADY-DES-03] confirm vs. classic love-red */</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-color-scheme</span><span class="ch">:</span> <span class="dv">dark</span><span class="fu">)</span> {</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="in">:root:not(</span><span class="ex">[</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;light&quot;</span><span class="ex">]</span><span class="in">)</span> {</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="va">--brand</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span> <span class="va">--brand-2</span><span class="ch">:</span> <span class="cn">#b7ebd6</span><span class="op">;</span> <span class="va">--brand-ink</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span>  <span class="co">/* brighter teal (Logo.png median) for dark surfaces */</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="va">--bg</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span> <span class="va">--surface</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span> <span class="va">--surface-warm</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="va">--fg</span><span class="ch">:</span> <span class="cn">#f8fafc</span><span class="op">;</span> <span class="va">--muted</span><span class="ch">:</span> <span class="cn">#94a3b8</span><span class="op">;</span> <span class="va">--border</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span> <span class="va">--border-strong</span><span class="ch">:</span> <span class="cn">#64748b</span><span class="op">;</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="va">--accent</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span> <span class="va">--accent-on</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span>   <span class="co">/* logo lime IS the dark accent — 13.56:1 */</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="va">--success</span><span class="ch">:</span> <span class="cn">#16a34a</span><span class="op">;</span> <span class="va">--warn</span><span class="ch">:</span> <span class="cn">#eab308</span><span class="op">;</span> <span class="va">--danger</span><span class="ch">:</span> <span class="cn">#ef4444</span><span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="va">--ds-heart</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="in">:root</span><span class="ex">[</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ex">]</span><span class="op">,</span> <span class="fu">.dark</span> { <span class="co">/* same dark block, for explicit-choice + .dark class */</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span> <span class="va">--brand-2</span><span class="ch">:</span> <span class="cn">#b7ebd6</span><span class="op">;</span> <span class="va">--brand-ink</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  <span class="va">--bg</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span> <span class="va">--surface</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span> <span class="va">--surface-warm</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  <span class="va">--fg</span><span class="ch">:</span> <span class="cn">#f8fafc</span><span class="op">;</span> <span class="va">--muted</span><span class="ch">:</span> <span class="cn">#94a3b8</span><span class="op">;</span> <span class="va">--border</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span> <span class="va">--border-strong</span><span class="ch">:</span> <span class="cn">#64748b</span><span class="op">;</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span> <span class="va">--accent-on</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  <span class="va">--success</span><span class="ch">:</span> <span class="cn">#16a34a</span><span class="op">;</span> <span class="va">--warn</span><span class="ch">:</span> <span class="cn">#eab308</span><span class="op">;</span> <span class="va">--danger</span><span class="ch">:</span> <span class="cn">#ef4444</span><span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  <span class="va">--ds-heart</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Provenance honesty.</strong> <code>--accent</code>,
+<code>--accent-on</code>, surfaces, foreground, border and semantic
+tokens are the <strong>verified</strong> helix‑green/slate values
+(measured, AA). The Thready <code>--brand-2</code> teal is now
+<strong>captured</strong>, not provisional
+<code>[VERIFIED — eyedrop of</code>assets/Logo.png<code>, closes THREADY-DES-01]</code>:
+applying the design‑system provenance rule (<code>§11.4.6</code> — the
+mean of a color‑dominant pixel region, the same method that produced
+helix‑green <code>#B6E376</code>), the <strong>mint/teal region</strong>
+of <code>Logo.png</code> (1916×1522, pixels where
+<code>blue &gt; red</code> and <code>green ≥ blue</code>, saturated,
+opaque — <strong>n = 618,886</strong>) has mean
+<strong><code>#ABDDC9</code></strong> (median <code>#B7EBD6</code>,
+brightest sample <code>#B8ECD7</code>). The light theme uses the mean
+<code>#ABDDC9</code>; dark uses the brighter median <code>#B7EBD6</code>
+so the mark holds on the dark surface. The same capture over the
+<strong>green‑dominant</strong> region (n = 1,057,661) returns
+<code>#BAE448</code>, which corroborates the documented helix‑green base
+(<code>#B6E376</code>, median <code>#BEE747</code>) and validates the
+method. The exact heuristic is reproducible and should be re‑confirmed
+by the design‑system’s own eyedrop tool at integration, but the value is
+captured evidence, not a guess. The teal is <strong>decorative</strong>
+(spiral marks, gradients, illustration) and MUST NOT be used for body
+text on light surfaces without an AA‑verified darkening — matching the
+<code>--brand</code> rule.</p>
+<h3 id="import-order-and-entry">3.3 Import order and entry</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Thready app entry (product web + desktop) */</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;@vasic-digital/design-system/tokens/core.css&quot;</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;@vasic-digital/design-system/tokens/themes/thready.css&quot;</span><span class="op">;</span>  <span class="co">/* Thready default */</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;@vasic-digital/design-system/fonts/fonts.css&quot;</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;@vasic-digital/design-system/components/css/components.css&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>At Angular bootstrap the Thready app provides the
+<code>DS_CONFIG</code> so the shared <code>ThemeService</code> /
+<code>I18nService</code> key their storage and defaults correctly
+<code>[VERIFIED — ds.config.ts interface]</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { DS_CONFIG<span class="op">,</span> DS_LOCALES<span class="op">,</span> DS_DICTIONARY } <span class="im">from</span> <span class="st">&#39;@vasic-digital/design-system&#39;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> appConfig <span class="op">=</span> {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  providers<span class="op">:</span> [</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    { provide<span class="op">:</span> DS_CONFIG<span class="op">,</span> useValue<span class="op">:</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        storagePrefix<span class="op">:</span> <span class="st">&#39;thready&#39;</span><span class="op">,</span>      <span class="co">// -&gt; localStorage &#39;thready-theme&#39; / &#39;thready-lang&#39;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        defaultTheme<span class="op">:</span> <span class="st">&#39;system&#39;</span><span class="op">,</span>        <span class="co">// light | dark | system  [OPERATOR: light+dark, system default]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        defaultLocale<span class="op">:</span> <span class="st">&#39;en&#39;</span><span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      } }<span class="op">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    { provide<span class="op">:</span> DS_LOCALES<span class="op">,</span> useValue<span class="op">:</span> [</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        { code<span class="op">:</span> <span class="st">&#39;en&#39;</span><span class="op">,</span> label<span class="op">:</span> <span class="st">&#39;English&#39;</span> }<span class="op">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        { code<span class="op">:</span> <span class="st">&#39;ru&#39;</span><span class="op">,</span> label<span class="op">:</span> <span class="st">&#39;Русский&#39;</span> }<span class="op">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        { code<span class="op">:</span> <span class="st">&#39;sr-Cyrl&#39;</span><span class="op">,</span> label<span class="op">:</span> <span class="st">&#39;Српски&#39;</span> }<span class="op">,</span>   <span class="co">// [OPERATOR: en/ru/sr-Cyrl] (§12)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      ] }<span class="op">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    { provide<span class="op">:</span> DS_DICTIONARY<span class="op">,</span> useValue<span class="op">:</span> THREADY_I18N }<span class="op">,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="shipped-brand-themes-adding-a-theme">3.4 Shipped brand themes
+&amp; adding a theme</h3>
+<p>The package ships <strong>three</strong> brand themes today
+<code>[VERIFIED — tokens/themes/{helix-green,vasic-red,helix-ota-blue}.css + docs/THEMES.md]</code>.
+They matter to Thready twice: <code>helix-green</code> is the base the
+Thready theme extends, and all three are the <strong>precedent</strong>
+the per‑Account white‑label follows (a theme = one <code>--brand</code>
++ an AA‑pinned <code>--accent</code>, neutrals shared). Measured
+accents:</p>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 12%" />
+<col style="width: 31%" />
+<col style="width: 35%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr>
+<th>Theme</th>
+<th><code>--brand</code></th>
+<th><code>--accent</code> light (on white)</th>
+<th><code>--accent</code> dark (on <code>#020817</code>)</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>helix-green</strong> (default, Thready base)</td>
+<td><code>#B6E376</code></td>
+<td><code>#446E12</code> = <strong>6.03:1</strong> ✅</td>
+<td><code>#B6E376</code> = <strong>13.56:1</strong> ✅</td>
+<td>eyedrop mean of 1,625,855 logo pixels <code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td><strong>vasic-red</strong></td>
+<td><code>#E11D2A</code></td>
+<td><code>#B91C1C</code> = <strong>6.47:1</strong> ✅</td>
+<td><code>#F87171</code> = <strong>7.23:1</strong> ✅</td>
+<td>⚠ brand is a <strong>PLACEHOLDER</strong> pending the vasic logo
+asset <code>[VERIFIED — THEMES.md]</code></td>
+</tr>
+<tr>
+<td><strong>helix-ota-blue</strong></td>
+<td><code>#2563EB</code></td>
+<td><code>#2563EB</code></td>
+<td><code>#3B82F6</code></td>
+<td>HelixOTA canonical shadcn blue <code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>The neutral/semantic slate is <strong>shared across all
+three</strong> (<code>--bg #ffffff</code>/<code>#020817</code>,
+<code>--muted #475569</code>/<code>#94A3B8</code>,
+<code>--danger #DC2626</code>/<code>#EF4444</code>, …) and is AA‑tuned —
+a theme changes only
+<code>--brand</code>/<code>--accent</code>(+<code>-on</code>). The theme
+file also declares convenience aliases the components read:
+<code>--fg-2</code> (=<code>--fg</code>), <code>--meta</code>
+(=<code>--muted</code>), <code>--border-soft</code>
+(=<code>--border</code>) <code>[VERIFIED — helix-green.css]</code>.</p>
+<p><strong>Adding a theme (the exact shipped 4‑step, applied to
+<code>thready</code>)</strong>
+<code>[VERIFIED — THEMES.md "Adding a theme"]</code>:</p>
+<ol type="1">
+<li>Copy <code>tokens/themes/helix-green.css</code> →
+<code>tokens/themes/thready.css</code>.</li>
+<li>Set <code>--theme-id</code>, <code>--brand</code>,
+<code>--accent</code>(+<code>-on</code>) for light <strong>and</strong>
+dark; keep the neutral slate unless the brand truly needs a different
+surface family.</li>
+<li>Record the brand‑color provenance + a <strong>measured</strong>
+accent contrast ratio in <code>docs/THEMES.md</code> (no invented values
+<code>[CONSTITUTION §11.4.6]</code>).</li>
+<li>Register it in <code>manifest.json &gt; themes[]</code>.</li>
+</ol>
+<p>This is precisely the workable item <code>THREADY‑DES‑DS‑01</code>
+under <code>[GAP: 8.1]</code> — the Thready theme is a new theme file
+added by this exact process, plus a Thready <code>DS_CONFIG</code>,
+nothing forked.</p>
+<h2 id="typography">4. Typography</h2>
+<p>Three shipped variable faces
+<code>[VERIFIED — fonts/fonts.css]</code>, all self‑hostable via
+<code>@fontsource</code> (no external CDN — matches the offline/private
+posture and CSP hygiene):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 29%" />
+<col style="width: 25%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Token</th>
+<th>Face</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Display</td>
+<td><code>--font-display</code></td>
+<td><strong>Space Grotesk Variable</strong></td>
+<td>Headings <code>h1–h3</code>, hero, <code>.ds-display</code></td>
+</tr>
+<tr>
+<td>Body</td>
+<td><code>--font-body</code></td>
+<td><strong>Hanken Grotesk Variable</strong></td>
+<td>Body, UI, controls</td>
+</tr>
+<tr>
+<td>Mono</td>
+<td><code>--font-mono</code></td>
+<td><strong>JetBrains Mono</strong></td>
+<td>Code, post payloads, CLI transcripts, hashtags, IDs</td>
+</tr>
+</tbody>
+</table>
+<p>Type scale is the 8‑step ramp in §3.1 (<code>--text-xs 12px</code> …
+<code>--text-4xl 64px</code>). Body line‑height is <code>1.5</code>;
+display is <code>1.2</code> with <code>-0.01em</code> tracking. All
+three faces are <strong>variable</strong> and self‑hosted via
+<code>@fontsource</code> (no external CDN — matches the offline/private
+posture and CSP hygiene). Weight usage
+<code>[DEFAULT — adjustable]</code>: body/UI text 400–500
+(<code>.ds-btn</code> is <code>font-weight:500</code>
+<code>[VERIFIED]</code>), headings 600–700 on
+<code>--font-display</code>, badges 600
+<code>[VERIFIED — .ds-badge]</code>; the variable <code>wght</code> axis
+means these are subsets of one file, not extra downloads.
+Numeric/ID/hashtag content uses <code>--font-mono</code> with tabular
+figures so columns align in the Dashboard and Post‑detail tables.</p>
+<p><strong>Localization</strong> is wired through the shipped
+<code>I18nService</code> (§ component-library §4) — a
+<code>t(key)</code> read tracks the <code>lang</code> signal so
+switching re‑renders instantly
+<code>[VERIFIED — i18n.service.ts]</code>. The footer slogan uses the
+exact keys <code>footer.made</code> / <code>footer.by</code> with
+<code>a11y.love</code> on the heart, and the language picker label uses
+<code>a11y.language</code>
+<code>[VERIFIED — reference.footer / language-picker component]</code>.</p>
+<p><strong>Cyrillic coverage</strong> (ru, <code>sr-Cyrl</code>) is
+required <code>[OPERATOR §12]</code>: verify each variable face’s
+Cyrillic subset at integration and fall back to the system stack
+per‑glyph — tracked as <code>[OPEN: THREADY-DES-04]</code> (Cyrillic
+subset verification). Because logical properties and the token scale are
+direction‑agnostic (§6.6), the type layer itself makes no LTR
+assumption.</p>
+<h2 id="spacing-radius-elevation-motion">5. Spacing, radius, elevation,
+motion</h2>
+<ul>
+<li><strong>Spacing:</strong> 4px base, ramp
+<code>--space-1..--space-12</code>; responsive section rhythm
+(<code>--section-y-{phone|tablet|desktop}</code> = 32/48/80px). Layout
+container <code>--container-max 1200px</code> with responsive
+gutters.</li>
+<li><strong>Radius:</strong> <code>--radius-sm 8px</code> (controls),
+<code>--radius-md 12px</code> (cards), <code>--radius-lg 16px</code>
+(surfaces/sheets), <code>--radius-pill</code> (chips, toggles).</li>
+<li><strong>Elevation:</strong> <code>--elev-ring</code> (1px token
+border), <code>--elev-raised</code> (soft shadow via
+<code>color-mix</code> over <code>--fg</code>). Prefer ring elevation in
+dark to avoid muddy shadows.</li>
+<li><strong>Motion:</strong> two shipped durations —
+<code>--motion-fast 150ms</code> (hover/press, control state),
+<code>--motion-base 200ms</code> (enter/exit, disclosure) — on
+<code>--ease-standard cubic-bezier(0.2,0,0,1)</code>. Larger
+choreographed transitions (page/route, skeleton→content, processing
+animations) extend this in <a href="./prototypes.md">prototypes.md</a>
+<code>[DEFAULT — adjustable]</code>. <strong>All motion honors
+<code>prefers-reduced-motion: reduce</code></strong> — the shipped
+components already gate transitions on it
+<code>[VERIFIED — components.css]</code>.</li>
+</ul>
+<h2 id="accessibility-contract">6. Accessibility contract</h2>
+<p>Non‑negotiable, aligned to the engineering‑quality bar
+<code>[CONSTITUTION §11.4.190]</code> and the <code>design_system</code>
+a11y evidence:</p>
+<ol type="1">
+<li><strong>WCAG 2.2 AA</strong> minimum: text ≥ 4.5:1 (normal) / 3:1
+(large + UI); non‑text/UI boundaries ≥ 3:1 (<code>--border-strong</code>
+exists precisely for load‑bearing boundaries)
+<code>[VERIFIED]</code>.</li>
+<li><strong>Brand vs. text separation:</strong>
+<code>--brand</code>/<code>--brand-2</code> are decorative only (logo
+lime is 1.47:1 on white — never body text). Text uses
+<code>--accent</code>/<code>--fg</code>. <strong><code>--accent</code>
+(brand) and <code>--danger</code> (error) are separate tokens</strong> —
+destructive UI is always <code>--danger</code>, so brand color never
+masks an error signal <code>[VERIFIED — THEMES.md]</code>.</li>
+<li><strong>Focus visible everywhere:</strong> <code>--focus-ring</code>
+(3px accent‑tinted) on <code>:focus-visible</code>; the shipped
+<code>.ds-btn</code>, <code>.ds-input</code>, toggle and picker all
+implement it <code>[VERIFIED]</code>.</li>
+<li><strong>Keyboard + SR:</strong> every interactive component is
+reachable and operable by keyboard, with a correct accessible name
+(e.g. the theme toggle uses <code>aria-pressed</code>, the language
+picker is a native <code>&lt;select&gt;</code>)
+<code>[VERIFIED]</code>.</li>
+<li><strong>Reduced motion</strong> and <strong>reduced
+transparency</strong> respected.</li>
+<li><strong>Localized, RTL‑ready:</strong> logical properties
+(<code>padding-inline</code>, <code>margin-inline</code>) are used in
+the shipped components; <code>en/ru/sr-Cyrl</code> are LTR, but the
+token layer does not assume direction.</li>
+</ol>
+<p>Every one of these is a <strong>testable gate</strong> — see §8.</p>
+<h2 id="perplatform-fanout">7. Per‑platform fan‑out</h2>
+<p>The design system fans to five platform variants (decision matrix
+§10.2). Honest status per <code>[GAP: 8.x]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 38%" />
+<col style="width: 15%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Package / mechanism</th>
+<th>Status</th>
+<th>Thready plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Web / CSS + Angular 19/22</strong></td>
+<td><code>@vasic-digital/design-system</code> (<code>.ds-*</code>,
+adapters)</td>
+<td><code>PRODUCTION</code>‑usable (web‑only foundation)
+<code>[GAP: 8.1]</code></td>
+<td>Primary surface. Publish the package to npm; add Thready theme +
+Thready components. <strong>Web + CLI first</strong>
+<code>[OPERATOR]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Angular version split <code>[Q17]</code>.</strong> The
+Thready <strong>product portal</strong> — the primary management surface
+specified in <a href="./wireframes.md">wireframes.md</a> — is
+<strong>Angular 19</strong> (matching the HelixTrack
+<code>web_client</code> + Tauri <code>desktop_client</code> family:
+Material 19, ngx‑translate 17). <strong>Angular 22</strong>
+(standalone/signals, SSR + SSG/prerender, Tailwind v4 on OpenDesign
+tokens) is for <strong>marketing / public sites</strong>. Both consume
+the same <code>@vasic-digital/design-system</code> tokens +
+<code>.ds-*</code> set, which is why the platform row above is labelled
+“19/22”. The design system layer itself is version‑agnostic. |
+<strong>Desktop (Tauri 2)</strong> | Wraps the Angular web UI (Rust
+core) | Inherits web | No separate token work; OS‑specific chrome
+overrides only | | <strong>React</strong> |
+<code>UI-Components-React</code> | <code>SCAFFOLD/FLAGGED</code>
+<code>[GAP: 8.6]</code> | Only if a React surface is needed
+(Catalogizer‑style); re‑audit before use | | <strong>KMP / Compose
+(Android/iOS)</strong> | <code>UI-Components-KMP</code> + KMP fleet |
+<code>SCAFFOLD</code>, <strong>no CI/publish</strong>
+<code>[GAP: 8.4]</code> | Mobile shared‑logic; needs CI + Maven publish
++ a token bridge (Compose <code>Color</code>/<code>Dp</code> from the
+CSS tokens) | | <strong>Flutter + Qt/Aurora</strong> |
+<code>helix_design</code> | <code>SCAFFOLD</code> (“not yet
+implemented”) <code>[GAP: 8.2/8.3]</code> | Alternative family; the only
+path to HarmonyOS/Aurora is native ArkTS/Qt via <code>helix_shims</code>
+<code>[GAP: 8.5]</code> | | <strong>TUI</strong> | Lipgloss theme
+(Bubble Tea) | Pattern exists in‑house
+<code>[VERIFIED — helix_track/llms_verifier/.../tui]</code> | Map the
+token palette to a Lipgloss <code>Style</code> set (see below) |</p>
+</blockquote>
+<p><strong>Token bridging (the mechanism that keeps them one
+system).</strong> The CSS custom properties are the canonical source;
+each non‑web platform consumes a <strong>generated</strong> binding, not
+a hand‑kept copy, so a token change propagates. A token export step
+(OpenDesign <code>tokensToJson</code> → per‑platform codegen)
+produces:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TUI (Lipgloss) — generated from tokens/themes/thready.css  [DEFAULT — adjustable]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> theme</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;github.com/charmbracelet/lipgloss&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Thready dark palette (TUI defaults to the terminal&#39;s dark surface).</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    Accent   <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#B6E376&quot;</span><span class="op">)</span> <span class="co">// --accent (dark)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    Fg       <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#F8FAFC&quot;</span><span class="op">)</span> <span class="co">// --fg</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    Muted    <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#94A3B8&quot;</span><span class="op">)</span> <span class="co">// --muted</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Border   <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#1E293B&quot;</span><span class="op">)</span> <span class="co">// --border</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    Danger   <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#EF4444&quot;</span><span class="op">)</span> <span class="co">// --danger</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    Success  <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#16A34A&quot;</span><span class="op">)</span> <span class="co">// --success</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> Button <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    Foreground<span class="op">(</span>lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#0A0F04&quot;</span><span class="op">)).</span> <span class="co">// --accent-on</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    Background<span class="op">(</span>Accent<span class="op">).</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    Padding<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">).</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    Bold<span class="op">(</span><span class="ot">true</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// KMP/Compose — generated from the same tokens  [DEFAULT — adjustable]  [GAP: 8.4]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> ThreadyColors <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">AccentLight</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF446E12</span><span class="op">);</span> <span class="kw">val</span> <span class="va">AccentDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFB6E376</span><span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">Fg</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFF020817</span><span class="op">);</span>          <span class="kw">val</span> <span class="va">FgDark</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFF8FAFC</span><span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="va">Danger</span> <span class="op">=</span> Color<span class="op">(</span><span class="bn">0xFFDC2626</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="va">ThreadySpacing</span> <span class="op">=</span> <span class="kw">object</span> <span class="op">{</span> <span class="kw">val</span> <span class="va">s1</span> <span class="op">=</span> <span class="fl">4.</span>dp<span class="op">;</span> <span class="kw">val</span> <span class="va">s4</span> <span class="op">=</span> <span class="fl">16.</span>dp<span class="op">;</span> <span class="kw">val</span> <span class="va">s6</span> <span class="op">=</span> <span class="fl">24.</span>dp <span class="op">}</span></span></code></pre></div>
+<h2 id="visualregression-a11y-testing">8. Visual‑regression &amp; a11y
+testing</h2>
+<p>Mandated by <code>[CONSTITUTION §11.4.162]</code> (visual‑regression
+required) and §10.2. The in‑house family (<code>Panoptic</code>,
+<code>VisualRegression</code> (LLM‑vision), <code>ScreenDiff</code>
+(pixel), <code>ReplayBuffer</code>) exists but is <strong>library‑grade
+with no CI</strong> <code>[GAP: 9.3]</code> — the plan closes that:</p>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test type</th>
+<th>Tool</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pixel visual‑regression</td>
+<td><code>ScreenDiff</code></td>
+<td>Every component in every theme×state; fail on &gt; threshold
+delta</td>
+</tr>
+<tr>
+<td>Semantic visual‑regression</td>
+<td><code>VisualRegression</code> (LLM‑vision)</td>
+<td>Catches layout/semantic breaks a pixel diff misses</td>
+</tr>
+<tr>
+<td>Interaction replay</td>
+<td><code>ReplayBuffer</code></td>
+<td>Records + replays UX interaction sequences</td>
+</tr>
+<tr>
+<td>a11y (web)</td>
+<td><code>cypress-axe</code> / Playwright + axe</td>
+<td>Zero critical violations per screen
+<code>[VERIFIED — §9.4 test frameworks]</code></td>
+</tr>
+<tr>
+<td>Contrast tokens</td>
+<td>scripted ratio check</td>
+<td>Re‑assert the THEMES.md ratios on every theme change</td>
+</tr>
+<tr>
+<td>Challenges (scenario banks)</td>
+<td><code>vasic-digital/challenges</code></td>
+<td>Adversarial UI/UX decks (edge cases, overflow, RTL/Cyrillic,
+boundary contrasts) — mandated test type
+<code>[CONSTITUTION §11.4.27]</code>; second half of
+<code>[GAP: 9.3]</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># thready visual-regression bank (HelixQA-style, anti-bluff runtime evidence)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suite</span><span class="kw">:</span><span class="at"> design-system.components</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">thready-light</span><span class="kw">,</span><span class="at"> thready-dark</span><span class="kw">]</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">state</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">default</span><span class="kw">,</span><span class="at"> hover</span><span class="kw">,</span><span class="at"> focus-visible</span><span class="kw">,</span><span class="at"> active</span><span class="kw">,</span><span class="at"> disabled</span><span class="kw">,</span><span class="at"> error</span><span class="kw">]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">component</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">ds-btn--primary</span><span class="kw">,</span><span class="at"> ds-btn--secondary</span><span class="kw">,</span><span class="at"> ds-input</span><span class="kw">,</span><span class="at"> ds-card</span><span class="kw">,</span><span class="at"> ds-nav</span><span class="kw">,</span><span class="at"> ds-footer</span><span class="kw">,</span><span class="at"> ds-badge</span><span class="kw">]</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">evidence</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">screenshot</span><span class="kw">,</span><span class="at"> dom-snapshot</span><span class="kw">,</span><span class="at"> axe-report</span><span class="kw">]</span><span class="co">   # runtime evidence mandatory (no bluff)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">gate</span><span class="kw">:</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pixel_delta_max</span><span class="kw">:</span><span class="at"> 0.1%</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">axe_critical</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contrast_min_text</span><span class="kw">:</span><span class="at"> </span><span class="fl">4.5</span></span></code></pre></div>
+<h2 id="gaps-addressed-tracked-workable-items">9. Gaps addressed &amp;
+tracked workable items</h2>
+<ul>
+<li><code>[GAP: 8.1 design_system]</code> — <strong>Plan:</strong> add
+<code>tokens/themes/thready.css</code> (§3.2) upstream; publish
+<code>@vasic-digital/design-system</code> to npm; mature the standalone
+package. <strong>Workable item THREADY‑DES‑DS‑01.</strong> Until
+published, consume via the git dependency. Do not claim non‑web arms
+work.</li>
+<li><code>[GAP: 8.2 helix_design]</code> /
+<code>[GAP: 8.3 helix_ui]</code> — <strong>Plan:</strong> implement the
+per‑platform token packages (Flutter, Qt/Aurora, CSS) from the
+OpenDesign source, in lockstep with <code>design_system</code>, before
+any Flutter/Qt client relies on them. Native ArkTS/Qt clients +
+<code>helix_shims</code> are the only HarmonyOS/Aurora path
+<code>[GAP: 8.5]</code>. <strong>Workable items THREADY‑DES‑FLUT‑01,
+‑QT‑01.</strong></li>
+<li><code>[GAP: 8.4 UI-Components-KMP]</code> — <strong>Plan:</strong>
+add CI + Maven publish + a token‑bridge codegen (§7) before the mobile
+clients depend on it. <strong>Workable item
+THREADY‑DES‑KMP‑01.</strong></li>
+<li><code>[GAP: 9.3 VisualRegression family]</code> — <strong>Plan (two
+halves):</strong> (1) add CI to the visual‑regression family and wire
+the bank in §8 — <strong>workable item THREADY‑DES‑VR‑01</strong>; (2)
+author the Thready <strong>Challenges</strong> scenario banks
+(<code>vasic-digital/challenges</code>, a mandated test type) —
+<strong>workable item THREADY‑DES‑CHAL‑01</strong> (see <a
+href="./component-library.md#9-testing-the-library">component-library.md
+§9</a>).</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[CLOSED: THREADY-DES-01]</code> Formal <code>Logo.png</code>
+eyedrop captured (§3.2): <code>--brand-2</code> = <code>#ABDDC9</code>
+(light, mean of n=618,886 mint pixels) / <code>#B7EBD6</code> (dark,
+median). Re‑confirm with the design‑system eyedrop tool at
+integration.</li>
+<li><code>[OPEN: THREADY-DES-02]</code> PenPot + Lottie exports are not
+native to OpenDesign — bridge needed (see <a
+href="./prototypes.md">prototypes.md</a>).</li>
+<li><code>[OPEN: THREADY-DES-03]</code> Heart‑glyph color: brand accent
+(current default) vs. classic love‑red.</li>
+<li><code>[OPEN: THREADY-DES-04]</code> Verify Cyrillic subsets of the
+three variable faces for ru / sr‑Cyrl.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

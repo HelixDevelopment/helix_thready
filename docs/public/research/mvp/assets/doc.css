@@ -1,0 +1,304 @@
+/*
+ * doc.css — Helix Thready public-documentation stylesheet
+ * =========================================================
+ * A light, print-friendly, branded stylesheet used by the
+ * Markdown -> HTML -> PDF export pipeline (scripts/export-docs.sh).
+ *
+ * Consumers:
+ *   - Web browsers (screen)   : reads the generated *.html directly.
+ *   - WeasyPrint (print media): renders *.html -> *.pdf, honouring the
+ *                               @page rules and running() margin boxes below.
+ *
+ * Constitution: satisfies §11.4.65 (every non-source .md has PDF + HTML
+ * siblings, kept in sync) and §11.4.106 (Docs Chain).
+ *
+ * Brand: Helix green  #446E12  (accents, links, running footer heart).
+ */
+
+/* ----------------------------------------------------------------------
+ * 0. Brand tokens
+ * -------------------------------------------------------------------- */
+:root {
+  --helix-green:        #446E12;   /* primary brand green            */
+  --helix-green-dark:   #2f5d0b;   /* darker green for text-on-light */
+  --helix-green-tint:   #eef6e3;   /* very light green wash          */
+  --ink:                #1c2530;   /* body text                      */
+  --ink-soft:           #45535f;   /* secondary text                 */
+  --rule:               #d7dee4;   /* hairlines / borders            */
+  --code-bg:            #f6f8fa;   /* code block background          */
+  --code-border:        #e2e8ee;
+  --link:               #2f5d0b;
+  --page-margin:        18mm;
+}
+
+/* ----------------------------------------------------------------------
+ * 1. @page — WeasyPrint page geometry + running header / footer
+ * -------------------------------------------------------------------- */
+@page {
+  size: A4;
+  margin: 24mm var(--page-margin) 22mm var(--page-margin);
+
+  /* Running header: brand line, pulled from the .rh-header element. */
+  @top-center {
+    content: element(docHeader);
+    vertical-align: bottom;
+    padding-bottom: 3mm;
+  }
+  /* Footer slogan (centre) + page number (right). */
+  @bottom-center {
+    content: element(docFooter);
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " / " counter(pages);
+    vertical-align: top;
+    padding-top: 3mm;
+    font-size: 8pt;
+    color: var(--ink-soft);
+  }
+}
+
+/* First page: no running header (title block already names the doc). */
+@page :first {
+  @top-center { content: none; }
+}
+
+/* The running elements themselves. `position: running(name)` lifts them
+ * out of normal flow (WeasyPrint / print media) and into the @page boxes.
+ * Browsers ignore running(); we hide them on screen in §9. */
+.rh-header {
+  position: running(docHeader);
+  font-size: 8.5pt;
+  letter-spacing: 0.02em;
+  color: var(--helix-green-dark);
+  border-bottom: 0.4pt solid var(--rule);
+  width: 100%;
+  text-align: center;
+}
+.rh-footer {
+  position: running(docFooter);
+  font-size: 8.5pt;
+  color: var(--ink-soft);
+  border-top: 0.4pt solid var(--rule);
+  width: 100%;
+  text-align: center;
+}
+.rh-footer .heart {
+  color: var(--helix-green);   /* brand-green heart per the slogan */
+  font-style: normal;
+}
+
+/* ----------------------------------------------------------------------
+ * 2. Base typography
+ * -------------------------------------------------------------------- */
+html { font-size: 11pt; }
+
+body {
+  font-family: "Source Sans Pro", "Segoe UI", "Helvetica Neue", Arial,
+               "Noto Sans", sans-serif;
+  color: var(--ink);
+  line-height: 1.55;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+p { margin: 0.65em 0; }
+
+a, a:visited { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+/* Keep links legible in print — no bright underlines, but show the colour. */
+
+/* ----------------------------------------------------------------------
+ * 3. Headings — serif display face for hierarchy + brand accent
+ * -------------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Source Serif Pro", "Georgia", "Times New Roman", serif;
+  color: var(--helix-green-dark);
+  line-height: 1.2;
+  font-weight: 600;
+  margin: 1.6em 0 0.5em;
+  page-break-after: avoid;
+}
+
+h1.title, header#title-block-header h1.title {
+  font-size: 2.0rem;
+  margin-top: 0.2em;
+  padding-bottom: 0.35em;
+  border-bottom: 3px solid var(--helix-green);
+  color: var(--helix-green-dark);
+}
+
+h1 { font-size: 1.7rem; border-bottom: 2px solid var(--helix-green); padding-bottom: 0.2em; }
+h2 { font-size: 1.35rem; border-bottom: 1px solid var(--rule); padding-bottom: 0.15em; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1.02rem; color: var(--ink); }
+h5, h6 { font-size: 0.95rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* ----------------------------------------------------------------------
+ * 4. Table of contents (pandoc --toc)
+ * -------------------------------------------------------------------- */
+nav#TOC {
+  background: var(--helix-green-tint);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--helix-green);
+  border-radius: 4px;
+  padding: 0.8em 1.2em;
+  margin: 1.2em 0 1.8em;
+  font-size: 0.92rem;
+  page-break-inside: avoid;
+}
+nav#TOC > ul { margin: 0.2em 0; }
+nav#TOC ul { list-style: none; padding-left: 1.1em; }
+nav#TOC > ul { padding-left: 0.2em; }
+nav#TOC a { color: var(--ink); }
+nav#TOC a:hover { color: var(--helix-green-dark); }
+
+/* ----------------------------------------------------------------------
+ * 5. Code — blocks and inline
+ * -------------------------------------------------------------------- */
+code, pre, kbd, samp {
+  font-family: "JetBrains Mono", "Source Code Pro", "DejaVu Sans Mono",
+               "Consolas", "Menlo", monospace;
+  font-size: 0.86em;
+}
+
+/* inline code */
+:not(pre) > code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 3px;
+  padding: 0.08em 0.34em;
+  color: var(--helix-green-dark);
+  word-break: break-word;
+}
+
+/* fenced code blocks (pandoc emits <pre class="sourceCode ..."><code>) */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-left: 3px solid var(--helix-green);
+  border-radius: 4px;
+  padding: 0.8em 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  /* Wrap long lines so nothing runs off the printed page. */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  page-break-inside: avoid;
+  line-height: 1.45;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  word-break: normal;
+}
+/* pandoc/skylighting inject their own token-colour CSS into the HTML head;
+ * this block only styles the container so both engines stay consistent. */
+
+/* ----------------------------------------------------------------------
+ * 6. Tables — fit wide content to the page
+ * -------------------------------------------------------------------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.1em 0;
+  font-size: 0.86rem;
+  /* auto layout + wrapping keeps wide tables inside the page box */
+  table-layout: auto;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  page-break-inside: avoid;
+}
+thead th {
+  background: var(--helix-green);
+  color: #ffffff;
+  text-align: left;
+  font-weight: 600;
+}
+th, td {
+  border: 1px solid var(--rule);
+  padding: 0.4em 0.6em;
+  vertical-align: top;
+}
+tbody tr:nth-child(even) { background: #f7faf3; }
+
+/* very wide tables get a horizontal scroll on screen (see §9 for print) */
+.table-wrap, .table-scroll { overflow-x: auto; }
+
+/* ----------------------------------------------------------------------
+ * 7. Diagrams / figures / images — size to the page
+ * -------------------------------------------------------------------- */
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+figure { margin: 1.2em 0; text-align: center; page-break-inside: avoid; }
+figure figcaption { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.4em; }
+
+/* inline-rendered Mermaid diagrams (from ```mermaid fences) */
+figure.mermaid-figure {
+  margin: 1.4em auto;
+  text-align: center;
+  page-break-inside: avoid;
+}
+figure.mermaid-figure svg {
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* ----------------------------------------------------------------------
+ * 8. Blockquotes, rules, lists, misc
+ * -------------------------------------------------------------------- */
+blockquote {
+  margin: 1em 0;
+  padding: 0.4em 1.1em;
+  border-left: 4px solid var(--helix-green);
+  background: var(--helix-green-tint);
+  color: var(--ink-soft);
+}
+blockquote p { margin: 0.4em 0; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2em 0;
+}
+
+ul, ol { padding-left: 1.5em; }
+li { margin: 0.25em 0; }
+
+/* pandoc comment-frontmatter is emitted as an HTML comment -> invisible.
+ * Definition lists (metadata) get light styling. */
+dl dt { font-weight: 600; color: var(--helix-green-dark); }
+dd { margin: 0 0 0.5em 1.2em; }
+
+/* ----------------------------------------------------------------------
+ * 9. Media-specific overrides
+ * -------------------------------------------------------------------- */
+
+/* Screen (browsers ignore running()): hide the running elements so the
+ * two brand lines don't appear stranded at the top of the page. */
+@media screen {
+  .rh-header, .rh-footer { display: none; }
+  body { box-shadow: 0 0 0 1px var(--rule); }
+}
+
+/* Print / WeasyPrint uses the `print` media type: the running elements
+ * stay in flow-as-running() and populate the @page margin boxes above. */
+@media print {
+  body { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+  a, a:visited { color: var(--link); }
+  /* Wrapped tables can't scroll on paper — force them to wrap instead. */
+  .table-wrap, .table-scroll { overflow-x: visible; }
+  h1, h2, h3 { page-break-after: avoid; }
+  pre, table, figure { page-break-inside: avoid; }
+}
