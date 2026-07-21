@@ -1,0 +1,13 @@
+%% Helix Thready — Searchable-but-sealed sensitive content
+%% Source of truth: helix_thready_research_request_final.md §3.6
+flowchart LR
+  P[Post with secret] --> DET[security/pkg/pii\ndetect + classify]
+  DET --> SEAL[Encrypt raw value\nAES-256-GCM securestorage]
+  DET --> RED[Tokenize/redact surrogate]
+  RED --> EMB[Embed surrogate]
+  EMB --> VEC[(pgvector)]
+  SEAL --> KV[(sealed secret store)]
+  Q[Search "aws key"] --> VEC --> HIT[match surrogate]
+  HIT --> GATE{RBAC allow?}
+  GATE -->|yes| KV --> REVEAL[reveal raw via Asset/secret API]
+  GATE -->|no| DENY[forbidden]

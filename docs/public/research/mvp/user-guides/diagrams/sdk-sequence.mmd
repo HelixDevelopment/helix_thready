@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant App as Your Go app
+  participant SDK as thready-go SDK
+  participant API as REST /v1 (HTTP/3)
+  participant WS as Event bus (WS/SSE)
+  App->>SDK: thready.New(WithAPIKey(key), WithServer(url))
+  SDK->>API: GET /v1/meta/version (handshake)
+  API-->>SDK: 200 {version, capabilities}
+  App->>SDK: client.Search(ctx, query, filters)
+  SDK->>API: POST /v1/search (Bearer key)
+  API-->>SDK: 200 {results:[{id,kind,score}]}
+  SDK-->>App: []SearchResult (hydrated)
+  App->>SDK: client.Events.Subscribe(ctx, "post.processed")
+  SDK->>WS: upgrade + subscribe(post.processed)
+  WS-->>SDK: event stream (durable replay on reconnect)
+  SDK-->>App: <-chan Event
+  App->>SDK: client.Posts.Reprocess(ctx, postID)
+  SDK->>API: POST /v1/posts/{id}/reprocess
+  API-->>SDK: 202 Accepted

@@ -1,0 +1,30 @@
+flowchart TB
+  subgraph HOST["Hetzner host (primary) — per environment"]
+    PG[("postgres + pgvector")]
+    WAL["WAL archiver\n(archive_command, hourly cadence)"]
+    MINIO[("minio assets")]
+    NATS[("nats JetStream")]
+    CFG["config + .env + certs"]
+    PG --> WAL
+  end
+  subgraph SEC["Secondary store (Hetzner Storage Box / 2nd MinIO)"]
+    BASE["daily FULL base backup\n(pg_basebackup)"]
+    WALARC["hourly WAL segments\n(PITR chain)"]
+    ASNAP["daily asset snapshot\n(content-hash dedup)"]
+    NSNAP["daily nats/config snapshot"]
+  end
+  WAL -->|hourly| WALARC
+  PG -->|daily| BASE
+  MINIO -->|daily dedup| ASNAP
+  NATS --> NSNAP
+  CFG --> NSNAP
+  subgraph RESTORE["Restore (RTO ~4h)"]
+    R1["1. provision host / user"]
+    R2["2. restore base backup"]
+    R3["3. replay WAL to target time (PITR)"]
+    R4["4. re-hydrate assets from snapshot / re-download"]
+    R5["5. boot stack + health gate"]
+  end
+  BASE -.-> R2
+  WALARC -.-> R3
+  ASNAP -.-> R4

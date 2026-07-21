@@ -1,0 +1,22 @@
+%% Helix Thready — Three-tier RBAC & auth flow
+%% Source of truth: helix_thready_research_request_final.md §6, §7
+flowchart TB
+  subgraph Tiers["Three-tier hierarchy"]
+    ROOT([Root Admin\nexactly one]):::t1
+    AADM([Account Admin\nper account]):::t2
+    USER([Standard User\nconsumer]):::t3
+  end
+  ROOT -->|creates/edits| AADM
+  AADM -->|invites/manages| USER
+  USER -.->|may create own account → becomes| AADM
+
+  subgraph Enforce["Enforcement path"]
+    CL[Client] --> GW[API Gateway\nauth: JWT / API key / OAuth2]
+    GW --> POL[security/pkg/policy\nRBAC enforcer]
+    POL --> SVC[Service handler\naccount-scoped query]
+    SVC --> DB[(row-level account_id filter)]
+  end
+  ROOT & AADM & USER --> CL
+  classDef t1 fill:#7a2f2f,stroke:#3c1414,color:#ffecec;
+  classDef t2 fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef t3 fill:#124a63,stroke:#062634,color:#e6f6ff;

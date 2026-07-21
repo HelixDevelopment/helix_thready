@@ -1,0 +1,12 @@
+flowchart LR
+  PROD[Producers: Herald, Processing, Asset, User, Metering] -->|event.Event| BUS[digital.vasic.eventbus]
+  BUS --> NATS{{NATS JetStream: stream EVENTBUS, subject eventbus.thready.*}}
+  NATS -->|durable consumer| EBS[Event Bus service]
+  EBS -->|WebSocket bidirectional| WS["/v1/events/ws"]
+  EBS -->|Server-Sent Events one-way| SSE["/v1/events/stream"]
+  EBS -->|last-value / compacted subject| STICKY["GET /v1/events/{entityType}/{entityId}/sticky"]
+  WS --> CA[Client A]
+  SSE --> CB[Client B]
+  CA -.->|reconnect: durable replay of missed events| NATS
+  CA -.->|snapshot reconcile| REST[REST /v1]
+  EBS -.->|RBAC + tenant filter on subscribe| WS

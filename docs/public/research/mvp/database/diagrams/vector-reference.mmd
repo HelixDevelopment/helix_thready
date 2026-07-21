@@ -1,0 +1,24 @@
+%% Helix Thready — Relational <-> Vector reference model (pgvector, cosine)
+%% Every vector row references a relational PK; search returns ids, hydrated from relational store.
+flowchart LR
+  subgraph REL["Relational store (system of record) — digital.vasic.database / PostgreSQL"]
+    P[(posts.id)]
+    R[(replies.id)]
+    A[(assets.id)]
+    G[(generated_artifacts.id)]
+  end
+  subgraph VEC["Vector store — digital.vasic.vectordb (pgvector, same Postgres instance)"]
+    VP[[vectordb_posts\nid, embedding vector 1024, metadata jsonb]]
+    VR[[vectordb_replies]]
+    VA[[vectordb_assets]]
+    VG[[vectordb_generated]]
+  end
+  EMB[digital.vasic.embeddings\nvoyage-code-3 / jina-embeddings-v2-base-code\nvia HelixLLM /v1/embeddings]
+  P -- "source_id in metadata" --> VP
+  R --> VR
+  A --> VA
+  G --> VG
+  EMB -- "float32[dim]" --> VP & VR & VA & VG
+  Q[/v1/search query/] -- "cosine <=>" --> VEC
+  VEC -- "ids + score" --> REL
+  REL -- "hydrated rows" --> Q

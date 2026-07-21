@@ -1,0 +1,25 @@
+flowchart TB
+  subgraph Clients
+    WEB[Angular 22 Web]
+    CLI[Go CLI]
+    TUI[Bubble Tea TUI]
+    DESK[Tauri Desktop]
+    MOB[Native Mobile]
+    SDKX[Generated SDKs x11]
+  end
+  Clients -->|HTTP/3 QUIC + HTTP/2 fallback, Brotli/gzip| EDGE[vasic-digital/http3 listener]
+  EDGE --> MW[middleware chain: request-id, recovery, CORS, security headers, authn JWT/API-key, RBAC scopes, ratelimiter]
+  MW --> REST[REST /v1 handlers]
+  MW --> HUB[WebSocket + SSE event hub]
+  REST --> SVC[Domain services]
+  HUB --> EBS[Event Bus service]
+  SVC --> USER[User Service: auth + policy]
+  SVC --> HER[Herald thread readers: Telegram/Max]
+  SVC --> PROC[Processing / Skill-dispatch engine]
+  SVC --> ASSET[Asset Service: Catalogizer + storage]
+  SVC --> SEARCH[Semantic Search: embeddings + vectordb]
+  SVC --> METER[Subscription / Metering]
+  SVC --> REL[(PostgreSQL + pgvector)]
+  EBS --> NATS{{NATS JetStream: stream EVENTBUS}}
+  PROC --> NATS
+  HER --> NATS

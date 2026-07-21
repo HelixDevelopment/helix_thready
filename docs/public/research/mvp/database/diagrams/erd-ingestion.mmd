@@ -1,0 +1,91 @@
+%% Helix Thready — Messenger & Ingestion domain ERD
+%% "complete post = root + full organic reply chain" (final request §1.2, §3.1)
+erDiagram
+  messengers {
+    uuid  id PK
+    text  kind UK "telegram|max"
+    text  display_name
+    jsonb capabilities
+  }
+  messenger_accounts {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  messenger_id FK
+    text  external_ref
+    bytea session_enc "AES-256-GCM (security)"
+    text  auth_state
+    text  status
+    timestamptz created_at
+  }
+  channels {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  messenger_account_id FK
+    text  external_channel_id
+    text  kind "channel|group|forum"
+    text  title
+    bytea access_hash_enc
+    int   poll_interval_seconds
+    bool  is_active
+    timestamptz last_polled_at
+  }
+  threads {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  channel_id FK
+    uuid  root_post_id "soft ref -> posts.id (partitioned; no DB FK)"
+    timestamptz root_post_posted_at "denormalised partition key"
+    bigint external_topic_id "forum topic"
+    text  title
+    int   reply_count
+    timestamptz last_activity_at
+  }
+  posts {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  channel_id FK
+    uuid  thread_id FK
+    bigint external_message_id
+    text  author_ref
+    text  raw_text
+    text  lang
+    bool  is_system_reply
+    bytea content_hash
+    timestamptz posted_at "PARTITION KEY"
+    timestamptz ingested_at
+  }
+  replies {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  thread_id FK
+    uuid  parent_post_id "soft ref -> posts.id (partitioned; no DB FK)"
+    uuid  parent_reply_id "self soft ref within reply chain"
+    bigint external_message_id
+    text  author_ref
+    text  raw_text
+    bool  is_system_reply
+    timestamptz posted_at "PARTITION KEY"
+  }
+  hashtags {
+    uuid  id PK
+    citext tag UK
+    timestamptz created_at
+  }
+  categories {
+    uuid  id PK
+    text  code UK "video|torrent|research|comic|..."
+    text  precedence_class "download|convert|analyze|research|reply"
+    int   sort_order
+  }
+
+  messengers          ||--o{ messenger_accounts : "typed_as"
+  messenger_accounts  ||--o{ channels           : "reads"
+  channels            ||--o{ threads            : "contains"
+  channels            ||--o{ posts              : "contains"
+  threads             ||--o| posts              : "root_of"
+  threads             ||--o{ replies            : "assembles"
+  posts               ||--o{ replies            : "answered_by"
+  posts               }o--o{ hashtags           : "post_hashtags"
+  replies             }o--o{ hashtags           : "reply_hashtags"
+  posts               }o--o{ categories         : "post_categories"
+  hashtags            }o--o{ categories         : "hashtag_categories"

@@ -1,0 +1,21 @@
+flowchart TB
+  OP[Operator] --> COND[Conductor session\nsingle ruler §11.4.187]
+  COND --> REG[(Exactly-once claim registry\n§11.4.176 — append-only, lock-arbitrated)]
+  COND --> WIDB[(workable_items.db\n§11.4.93/95 tracked in git)]
+  COND -->|spawn headless\nclaude -p --output-format stream-json| T1[Track: foundation]
+  COND --> T2[Track: processing]
+  COND --> T3[Track: clients]
+  COND --> T4[Track: testing]
+  T1 --> W1[Worker + subagents §11.4.20/70]
+  T2 --> W2[Worker + subagents]
+  T3 --> W3[Worker + subagents]
+  T4 --> W4[Worker + subagents]
+  W1 & W2 & W3 & W4 -->|each on its own| WT[git worktree per track]
+  W1 & W2 & W3 & W4 --> REV[Independent AI review\nFable @ xhigh · Opus xhigh fallback §11.4.209]
+  REV -->|GO §11.4.134| MERGE[merge onto latest main\nno force-push §11.4.113]
+  REV -->|NO-GO| W1
+  MERGE --> PUSH[commit_all -> all 4 upstreams §2.1]
+  subgraph ALIAS[Model selection — native-alias-first §11.4.196/198]
+    A1[deepseek] --> A2[xiaomi] --> A3[opencode] --> A4[kimi] --> A5[… incl. Helix LLM]
+  end
+  W1 & W2 & W3 & W4 -.uses.-> ALIAS

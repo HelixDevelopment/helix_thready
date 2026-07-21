@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> queued
+  queued --> running: worker picks up
+  running --> running: progress updates (0..1)
+  running --> succeeded: asset_ref set
+  running --> failed: error{retryable?}
+  failed --> queued: retry (back-off) if retryable
+  running --> cancelled: cancel
+  succeeded --> [*]
+  cancelled --> [*]

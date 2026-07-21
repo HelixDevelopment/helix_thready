@@ -1,0 +1,11 @@
+%% Helix Thready — dominant query paths mapped to serving indexes
+flowchart LR
+  Q1[poll: new posts in channel since T] --> I1[idx_posts_channel_time]
+  Q2[assemble thread: root + replies] --> I2[idx_replies_thread_time]
+  Q3[claim next post to process] --> I3[idx_processing_claimable partial]
+  Q4[semantic search topK] --> I4[HNSW vector_cosine_ops + GIN metadata]
+  Q5[keyword search in posts] --> I5[GIN tsvector fts]
+  Q6[posts by hashtag] --> I6[idx_post_hashtags_hashtag]
+  Q7[account dashboard counts] --> I7[idx_*_account_time]
+  Q8[audit query by actor/target] --> I8[idx_audit_account_time + actor]
+  Q9[asset by content hash dedup] --> I9[uq_assets_account_hash]

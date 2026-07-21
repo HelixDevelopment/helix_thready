@@ -1,0 +1,18 @@
+%% Helix Thready — Expand/Contract zero-downtime migration flow via migration.Runner
+sequenceDiagram
+  participant Dev as Author (workable item ATM-NNN)
+  participant Run as migration.Runner
+  participant DB as PostgreSQL
+  participant App as Running services (N-1 & N)
+  Note over Dev,App: EXPAND phase (backward-compatible)
+  Dev->>Run: Apply([0002_expand]) — add nullable col / new table / new index CONCURRENTLY
+  Run->>DB: BEGIN; Up SQL; INSERT schema_migrations; COMMIT
+  Note right of DB: CONCURRENTLY steps run OUTSIDE the tx wrapper (see OPEN-DB-03)
+  App->>DB: N-1 keeps working (old columns intact)
+  Dev->>App: Deploy N — dual-writes old + new
+  Note over Dev,App: MIGRATE phase (backfill)
+  Dev->>Run: Apply([0003_backfill]) — batched UPDATE, idempotent
+  Note over Dev,App: CONTRACT phase (after N is everywhere)
+  Dev->>Run: Apply([0004_contract]) — drop old col / constraint NOT NULL
+  Run->>DB: BEGIN; Up SQL; COMMIT
+  Dev-->>Run: on failure -> RollbackWith(version, migs) reverses Down SQL

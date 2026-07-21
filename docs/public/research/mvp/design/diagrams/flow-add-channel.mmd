@@ -1,0 +1,28 @@
+sequenceDiagram
+  actor U as User
+  participant W as Web/CLI/TUI
+  participant API as REST /v1
+  participant ACC as Accounts Mgmt
+  participant HER as Herald (Telegram/Max)
+  participant EVT as Event Bus (JetStream)
+  U->>W: Add channel
+  W->>U: Step 1 choose source (Telegram/Max)
+  U->>W: Step 2 pick / sign-in messenger account
+  alt not signed in
+    W->>API: POST /v1/messengers/{kind}/signin (interactive|env)
+    API->>ACC: begin sign-in (phone+code+2FA | env vars)
+    ACC-->>API: session established
+    API-->>W: signed in
+  end
+  U->>W: Step 3 paste invite/link → Resolve
+  W->>API: POST /v1/channels:resolve {link}
+  API->>HER: resolve channel (access_hash)
+  HER-->>API: {title, kind, size, autoType}
+  API-->>W: preview + auto-detected type
+  U->>W: Step 4 confirm recipe + schedule
+  W->>API: POST /v1/channels {source, ref, type, schedule}
+  API->>EVT: emit channel.added
+  API->>HER: start thread reader (poll + on-event)
+  HER->>EVT: post.received (backfill + new)
+  API-->>W: 201 channel + WS subscription
+  W-->>U: channel appears, sync begins (live)

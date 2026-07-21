@@ -1,0 +1,24 @@
+flowchart TB
+  BANKS[YAML test banks\ntests/banks/*.yaml] --> ORCH[orchestrator\nQA pipeline coordinator]
+  ORCH --> DET[detector\ncrash/ANR: ADB / browser / JVM]
+  ORCH --> VAL[validator\nstep-by-step]
+  VAL --> EV[evidence collector]
+  EV --> S[screenshots]
+  EV --> L[logcat / logs]
+  EV --> V[video timeline]
+  EV --> T[stack traces]
+  VAL --> PASS{step PASS?}
+  PASS -->|yes + evidence| NEXT[next step]
+  PASS -->|yes, no evidence| BLUFF[CRITICAL DEFECT\ngreen without evidence]
+  PASS -->|no| TICKET[ticket\nMarkdown for AI fix pipeline]
+  DET -->|crash/ANR| TICKET
+  NEXT --> REP[reporter\nMarkdown / HTML / JSON]
+  TICKET --> REP
+  subgraph Autonomous["autonomous session (4 phases)"]
+    SETUP[Setup: LLMsVerifier + DocProcessor\nfeature-map + LLMOrchestrator + VisionEngine]
+    DDV[Doc-driven verification]
+    CDE[Curiosity-driven exploration]
+    RC[Report + cleanup]
+    SETUP --> DDV --> CDE --> RC
+  end
+  RC --> REP

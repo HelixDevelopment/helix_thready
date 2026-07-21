@@ -1,0 +1,55 @@
+flowchart TB
+  subgraph EnvStack["One environment stack (repeated 3x: dev / sta / prod)"]
+    direction TB
+    subgraph Edge["Edge (host-wide, shared across envs)"]
+      CADDY["caddy (rootless)\n:80 / :443 TCP+UDP"]
+    end
+    subgraph AppPlane["Application plane (Go services)"]
+      API["thready-api\nREST /v1 + WS/SSE (http3)"]
+      HERALD["thready-herald\nTelegram/Max thread readers"]
+      PROC["thready-processing\nBackgroundTasks + Skill dispatch"]
+      ASSET["thready-assetsvc\nCatalogizer  [BUILD-NEW decouple]"]
+      DLM["thready-downloadmgr\n[BUILD-NEW]"]
+      USER["thready-usersvc\n[BUILD-NEW]"]
+      EVT["thready-eventbus-svc\n[BUILD-NEW]"]
+      SEM["thready-semsearch\nembeddings+vectordb  [BUILD-NEW]"]
+    end
+    subgraph DataPlane["Data plane"]
+      PG[("postgres:17 + pgvector")]
+      REDIS[("redis:7")]
+      NATS[("nats:2.10 JetStream")]
+      MINIO[("minio (S3 assets)")]
+      CH[("clickhouse (obs analytics)")]
+    end
+    subgraph ThirdParty["3rd-party download workers"]
+      BOBA["boba (torrents)"]
+      METUBE["metube (video)"]
+    end
+    subgraph Obs["Observability"]
+      PROM["prometheus"]
+      GRAF["grafana"]
+      JAEGER["jaeger"]
+    end
+    subgraph Web["Web client"]
+      NG["thready-web (Angular static)"]
+    end
+    CADDY --> API
+    CADDY --> NG
+    API --> PG & REDIS & NATS & MINIO
+    HERALD --> PG & NATS
+    PROC --> PG & NATS & REDIS
+    PROC --> ASSET & DLM & SEM
+    PROC --> BOBA & METUBE
+    ASSET --> MINIO & PG
+    SEM --> PG
+    USER --> PG
+    EVT --> NATS
+    API --> USER & EVT & SEM & ASSET
+    PROM --> API & HERALD & PROC & PG
+    GRAF --> PROM
+    API -. OTLP .-> JAEGER
+    API -. logs .-> CH
+  end
+  LLM["HelixLLM (external GPU endpoint)"]
+  PROC -. /v1/chat + /v1/embeddings .- LLM
+  SEM -. /v1/embeddings .- LLM

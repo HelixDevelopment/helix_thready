@@ -1,0 +1,25 @@
+flowchart TB
+  subgraph Runner["runner.Runner"]
+    REG[registry.Registry\nregistration + topological order]
+    ENG[assertion.Engine\n16 built-in evaluators]
+    REP[report.Reporter\nMarkdown / JSON / HTML]
+    MON[monitor.EventCollector\nlive WebSocket dashboard]
+    PLG[plugin.PluginRegistry]
+  end
+  BANK[banks/*.yaml or *.json\nThready feature banks] --> REG
+  REG --> RUN[RunAll ctx, Config]
+  RUN --> ENG
+  RUN --> MON
+  RUN --> REP
+  subgraph Challenges["challenge.Challenge implementations"]
+    BASE[BaseChallenge]
+    SHELL[ShellChallenge\nwrap bash]
+    API[userflow.APIFlowChallenge]
+    WS[userflow.WebSocketFlowChallenge]
+    BR[userflow.BrowserFlowChallenge]
+    DESK[userflow.DesktopFlowChallenge\nTauri WebDriver]
+    MOB[userflow.MobileFlowChallenge\nADB/Appium/Maestro]
+  end
+  REG --> BASE & SHELL & API & WS & BR & DESK & MOB
+  INFRA[infra.ContainersAdapter\n-> digital.vasic.containers] --> RUN
+  META[describe-Challenge meta-runner\n--anti-bluff-mutate] --> BANK

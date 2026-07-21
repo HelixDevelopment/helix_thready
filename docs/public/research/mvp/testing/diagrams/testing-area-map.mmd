@@ -1,0 +1,31 @@
+flowchart TB
+  subgraph Sources["Authoritative sources (read-only)"]
+    RR[research_request_final\nSLOs, decisions, Q1-Q45]
+    GAP[subsystem_gaps_register\nP0/P1/P2]
+  end
+  subgraph Testing["Testing area (this pack)"]
+    STRAT[test-strategy]
+    TYPES[test-types\n15 mandated types]
+    TDD[tdd-skeletons\nRED-first]
+    QA[helixqa-banks\nYAML + evidence]
+    CH[challenges-scenarios\ndigital.vasic.challenges]
+    SA[static-analysis\nSonarQube + Snyk]
+    PC[performance-and-chaos\nSLO + DDoS + DR]
+  end
+  subgraph Upstream["Upstream areas (contracts under test)"]
+    ARCH[architecture]
+    API[api]
+    DB[database]
+  end
+  RR --> STRAT
+  GAP --> STRAT
+  STRAT --> TYPES --> TDD
+  TYPES --> QA
+  TYPES --> CH
+  TYPES --> SA
+  TYPES --> PC
+  ARCH --> STRAT
+  API --> STRAT
+  DB --> STRAT
+  STRAT --> DEP[deployment\ngating + DR runbook]
+  STRAT --> DEV[development\nATM-NNN workable items]

@@ -1,0 +1,1861 @@
+# =============================================================================
+#  Title           : Helix Thready — REST /v1 OpenAPI 3.1 Contract
+#  Classification  : PUBLIC
+#  Location        : docs/public/research/mvp/api/openapi.yaml
+#  Status          : Draft — v0.2
+#  Revision        : 2 (2026-07-21)
+#  Author          : Helix Thready documentation swarm (API & SDKs)
+#  Related         : ./rest-endpoints.md, ./authn-authz.md, ./error-model.md,
+#                    ./versioning.md, ./event-bus-contract.md, ./sdk-strategy.md,
+#                    ./contract-tests.md
+#  Rev 2 changes   : Added hmacAuth scheme + wired to callback/webhook; completed
+#                    oauth2 scope list (events:read, billing:read); added Unprocessable
+#                    (422) response; added x-thready-maturity vendor extensions to every
+#                    non-GA operation; added Idempotency-Key to all unsafe async POSTs;
+#                    documented p95 SLO + universal 401/429/500 responses.
+#  Provenance      : [DEFAULT — adjustable] surface derived from the decision
+#                    matrix + Q1–Q45; RBAC vendor-extension pattern reused
+#                    verbatim from vasic-digital/helix_proto (openapi/helix.v1.yaml).
+#  Notes           : This is the SCHEMA-FIRST single source of truth for the REST
+#                    surface. Protobuf (proto/helix/thready/v1/*.proto) is the
+#                    parallel SSOT for the event/DTO wire contract — see
+#                    sdk-strategy.md. Endpoint behaviour is specified in
+#                    rest-endpoints.md; error semantics in error-model.md.
+# =============================================================================
+openapi: 3.1.0
+
+info:
+  title: Helix Thready Control API
+  version: "1.0.0"
+  summary: Multi-messenger thread ingestion, AI processing, assets, and semantic search.
+  description: |
+    The REST `/v1` surface of Helix Thready, served over **HTTP/3 (QUIC) with an
+    HTTP/2 fallback** via `vasic-digital/http3`, with Brotli/gzip compression.
+    Authentication, RBAC, rate limiting and security headers are enforced by the
+    shared middleware chain (`digital.vasic.auth` + `digital.vasic.middleware` +
+    `digital.vasic.ratelimiter` + `security/pkg/headers`) BEFORE any handler runs.
+
+    - **Versioning** — URL-path `/v1` (Q29). Additive-only within a major; breaking
+      changes ship as `/v2`. See `versioning.md`.
+    - **AuthN** — JWT access+refresh (RS256/EdDSA), scoped API keys (`sk-…`), or an
+      OAuth2 external-link session. See `authn-authz.md`.
+    - **AuthZ** — three-tier RBAC (`root` / `account_admin` / `user`). OpenAPI has
+      no native per-route role vocabulary, so every operation carries an
+      `x-required-roles` vendor extension listing the role floor; enforcement lives
+      in the Go `RequireScopes`/policy middleware, never in this contract.
+    - **Errors** — one canonical envelope with stable string `code`s that map 1:1 to
+      the Protobuf/Connect codes so SDKs surface identical errors. See `error-model.md`.
+    - **Real-time** — the event stream (WebSocket/SSE, sticky events) is specified in
+      `event-bus-contract.md`; the discovery + sticky-snapshot endpoints appear here.
+    - **SLO** — Aggressive posture (Q14): REST **p95 < 150 ms** (excluding async `202`
+      operations and content streaming), semantic search **< 500 ms p95**. Async work
+      returns `202` and emits progress events rather than blocking.
+
+    All timestamps are RFC 3339 UTC. All ids are UUIDv4 strings unless noted.
+
+    **Universal responses.** Because the shared middleware chain runs before every
+    handler, ANY authenticated operation may additionally return `401 unauthenticated`
+    (expired credential), `429 rate_limited` (with `Retry-After` + `RateLimit-*`
+    headers), or `500 internal`. These are documented once here and omitted from each
+    operation's `responses` for brevity; only operation-specific statuses are enumerated
+    per path. Every non-2xx body is the canonical `Error` envelope (see `error-model.md`).
+
+    **`x-thready-maturity`.** Operations whose backing subsystem is not yet GA carry an
+    `x-thready-maturity` vendor extension — one of `ga` | `foundation` | `build_new` |
+    `design` — mirroring the "Backing-service maturity" table in `rest-endpoints.md`.
+    A non-`ga` value means the *contract* is stable but the implementation may `503`
+    (`unavailable`) or return `x-thready-maturity: build_new` semantics until the
+    referenced gap is closed. SDKs and clients MUST surface this to callers.
+
+    > `[GAP: New#User Service]` `[GAP: New#Max adapter]` `[GAP: 5.1 Herald]`
+    > `[GAP: New#Semantic-search service]` `[GAP: 4.1 helix_skills dispatch]`
+    > Several backing services are BUILD-NEW / FOUNDATION (see `rest-endpoints.md`
+    > "Backing-service maturity"). This contract is the *target* surface; endpoints
+    > backed by a stubbed subsystem are annotated `x-thready-maturity` (above) and must
+    > not be presented as GA until the referenced gap is closed.
+  contact:
+    name: Helix Thready API team
+    url: https://thready.hxd3v.com
+  license:
+    name: UNLICENSED — internal Helix Development contract, not for redistribution
+
+externalDocs:
+  description: REST endpoint behaviour, pagination, idempotency, backing-service maturity.
+  url: ./rest-endpoints.md
+
+servers:
+  - url: https://thready.hxd3v.com/v1
+    description: Production
+  - url: https://sta.thready.hxd3v.com/v1
+    description: Staging
+  - url: https://dev.thready.hxd3v.com/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+tags:
+  - name: auth
+    description: Login, refresh, logout, MFA, OAuth2 linking, API keys, JWKS.
+  - name: accounts
+    description: Tenant accounts, white-label branding (three-tier hierarchy).
+  - name: users
+    description: Users, memberships, roles, invitations.
+  - name: messengers
+    description: Messenger platforms (Telegram, Max) and their capabilities.
+  - name: channels
+    description: Registered channels/groups to read; sync/backfill control.
+  - name: posts
+    description: Posts, full threads (root + organic reply chain), hashtags.
+  - name: processing
+    description: Processing/reprocessing triggers, jobs, progress, 3rd-party callbacks.
+  - name: assets
+    description: Assets, asset↔post links, download jobs, re-download.
+  - name: search
+    description: Semantic + hybrid search over posts and generated materials.
+  - name: skills
+    description: Skill-Graph knowledge units and dispatch bindings.
+  - name: billing
+    description: Subscriptions, plans, usage metering, invoices.
+  - name: events
+    description: Event catalog + sticky-event snapshots (streams live in event-bus-contract.md).
+  - name: ops
+    description: Unauthenticated liveness/readiness/metrics.
+
+# ---------------------------------------------------------------------------
+#  Reusable parameters, responses, schemas, security schemes
+# ---------------------------------------------------------------------------
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token from `POST /auth/login` or `/auth/refresh`. Signed with
+        RS256/EdDSA; verified against the JWKS at `/.well-known/jwks.json`.
+        Carries `sub`, `role`, `account_id`, `scopes`. Lifetime 15 min.
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: |
+        Scoped API key (`sk-…`) minted at `POST /api-keys`, presented as
+        `Authorization: Bearer sk-…`. Validated by `digital.vasic.auth`
+        (`apikey.Validate`); scopes gate access exactly like JWT scopes.
+        Intended for SDK/CLI/automation (non-interactive).
+    oauth2:
+      type: oauth2
+      description: OAuth2 for linking external services (Dropbox/GDrive/OneDrive presets).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://thready.hxd3v.com/v1/auth/oauth2/authorize
+          tokenUrl: https://thready.hxd3v.com/v1/auth/oauth2/token
+          refreshUrl: https://thready.hxd3v.com/v1/auth/oauth2/token
+          scopes:
+            posts:read: Read posts and threads.
+            posts:write: Create/update posts and trigger processing.
+            assets:read: Read/download assets.
+            assets:write: Manage assets and download jobs.
+            search:read: Run semantic/hybrid search.
+            skills:read: Read Skill-Graph.
+            skills:write: Register/update skills.
+            events:read: Subscribe to WS/SSE streams and read sticky snapshots.
+            accounts:admin: Administer an account and its users.
+            billing:read: Read subscription, usage and invoices.
+            root:admin: Root-only system administration.
+    hmacAuth:
+      type: apiKey
+      in: header
+      name: X-Thready-Signature
+      description: |
+        Per-provider HMAC-SHA256 signature over the raw request body (NOT a JWT/API
+        key). Used ONLY for machine-to-machine ingress from 3rd-party download systems
+        (`/processing/callbacks/{provider}`) and echoed on outbound `eventDelivery`
+        webhooks. The shared secret is provisioned per provider/sink out of band and
+        rotated via the deployment/secrets pack. Requests failing signature verification
+        return `401 unauthenticated`; replays are idempotent on `job_id`.
+        `[GAP: 6.6 callback module]`
+
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque forward cursor from a previous page's `next_cursor`.
+      required: false
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      description: Page size (1–200).
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    AccountScope:
+      name: account_id
+      in: query
+      description: |
+        Restrict to a tenant account. Ignored for `user`/`account_admin` (implicit
+        from the token); honoured for `root` to cross tenants.
+      required: false
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: |
+        Client-supplied UUID making an unsafe (POST) request idempotent for 24 h.
+        A replay with the same key + body returns the original result; a same-key
+        different-body request returns `409 conflict`.
+      required: false
+      schema: { type: string, format: uuid }
+
+  headers:
+    RateLimit-Limit:
+      description: Request ceiling for the current window (`digital.vasic.ratelimiter`).
+      schema: { type: integer }
+    RateLimit-Remaining:
+      description: Remaining requests in the current window.
+      schema: { type: integer }
+    RateLimit-Reset:
+      description: Seconds until the window resets.
+      schema: { type: integer }
+    Retry-After:
+      description: Seconds to wait before retrying (on 429/503).
+      schema: { type: integer }
+    Sunset:
+      description: RFC 8594 deprecation date for a sunsetting resource/version.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: invalid_argument — malformed body/params.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unprocessable:
+      description: unprocessable — well-formed but semantically invalid (e.g. unknown enum in a filter).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: unauthenticated — missing/invalid/expired credential.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: permission_denied — role/scope/tenant check failed.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: not_found — resource does not exist or is not visible to the caller.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: conflict / already_exists — state or idempotency conflict.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: rate_limited — quota exhausted.
+      headers:
+        Retry-After: { $ref: '#/components/headers/Retry-After' }
+        RateLimit-Limit: { $ref: '#/components/headers/RateLimit-Limit' }
+        RateLimit-Remaining: { $ref: '#/components/headers/RateLimit-Remaining' }
+        RateLimit-Reset: { $ref: '#/components/headers/RateLimit-Reset' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unavailable:
+      description: unavailable / deadline_exceeded — a downstream subsystem failed.
+      headers:
+        Retry-After: { $ref: '#/components/headers/Retry-After' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Internal:
+      description: internal — unexpected server error (carries a trace_id).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+
+    # ----- Cross-cutting -----
+    Error:
+      type: object
+      description: Canonical error envelope. See error-model.md for the code table.
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, status, trace_id]
+          properties:
+            code:
+              type: string
+              description: Stable machine code, 1:1 with Protobuf/Connect codes.
+              enum:
+                - invalid_argument
+                - unauthenticated
+                - permission_denied
+                - not_found
+                - already_exists
+                - conflict
+                - failed_precondition
+                - unprocessable
+                - rate_limited
+                - deadline_exceeded
+                - unavailable
+                - internal
+            message: { type: string, description: Human-readable, non-localized-by-default. }
+            status: { type: integer, description: Mirrored HTTP status. }
+            trace_id: { type: string, description: OpenTelemetry trace id for support/logs. }
+            retry_after:
+              type: [integer, "null"]
+              description: Seconds to wait, when retryable.
+            details:
+              type: array
+              description: Field-level or structured detail entries.
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  issue: { type: string }
+                  reason: { type: string }
+      examples:
+        - error:
+            code: permission_denied
+            message: "role 'user' cannot administer account"
+            status: 403
+            trace_id: 3f9a…
+    PageMeta:
+      type: object
+      required: [next_cursor]
+      properties:
+        next_cursor:
+          type: [string, "null"]
+          description: Cursor for the next page, or null at end.
+        total_estimate:
+          type: [integer, "null"]
+          description: Approximate total (exact counts avoided at Large scale).
+
+    # ----- Auth -----
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password, minLength: 12 }
+        totp: { type: [string, "null"], description: 6-digit TOTP; required for admin tiers. }
+    TokenPair:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string, enum: [Bearer] }
+        expires_in: { type: integer, description: Access-token TTL seconds (900). }
+        refresh_expires_in: { type: integer, description: Refresh TTL seconds (604800). }
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    Identity:
+      type: object
+      description: The authenticated principal (`GET /auth/me`).
+      required: [user_id, role, scopes]
+      properties:
+        user_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        account_id: { type: [string, "null"], format: uuid }
+        memberships:
+          type: array
+          items: { $ref: '#/components/schemas/Membership' }
+        scopes: { type: array, items: { type: string } }
+        mfa_enabled: { type: boolean }
+    ApiKey:
+      type: object
+      required: [id, name, prefix, scopes, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        prefix: { type: string, description: "Non-secret prefix, e.g. 'sk-'." }
+        masked: { type: string, description: "Masked form via apikey.MaskKey, e.g. sk-ab…yz." }
+        secret:
+          type: [string, "null"]
+          description: Full key — returned ONCE at creation, never again.
+        scopes: { type: array, items: { type: string } }
+        expires_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: [string, "null"], format: date-time }
+    ApiKeyCreate:
+      type: object
+      required: [name, scopes]
+      properties:
+        name: { type: string }
+        scopes: { type: array, items: { type: string }, minItems: 1 }
+        expires_at: { type: [string, "null"], format: date-time }
+
+    # ----- RBAC / tenancy -----
+    Role:
+      type: string
+      description: Three-tier role floor.
+      enum: [root, account_admin, user]
+    Membership:
+      type: object
+      required: [account_id, role]
+      properties:
+        account_id: { type: string, format: uuid }
+        role: { $ref: '#/components/schemas/Role' }
+    Account:
+      type: object
+      required: [id, name, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        branding: { $ref: '#/components/schemas/Branding' }
+        retention_days:
+          type: [integer, "null"]
+          description: Per-account retention override; null = inherit global default (keep indefinitely).
+        created_at: { type: string, format: date-time }
+    AccountCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        slug: { type: [string, "null"] }
+    Branding:
+      type: object
+      description: White-label branding; defaults to Thready/Helix Development.
+      properties:
+        primary_color: { type: string, description: "Hex, e.g. #B6E376 (helix-green)." }
+        logo_asset_id: { type: [string, "null"], format: uuid }
+        slogan: { type: string, default: "Made with love ♥ by Helix Development" }
+    User:
+      type: object
+      required: [id, email, role, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        display_name: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        memberships:
+          type: array
+          items: { $ref: '#/components/schemas/Membership' }
+        mfa_enabled: { type: boolean }
+        created_at: { type: string, format: date-time }
+    UserInvite:
+      type: object
+      required: [email, role]
+      properties:
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+
+    # ----- Messengers / channels -----
+    Messenger:
+      type: object
+      required: [id, kind, capabilities]
+      properties:
+        id: { type: string, description: "e.g. telegram, max" }
+        kind: { type: string, enum: [telegram, max] }
+        display_name: { type: string }
+        capabilities:
+          type: object
+          properties:
+            user_client: { type: boolean, description: MTProto/OneMe user session (full history). }
+            bot_api: { type: boolean }
+            forum_topics: { type: boolean }
+            reply_threads: { type: boolean }
+        maturity:
+          type: string
+          enum: [ga, foundation, build_new]
+          description: telegram=foundation (MTProto reader promotion pending), max=build_new.
+    Channel:
+      type: object
+      required: [id, messenger, external_ref, state]
+      properties:
+        id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        messenger: { type: string, enum: [telegram, max] }
+        external_ref: { type: string, description: Invite link / @handle / chat id. }
+        title: { type: string }
+        state: { type: string, enum: [pending, active, syncing, error, disabled] }
+        poll_interval_seconds: { type: integer, default: 300 }
+        last_synced_at: { type: [string, "null"], format: date-time }
+    ChannelCreate:
+      type: object
+      required: [messenger, external_ref]
+      properties:
+        messenger: { type: string, enum: [telegram, max] }
+        external_ref: { type: string }
+        poll_interval_seconds: { type: [integer, "null"] }
+    SyncRequest:
+      type: object
+      properties:
+        backfill: { type: boolean, default: false, description: Full history backfill vs incremental. }
+        since: { type: [string, "null"], format: date-time }
+
+    # ----- Posts / threads -----
+    Post:
+      type: object
+      required: [id, channel_id, external_id, author, posted_at, processing]
+      properties:
+        id: { type: string, format: uuid }
+        channel_id: { type: string, format: uuid }
+        external_id: { type: string, description: Messenger-native message id. }
+        thread_id: { type: [string, "null"], format: uuid }
+        is_root: { type: boolean }
+        author:
+          type: object
+          properties:
+            external_id: { type: string }
+            display_name: { type: string }
+            is_system: { type: boolean, description: Thready's own reply — never processed. }
+        body: { type: string }
+        hashtags: { type: array, items: { type: string } }
+        categories: { type: array, items: { $ref: '#/components/schemas/ContentType' } }
+        links: { type: array, items: { type: string, format: uri } }
+        asset_links: { type: array, items: { $ref: '#/components/schemas/AssetLink' } }
+        posted_at: { type: string, format: date-time }
+        processing: { $ref: '#/components/schemas/ProcessingState' }
+    Thread:
+      type: object
+      description: Complete post = root + full organic reply chain (system replies excluded).
+      required: [id, root, replies]
+      properties:
+        id: { type: string, format: uuid }
+        root: { $ref: '#/components/schemas/Post' }
+        replies:
+          type: array
+          items: { $ref: '#/components/schemas/Post' }
+    ContentType:
+      type: string
+      description: Recognized content categories (all built in parallel).
+      enum:
+        - video
+        - torrent
+        - series
+        - movie
+        - research
+        - documentary
+        - concert
+        - game
+        - software
+        - channel
+        - playlist
+        - music
+        - book
+        - comic
+        - netflix
+        - training
+        - technology
+
+    # ----- Processing -----
+    ProcessingState:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, claimed, running, partial, succeeded, failed, skipped]
+        progress: { type: number, minimum: 0, maximum: 1 }
+        attempt: { type: integer }
+        max_attempts: { type: integer, default: 5 }
+        skills_applied: { type: array, items: { type: string } }
+        last_error: { type: [string, "null"] }
+        updated_at: { type: string, format: date-time }
+    ProcessRequest:
+      type: object
+      description: "Trigger (re)processing. `[GAP: 4.1]` dispatch engine is BUILD-NEW atop helix_skills."
+      properties:
+        force: { type: boolean, default: false, description: Reprocess even if already succeeded. }
+        skills: { type: array, items: { type: string }, description: Override auto-selected skills. }
+    ProcessingJob:
+      type: object
+      required: [id, post_id, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        post_id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/ProcessingState' }
+        precedence:
+          type: array
+          description: Deterministic order — download > convert > analyze > research > reply.
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+    Callback:
+      type: object
+      description: |
+        Standardized 3rd-party completion callback (Boba, MeTube, Download Manager)
+        `[GAP: 6.6 callback module]`. Common schema shared across providers.
+      required: [job_id, state]
+      properties:
+        job_id: { type: string }
+        provider: { type: string, enum: [boba, metube, download_manager] }
+        state: { type: string, enum: [queued, running, completed, failed] }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        result_asset_ref: { type: [string, "null"], description: Asset id/URI on completion. }
+        error: { type: [string, "null"] }
+
+    # ----- Assets -----
+    Asset:
+      type: object
+      required: [id, kind, state, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [video, audio, image, document, book, comic, archive, other] }
+        state: { type: string, enum: [pending, downloading, stored, transcoding, ready, broken] }
+        content_hash: { type: string, description: Dedup + integrity (content-addressed). }
+        size_bytes: { type: [integer, "null"] }
+        mime_type: { type: string }
+        renditions:
+          type: array
+          description: Web-optimized variants (…-web suffix), e.g. HLS/DASH ladders.
+          items:
+            type: object
+            properties:
+              label: { type: string, example: "1080p-web" }
+              mime_type: { type: string }
+              url: { type: string, format: uri, description: Asset-Service-resolved, never a raw path. }
+        sensitivity: { type: string, enum: [public, internal, sensitive], default: internal }
+        created_at: { type: string, format: date-time }
+    AssetLink:
+      type: object
+      required: [asset_id, relation]
+      properties:
+        asset_id: { type: string, format: uuid }
+        relation: { type: string, enum: [attachment, generated, web_rendition, ocr_transcript] }
+        order_index: { type: [integer, "null"], description: Preserves series/playlist ordering. }
+    DownloadJob:
+      type: object
+      required: [id, source_uri, state]
+      properties:
+        id: { type: string, format: uuid }
+        source_uri: { type: string, format: uri }
+        protocol: { type: string, enum: [https, http, ftp, smb, nfs, webdav, torrent, magnet] }
+        state: { type: string, enum: [queued, running, paused, completed, failed] }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        asset_id: { type: [string, "null"], format: uuid }
+
+    # ----- Search -----
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query: { type: string }
+        mode: { type: string, enum: [semantic, keyword, hybrid], default: hybrid }
+        sources:
+          type: array
+          items: { type: string, enum: [posts, generated, assets] }
+          default: [posts, generated]
+        filters:
+          type: object
+          properties:
+            account_id: { type: [string, "null"], format: uuid }
+            categories: { type: array, items: { $ref: '#/components/schemas/ContentType' } }
+            hashtags: { type: array, items: { type: string } }
+        top_k: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        rerank: { type: boolean, default: true }
+    SearchResult:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            required: [source_id, kind, score]
+            properties:
+              source_id: { type: string, format: uuid, description: Relational PK the vector references. }
+              kind: { type: string, enum: [post, generated, asset] }
+              score: { type: number, description: Cosine similarity / fused score. }
+              span: { type: [string, "null"], description: Chunk span (symbol/section granularity). }
+              snippet: { type: string }
+        took_ms: { type: integer }
+        embedder:
+          type: string
+          description: |
+            Active embedding provider. `[GAP: #1 / 2.1 HelixLLM]` MUST be a real llama.cpp
+            provider (HELIX_EMBEDDING_PROVIDER=llama), NOT the default HashEmbedder stub;
+            search fails loudly (503 unavailable) if the hash embedder is active.
+
+    # ----- Skills -----
+    Skill:
+      type: object
+      required: [id, name, kind]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        version: { type: string }
+        kind: { type: string, enum: [atomic, composite, umbrella] }
+        edges:
+          type: array
+          description: Typed Skill-Graph edges.
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [requires, extends, composes, recommends, related_to, alternative_to] }
+              target: { type: string }
+        binds_content_types: { type: array, items: { $ref: '#/components/schemas/ContentType' } }
+        sort_order: { type: integer, description: Dispatch precedence within a stage. }
+
+    # ----- Billing / metering -----
+    Plan:
+      type: object
+      required: [id, name, price_cents, interval]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        price_cents: { type: integer }
+        currency: { type: string, default: EUR }
+        interval: { type: string, enum: [month, year] }
+        limits:
+          type: object
+          additionalProperties: { type: integer }
+    Subscription:
+      type: object
+      required: [account_id, plan_id, status]
+      properties:
+        account_id: { type: string, format: uuid }
+        plan_id: { type: string }
+        status: { type: string, enum: [trialing, active, past_due, canceled] }
+        current_period_end: { type: string, format: date-time }
+    UsageRecord:
+      type: object
+      description: Metered usage (subscription + metered billing, day one).
+      required: [metric, quantity, period_start]
+      properties:
+        metric: { type: string, enum: [posts_processed, assets_bytes, search_queries, llm_tokens, storage_bytes] }
+        quantity: { type: number }
+        period_start: { type: string, format: date-time }
+        period_end: { type: string, format: date-time }
+
+    # ----- Events -----
+    EventDescriptor:
+      type: object
+      description: Catalog entry describing a system event type.
+      required: [type, sticky]
+      properties:
+        type: { type: string, description: "Dot-notation, e.g. post.received, processing.completed." }
+        description: { type: string }
+        sticky: { type: boolean, description: Sticky (last-value retained) vs one-time. }
+        payload_schema_ref: { type: string, description: JSON Schema / proto message name. }
+        required_scopes: { type: array, items: { type: string } }
+    EventEnvelope:
+      type: object
+      description: |
+        Wire form of digital.vasic.eventbus event.Event. Identical shape on
+        WebSocket, SSE and sticky snapshots — see event-bus-contract.md.
+      required: [id, type, source, timestamp]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        source: { type: string }
+        payload: {}
+        timestamp: { type: string, format: date-time }
+        trace_id: { type: string }
+        metadata: { type: object, additionalProperties: { type: string } }
+
+# ---------------------------------------------------------------------------
+#  Paths
+# ---------------------------------------------------------------------------
+paths:
+
+  # ============================== AUTH ==============================
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Exchange credentials (+ TOTP for admin tiers) for a token pair.
+      security: []
+      x-required-roles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshToken
+      summary: Rotate a refresh token for a new pair (old refresh is revoked).
+      security: []
+      x-required-roles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: Rotated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Revoke the current access + refresh tokens.
+      x-required-roles: [user]
+      responses:
+        '204': { description: Revoked. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      operationId: getIdentity
+      summary: Return the authenticated principal and effective scopes.
+      x-required-roles: [user]
+      responses:
+        '200':
+          description: Identity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Identity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/mfa/totp/enroll:
+    post:
+      tags: [auth]
+      operationId: enrollTotp
+      summary: Begin TOTP enrolment (returns otpauth URI + secret).
+      x-required-roles: [user]
+      responses:
+        '200':
+          description: Enrolment challenge.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  otpauth_uri: { type: string }
+                  secret: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/mfa/totp/verify:
+    post:
+      tags: [auth]
+      operationId: verifyTotp
+      summary: Confirm TOTP enrolment with a code.
+      x-required-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties: { code: { type: string } }
+      responses:
+        '204': { description: MFA enabled. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /auth/oauth2/authorize:
+    get:
+      tags: [auth]
+      operationId: oauth2Authorize
+      summary: Start an OAuth2 authorization-code link for an external provider.
+      x-required-roles: [user]
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema: { type: string, enum: [dropbox, gdrive, onedrive] }
+        - name: redirect_uri
+          in: query
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '302': { description: Redirect to the provider's consent screen. }
+
+  /api-keys:
+    get:
+      tags: [auth]
+      operationId: listApiKeys
+      summary: List the caller's API keys (masked).
+      x-required-roles: [user]
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Keys.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ApiKey' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+    post:
+      tags: [auth]
+      operationId: createApiKey
+      summary: Mint a scoped API key (secret returned once).
+      x-required-roles: [user]
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApiKeyCreate' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiKey' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api-keys/{keyId}:
+    delete:
+      tags: [auth]
+      operationId: revokeApiKey
+      summary: Revoke an API key.
+      x-required-roles: [user]
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Revoked. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /.well-known/jwks.json:
+    get:
+      tags: [auth]
+      operationId: getJwks
+      summary: Public JWKS for verifying RS256/EdDSA access tokens.
+      security: []
+      x-required-roles: []
+      responses:
+        '200':
+          description: JSON Web Key Set.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys: { type: array, items: { type: object, additionalProperties: true } }
+
+  # ============================== ACCOUNTS ==============================
+  /accounts:
+    get:
+      tags: [accounts]
+      operationId: listAccounts
+      summary: List accounts (root = all; others = own memberships).
+      x-required-roles: [user]
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Accounts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Account' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [accounts]
+      operationId: createAccount
+      summary: Create an account (the creator becomes its account_admin).
+      x-required-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountCreate' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+
+  /accounts/{accountId}:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [accounts]
+      operationId: getAccount
+      x-required-roles: [user]
+      summary: Fetch an account.
+      responses:
+        '200':
+          description: Account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [accounts]
+      operationId: updateAccount
+      x-required-roles: [account_admin]
+      summary: Update account settings (name, retention override).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Account' }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+    delete:
+      tags: [accounts]
+      operationId: deleteAccount
+      x-required-roles: [root]
+      summary: Delete an account (root only).
+      responses:
+        '204': { description: Deleted. }
+
+  /accounts/{accountId}/branding:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [accounts]
+      operationId: setBranding
+      x-required-roles: [account_admin]
+      summary: Set per-account white-label branding.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Branding' }
+      responses:
+        '200':
+          description: Branding set.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Branding' }
+
+  # ============================== USERS ==============================
+  /accounts/{accountId}/users:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [users]
+      operationId: listAccountUsers
+      x-required-roles: [account_admin]
+      summary: List users in an account.
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Users.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/User' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+    post:
+      tags: [users]
+      operationId: inviteUser
+      x-required-roles: [account_admin]
+      summary: Invite a user to the account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserInvite' }
+      responses:
+        '201':
+          description: Invited.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [users]
+      operationId: getUser
+      x-required-roles: [user]
+      summary: Fetch a user (self, or admin within tenant).
+      responses:
+        '200':
+          description: User.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      tags: [users]
+      operationId: updateUser
+      x-required-roles: [account_admin]
+      summary: Update a user's role/profile within the tenant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/User' }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  # ============================== MESSENGERS ==============================
+  /messengers:
+    get:
+      tags: [messengers]
+      operationId: listMessengers
+      x-required-roles: [user]
+      summary: List supported messengers and their capabilities/maturity.
+      responses:
+        '200':
+          description: Messengers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Messenger' }
+
+  # ============================== CHANNELS ==============================
+  /channels:
+    get:
+      tags: [channels]
+      operationId: listChannels
+      x-required-roles: [user]
+      summary: List registered channels for the tenant.
+      parameters:
+        - { $ref: '#/components/parameters/AccountScope' }
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Channels.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Channel' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+    post:
+      tags: [channels]
+      operationId: registerChannel
+      x-required-roles: [account_admin]
+      x-thready-maturity: foundation
+      summary: Register a channel/group to read (Telegram/Max invite or handle).
+      description: >-
+        `[GAP: 3/5.1 Herald]` Telegram live-read is FOUNDATION (MTProto reader
+        promotion pending); Max is BUILD-NEW. Registration itself is GA; ingestion
+        depth depends on the backing reader/adapter.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChannelCreate' }
+      responses:
+        '201':
+          description: Registered.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /channels/{channelId}:
+    parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [channels]
+      operationId: getChannel
+      x-required-roles: [user]
+      summary: Fetch a channel.
+      responses:
+        '200':
+          description: Channel.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [channels]
+      operationId: deregisterChannel
+      x-required-roles: [account_admin]
+      summary: Stop reading a channel.
+      responses:
+        '204': { description: Deregistered. }
+
+  /channels/{channelId}/sync:
+    post:
+      tags: [channels]
+      operationId: syncChannel
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Trigger an incremental poll or full backfill.
+      description: >-
+        `[GAP: 3/5.1 Herald]` Telegram backfill requires the MTProto user-client
+        reader (promotion pending); Max is BUILD-NEW. Until closed, backfill on
+        those may 503 `unavailable`.
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SyncRequest' }
+      responses:
+        '202':
+          description: Sync accepted (async; watch channel.synced events).
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  # ============================== POSTS / THREADS ==============================
+  /posts:
+    get:
+      tags: [posts]
+      operationId: listPosts
+      x-required-roles: [user]
+      summary: List/filter posts by channel, hashtag, category, or processing status.
+      parameters:
+        - { $ref: '#/components/parameters/AccountScope' }
+        - name: channel_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: hashtag
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, running, succeeded, failed, skipped] }
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Posts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Post' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+
+  /posts/{postId}:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [posts]
+      operationId: getPost
+      x-required-roles: [user]
+      summary: Fetch a single post.
+      responses:
+        '200':
+          description: Post.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Post' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /posts/{postId}/thread:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [posts]
+      operationId: getThread
+      x-required-roles: [user]
+      summary: Fetch the complete thread (root + full organic reply chain).
+      responses:
+        '200':
+          description: Thread.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Thread' }
+
+  /posts/{postId}/process:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [processing]
+      operationId: triggerProcessing
+      x-required-roles: [user]
+      x-thready-maturity: build_new
+      summary: Trigger processing for a post (idempotent single-claim).
+      description: >-
+        Enqueues onto the BackgroundTasks queue with a single-claim lock so a
+        post is processed exactly once under an event storm.
+        `[GAP: 6/4.1 helix_skills]` the dispatch engine is BUILD-NEW atop the
+        Skill-Graph (which is a knowledge DAG, not a run engine).
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProcessRequest' }
+      responses:
+        '202':
+          description: Accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessingJob' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /posts/{postId}/reprocess:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [processing]
+      operationId: triggerReprocessing
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Force a fresh reprocess (client → REST → System, per §3.2.3).
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProcessRequest' }
+      responses:
+        '202':
+          description: Accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessingJob' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /posts/{postId}/processing:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [processing]
+      operationId: getProcessingState
+      x-required-roles: [user]
+      summary: Current processing state + progress for a post.
+      responses:
+        '200':
+          description: State.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessingState' }
+
+  /processing/jobs:
+    get:
+      tags: [processing]
+      operationId: listProcessingJobs
+      x-required-roles: [user]
+      summary: List processing jobs.
+      parameters:
+        - { $ref: '#/components/parameters/AccountScope' }
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Jobs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ProcessingJob' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+
+  /processing/callbacks/{provider}:
+    parameters:
+      - name: provider
+        in: path
+        required: true
+        schema: { type: string, enum: [boba, metube, download_manager] }
+    post:
+      tags: [processing]
+      operationId: ingestCallback
+      x-thready-maturity: foundation
+      summary: Inbound completion callback from a 3rd-party download system.
+      description: >-
+        Standardized callback ingress `[GAP: 6.6 callback module]`. Authenticated by a
+        per-provider HMAC-SHA256 signature header (`X-Thready-Signature`, NOT a JWT).
+        Idempotent on `job_id`. `[GAP: 6.5 MeTube]` MeTube is poll-only today; an
+        internal poller bridges its status into this same path until its webhook lands.
+      security:
+        - hmacAuth: []
+      x-required-roles: []
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Callback' }
+      responses:
+        '204': { description: Accepted. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ============================== ASSETS ==============================
+  /assets:
+    get:
+      tags: [assets]
+      operationId: listAssets
+      x-required-roles: [user]
+      summary: List assets for the tenant.
+      parameters:
+        - { $ref: '#/components/parameters/AccountScope' }
+        - name: kind
+          in: query
+          schema: { type: string }
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Assets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Asset' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+
+  /assets/{assetId}:
+    parameters:
+      - name: assetId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [assets]
+      operationId: getAsset
+      x-required-roles: [user]
+      summary: Fetch asset metadata (renditions, hash, sensitivity).
+      responses:
+        '200':
+          description: Asset.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Asset' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /assets/{assetId}/content:
+    parameters:
+      - name: assetId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [assets]
+      operationId: getAssetContent
+      x-required-roles: [user]
+      summary: Resolve to signed, Range-capable content (never a raw path).
+      description: >-
+        The Asset Service (Catalogizer + storage) resolves to a signed URL and
+        supports HTTP Range via `OpenSeekable`. Returns 302 to a short-lived
+        signed URL, or streams directly with `Accept-Ranges: bytes`.
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { description: Full content stream. }
+        '206': { description: Partial content (Range). }
+        '302': { description: Redirect to a signed URL. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /assets/{assetId}/redownload:
+    parameters:
+      - name: assetId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [assets]
+      operationId: redownloadAsset
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Re-fetch a broken/missing physical asset via the Download Manager.
+      description: >-
+        `[GAP: 4/6.3 Download Manager]` The generic multi-protocol Download Manager is
+        BUILD-NEW (P0); Boba (torrents) and MeTube (video) integrate via the standardized
+        callback. Until the manager lands, re-download may 503 `unavailable`.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '202':
+          description: Re-download enqueued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DownloadJob' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /posts/{postId}/assets:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [assets]
+      operationId: listPostAssets
+      x-required-roles: [user]
+      summary: List assets linked to a post (attachments + generated + renditions).
+      responses:
+        '200':
+          description: Asset links.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AssetLink' }
+
+  /downloads:
+    get:
+      tags: [assets]
+      operationId: listDownloads
+      x-required-roles: [user]
+      x-thready-maturity: build_new
+      summary: List download jobs (Download Manager / Boba / MeTube).
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Download jobs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/DownloadJob' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+
+  # ============================== SEARCH ==============================
+  /search:
+    post:
+      tags: [search]
+      operationId: search
+      x-required-roles: [user]
+      x-thready-maturity: build_new
+      summary: Semantic / keyword / hybrid search over posts and generated materials.
+      description: >-
+        In-house "Lumen-style" search `[GAP: New#Semantic-search service]` over
+        `embeddings`+`vectordb`(pgvector, cosine). SLO < 500 ms p95. `[GAP: #1 HelixLLM]`
+        503 `unavailable` if the non-semantic HashEmbedder stub is the active provider
+        (fail-loud) — the response `embedder` field echoes the active provider.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SearchRequest' }
+      responses:
+        '200':
+          description: Results.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  # ============================== SKILLS ==============================
+  /skills:
+    get:
+      tags: [skills]
+      operationId: listSkills
+      x-required-roles: [user]
+      x-thready-maturity: foundation
+      summary: List Skill-Graph knowledge units.
+      description: >-
+        `[GAP: 6/4.1 helix_skills]` The Skill-Graph is FOUNDATION/MVP (inconsistent file
+        format + open findings backlog). This endpoint exposes the graph for reading;
+        execution is the separate BUILD-NEW dispatch engine (see /posts/{id}/process).
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Skills.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Skill' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+    post:
+      tags: [skills]
+      operationId: registerSkill
+      x-required-roles: [account_admin]
+      x-thready-maturity: foundation
+      summary: Register a Skill (knowledge unit) and its Skill-Graph edges.
+      description: "Requires scope `skills:write` (see authn-authz.md §7)."
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Skill' }
+      responses:
+        '201':
+          description: Registered.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Skill' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /skills/{skillId}:
+    parameters:
+      - name: skillId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [skills]
+      operationId: getSkill
+      x-required-roles: [user]
+      summary: Fetch a Skill and its edges.
+      responses:
+        '200':
+          description: Skill.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Skill' }
+
+  # ============================== BILLING ==============================
+  /plans:
+    get:
+      tags: [billing]
+      operationId: listPlans
+      x-required-roles: [user]
+      summary: List subscription plans.
+      responses:
+        '200':
+          description: Plans.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Plan' }
+
+  /accounts/{accountId}/subscription:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [billing]
+      operationId: getSubscription
+      x-required-roles: [account_admin]
+      x-thready-maturity: design
+      summary: Fetch an account's subscription.
+      description: >-
+        `[GAP: #12 billing]` Schema is fixed (subscription + metered from day one, Q11);
+        payment-provider integration lands in the deployment pack. Requires scope
+        `billing:read`.
+      responses:
+        '200':
+          description: Subscription.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Subscription' }
+    put:
+      tags: [billing]
+      operationId: setSubscription
+      x-required-roles: [account_admin]
+      x-thready-maturity: design
+      summary: Change an account's plan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan_id]
+              properties: { plan_id: { type: string } }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Subscription' }
+
+  /accounts/{accountId}/usage:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [billing]
+      operationId: getUsage
+      x-required-roles: [account_admin]
+      x-thready-maturity: design
+      summary: Metered usage for the current or a named period.
+      description: "Requires scope `billing:read`. `[GAP: #12 billing]` provider integration pending."
+      parameters:
+        - name: period_start
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Usage records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/UsageRecord' }
+
+  # ============================== EVENTS ==============================
+  /events:
+    get:
+      tags: [events]
+      operationId: listEventDescriptors
+      x-required-roles: [user]
+      x-thready-maturity: build_new
+      summary: The event catalog — every event type, sticky flag, and required scopes.
+      description: "`[GAP: 5/New#Event Bus service]` client-facing JetStream wrapper is BUILD-NEW."
+      responses:
+        '200':
+          description: Event catalog.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EventDescriptor' }
+
+  /events/{entityType}/{entityId}/sticky:
+    parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema: { type: string, enum: [channel, post, processing, asset, download] }
+      - name: entityId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [events]
+      operationId: getStickyEvent
+      x-required-roles: [user]
+      x-thready-maturity: build_new
+      summary: Last-value snapshot of a sticky event for an entity (reconnect reconcile).
+      description: >-
+        Sticky events retain last-value with explicit invalidation
+        (`[GAP: New#Event Bus service]`). Streams (WS/SSE) are in
+        event-bus-contract.md; this returns the retained value for a single entity.
+      responses:
+        '200':
+          description: Retained event value.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventEnvelope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ============================== OPS ==============================
+  /healthz:
+    get:
+      tags: [ops]
+      operationId: healthz
+      security: []
+      x-required-roles: []
+      summary: Liveness (observability/pkg/health).
+      responses:
+        '200': { description: Alive. }
+  /readyz:
+    get:
+      tags: [ops]
+      operationId: readyz
+      security: []
+      x-required-roles: []
+      summary: Readiness (dependencies reachable).
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+# ---------------------------------------------------------------------------
+#  Webhooks (OpenAPI 3.1) — outbound callbacks Thready SENDS to subscribers.
+# ---------------------------------------------------------------------------
+webhooks:
+  eventDelivery:
+    post:
+      summary: Outbound webhook delivery of a system event to a registered sink.
+      description: >-
+        Alternative to WS/SSE for server-to-server subscribers. Thready signs each
+        delivery with an `X-Thready-Signature` HMAC-SHA256 header over the raw body
+        (the receiver verifies it — see `hmacAuth`); non-2xx triggers exponential
+        back-off retry from the durable stream. Payload is the same EventEnvelope used
+        on the live streams. Sink registration is `[OPEN: evt-2]` (`/v1/event-sinks`,
+        deferred to the User Service pack).
+      security:
+        - hmacAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventEnvelope' }
+      responses:
+        '2XX': { description: Acknowledged (any 2xx). Non-2xx triggers retry. }

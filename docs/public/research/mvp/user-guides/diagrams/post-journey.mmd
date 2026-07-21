@@ -1,0 +1,16 @@
+flowchart LR
+  POST["Human posts in channel<br/>root + organic replies<br/>with #hashtags"] --> RECV{{post.received event}}
+  RECV --> CLAIM["Single-claim in<br/>BackgroundTasks queue"]
+  CLAIM --> PRE["Pre-process:<br/>extract hashtags, links,<br/>attachments, thread context"]
+  PRE --> CLASS{Classify by<br/>hashtag + content type}
+  CLASS -->|missing/weak tags| INDIRECT["Indirect determination<br/>(GitHub→research, torrent→download...)"]
+  INDIRECT --> DISPATCH
+  CLASS --> DISPATCH["Dispatch Skill(s)<br/>download → convert → analyze → research → reply"]
+  DISPATCH --> DL[Download media<br/>Boba / MeTube / DL-Manager]
+  DISPATCH --> RES[Deep research + docs]
+  DL --> ASSET[Asset Service<br/>raw + -web rendition]
+  RES --> VEC[(Embed → pgvector)]
+  ASSET --> VEC
+  DISPATCH --> REPLY["Status reply to original post<br/>(success/metrics/asset refs)"]
+  REPLY --> DONE["Mark processed<br/>(re-processable on request)"]
+  VEC --> SEARCH([Semantic search<br/>from any client])

@@ -1,0 +1,14 @@
+flowchart LR
+  U["Client (browser / CLI / SDK)"] -->|HTTPS + HTTP/3| DNS
+  DNS["DNS A/AAAA\ndev. sta. thready.\n→ one host IP"] --> EDGE
+  subgraph HOST["Hetzner host — thready user"]
+    EDGE{"Caddy edge\n:443 TCP+UDP, :80\nroute by Host header"}
+    EDGE -->|"Host: dev.thready.hxd3v.com"| DEVGW["127.0.0.1:60443\nthready-api (dev)"]
+    EDGE -->|"Host: sta.thready.hxd3v.com"| STAGW["127.0.0.1:61443\nthready-api (sta)"]
+    EDGE -->|"Host: thready.hxd3v.com"| PRODGW["127.0.0.1:62443\nthready-api (prod)"]
+    EDGE -->|"/.well-known/acme-challenge/*"| WEBROOT["ACME webroot\n(HTTP-01)"]
+    DEVGW --- DEVNET[("thready-dev-net\nfull isolated stack")]
+    STAGW --- STANET[("thready-sta-net\nfull isolated stack")]
+    PRODGW --- PRODNET[("thready-prod-net\nfull isolated stack")]
+  end
+  CERTS["lets_encrypt\ncert per subdomain"] -. installs .-> EDGE

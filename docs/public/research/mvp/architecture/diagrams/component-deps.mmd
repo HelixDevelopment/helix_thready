@@ -1,0 +1,35 @@
+%% Helix Thready — Service → Engine dependency graph
+%% Source of truth: helix_thready_research_request_final.md §2.1, §4.1
+flowchart LR
+  subgraph Services
+    ING[Ingestion]:::s
+    PROC[Processing]:::s
+    SEM[Semantic-search]:::s
+    ASSET[Asset Service]:::s
+    DLM[Download Manager]:::s
+    USER[User Service]:::s
+    GW[API Gateway]:::s
+  end
+  subgraph Engines
+    DB[(database)]:::e
+    VDB[(vectordb)]:::e
+    EB{{eventbus}}:::e
+    BG[background]:::e
+    ST[(storage)]:::e
+    SEC[security]:::e
+    HERALD[herald]:::e
+    LLM[HelixLLM/LLMProvider]:::e
+    SK[helix_skills]:::e
+    CAT[Catalogizer]:::e
+  end
+  ING --> HERALD & DB & EB & SEC
+  PROC --> EB & BG & SK & LLM & DB
+  PROC --> SEM
+  SEM --> VDB & LLM & EB
+  ASSET --> CAT & ST & SEC & DB
+  DLM --> ST & BG
+  USER --> DB & SEC
+  GW --> USER & SEC
+  DLM -->|callback| ASSET
+  classDef s fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef e fill:#124a63,stroke:#062634,color:#e6f6ff;

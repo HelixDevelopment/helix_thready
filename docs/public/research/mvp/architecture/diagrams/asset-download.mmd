@@ -1,0 +1,17 @@
+%% Helix Thready — Download delegation + Asset Service via standardized callback
+%% Source of truth: helix_thready_research_request_final.md §7, §8.1, §19.3-4
+flowchart TB
+  DISP[Skill Dispatch\ndownload stage]:::c --> ROUTE{link type}
+  ROUTE -->|torrent/magnet| BOBA[Boba\nSSE + POST /api/v1/hooks]:::c
+  ROUTE -->|youtube/streaming| METUBE[MeTube\n+ outbound webhook BUILD-NEW]:::c
+  ROUTE -->|http/ftp/smb/nfs/webdav| DLM[Download Manager\nBUILD-NEW · reuse filesystem]:::c
+  BOBA & METUBE & DLM -->|standardized callback\njob id/state/progress/asset-ref/error| CB[Callback module\nBUILD-NEW]:::c
+  CB --> ASSET[Asset Service\nCatalogizer + storage]:::c
+  ASSET --> RAW[(raw original)]:::db
+  ASSET --> WEB[(…-web rendition\nH.264/AAC fMP4 · HLS/DASH)]:::db
+  ASSET --> OBJ[(MinIO/S3 50 TB+)]:::db
+  ASSET -->|checksum dedup + post↔asset link| PG[(relational SoR)]:::db
+  ASSET -->|embed transcript/metadata| SEM[Semantic index]:::c
+  CL[Client] -->|/v1/assets/:id\nnever a direct file path| ASSET
+  classDef c fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef db fill:#124a63,stroke:#062634,color:#e6f6ff;

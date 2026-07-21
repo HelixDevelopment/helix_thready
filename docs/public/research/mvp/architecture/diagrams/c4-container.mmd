@@ -1,0 +1,61 @@
+%% Helix Thready — C4 Level 2 (Container)
+%% Source of truth: helix_thready_research_request_final.md §2.1, §2.2
+flowchart TB
+  subgraph EDGE["Edge / API (HTTP/3 QUIC + HTTP/2 fallback)"]
+    GW[API Gateway\nvasic-digital/http3 + middleware]:::c
+    REST[REST /v1\nauth · ratelimiter · headers]:::c
+    RT[Realtime\nWebSocket hub + SSE]:::c
+  end
+
+  subgraph INGEST["Messenger Ingestion"]
+    HERALD[Herald thread readers\ngotd/td + Max adapter]:::c
+    TR[ThreadReader\nroot + organic-reply assembly]:::c
+  end
+
+  subgraph PROC["Processing plane"]
+    BUS{{EventBus\nNATS JetStream}}:::bus
+    BG[BackgroundTasks\nPostgres queue · single-claim]:::c
+    DISP[Skill Dispatch Engine\ndownload>convert>analyze>research>reply]:::c
+    SKILLS[HelixSkills\nSkill-Graph DAG]:::c
+    LLM[HelixLLM / LLMProvider / HelixAgent]:::c
+    VIS[VisionEngine + OCR adapter]:::c
+    SEM[Semantic-search service\nembeddings · vectordb · rag]:::c
+  end
+
+  subgraph ASSETS["Assets & Download"]
+    DLM[Download Manager\nHTTP/2/3 · FTP/SMB/NFS/WebDAV]:::c
+    BOBA[Boba torrents]:::c
+    METUBE[MeTube video]:::c
+    ASSET[Asset Service\nCatalogizer + storage]:::c
+  end
+
+  subgraph DATA["Data plane"]
+    PG[(PostgreSQL\ndatabase — system of record)]:::db
+    PGV[(pgvector\nvectordb — embeddings)]:::db
+    OBJ[(MinIO / S3\nstorage — 50 TB+)]:::db
+    CACHE[(cache\nL1/L2 + Redis)]:::db
+  end
+
+  TG[[Telegram]]:::ext --> HERALD
+  MAX[[Max]]:::ext --> HERALD
+  HERALD --> TR --> PG
+  TR -->|post.received| BUS
+  BUS --> BG --> DISP
+  DISP --> SKILLS & LLM & VIS & DLM & BOBA & METUBE
+  DISP --> SEM
+  DLM & BOBA & METUBE -->|callback| ASSET
+  ASSET --> OBJ
+  SEM --> PGV
+  LLM --> SEM
+  DISP -->|status reply| HERALD
+  DISP -->|events| BUS
+
+  REST --- PG & PGV & ASSET & SEM
+  RT --- BUS
+  GW --- REST & RT
+  PROC --- CACHE
+
+  classDef c fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef db fill:#124a63,stroke:#062634,color:#e6f6ff;
+  classDef bus fill:#7a4ea0,stroke:#3c2352,color:#f3e9ff;
+  classDef ext fill:#e8eef2,stroke:#6b7b88,color:#1c2a33;

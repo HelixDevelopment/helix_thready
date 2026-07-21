@@ -1,0 +1,23 @@
+%% Helix Thready — Skill dispatch pipeline (download>convert>analyze>research>reply)
+%% Source of truth: helix_thready_research_request_final.md §3.2, §3.3, Q33
+flowchart TB
+  IN[post.received claimed]:::ev --> CLS[Classify\nhashtags + content-type + thread ctx]
+  CLS --> IND{tags absent/insufficient?}
+  IND -->|yes| INF[Indirect determination\ntorrent→Torrent; github→Research; media→Download+Research]
+  IND -->|no| MAP
+  INF --> MAP[Map category set → Skill set\nHelixSkills Skill-Graph resolve]
+  MAP --> ORD[Order by precedence + SortOrder]
+  subgraph Stages["Deterministic stage order"]
+    S1[1 download\nBoba/MeTube/DL Mgr]:::st
+    S2[2 convert\n…-web renditions]:::st
+    S3[3 analyze\nVision+OCR, transcript]:::st
+    S4[4 research\nmulti-pass web + docs + Skills growth]:::st
+    S5[5 reply\nstatus reply to source post]:::st
+  end
+  ORD --> S1 --> S2 --> S3 --> S4 --> S5
+  S1 & S2 & S3 & S4 -->|embed artifacts| SEM[Semantic-search index]:::c
+  S5 --> DONE[post.processed]:::ev
+  S1 -. per-step retry/backoff .-> S1
+  classDef ev fill:#7a4ea0,stroke:#3c2352,color:#f3e9ff;
+  classDef st fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef c fill:#124a63,stroke:#062634,color:#e6f6ff;

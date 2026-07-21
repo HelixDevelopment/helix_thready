@@ -1,0 +1,271 @@
+<!--
+  Title           : Helix Thready — Prototypes & Motion (Figma · PenPot · Lottie)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/prototypes.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-21)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./index.md, ./wireframes.md, ./ux-flows.md,
+                    ./design-system.md, ./brand-assets.md, ../CONVENTIONS.md
+-->
+
+# Helix Thready — Prototypes & Motion (Figma · PenPot · Lottie)
+
+| Rev | Date | Author | Change |
+|-----|------|--------|--------|
+| 1 | 2026-07-21 | swarm (design) | Initial complete draft: Figma plan, interactive vs. non‑interactive prototypes, motion/transition spec, export pipeline (Figma/PenPot/PDF/PNG/SVG/Lottie), review loop, Docs Chain wiring |
+
+## Table of contents
+
+- [1. Requirements (verbatim intent)](#1-requirements-verbatim-intent)
+- [2. Tooling: OpenDesign + Figma (+ PenPot, Lottie)](#2-tooling-opendesign--figma--penpot-lottie)
+- [3. Figma source‑of‑record structure](#3-figma-source-of-record-structure)
+- [4. Interactive prototypes](#4-interactive-prototypes)
+- [5. Non‑interactive prototypes](#5-non-interactive-prototypes)
+- [6. Motion & transition spec](#6-motion--transition-spec)
+- [7. Export pipeline](#7-export-pipeline)
+- [8. Review loop (design ≈ code review)](#8-review-loop-design--code-review)
+- [9. Docs Chain wiring & versioning](#9-docs-chain-wiring--versioning)
+- [10. Deliverables checklist](#10-deliverables-checklist)
+- [11. Gaps & open items](#11-gaps--open-items)
+
+## 1. Requirements (verbatim intent)
+
+From the request (§Design) `[OPERATOR]`:
+
+- **Full Figma design + interactive AND non‑interactive prototypes** for every visual client.
+- **Designed with OpenDesign** `[CONSTITUTION §11.4.162]`, refined by **multiple independent‑agent
+  reviews** (like code review) until UI/UX perfection.
+- Materials in **all major formats** — **PenPot, PDF, PNGs, and lots of Lottie animations**.
+- **Stunning transition effects** between screens/pages and during UI interactions.
+- **Full forms validation, hints, tooltips**; a unique design created exclusively for Thready.
+- Materials **connected to the project via all hooks and Docs Chain**, so a change that affects
+  client UI/UX propagates.
+- **Versioned** like all documentation.
+
+## 2. Tooling: OpenDesign + Figma (+ PenPot, Lottie)
+
+`[CONSTITUTION + request]` `[Q26]`:
+
+- **OpenDesign** (`nexu-io/open-design`, release 0.13.0 `[VERIFIED]`) is the design‑system **source
+  of truth** and ships a **first‑party Figma plugin**; it drives tokens and generates artifacts.
+- **Figma** is the **source of record** for the component set and screen frames + the interactive
+  prototype layer (in‑house standard `[IN-HOUSE]`).
+- **PenPot** — required by the request but **not currently used anywhere in the org**; introduced
+  for Thready. **PenPot is not a native OpenDesign export target** `[VERIFIED — export.ts emits
+  tokens.json/theme.json/CSS/PPTX/PDF only]` → a bridge is required `[OPEN: THREADY-DES-02]`.
+- **Lottie** — required (motion), also **not a native OpenDesign/Figma‑plugin export**; produced via
+  an After Effects/`bodymovin` or a Figma‑to‑Lottie plugin path → tracked in §7.
+
+> **Honesty.** OpenDesign natively emits `tokens.json`, `theme.json` (antd), CSS vars, and
+> screenshot‑backed **PPTX/PDF**. **PDF/PNG/SVG** are reachable (PDF native; PNG/SVG via Figma or
+> `svgo`/`sharp`). **PenPot and Lottie need an added bridge** — this doc specifies the bridge; it
+> does not pretend the export is one click today.
+
+## 3. Figma source‑of‑record structure
+
+`[DEFAULT — adjustable]` — one Figma project, four files:
+
+| Figma file | Contents |
+|------------|----------|
+| **Thready · Foundations** | Token styles (colors from `thready` theme, type, spacing, radius, elevation, motion), light+dark variables, grid |
+| **Thready · Components** | The component set (§ component-library.md §5) — every composite as a Figma component with all variants/states, bound to the token styles |
+| **Thready · Screens** | Every screen frame from [wireframes.md](./wireframes.md) at phone/tablet/desktop, light+dark, per surface (Web, Desktop, Mobile per platform) |
+| **Thready · Flows** | The interactive prototypes wiring screens into the four journeys ([ux-flows.md](./ux-flows.md)) |
+
+Figma **variables/modes** carry the two theming axes (mode: light/dark; brand: Thready + a
+white‑label sample) so a reviewer flips a mode instead of duplicating frames — mirroring the runtime
+token model exactly.
+
+## 4. Interactive prototypes
+
+Clickable, transition‑rich prototypes for each **key journey** (the four in ux-flows.md), per
+surface:
+
+| Prototype | Covers | Surfaces |
+|-----------|--------|----------|
+| **Add channel** | wizard steps, sign‑in, resolve preview, live sync start | Web, Mobile |
+| **Process post** | queue → per‑step progress → completion/retry (live states mocked) | Web, Mobile, TUI (recorded) |
+| **Search** | query → semantic/keyword/hybrid → results → open | Web, Mobile |
+| **Manage account** | switch, invite, branding editor + AA meter, billing | Web |
+
+Each interactive prototype demonstrates: real state transitions (empty→skeleton→content), form
+validation/hints/tooltips, error/retry, theme toggle (light↔dark), language switch (en/ru/sr‑Cyrl),
+and the motion spec (§6). They are the artifact the independent‑agent review (§8) evaluates.
+
+## 5. Non‑interactive prototypes
+
+Static, annotated deliverables (for spec/handoff/docs):
+
+- **Redlines / measure specs** — spacing, sizes, token references per screen.
+- **State sheets** — every component's states side‑by‑side (default/hover/focus/active/disabled/
+  error) in light + dark.
+- **Screen catalog** — PDF/PNG of every frame, per surface + breakpoint.
+- **Annotated flows** — the ux‑flows diagrams overlaid on real frames (the request's "Figma exported
+  screens with additional layers over it" for documentation).
+
+## 6. Motion & transition spec
+
+Grounded in the two shipped motion tokens (§ design-system.md §5) and extended for choreography
+`[DEFAULT — adjustable]`:
+
+| Interaction | Motion | Duration / easing |
+|-------------|--------|-------------------|
+| Button/control state | color/shadow | `--motion-fast` 150ms · `--ease-standard` |
+| Disclosure / drawer / sheet | slide + fade | `--motion-base` 200ms · standard |
+| Route/page transition | shared‑axis / fade‑through | 250–300ms `[DEFAULT]` |
+| Skeleton → content | cross‑fade + subtle rise | 200ms |
+| Processing pulse | looped Lottie (indeterminate) | seamless loop |
+| Toast enter/exit | slide‑in + fade | 200ms in / 150ms out |
+| Theme toggle | crossfade tokens | 150ms (instant if reduced‑motion) |
+
+**Lottie usage** ("lots of Lottie animations"): the launcher‑spiral loader (the Thready spiral
+drawing itself), the processing indeterminate pulse, empty‑state illustrations, success checkmarks,
+and onboarding accents. Every animation ships a **static fallback** and is **skipped/frozen under
+`prefers-reduced-motion`** — motion is enhancement, never required for meaning.
+
+```json
+// Lottie asset manifest (excerpt) [DEFAULT — adjustable]
+{
+  "animations": [
+    { "id": "spiral-loader",     "loop": true,  "reducedMotionFallback": "spiral-static.svg" },
+    { "id": "processing-pulse",  "loop": true,  "reducedMotionFallback": "pulse-static.svg" },
+    { "id": "empty-channels",    "loop": false, "reducedMotionFallback": "empty-channels.svg" },
+    { "id": "success-check",     "loop": false, "reducedMotionFallback": "check.svg" }
+  ],
+  "runtime": { "web": "lottie-web", "compose": "lottie-compose", "ios": "lottie-ios" }
+}
+```
+
+## 7. Export pipeline
+
+```mermaid
+flowchart TB
+  OD[OpenDesign\nnexu-io/open-design\n+ Figma plugin] --> FIG[Figma source of record\ncomponent set + screen frames]
+  FIG --> INT[Interactive prototype\nclickable flows + transitions]
+  FIG --> STATIC[Non-interactive\nannotated redlines / specs]
+  INT --> REVIEW{Independent agent review\nuntil GO}
+  STATIC --> REVIEW
+  REVIEW -- iterate --> FIG
+  REVIEW -- GO --> EXPORT[Export pipeline]
+  EXPORT --> NATIVE[OpenDesign native\ntokens.json / theme.json / CSS\nPPTX / PDF / PNG / SVG]
+  EXPORT --> PENPOT[PenPot import\nvia SVG/JSON bridge]
+  EXPORT --> LOTTIE[Lottie JSON\nAE/LottieFiles export]
+  NATIVE --> DOCS[Docs Chain hooks\nembed in docs + user guides]
+  PENPOT --> DOCS
+  LOTTIE --> APPS[app motion runtime\nlottie-web / compose / native]
+  DOCS --> VER[versioned like all docs]
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/prototype-export-pipeline.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** OpenDesign (with its Figma plugin)
+seeds tokens into Figma, the source of record for the component set and screen frames. From Figma two
+prototype tracks branch: the interactive (clickable flows with transitions) and the non‑interactive
+(annotated redlines/specs). Both feed the independent‑agent review gate, which iterates back into
+Figma until it returns GO (§8). On GO, the export pipeline runs. Native OpenDesign/Figma exports
+produce `tokens.json`, `theme.json`, CSS vars, and screenshot‑backed PPTX/PDF, plus PNG/SVG. Two
+required formats are **not native** and go through added bridges: **PenPot** (imported via an
+SVG/JSON bridge) and **Lottie** (JSON exported via an After Effects/`bodymovin` or Figma‑to‑Lottie
+path). The native + PenPot artifacts flow into Docs Chain hooks so they embed into the docs and user
+guides and are **versioned like all documentation**; the Lottie JSON flows into the app motion
+runtimes (`lottie-web` on web, `lottie-compose`/`lottie-ios` on mobile). The dotted truth here is the
+two bridges — they are the tracked open item `THREADY-DES-02`.
+
+**Export target matrix** `[DEFAULT — adjustable]`:
+
+| Format | Source | Native? | Use |
+|--------|--------|:-------:|-----|
+| `tokens.json` / `theme.json` | OpenDesign `export.ts` | ✅ | design→code token sync |
+| CSS custom properties | OpenDesign `tokensToCssVars` | ✅ | the running theme |
+| **PDF** | OpenDesign / Figma | ✅ | screen catalog, spec handoff, docs |
+| **PNG** | Figma / `sharp` | ✅ | docs illustrations, store assets |
+| **SVG** | Figma / `svgo` | ✅ | icon, scalable illustration |
+| **PPTX** | OpenDesign (screenshot‑backed) | ✅ | stakeholder decks |
+| **PenPot** | SVG/JSON **bridge** | ❌ bridge | open‑source design portability `[OPEN: THREADY-DES-02]` |
+| **Lottie JSON** | AE `bodymovin` / Figma‑to‑Lottie | ❌ added | in‑app motion `[OPEN: THREADY-DES-02]` |
+
+## 8. Review loop (design ≈ code review)
+
+The request mandates design review "like we are doing with code review, until absolute perfection".
+Mirror the code‑review process `[CONSTITUTION §11.4.209]`:
+
+- Each prototype/screen set is reviewed by an **independent agent** against an explicit rubric:
+  a11y (WCAG AA, keyboard, SR), token fidelity (no off‑token values), state completeness
+  (empty/skeleton/error/validation), responsive integrity (phone/tablet/desktop), light+dark parity,
+  motion‑with‑meaning + reduced‑motion, localization (en/ru/sr‑Cyrl incl. Cyrillic width), and brand
+  correctness (no letters in the icon, attribution present).
+- Findings iterate back into Figma; the gate returns **GO** only when the rubric passes — the same
+  "iterate to GO" `[CONSTITUTION §11.4.134]` used for code.
+- Visual‑regression (`ScreenDiff` + `VisualRegression`) locks the approved frames so later drift is
+  caught `[GAP: 9.3]`.
+
+```yaml
+# design-review rubric gate (excerpt)
+review:
+  target: interactive-prototype/add-channel
+  checks:
+    a11y_AA: pass            # contrast, focus, keyboard, SR names
+    token_fidelity: pass      # every color/space value is a token
+    states: [default, empty, skeleton, error, validation]  # all present
+    responsive: [phone, tablet, desktop]
+    themes: [light, dark]
+    reduced_motion: honored
+    i18n: [en, ru, sr-Cyrl]
+    brand: icon-has-no-letters, helix-attribution-present
+  decision: GO | ITERATE
+```
+
+## 9. Docs Chain wiring & versioning
+
+Per the request ("connected … through Docs Chain … so any change … gets applied") and
+`[CONSTITUTION §11.4.65/106]`:
+
+- Exported PNG/SVG/PDF frames are committed under `design/exports/` and **referenced** by the docs
+  and user guides; a Docs Chain context re‑propagates on change.
+- The `.mmd` diagram sources in `design/diagrams/` render to PNG/SVG via Docs Chain (already the
+  convention for every diagram in this area).
+- Design artifacts are **versioned like all docs** (revision headers, all‑upstreams push §2.1);
+  Figma file versions are tagged to the doc revision so a doc rev pins the design it describes.
+
+```yaml
+# .docs_chain/contexts/design.yaml (proposed)  [DEFAULT — adjustable]  [GAP: 10.1 docs_chain tooling]
+context: design
+watch:
+  - docs/public/research/mvp/design/**/*.md
+  - docs/public/research/mvp/design/diagrams/**/*.mmd
+  - docs/public/research/mvp/design/exports/**
+emit: [html, pdf]           # md ↔ HTML/PDF siblings (needs pandoc/weasyprint on host)
+on_change: repropagate      # a token/frame change updates dependent docs
+```
+
+> **Honesty.** Docs Chain honestly **SKIPs** md→HTML/PDF when `pandoc`/`weasyprint` are absent
+> (as on the current authoring host) `[GAP: 10.1 docs_chain]`; provision them on the dev host to
+> emit siblings.
+
+## 10. Deliverables checklist
+
+A prototype phase is **done** only when all are present and GO‑reviewed:
+
+- [ ] Figma: Foundations + Components (all states) + Screens (all surfaces × breakpoints × light/dark)
+      + Flows.
+- [ ] Interactive prototypes for the four journeys × surfaces.
+- [ ] Non‑interactive: redlines, state sheets, screen catalog, annotated flows.
+- [ ] Motion: Lottie set (§6) with static + reduced‑motion fallbacks.
+- [ ] Exports: PDF, PNG, SVG (native); **PenPot** + **Lottie** via bridge.
+- [ ] Independent‑agent review = GO; visual‑regression frames locked.
+- [ ] Docs Chain wired; artifacts versioned; slogan + attribution present everywhere.
+
+## 11. Gaps & open items
+
+- `[OPEN: THREADY-DES-02]` — **PenPot + Lottie bridges** are BUILD‑NEW (not native OpenDesign
+  exports). Workable item THREADY‑DES‑EXPORT‑01: build/validate both bridges.
+- `[GAP: 9.3 VisualRegression family]` — CI needed to lock approved frames (THREADY‑DES‑VR‑01).
+- `[GAP: 10.1 docs_chain]` — provision pandoc/weasyprint so exports+docs get HTML/PDF siblings.
+- `[OPEN: THREADY-DES-04]` — Cyrillic width/subset must be validated in the review rubric.
+- `[OPEN: THREADY-DES-13]` — decide PenPot's role: mirror of Figma (portability only) vs. a
+  co‑equal editing surface (higher maintenance).
+
+---
+
+*Made with love ♥ by Helix Development.*

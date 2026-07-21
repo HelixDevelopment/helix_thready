@@ -1,0 +1,23 @@
+sequenceDiagram
+  participant Op as Operator / deploy.sh
+  participant Boot as containers pkg/boot.BootManager
+  participant Disc as pkg/discovery.Discoverer
+  participant Orch as pkg/compose.ComposeOrchestrator
+  participant Pod as podman-compose (rootless)
+  participant HC as pkg/health.HealthChecker
+  Op->>Boot: BootAll(ctx)
+  Boot->>Disc: Phase 1 — Discover remote endpoints (HelixLLM)
+  Disc-->>Boot: found / not-found (mark discovered|skipped)
+  Boot->>Orch: Phase 2 — Up(project, WithUpDetach, WithRemoveOrphans)
+  Orch->>Pod: podman-compose -p thready-prod up -d
+  Note over Orch,Pod: no --wait (standalone podman-compose lacks it) —<br/>readiness is gated in Phase 3, not by compose
+  Pod-->>Orch: containers started (data plane first via depends_on)
+  Orch-->>Boot: ok (track booted project for rollback)
+  Boot->>HC: Phase 3 — CheckAll(targets: /health per service)
+  HC-->>Boot: []HealthResult (healthy? required?)
+  alt a Required service is unhealthy or ctx cancelled
+    Boot->>Orch: rollback — Down(booted projects, reverse order)
+    Boot-->>Op: BootSummary{HasFailures=true}, error
+  else all Required healthy
+    Boot-->>Op: BootSummary{Started, Healthy}, nil
+  end

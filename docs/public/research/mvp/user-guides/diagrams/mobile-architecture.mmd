@@ -1,0 +1,23 @@
+flowchart TB
+  subgraph SHARED["KMP shared logic (Android + iOS only)"]
+    AUTHK[Auth-KMP]
+    SECK["Security-KMP<br/>⚠ mobile secure storage = STUB"]
+    DBK["Database-KMP<br/>⚠ interfaces only"]
+    CONK[Concurrency-KMP]
+    UIK[UI-Components-KMP]
+  end
+  subgraph NATIVE["Native UI per platform"]
+    AND["Android<br/>Jetpack Compose"]
+    IOS["iOS<br/>SwiftUI"]
+    HAR["HarmonyOS<br/>ArkTS + helix_shims ⚠ scaffold"]
+    AUR["Aurora<br/>Qt + helix_shims ⚠ scaffold"]
+  end
+  AND --> SHARED
+  IOS --> SHARED
+  HAR -.->|no KMP/Flutter support| NATIVEONLY["native-only path"]
+  AUR -.->|no KMP/Flutter support| NATIVEONLY
+  SHARED --> API["REST /v1 + WS/SSE"]
+  HAR --> API
+  AUR --> API
+  API --> SYS["Thready System"]
+  SECK -->|Android Keystore / iOS Keychain<br/>REQUIRED before ship| KEYSTORE["Platform secure storage<br/>(to implement)"]

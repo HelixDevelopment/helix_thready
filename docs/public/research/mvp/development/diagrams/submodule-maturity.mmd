@@ -1,0 +1,28 @@
+flowchart TB
+  classDef prod fill:#B6E376,stroke:#2f6f2f,color:#12300f;
+  classDef found fill:#ffe08a,stroke:#8a6d00,color:#3a2e00;
+  classDef scaf fill:#ffb3b3,stroke:#8a0000,color:#3a0000;
+  classDef newm fill:#bcd4ff,stroke:#003a8a,color:#00204a;
+
+  DB[(database)]:::prod --> VEC[(vectordb pgvector)]:::prod
+  EMB[embeddings]:::prod --> VEC
+  HLLM[HelixLLM * HashEmbedder trap]:::found --> EMB
+  EB[eventbus JetStream]:::prod --> BG[background queue]:::prod
+  BG --> DISP[Skill-dispatch engine]:::newm
+  SKILLS[helix_skills * no exec engine]:::found --> DISP
+  DISP --> DLM[Download Manager]:::newm
+  FS[filesystem * no HTTP source]:::found -.reuse.-> DLM
+  DLM --> CB[callback module]:::newm
+  BOBA[Boba]:::found --> CB
+  METUBE[MeTube * no webhook]:::found --> CB
+  CB --> ASSET[Asset Service]:::newm
+  CAT[Catalogizer]:::prod --> ASSET
+  VIS[VisionEngine * no OCR]:::found --> OCR[OCR adapter]:::newm
+  HERALD[herald * MTProto trapped]:::found --> TR[ThreadReader]:::newm
+  TR --> MAX[Max adapter]:::newm
+  AUTH[auth]:::prod --> USER[User Service]:::newm
+  SEC[security]:::prod --> USER
+  SKMP[Security-KMP * in-mem stub]:::scaf --> USER
+  DISP --> SEM[Semantic-search service]:::newm
+  EMB --> SEM
+  VEC --> SEM

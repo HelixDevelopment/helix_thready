@@ -1,0 +1,81 @@
+%% Helix Thready — Processing, Skills & Assets domain ERD
+%% Idempotent single-claim per post; additive Skills; raw + …-web renditions
+erDiagram
+  processing_state {
+    uuid  post_id PK "soft ref -> posts.id (partitioned; no DB FK)"
+    timestamptz post_posted_at "denormalised partition key"
+    text  status "pending|claimed|running|done|failed|skipped"
+    int   attempts
+    uuid  claimed_by "worker id"
+    timestamptz claimed_at
+    timestamptz visible_at "backoff gate"
+    text  precedence "download>convert>analyze>research>reply"
+    jsonb result
+    text  last_error
+    timestamptz updated_at
+  }
+  skills {
+    uuid  id PK
+    text  skill_key UK "helix_skills node id"
+    text  name
+    text  version
+    text  kind "atomic|composite|umbrella"
+    int   sort_order
+    bool  is_enabled
+  }
+  skill_runs {
+    uuid  id PK
+    uuid  post_id "soft ref -> posts.id (partitioned; no DB FK)"
+    uuid  skill_id FK
+    text  status
+    int   attempt
+    timestamptz started_at
+    timestamptz finished_at
+    jsonb metrics
+    text  error
+  }
+  generated_artifacts {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  post_id "soft ref -> posts.id (partitioned; no DB FK)"
+    text  kind "research_doc|book|transcript|summary"
+    text  title
+    text  storage_key
+    text  lang
+    timestamptz created_at
+  }
+  assets {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  parent_asset_id FK "raw -> …-web rendition"
+    bytea content_hash UK
+    text  kind "video|audio|image|document|book|comic"
+    text  mime
+    bigint size_bytes
+    text  storage_backend "minio|s3|local"
+    text  storage_key
+    bool  is_web_rendition
+    bool  is_encrypted
+    text  sensitivity "public|internal|sensitive"
+    timestamptz created_at
+  }
+  asset_links {
+    uuid  id PK
+    uuid  asset_id FK
+    uuid  post_id "one-of (soft ref -> posts.id)"
+    uuid  reply_id "one-of (soft ref -> replies.id)"
+    uuid  generated_artifact_id FK "one-of"
+    text  role "source|generated|rendition"
+    int   ordering_index "series/playlist order"
+  }
+
+  %% Edges marked (soft) reference RANGE-partitioned tables: no DB-level FK (see erd.md §9).
+  posts               ||--|| processing_state    : "tracked_by (soft)"
+  posts               ||--o{ skill_runs          : "runs (soft)"
+  skills              ||--o{ skill_runs          : "executed_as"
+  posts               ||--o{ generated_artifacts : "produces (soft)"
+  assets              ||--o{ asset_links         : "linked"
+  posts               ||--o{ asset_links         : "attaches (soft)"
+  replies             ||--o{ asset_links         : "attaches (soft)"
+  generated_artifacts ||--o{ asset_links         : "attaches"
+  assets              ||--o{ assets              : "rendition_of"

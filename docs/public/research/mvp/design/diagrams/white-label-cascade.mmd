@@ -1,0 +1,14 @@
+flowchart TB
+  ROOT[Root Admin\nsets system default] --> SYS[System default brand\nThready theme]
+  SYS --> ACC{Account has\nbranding override?}
+  ACC -- no --> USE1[Effective brand =\nThready default]
+  ACC -- yes --> AB[(account_branding\ncolors / logo / slogan)]
+  AB --> USE2[Effective brand =\nAccount override]
+  USE1 --> RESOLVE[Theme resolver\nemit :root CSS vars]
+  USE2 --> RESOLVE
+  RESOLVE --> MODE{Light / dark choice}
+  MODE -- system --> M1[prefers-color-scheme]
+  MODE -- explicit --> M2[data-theme / .dark]
+  M1 --> RENDER[Rendered UI +\ngenerated documents]
+  M2 --> RENDER
+  RENDER --> ATTR[Helix Development\nattribution persists in footer]

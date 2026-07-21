@@ -1,0 +1,20 @@
+flowchart TB
+  REQ[Request in] --> AUTHN{authn ok?}
+  AUTHN -- no --> E401[401 unauthenticated]
+  AUTHN -- yes --> AUTHZ{role floor + scopes + tenant ok?}
+  AUTHZ -- no --> E403[403 permission_denied]
+  AUTHZ -- yes --> VAL{request valid?}
+  VAL -- no --> E400[400 invalid_argument / 422 unprocessable]
+  VAL -- yes --> RL{under rate limit?}
+  RL -- no --> E429[429 rate_limited + Retry-After]
+  RL -- yes --> H[handler]
+  H --> NF{resource found?}
+  NF -- no --> E404[404 not_found]
+  NF -- yes --> PRE{precondition ok?}
+  PRE -- no --> E409[409 conflict / 412 failed_precondition]
+  PRE -- yes --> DEP{downstream ok?}
+  DEP -- no --> E503[503 unavailable / 504 deadline_exceeded]
+  DEP -- yes --> ERR{internal error?}
+  ERR -- yes --> E500[500 internal]
+  ERR -- no --> OK[2xx success]
+  E401 & E403 & E400 & E429 & E404 & E409 & E503 & E500 --> ENV[Error envelope: code, message, status, trace_id, details, retry_after]

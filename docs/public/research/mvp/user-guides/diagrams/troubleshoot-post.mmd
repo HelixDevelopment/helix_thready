@@ -1,0 +1,18 @@
+flowchart TB
+  START(["Post not processed / wrong result"]) --> Q1{Status?}
+  Q1 -->|queued forever| PAUSED{Processing paused?}
+  PAUSED -->|yes| RESUME["Resume: thready processing resume"]
+  PAUSED -->|no| WORKERS["Check workers/queue: thready processing status; scale THREADY_WORKERS"]
+  Q1 -->|failed| STEP{Which step failed?}
+  STEP -->|download| DLGAP["MeTube poll-only [GAP:5] / DL-Manager missing [GAP:4]<br/>→ retry step; check 3rd-party URLs"]
+  STEP -->|research/analyze| LLM["LLM/provider down → check HELIX_LLM_* + provider keys; circuit breaker"]
+  STEP -->|reply| MSG["Messenger session invalid → thready messenger login telegram"]
+  Q1 -->|processed but| WRONG{Symptom?}
+  WRONG -->|search irrelevant| EMB["Hash embedder [GAP:1]<br/>set HELIX_EMBEDDING_PROVIDER=llama; restart"]
+  WRONG -->|no OCR text| OCR["No OCR engine [GAP:2]<br/>OCR adapter [BUILD-NEW]; LLM-vision fallback only"]
+  WRONG -->|missing category| TAGS["Tag in a reply? verify complete-post assembly; reprocess"]
+  DLGAP --> DLQ{Still failing after 5 retries?}
+  LLM --> DLQ
+  MSG --> DLQ
+  DLQ -->|yes| INSPECT["Inspect DLQ (Admin) + logs (ClickHouse); open issue"]
+  DLQ -->|no| OK([Resolved])

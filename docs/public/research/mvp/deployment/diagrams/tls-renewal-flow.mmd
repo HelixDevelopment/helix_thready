@@ -1,0 +1,33 @@
+sequenceDiagram
+  participant T as systemd --user timer (twice daily)
+  participant R as renew.sh (engine.sh)
+  participant ACME as acme.sh → Let's Encrypt CA
+  participant V as le_validate_cert (openssl)
+  participant B as le_backup_certs
+  participant H as deploy-hook.sh (atomic mv)
+  participant P as le_probe_url (LE_VALIDATE_URL)
+  participant Edge as Caddy edge (HUP reload)
+  T->>R: renew --config lets_encrypt.conf
+  R->>R: window check (LE_RENEW_DAYS)
+  alt outside renewal window
+    R-->>T: no-op (exit 0)
+  else inside window
+    R->>ACME: issue/renew (HTTP-01 webroot | DNS-01)
+    ACME-->>R: new cert staged in LE_CERT_DIR/.incoming
+    R->>V: validate new fullchain (dates, chain, key match)
+    alt invalid
+      V-->>R: fail → discard .incoming, keep current cert
+      R-->>T: error (served site untouched)
+    else valid
+      R->>B: snapshot current live cert → .backup
+      R->>H: atomic install (.incoming/*.pem → live) + LE_RELOAD_CMD
+      H->>Edge: podman kill -s HUP caddy
+      R->>P: HTTPS reachability probe (< 500?)
+      alt probe fails
+        R->>B: le_restore_certs(.backup) + reload again
+        R-->>T: die "rolled back to previous certificate"
+      else probe ok
+        R-->>T: success (new cert live)
+      end
+    end
+  end

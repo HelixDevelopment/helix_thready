@@ -1,0 +1,20 @@
+sequenceDiagram
+  actor AA as Account Admin
+  participant API as REST /v1
+  participant SYS as Thready System
+  participant HER as Herald (Telegram)
+  participant BG as BackgroundTasks queue
+  AA->>API: POST /v1/accounts/{id}/channels (invite link)
+  API->>SYS: onboard channel
+  SYS->>HER: join channel, resolve access_hash
+  HER-->>SYS: channel joined
+  SYS-->>API: 201 channel (status: recognizing)
+  SYS->>SYS: auto-recognize thread type
+  loop scheduled poll + post.received events
+    HER->>SYS: new posts (root + organic replies)
+    SYS->>BG: enqueue post (single-claim)
+    BG->>SYS: dispatch matching Skill(s)
+    SYS-->>API: emit post.processed (WS/SSE)
+  end
+  AA->>API: invite Standard Users
+  AA->>API: adjust retention / branding / skills

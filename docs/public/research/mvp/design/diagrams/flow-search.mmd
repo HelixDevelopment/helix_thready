@@ -1,0 +1,23 @@
+sequenceDiagram
+  actor U as User
+  participant W as Client
+  participant API as REST /v1/search
+  participant EMB as Embeddings (HelixLLM)
+  participant VEC as pgvector (vectordb)
+  participant REL as PostgreSQL (system of record)
+  U->>W: type query + scope/mode/filters
+  W->>API: POST /v1/search {q, mode, scope, filters}
+  alt semantic or hybrid
+    API->>EMB: embed(q)  (HELIX_EMBEDDING_PROVIDER=llama)
+    EMB-->>API: query vector
+    API->>VEC: ANN cosine top-k (ids + score)
+    VEC-->>API: [{source_id, kind, score}]
+  end
+  alt keyword or hybrid
+    API->>REL: full-text filter (type/channel/tag)
+    REL-->>API: candidate ids
+  end
+  API->>REL: hydrate rows by id (posts + generated docs)
+  REL-->>API: full records
+  API-->>W: ranked results (< 500ms SLO)
+  W-->>U: results → open Post/Asset

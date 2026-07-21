@@ -1,0 +1,25 @@
+%% Helix Thready — Root + organic-reply thread assembly
+%% Source of truth: helix_thready_research_request_final.md §3.1, request "IMPORTANT: To form full post"
+flowchart TB
+  subgraph Source["Telegram / Max channel"]
+    ROOT[Root post\nlink or text only]:::m
+    R1[Reply: #Research #Video]:::m
+    R2[Reply: organic human comment]:::m
+    SYS[Reply: Thready status reply]:::sys
+    R3[Reply: forwarded post + attachment]:::m
+  end
+  ROOT --> R1 --> R2 --> R3
+  ROOT --> SYS
+  subgraph TR["ThreadReader"]
+    ASM[Assemble root + organic replies]:::c
+    FILT[Exclude system replies\nby bot/user id]:::c
+    HASH[Union hashtags across chain]:::c
+    ATT[Extract attachments, forwards, links]:::c
+  end
+  ROOT & R1 & R2 & R3 --> ASM
+  SYS -. excluded .-> FILT
+  ASM --> FILT --> HASH --> ATT --> POST[(Complete Post\nposts + replies + hashtags)]
+  POST -->|post.received| BUS{{EventBus}}
+  classDef m fill:#124a63,stroke:#062634,color:#e6f6ff;
+  classDef sys fill:#7a2f2f,stroke:#3c1414,color:#ffecec;
+  classDef c fill:#1f6f43,stroke:#0c3b22,color:#eafff0;

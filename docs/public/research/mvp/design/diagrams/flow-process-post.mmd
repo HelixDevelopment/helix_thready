@@ -1,0 +1,22 @@
+flowchart TB
+  RCV[post.received event] --> CLAIM{BackgroundTasks\nsingle-claim\nrow/advisory lock}
+  CLAIM -- already claimed --> SKIP[skip: no double-process]
+  CLAIM -- claimed --> CTX[assemble full thread\nroot + organic replies]
+  CTX --> TAGS[extract + classify hashtags]
+  TAGS -->|absent/insufficient| IND[indirect determination\ntorrent/github/youtube]
+  TAGS --> DISPATCH[dispatch matching Skills\nadditive]
+  IND --> DISPATCH
+  DISPATCH --> ORDER["order: download &gt; convert &gt; analyze &gt; research &gt; reply"]
+  ORDER --> DL[download\nBoba/MeTube/DownloadMgr]
+  DL -->|callback| CONV[convert web ...-web]
+  CONV --> AN[analyze\nVision/OCR]
+  AN --> RES[deep research\nHelixLLM/agents]
+  RES --> EMB[embed + write pgvector\n+ CodeGraph]
+  EMB --> REPLY[status reply to post]
+  REPLY --> DONE[mark processed]
+  DL -. fail .-> RETRY{retry?\nbackoff+jitter max5}
+  RETRY -- yes --> DL
+  RETRY -- no --> DLQ[dead-letter + surface in UI]
+  ORDER -. progress .-> EVTS[processing.progress\n→ WS/SSE clients]
+  DONE --> EVTC[processing.completed → clients]
+  DLQ --> EVTF[processing.failed → clients]

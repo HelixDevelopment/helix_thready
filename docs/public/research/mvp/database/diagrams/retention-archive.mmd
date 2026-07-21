@@ -1,0 +1,18 @@
+%% Helix Thready — Retention resolution + archive lifecycle
+%% Default keep-indefinitely; per-account overrides may shorten (operator decision)
+flowchart TB
+  GLOBAL[Global default\nretention = keep-indefinitely\nset by Root Admin]
+  ACCT[Per-account override\naccounts.default_retention_days]
+  CHAN[Optional per-channel override\nchannels.retention_days]
+  RESOLVE{Effective retention\n= most-specific non-null}
+  GLOBAL --> RESOLVE
+  ACCT --> RESOLVE
+  CHAN --> RESOLVE
+  RESOLVE -->|indefinite| KEEP[Keep hot in primary partitions]
+  RESOLVE -->|N days elapsed| AGE[Partition age-out candidate]
+  AGE --> DETACH[DETACH PARTITION]
+  DETACH --> ARCHIVE[COPY to Parquet/SQL dump\n-> MinIO/S3 cold tier]
+  ARCHIVE --> DROP[DROP detached partition]
+  DETACH --> INDEX[Archive index row\narchived_partitions catalog]
+  ERASE[GDPR-aware erasure request] -.-> PURGE[Targeted delete + vector delete\n+ asset unlink/gc]
+  ASSETGC[Asset dedup + GC] -.-> Cold[(cold storage)]

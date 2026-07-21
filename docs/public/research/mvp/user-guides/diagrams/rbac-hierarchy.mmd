@@ -1,0 +1,14 @@
+flowchart TB
+  ROOT["Root Admin (exactly one)<br/>owns the whole system"]
+  ROOT -->|creates & edits| A1["Account: Acme"]
+  ROOT -->|creates & edits| A2["Account: Globex"]
+  ROOT -->|sets| GLOBAL["Global defaults:<br/>retention, MFA policy,<br/>white-label defaults, backup"]
+  A1 --> AA1["Account Admin(s)"]
+  A2 --> AA2["Account Admin(s)"]
+  AA1 -->|invite / manage| U1["Standard Users"]
+  AA1 -->|manage| CH1["Channels & Skills"]
+  AA1 -->|override| R1["Per-account retention & branding"]
+  U1 -->|consume| VIEW["Browse threads,<br/>search, download,<br/>re-process"]
+  U1 -.->|can create own| A3["New Account<br/>(user becomes its Admin)"]
+  ROOT -.->|can edit ANY| AA1
+  ROOT -.->|can edit ANY| U1

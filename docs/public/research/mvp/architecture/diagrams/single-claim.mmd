@@ -1,0 +1,19 @@
+%% Helix Thready — Idempotent single-claim per post under event storm
+%% Source of truth: helix_thready_research_request_final.md §3.3
+flowchart TB
+  E1[post.received #1]:::ev
+  E2[post.received #2 duplicate]:::ev
+  E3[post.received #3 duplicate]:::ev
+  E1 & E2 & E3 --> Q[BackgroundTasks.Enqueue\nidempotency_key = post_id]
+  Q --> DEDUP{unique task per post_id?\nINSERT ... ON CONFLICT DO NOTHING}
+  DEDUP -->|first wins| ROW[(background_tasks row\nstatus=pending)]
+  DEDUP -->|duplicates| DROP[no-op / ack]
+  ROW --> CLAIM[Worker Dequeue\nSELECT ... FOR UPDATE SKIP LOCKED]
+  CLAIM --> RUN[status=running\nheartbeat + progress]
+  RUN --> OK{success?}
+  OK -->|yes| DONE[status=completed\npublish post.processed]
+  OK -->|no| RETRY{attempt < max?}
+  RETRY -->|yes| BACKOFF[Requeue delay=exp backoff+jitter\nstatus=retrying]
+  BACKOFF --> ROW
+  RETRY -->|no| DLQ[MoveToDeadLetter\nstatus=dead_letter\npublish post.failed]
+  classDef ev fill:#7a4ea0,stroke:#3c2352,color:#f3e9ff;

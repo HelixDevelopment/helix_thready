@@ -1,0 +1,32 @@
+%% Helix Thready — End-to-end data flow (ingest → process → assets → index → serve)
+%% Source of truth: helix_thready_research_request_final.md §2.2, §3
+sequenceDiagram
+  autonumber
+  participant TG as Telegram/Max
+  participant HR as Herald/ThreadReader
+  participant PG as PostgreSQL (SoR)
+  participant BUS as EventBus (JetStream)
+  participant BG as BackgroundTasks
+  participant DISP as Skill Dispatch
+  participant DL as Download/Boba/MeTube
+  participant AS as Asset Service
+  participant SEM as Semantic (pgvector)
+  participant API as REST /v1 + WS
+
+  TG->>HR: poll + push trigger
+  HR->>HR: assemble root + organic replies
+  HR->>PG: persist complete post
+  HR->>BUS: post.received (idempotency_key=post_id)
+  BUS->>BG: durable consumer (at-least-once)
+  BG->>BG: single-claim (row lock)
+  BG->>DISP: hand claimed post
+  DISP->>DL: download stage (delegated)
+  DL-->>AS: standardized callback → store raw + …-web
+  AS->>PG: post↔asset links + checksum
+  DISP->>SEM: embed post + artifacts
+  SEM->>PG: hydrate refs (co-located)
+  DISP->>HR: status reply to source post
+  DISP->>BUS: post.processed
+  API-->>PG: reads (system of record)
+  API-->>SEM: /v1/search
+  BUS-->>API: real-time events (WS/SSE)

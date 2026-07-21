@@ -1,0 +1,12 @@
+flowchart TB
+  ROOT[Tier 1 Root Admin - role: root - only one] --> AA[Tier 2 Account Admin - role: account_admin]
+  AA --> USR[Tier 3 Standard User - role: user]
+  subgraph Enforcement["Per-request authorization"]
+    CRED[Credential: JWT claims sub/role/account_id/scopes OR API key scopes] --> ENF[policy enforcer: security/pkg/policy]
+    ROUTE[Route contract: x-required-roles + required scopes] --> ENF
+    ENF --> TEN{tenant match on account_id?}
+    TEN -- no --> DENY[403 permission_denied]
+    TEN -- yes --> SCOPE{role floor and scopes satisfied?}
+    SCOPE -- no --> DENY
+    SCOPE -- yes --> ALLOW[handler executes]
+  end

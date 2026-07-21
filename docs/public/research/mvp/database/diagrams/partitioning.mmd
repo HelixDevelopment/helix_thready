@@ -1,0 +1,24 @@
+%% Helix Thready — Time partitioning + read-replica topology for the Large-scale post volume
+flowchart TB
+  subgraph Primary["PostgreSQL 16 primary (writes)"]
+    direction TB
+    POSTS[posts — PARTITION BY RANGE posted_at]
+    P1[posts_2026_05]
+    P2[posts_2026_06]
+    P3[posts_2026_07]
+    PDEF[posts_default — safety-net; alerted on]
+    POSTS --> P1 & P2 & P3 & PDEF
+    REPL[replies — RANGE posted_at]
+    AUD[audit_log — RANGE created_at]
+    EVT[events — RANGE created_at]
+  end
+  PM[pg_partman / partition maintenance job\ncreate-ahead + detach-old]
+  PM -. "monthly create + detach" .-> POSTS & REPL & AUD & EVT
+  subgraph Replicas["Streaming read replicas"]
+    RR1[(replica-1\nsearch + read API)]
+    RR2[(replica-2\nanalytics / exports)]
+  end
+  Primary == "WAL streaming" ==> RR1 & RR2
+  API[REST /v1 read paths] --> RR1
+  ARCH[Archive job] -. "detach + COPY to MinIO/S3" .-> Cold[(cold storage\ndigital.vasic.storage)]
+  P1 -. "aged-out partition" .-> ARCH

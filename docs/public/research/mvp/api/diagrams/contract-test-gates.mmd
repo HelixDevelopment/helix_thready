@@ -1,0 +1,26 @@
+flowchart TB
+  subgraph Loop["Reproduce-first loop (per behaviour)"]
+    RED[Write failing RED test from the contract] --> IMPL[Implement handler/middleware]
+    IMPL --> GREEN[Same test asserts GREEN]
+    GREEN --> EXT[Extend to edge/negative cases]
+    EXT -.->|next behaviour| RED
+  end
+  EXT --> GATE[Local pre-tag full-suite retest - no server CI]
+  GATE --> T1[unit]
+  GATE --> T2[integration]
+  GATE --> T3[e2e]
+  GATE --> T4[full-automation - buf breaking + openapi-diff + roundtrip + check-no-handwritten]
+  GATE --> T5[security - authz/algorithm-confusion/HMAC/tenant]
+  GATE --> T6[DDoS - ratelimiter 429 flood]
+  GATE --> T7[scaling - cursor at 10k+/day]
+  GATE --> T8[chaos - kill JetStream/downstream to 503]
+  GATE --> T9[stress - event-storm single-claim]
+  GATE --> T10[performance - p95 < 150ms / search < 500ms]
+  GATE --> T11[benchmarking - middleware/serialize]
+  GATE --> T12[UI - client areas]
+  GATE --> T13[UX - client areas]
+  GATE --> T14[Challenges scenario bank]
+  GATE --> T15[HelixQA YAML bank + runtime evidence]
+  T1 & T2 & T3 & T4 & T5 & T6 & T7 & T8 & T9 & T10 & T11 & T14 & T15 --> DEC{all GREEN?}
+  DEC -- no --> RED
+  DEC -- yes --> TAG[cut THREADY-version tag - push all four upstreams]

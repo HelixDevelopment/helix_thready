@@ -1,0 +1,28 @@
+%% Helix Thready — C4 Level 1 (System Context)
+%% Source of truth: helix_thready_research_request_final.md §1.2, §2
+flowchart TB
+  OP([Operator / Root Admin]):::person
+  AA([Account Admin]):::person
+  U([Standard User]):::person
+
+  subgraph THREADY["Helix Thready — enterprise messenger-content processing system"]
+    CORE[Thready Core\ningest · process · index · serve]:::system
+  end
+
+  TG[[Telegram\nMTProto]]:::ext
+  MAX[[Max\nOneMe + Bot API]]:::ext
+  LLMC[[Cloud LLM fallback\nAnthropic · Google · DeepSeek]]:::ext
+  DL3[[Download targets\nYouTube · Torrents · HTTP/FTP/SMB]]:::ext
+
+  OP -->|configures channels, accounts, policy| CORE
+  AA -->|manages account + users| CORE
+  U -->|search, browse, trigger reprocess| CORE
+
+  CORE <-->|read threads / post status replies| TG
+  CORE <-->|read threads / post status replies| MAX
+  CORE -->|research / vision / embeddings fallback| LLMC
+  CORE -->|delegated media acquisition| DL3
+
+  classDef person fill:#B6E376,stroke:#2f5d0b,color:#12210a;
+  classDef system fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef ext fill:#e8eef2,stroke:#6b7b88,color:#1c2a33;

@@ -1,0 +1,18 @@
+flowchart TB
+  DEV[Author change\nATM-NNN workable item] --> RED[Write RED test first\nreproduce-first TDD]
+  RED --> IMPL[Implement until GREEN]
+  IMPL --> LOCAL{Local pre-commit hook}
+  LOCAL -->|go vet, gofmt, unit -race| U[Unit + race]
+  LOCAL -->|lint/format TS/Kotlin/Swift/Rust| L[Format + lint]
+  U --> AB[Anti-bluff paired-mutation gate\nmutation planted -> MUST FAIL]
+  L --> AB
+  AB -->|clean=exit0, mutation=exit99| SA[Static analysis\nSonarQube + Snyk]
+  SA --> QG{Quality gate}
+  QG -->|fail| DEV
+  QG -->|pass| REV[Independent AI review\nFable @ xhigh -> GO]
+  REV -->|iterate| DEV
+  REV -->|GO| PRETAG[Pre-tag full-suite retest\nall 15 types + Challenges + HelixQA]
+  PRETAG --> EVID[Runtime evidence collected\nscreenshots/logcat/video/trace]
+  EVID --> TAG[Tag PREFIX-version\nmerge-onto-latest-main, no force-push]
+  TAG --> PUSH[Fan-out to 4 upstreams\nGitHub/GitLab/GitFlic/GitVerse]
+  PUSH --> DEPLOY[deployment area\nrootless Podman Compose]

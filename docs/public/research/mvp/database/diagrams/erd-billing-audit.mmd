@@ -1,0 +1,80 @@
+%% Helix Thready — Events, Billing/Metering & Audit domain ERD
+%% Subscription + metered billing from day one (operator decision); append-only audit
+erDiagram
+  events {
+    uuid  id PK
+    uuid  account_id "soft ref -> accounts.id (partitioned; no DB FK)"
+    text  type "post.received|processing.done|..."
+    text  scope "one_time|sticky"
+    uuid  entity_id "sticky last-value key"
+    jsonb payload
+    bool  invalidated
+    timestamptz created_at "PARTITION KEY"
+  }
+  event_subscriptions {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  user_id FK
+    text  pattern "subject filter"
+    text  transport "ws|sse|webhook"
+    text  endpoint
+    timestamptz created_at
+  }
+  plans {
+    uuid  id PK
+    text  code UK "free|pro|enterprise"
+    jsonb limits
+    numeric price_cents
+    text  interval "month|year"
+  }
+  subscriptions {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  plan_id FK
+    text  status "trialing|active|past_due|canceled"
+    timestamptz current_period_start
+    timestamptz current_period_end
+    timestamptz created_at
+  }
+  usage_records {
+    uuid  id PK
+    uuid  account_id FK
+    text  metric "posts_processed|assets_bytes|llm_tokens|searches"
+    numeric quantity
+    timestamptz window_start
+    timestamptz window_end
+    bool  billed
+  }
+  invoices {
+    uuid  id PK
+    uuid  account_id FK
+    uuid  subscription_id FK
+    numeric amount_cents
+    text  currency
+    text  status "open|paid|void"
+    timestamptz issued_at
+    timestamptz period_start
+    timestamptz period_end
+  }
+  audit_log {
+    uuid  id PK
+    uuid  account_id "soft ref -> accounts.id (partitioned; no DB FK)"
+    uuid  actor_user_id "soft ref -> users.id (append-only)"
+    text  action
+    text  target_type
+    uuid  target_id
+    inet  ip
+    jsonb metadata
+    timestamptz created_at "PARTITION KEY"
+  }
+
+  accounts ||--o{ events              : "emits"
+  accounts ||--o{ event_subscriptions : "subscribes"
+  users    ||--o{ event_subscriptions : "owns"
+  plans    ||--o{ subscriptions       : "sold_as"
+  accounts ||--o{ subscriptions       : "billed_by"
+  subscriptions ||--o{ invoices        : "charged_on"
+  accounts ||--o{ usage_records       : "meters"
+  accounts ||--o{ invoices            : "invoiced"
+  accounts ||--o{ audit_log           : "audited"
+  users    ||--o{ audit_log           : "acts"

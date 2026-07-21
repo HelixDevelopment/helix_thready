@@ -1,0 +1,16 @@
+flowchart TD
+  START([deploy.sh --env prod --version THREADY-1.4.0]) --> PRE{Pre-flight}
+  PRE -->|secrets present, .env chmod 600, images pulled| REC[Record current state:\nrunning image digests + DB migration version]
+  PRE -->|missing secret / bad perms| ABORT1([abort — no change])
+  REC --> MIG[DB migrate UP\nmigration.Runner expand phase]
+  MIG -->|migrate error| RBMIG[migration.Runner Rollback]
+  RBMIG --> ABORT2([abort — DB restored])
+  MIG --> UP[BootManager.BootAll\npodman-compose up -d new digests]
+  UP --> GATE{Health gate\nCheckAll required services}
+  GATE -->|all Required healthy\n+ anti-bluff assertions pass| PROBE{Edge probe\nLE_VALIDATE_URL 200?}
+  GATE -->|a Required unhealthy| RB
+  PROBE -->|yes| DONE([promote: mark THREADY-1.4.0 live])
+  PROBE -->|no| RB[ROLLBACK]
+  RB --> RB1[BootManager down new + up previous digests]
+  RB1 --> RB2[migration.Runner Rollback contract phase if needed]
+  RB2 --> RBDONE([restored to previous release + summary])

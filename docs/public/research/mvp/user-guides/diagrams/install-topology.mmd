@@ -1,0 +1,32 @@
+flowchart TB
+  subgraph HOST["Hetzner host (one machine, user: thready)"]
+    subgraph PROXY["Reverse proxy + Let's Encrypt"]
+      RP[HTTP/3 reverse proxy]
+    end
+    subgraph DEV["dev.thready.hxd3v.com stack"]
+      DAPI[Thready API dev] --- DDB[(Postgres+pgvector dev)]
+      DAPI --- DNATS[[NATS JetStream dev]]
+    end
+    subgraph STA["sta.thready.hxd3v.com stack"]
+      SAPI[Thready API staging] --- SDB[(Postgres+pgvector sta)]
+    end
+    subgraph PROD["thready.hxd3v.com stack"]
+      PAPI[Thready API prod] --- PDB[(Postgres+pgvector prod)]
+      PAPI --- PNATS[[NATS JetStream prod]]
+      PAPI --- PMINIO[(MinIO/S3 assets)]
+    end
+    RP --> DAPI
+    RP --> SAPI
+    RP --> PAPI
+  end
+  subgraph EXT["Shared / external services"]
+    LLM[HelixLLM llama.cpp<br/>32GB Nvidia workstation or GPU node]
+    BOBA[Boba torrents]
+    METUBE[MeTube video]
+    TG[(Telegram MTProto)]
+  end
+  PAPI -.-> LLM
+  PAPI -.-> BOBA
+  PAPI -.-> METUBE
+  PAPI -.-> TG
+  CLIENT([Web / CLI / TUI / Mobile / SDK]) --> RP

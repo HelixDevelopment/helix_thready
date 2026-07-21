@@ -1,0 +1,24 @@
+%% Helix Thready — Lumen-style semantic search (embeddings → pgvector → rag)
+%% Source of truth: helix_thready_research_request_final.md §15, §18/semantic, §2.1.1
+flowchart TB
+  subgraph Ingest["Index path (write)"]
+    SRC[Source: posts + generated materials\nvideo transcripts, research docs, OCR, code]:::c
+    CHUNK[Chunk\nAST/tree-sitter code · Markdown/section docs]:::c
+    EMB[Embeddings\nHelixLLM /v1/embeddings\nHELIX_EMBEDDING_PROVIDER=llama]:::c
+    VEC[(pgvector\nvectordb cosine <=>)]:::db
+  end
+  SRC --> CHUNK --> EMB --> VEC
+  EMB -. FAIL LOUD if HashEmbedder .-> GUARD[startup guard\nrefuse hash embedder in search ctx]:::warn
+
+  subgraph Query["Query path (read)"]
+    Q[/v1/search query]:::c --> QEMB[Embed query same model]:::c
+    QEMB --> ANN[ANN search top-k\npgvector index]:::c
+    ANN --> RR[Rerank bge-small-en-v1.5]:::c
+    RR --> HYD[Hydrate ids from relational SoR]:::c
+    HYD --> RAG[rag: assemble context]:::c
+    RAG --> ANS[answer / results + citations]:::c
+  end
+  VEC --> ANN
+  classDef c fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
+  classDef db fill:#124a63,stroke:#062634,color:#e6f6ff;
+  classDef warn fill:#7a2f2f,stroke:#3c1414,color:#ffecec;

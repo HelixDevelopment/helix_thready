@@ -1,0 +1,39 @@
+flowchart TB
+  subgraph Load["Load generators (sta. tier)"]
+    K6[k6\nSLO thresholds + ramp]
+    VEG[vegeta\nDDoS flood]
+    BENCH[go test -bench\n+ benchstat baseline]
+  end
+  subgraph SUT["System under test (production-like)"]
+    API[REST /v1 HTTP-3\n+ ratelimiter]
+    WS[WebSocket/SSE hub]
+    PROC[Processing Engine\nBackgroundTasks x32]
+    PG[(Postgres + pgvector\npartitioned + replica)]
+    NATS[NATS JetStream\ncluster]
+    MINIO[(MinIO/S3\n50TB assets)]
+  end
+  K6 --> API
+  K6 --> WS
+  VEG --> API
+  BENCH --> PROC
+  API --> PG
+  API --> NATS
+  PROC --> PG
+  PROC --> NATS
+  PROC --> MINIO
+  subgraph Chaos["Chaos / DR injectors"]
+    KILL[podman kill/pause]
+    NETEM[tc netem\nlatency/loss/partition]
+    PITR[DB PITR restore\nhourly incrementals]
+  end
+  KILL -.-> PROC & PG & NATS
+  NETEM -.-> NATS & API
+  PITR -.-> PG
+  subgraph Obs["Observability"]
+    PROM[Prometheus]
+    PPROF[pprof]
+    CH[(ClickHouse\nlatency histograms)]
+  end
+  SUT --> PROM & CH
+  PROC --> PPROF
+  PROM --> GATE{SLO gate\np95<150ms, search<500ms, page<1.5s}

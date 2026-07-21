@@ -1,0 +1,18 @@
+stateDiagram-v2
+  [*] --> SignedIn
+  SignedIn --> AccountList: open account switcher
+  AccountList --> CreateAccount: create (becomes Admin)
+  AccountList --> SwitchActive: select membership
+  SwitchActive --> AdminHome: role Account Admin or Root
+  SwitchActive --> UserHome: Standard User
+  AdminHome --> InviteUser: invite (role per account)
+  InviteUser --> PendingInvite: email/OTP sent
+  PendingInvite --> SignedIn: invitee accepts
+  AdminHome --> EditBranding: white-label
+  EditBranding --> AAValidate: save
+  AAValidate --> EditBranding: 422 accent fails AA
+  AAValidate --> AdminHome: 200 saved (audit-logged)
+  AdminHome --> Billing: plan + metered usage
+  AdminHome --> AuditLog: review actions
+  AdminHome --> [*]
+  UserHome --> [*]

@@ -1,0 +1,15 @@
+flowchart LR
+  subgraph IN["Internal container ports (same in every env)"]
+    P1["postgres 5432"]
+    P2["nats 4222"]
+    P3["minio 9000"]
+    P4["api 8443"]
+  end
+  PP["port_prefix.Exposed(prefix, internal, taken)\nband = prefix*1000 .. prefix*1000+999\ncollision → linear probe, always <= 65535"]
+  IN --> PP
+  PP --> DEV["dev band 60xxx\n5432→60432 4222→60222\n9000→60000 8443→60443"]
+  PP --> STA["sta band 61xxx\n5432→61432 4222→61222\n9000→61000 8443→61443"]
+  PP --> PROD["prod band 62xxx\n5432→62432 4222→62222\n9000→62000 8443→62443"]
+  DEV --> REG["serviceregistry + discovery + mdns\nintra-stack lookup / health"]
+  STA --> REG
+  PROD --> REG

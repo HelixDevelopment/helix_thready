@@ -1,0 +1,57 @@
+%% Helix Thready — Tenancy & Identity domain ERD
+%% Three-tier RBAC: Root Admin / Account Admin / Standard User (final request §6)
+erDiagram
+  accounts {
+    uuid   id PK
+    text   slug UK
+    text   name
+    jsonb  branding
+    int    default_retention_days
+    text   status
+    uuid   created_by FK
+    timestamptz created_at
+  }
+  users {
+    uuid   id PK
+    citext email UK
+    text   password_hash
+    text   display_name
+    bytea  totp_secret_enc
+    bool   mfa_enabled
+    bool   is_root
+    text   status
+    timestamptz created_at
+  }
+  roles {
+    uuid   id PK
+    uuid   account_id FK "null = system role"
+    text   name
+    text   tier "root|account_admin|user"
+    text   description
+  }
+  permissions {
+    uuid   id PK
+    text   code UK "e.g. post.read"
+    text   description
+  }
+  role_permissions {
+    uuid   role_id PK,FK
+    uuid   permission_id PK,FK
+  }
+  memberships {
+    uuid   id PK
+    uuid   user_id FK
+    uuid   account_id FK
+    uuid   role_id FK
+    text   status "active|invited|revoked"
+    uuid   invited_by FK
+    timestamptz created_at
+  }
+
+  accounts     ||--o{ memberships       : "has"
+  users        ||--o{ memberships       : "joins"
+  roles        ||--o{ memberships       : "grants"
+  accounts     ||--o{ roles             : "scopes"
+  roles        ||--o{ role_permissions  : "bundles"
+  permissions  ||--o{ role_permissions  : "in"
+  users        ||--o{ accounts          : "created"

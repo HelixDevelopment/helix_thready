@@ -1,0 +1,23 @@
+flowchart TB
+  subgraph Host["Single Hetzner dedicated host — user: thready (rootless)"]
+    EDGE["Edge reverse proxy\nCaddy 2 (rootless Podman)\n:80 + :443 (TCP/UDP HTTP-3)\nTLS certs from lets_encrypt"]
+    subgraph DEV["dev stack — port band 60xxx"]
+      DAPI[thready-api dev] --- DDATA[(postgres+pgvector / nats / minio / redis)]
+    end
+    subgraph STA["sta stack — port band 61xxx"]
+      SAPI[thready-api sta] --- SDATA[(postgres+pgvector / nats / minio / redis)]
+    end
+    subgraph PROD["prod stack — port band 62xxx"]
+      PAPI[thready-api prod] --- PDATA[(postgres+pgvector / nats / minio / redis)]
+    end
+    LE["lets_encrypt\nissue/renew/rotate\nsystemd --user timer"]
+    BK["backup+DR\ndaily full + hourly WAL\nsnapshot to secondary"]
+  end
+  DNS["DNS: *.thready.hxd3v.com"] --> EDGE
+  EDGE -->|Host: dev.| DAPI
+  EDGE -->|Host: sta.| SAPI
+  EDGE -->|Host: thready.| PAPI
+  LE -.reload HUP.-> EDGE
+  GPU["HelixLLM GPU node / workstation\n(external endpoint)"] -. discovery/endpoint .- PROD
+  BK -.-> DDATA & SDATA & PDATA
+  SEC["Secrets: .env + api_keys.sh\nruntime-load-only, chmod 600"] -.-> DEV & STA & PROD

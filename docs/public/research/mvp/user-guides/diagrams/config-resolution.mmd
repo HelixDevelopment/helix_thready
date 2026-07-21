@@ -1,0 +1,24 @@
+flowchart TB
+  START([Process start]) --> ENVFILE{".env in CWD<br/>or THREADY_ENV_FILE?"}
+  ENVFILE -->|found| LOADENV[Load .env<br/>KEY=VALUE lines]
+  ENVFILE -->|missing| SKIP1[SKIP silently]
+  LOADENV --> SHELL
+  SKIP1 --> SHELL
+  SHELL{"~/.bashrc / ~/.zshrc<br/>exported vars?"}
+  SHELL -->|exported| LOADSHELL[Inherit from process env]
+  SHELL -->|none| SKIP2[SKIP silently]
+  LOADSHELL --> KEYS
+  SKIP2 --> KEYS
+  KEYS{"$HOME/api_keys.sh?"}
+  KEYS -->|present| SOURCEKEYS[Source secrets<br/>API keys / tokens]
+  KEYS -->|missing| SKIP3[SKIP — never error]
+  SOURCEKEYS --> PRIV
+  SKIP3 --> PRIV
+  PRIV{"Private repo<br/>secrets mount?"}
+  PRIV -->|mounted| LOADPRIV[Load sealed values]
+  PRIV -->|none| SKIP4[SKIP]
+  LOADPRIV --> MERGE
+  SKIP4 --> MERGE
+  MERGE[Merge with precedence<br/>process-env wins over .env] --> VALIDATE{Required<br/>vars present?}
+  VALIDATE -->|yes| RUN([Service runs])
+  VALIDATE -->|no| FAILLOUD[Fail loudly<br/>list missing keys]

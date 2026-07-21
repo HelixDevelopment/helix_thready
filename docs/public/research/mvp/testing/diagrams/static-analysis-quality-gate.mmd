@@ -1,0 +1,19 @@
+flowchart TB
+  SRC[Working tree\nGo / TS / Kotlin / Swift / Rust / SQL] --> HOOK{pre-commit / pre-push hook}
+  HOOK --> SCAN[sonar-scanner CLI\non PATH]
+  HOOK --> SNYK[snyk test + snyk code]
+  subgraph Server["SonarQube server (rootless Podman)"]
+    SQ[sonarqube:community\nvia digital.vasic.containers]
+    PG[(sonar db\npostgres)]
+    SQ --- PG
+  end
+  SCAN --> SQ
+  SQ --> QG{Quality Gate\nSonar Way + custom}
+  SNYK --> SEV{severity >= high?}
+  QG -->|fail| FIX[fix / waive] --> HOOK
+  SEV -->|yes| FIX
+  QG -->|pass| REV
+  SEV -->|no| REV[Independent AI review\nFable @ xhigh -> GO]
+  REV --> PRETAG[pre-tag full-suite retest]
+  CRON[daily scheduled scan\nsystemd timer] --> SNYK
+  CRON --> SCAN

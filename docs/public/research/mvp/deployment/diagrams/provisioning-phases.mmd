@@ -1,0 +1,29 @@
+flowchart TD
+  subgraph ROOT["Phase A — as root (one time)"]
+    A1[Update OS + install podman, podman-compose, rclone, openssl, curl, pandoc, weasyprint]
+    A2[Create user 'thready' home /home/thready]
+    A3[Set /etc/subuid /etc/subgid for thready]
+    A4[sysctl net.ipv4.ip_unprivileged_port_start=80]
+    A5[Harden SSH: key-only, no root login]
+    A6[Firewall nftables: allow 22,80,443; deny rest]
+    A7[loginctl enable-linger thready]
+    A1-->A2-->A3-->A4-->A5-->A6-->A7
+  end
+  subgraph USER["Phase B — as thready (rootless)"]
+    B1[SSH key-in as thready]
+    B2[Clone helix_thready + submodules containers, lets_encrypt]
+    B3[Place .env + api_keys.sh chmod 600 from private repo]
+    B4[podman login registries if needed]
+    B5[lets_encrypt setup.sh --install acme.sh rootless]
+    B6[Install systemd --user timers: le-renew-{dev,sta,prod}]
+    B1-->B2-->B3-->B4-->B5-->B6
+  end
+  subgraph FIRST["Phase C — first deploy"]
+    C1[Issue certs STAGING then PROD per subdomain]
+    C2[deploy-stack / thready-deploy.sh per env]
+    C3[Health gate + edge probe]
+    C4[Enable stack systemd --user units]
+    C1-->C2-->C3-->C4
+  end
+  A7-->B1
+  B6-->C1

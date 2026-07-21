@@ -1,0 +1,16 @@
+sequenceDiagram
+  actor U as Client
+  participant API as REST /v1 (middleware.BearerToken)
+  participant AUTH as User Service (digital.vasic.auth)
+  participant KMS as security key store + JWKS
+  U->>API: POST /v1/auth/login {email, password, totp?}
+  API->>AUTH: verify Argon2id hash + TOTP (admin tiers mandatory)
+  AUTH->>KMS: sign access (RS256/EdDSA, 15m) + refresh (7d)
+  AUTH-->>U: 200 {access_token, refresh_token, token_type, expires_in}
+  U->>API: GET /v1/... Authorization: Bearer <access>
+  API->>KMS: fetch JWKS (cached), verify sig + iss/aud/exp + scopes
+  API-->>U: 200 | 401 unauthenticated | 403 permission_denied
+  U->>API: POST /v1/auth/refresh {refresh_token}
+  API->>AUTH: validate refresh, rotate, revoke old (token store)
+  AUTH-->>U: 200 new {access_token, refresh_token}
+  Note over U,API: API keys (sk-... scoped) and OAuth2 external linking are alternate credential paths into the same RBAC enforcer.

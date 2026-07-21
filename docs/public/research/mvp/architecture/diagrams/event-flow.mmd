@@ -1,0 +1,25 @@
+%% Helix Thready — Event lifecycle (one-time vs sticky, durable replay)
+%% Source of truth: helix_thready_research_request_final.md §2.1.3, §3.4
+sequenceDiagram
+  participant HR as Herald ThreadReader
+  participant BUS as EventBus (NATS JetStream)
+  participant BG as BackgroundTasks
+  participant PROC as Skill Dispatch
+  participant EBS as Event Bus Service
+  participant CL as Client (WS/SSE)
+
+  HR->>BUS: Publish post.received (JetStream, persisted)
+  BUS->>BG: durable pull consumer (at-least-once)
+  BG->>BG: single-claim (row lock) — dedupe
+  BG->>PROC: hand claimed post
+  PROC->>BUS: Publish post.processing.progress (one-time)
+  PROC->>BUS: Publish post.state (STICKY, last-value)
+  PROC->>BUS: Publish post.processed (one-time)
+  Note over BUS: sticky subject retains last post.state per post_id
+  CL->>EBS: Subscribe(account, types)
+  EBS->>BUS: durable consumer per client
+  BUS-->>EBS: replay missed + live events
+  EBS-->>CL: fan-out over WebSocket/SSE
+  CL->>EBS: reconnect after drop
+  EBS->>BUS: resume durable consumer (replay backlog)
+  PROC->>BUS: Publish post.state.invalidate (on reprocess)
