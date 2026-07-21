@@ -1,0 +1,29 @@
+%% Helix Thready — where each integrity guarantee is enforced (DB vs application vs trigger)
+flowchart TB
+  subgraph APP["Application layer (Go services)"]
+    RD[Thread reader\nroot post + thread in ONE tx]
+    PE[Processing engine\nsingle-claim FOR UPDATE SKIP LOCKED]
+    SV[Search service\ntenant filter over-fetch]
+  end
+  subgraph DB["PostgreSQL — declarative guarantees"]
+    FK[Real FKs\nCASCADE / RESTRICT / SET NULL]
+    UQ[UNIQUE natural keys\ndedup + idempotency]
+    CK[CHECK domains\nenum-like TEXT + ranges]
+    PK[Composite PKs\n(id, posted_at) on firehoses]
+  end
+  subgraph TRG["Trigger layer (optional / enforced)"]
+    UPD[trg_*_updated\nmaintain updated_at]
+    AO[audit append-only\nblock UPDATE/DELETE]
+    VAL[validate soft-ref\nposts/replies existence]
+  end
+  RD --> FK & UQ
+  PE --> PK
+  SV --> UQ
+  FK --> DBOK[(referential integrity)]
+  UQ --> DBOK
+  CK --> DBOK
+  PK --> DBOK
+  UPD --> DBOK
+  AO --> DBOK
+  VAL -. "opt-in per env (ATM-DB-004)" .-> DBOK
+  APP -. "soft refs into partitioned tables\n(no DB FK; app + VAL enforce)" .-> TRG

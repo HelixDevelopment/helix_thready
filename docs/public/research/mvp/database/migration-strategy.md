@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (database) | Initial: migration.Runner contract, expand-contract, loader, rollback, CI-less enforcement, verified caveats |
+| 2 | 2026-07-22 | swarm (database, Pass 3) | Shipped runnable `0002`–`0007` migration files (all six previously roadmap-only); reconciled the roadmap table to actual file contents; documented the non-transactional apply path for `0007` and the full-list bootstrap-vs-online index recipe |
 
 ## Table of Contents
 
@@ -184,18 +185,27 @@ sequenceDiagram
   Dev-->>Run: on failure -> RollbackWith(version, migs)
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** A change is split across
-several small migrations. In **expand**, `0002` adds only backward-compatible things — a
-nullable column, a new table, or a new index — so the still-running N-1 services are
-unaffected; the new column/table is invisible to them. The runner applies it atomically and
-records it. We then deploy version N of the services, which **dual-write** the old and new
-shapes so both readers stay correct. In **migrate**, `0003` backfills existing rows in
-idempotent batches (safe to re-run, chunked to avoid long locks). Once N is deployed
-everywhere and nothing reads the old shape, **contract** `0004` removes it — drops the old
-column or tightens a constraint to `NOT NULL`. Each phase is a separate reviewable migration;
-if any fails, `RollbackWith` reverses it using its `Down` SQL. This is why our enum-like
-columns are `TEXT + CHECK` (widening a CHECK is an expand-only `ALTER`, not a type rewrite)
-and why the firehose tables avoid incoming FKs (adding/removing them online is costly).
+**Explanation (for readers/models that cannot see the diagram).** The sequence diagram has
+four participants — the change **Author** (an `ATM-NNN` work item), the `migration.Runner`,
+**PostgreSQL**, and the running **Services** (both version N-1 and N during a rollout) — and
+walks them through the three phases separated by the `Note over` bands.
+
+In **expand**, the author applies a migration (here labelled `0002_expand`) that adds only
+backward-compatible things — a nullable column, a new table, or a new index — so the
+still-running N-1 services are unaffected; the new column/table is invisible to them. The
+runner applies it inside its `BEGIN; Up; INSERT schema_migrations; COMMIT` transaction and
+records the version, and the diagram's side-note flags that any `CONCURRENTLY` step must run
+*outside* that transaction wrapper (§8.2). Version N of the services is then deployed and
+**dual-writes** the old and new shapes so both readers stay correct while the fleet is mixed.
+
+In **migrate**, a separate migration backfills existing rows in idempotent batches — safe to
+re-run and chunked to avoid long locks. Only once N is deployed everywhere and nothing reads
+the old shape does **contract** remove it: dropping the old column or tightening a constraint
+to `NOT NULL`. Each phase is its own reviewable migration, and the final dashed edge shows the
+failure path — `RollbackWith(version, migs)` reverses a phase using its `Down` SQL. This
+three-phase discipline is why our enum-like columns are `TEXT + CHECK` (widening a CHECK is an
+expand-only `ALTER`, not a type rewrite) and why the firehose tables avoid incoming FKs
+(adding or removing them online is costly).
 
 Concrete example — widening a category domain without a rewrite:
 
@@ -295,19 +305,36 @@ in production. None of them is papered over.
 
 ## 9. Migration roadmap (0001–0007)
 
-| Version | Name | Phase | Transactional? | Notes |
-|---------|------|-------|----------------|-------|
-| 0001 | `init` | expand | yes | tenancy + ingestion + processing core (shipped example) |
-| 0002 | `classification` | expand | yes | hashtags, categories, join tables |
-| 0003 | `assets` | expand | yes | assets, asset_links, generated_artifacts |
-| 0004 | `billing` | expand | yes | plans, subscriptions, usage_records, invoices |
-| 0005 | `events_audit` | expand | yes | events (partitioned), event_subscriptions, audit_log (partitioned) |
-| 0006 | `vector_collections` | expand | yes | vectordb_* tables (from schema-vector.sql) |
-| 0007 | `secondary_indexes` | expand | **no (CONCURRENTLY)** | all secondary + FTS + ANN indexes; non-transactional path (§8.2) |
+All seven migrations are now shipped as reviewable `.sql` files under
+[`migrations/`](./migrations/) (Pass 3 added `0002`–`0007`; `0001` shipped in Wave 1). Each
+mirrors the corresponding domain in [`schema-relational.sql`](./schema-relational.sql) /
+[`schema-vector.sql`](./schema-vector.sql) exactly.
+
+| Version | File | Phase | Transactional? | Contents |
+|---------|------|-------|----------------|----------|
+| 0001 | [`0001_init.sql`](./migrations/0001_init.sql) | expand | yes | accounts, users, roles, permissions, role_permissions, memberships, messengers, messenger_accounts, channels, threads, posts (partitioned), replies (partitioned), processing_state + hot claim index |
+| 0002 | [`0002_classification.sql`](./migrations/0002_classification.sql) | expand | yes | hashtags, categories, hashtag_categories, post_hashtags, reply_hashtags, post_categories |
+| 0003 | [`0003_assets.sql`](./migrations/0003_assets.sql) | expand | yes | skills, skill_runs, generated_artifacts, assets, asset_links (skills/artifacts precede assets because `asset_links` has a real FK into `generated_artifacts`) |
+| 0004 | [`0004_billing.sql`](./migrations/0004_billing.sql) | expand | yes | plans, subscriptions, usage_records, invoices |
+| 0005 | [`0005_events_audit.sql`](./migrations/0005_events_audit.sql) | expand | yes | events (partitioned), event_subscriptions, audit_log (partitioned), archived_partitions |
+| 0006 | [`0006_vector_collections.sql`](./migrations/0006_vector_collections.sql) | expand | yes | vectordb_posts/replies/assets/generated (tables only — matches the adapter's DDL; **no** ANN index here) |
+| 0007 | [`0007_secondary_indexes.sql`](./migrations/0007_secondary_indexes.sql) | expand | **no (CONCURRENTLY)** | all relational secondary indexes + FTS (`body_fts` + GIN) + vector ANN (HNSW) + metadata GIN; applied by the non-transactional deploy step (§8.2) |
+
+**Why the split is exactly this.** `0001`–`0006` are pure DDL with no bind parameters, so each
+runs cleanly inside the runner's single `applyOne` transaction (multi-statement `Up` via the
+pgx simple protocol). `0007` is isolated precisely because `CREATE INDEX CONCURRENTLY` cannot
+run in a transaction (§8.2 / `ATM-DB-002`); it carries **every** index that is not a
+structural PK/UNIQUE (those ship inline in `0001`–`0006`) plus the FTS generated column. The
+`0007` header documents the bootstrap-vs-online distinction for partitioned parents (plain
+`CREATE INDEX` on empty parents at init; the ON ONLY + per-partition `ATTACH` recipe from
+[indexing.md §7](./indexing.md#7-index-maintenance-on-partitioned-tables) for a populated
+deployment).
 
 Small, single-purpose migrations keep each one reviewable by the independent AI review gate
 (Fable @ xhigh) and cheap to roll back. Partition-maintenance DDL (new monthly partitions)
 is **not** a migration — it is the scheduled job in [partitioning.md](./partitioning.md).
+Every migration ships a real `Down`; the from-empty apply-then-rollback of the whole list on
+both drivers is the pre-tag gate in §10.
 
 ---
 

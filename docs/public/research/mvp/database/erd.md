@@ -7,6 +7,7 @@
   Author          : Helix Thready documentation swarm (database)
   Related         : ./index.md ./schema-relational.sql ./schema-vector.sql
                     ./indexing.md ./partitioning.md ./retention-archive.md
+                    ./constraints-and-integrity.md ./migration-strategy.md
                     ../architecture/index.md ../api/index.md
 -->
 
@@ -16,6 +17,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (database) | Initial full ERD: overview + 5 domain diagrams + entity dictionary |
 | 2 | 2026-07-21 | reviewer (database) | Domain C/D diagrams: drew the soft-ref edges (no orphan `processing_state`/`events`/`audit_log` boxes); labelled soft vs hard FKs consistent with §9 and the `.mmd` siblings |
+| 3 | 2026-07-22 | swarm (database, Pass 3) | Cross-linked the new [`constraints-and-integrity.md`](./constraints-and-integrity.md) (FK on-delete matrix, CHECK catalogue, soft-ref validation-trigger DDL) and the shipped `0001`–`0007` migrations from §9 |
+| 4 | 2026-07-22 | critic (database, Pass 4) | Diagram↔schema parity: added `is_encrypted` to the Domain-C `assets` box (already in the `.mmd` sibling and referenced by the prose + schema) |
 
 ## Table of Contents
 
@@ -394,6 +397,7 @@ erDiagram
     bigint size_bytes
     text  storage_key
     bool  is_web_rendition
+    bool  is_encrypted
     text  sensitivity
   }
   asset_links {
@@ -586,19 +590,31 @@ flowchart LR
 ```
 
 **Explanation (for readers/models that cannot see the diagram).** This resolves the
-progress-doc inconsistency #1 (final request §2.1.1). The relational tables on the left are
-the **system of record**. For each embeddable row — a post, a reply, an asset's extracted
-text, or a generated artifact — `digital.vasic.embeddings` computes a float32 vector via
-HelixLLM's `/v1/embeddings` (`voyage-code-3` at 1024 dims or `jina-embeddings-v2-base-code`
-at 768 dims) and upserts it into the matching `vectordb_*` collection. Each vector row's
-`id` is the relational UUID (optionally suffixed `:chunk` for chunked documents) and its
-`metadata` JSONB always carries `source_id`, `kind`, and `account_id`. A `/v1/search` query
-embeds the query text, runs a cosine (`<=>`) nearest-neighbour scan against the ANN index,
-gets back `(id, score)` pairs, and the API hydrates the full rows from the relational
-store. Because pgvector lives in the same PostgreSQL instance, no cross-datastore join is
-needed. The executable DDL, ANN indexes, and the anti-bluff note about HelixLLM's default
-non-semantic `HashEmbedder` are in [`schema-vector.sql`](./schema-vector.sql). `[GAP:
-vectordb-3.1]` `[GAP: HelixLLM-1]`
+progress-doc inconsistency #1 (final request §2.1.1). The relational tables on the left —
+`posts.id`, `replies.id`, `assets.id`, `generated_artifacts.id` — are the **system of
+record**. Nothing in the vector store is authoritative; the four `vectordb_*` collections on
+the right hold only embeddings that *point back* at those relational rows. This one-directional
+"vectors reference rows, never the reverse" rule is what keeps the two stores consistent under
+deletes and re-embeds.
+
+For each embeddable row — a post, a reply, an asset's extracted text (OCR/caption/transcript),
+or a generated artifact — `digital.vasic.embeddings` computes a float32 vector via HelixLLM's
+`/v1/embeddings` (`voyage-code-3` at 1024 dims or `jina-embeddings-v2-base-code` at 768 dims)
+and upserts it into the matching collection. Each vector row's `id` is the relational UUID
+(optionally suffixed `:chunk` for chunked documents), and its `metadata` JSONB always carries
+`source_id`, `kind`, and `account_id` so the row can be traced home and scoped to a tenant.
+The `EMB` node in the diagram fans out to all four collections precisely because the same
+embedding pipeline feeds source content *and* generated materials — the "both posts and
+generated materials are indexed" requirement (final request §1.3, §19.1).
+
+A `/v1/search` query (the `Q` node) embeds the query text, runs a cosine (`<=>`)
+nearest-neighbour scan against the ANN index, gets back `(id, score)` pairs, and the API
+hydrates the full rows from the relational store — the `VEC → REL → Q` return path in the
+diagram. Because pgvector lives in the same PostgreSQL instance, no cross-datastore join is
+needed and there is no second database to keep in sync. The executable DDL, ANN indexes, the
+verified caveat that the adapter's `Search` applies no tenant filter, and the anti-bluff note
+about HelixLLM's default non-semantic `HashEmbedder` are all in
+[`schema-vector.sql`](./schema-vector.sql). `[GAP: vectordb-3.1]` `[GAP: HelixLLM-1]`
 
 ---
 
@@ -668,6 +684,14 @@ FKs referencing `posts(id, posted_at)`) is documented as an option in
 [partitioning.md](./partitioning.md) for deployments that prefer DB-enforced integrity over
 write throughput. `[OPEN: db-partition-fk]` — decide per environment; tracked as ATM item
 `ATM-DB-004`.
+
+Both hardening options — the composite FK **and** a lighter deferred `CONSTRAINT TRIGGER`
+that checks existence on insert (pruning to one partition via the denormalised
+`post_posted_at`) — are specified with runnable DDL in
+[`constraints-and-integrity.md §5`](./constraints-and-integrity.md#5-optional-validation-triggers-closing-atm-db-004),
+alongside the full CHECK-domain catalogue and the FK on-delete action matrix. The executable
+schema is delivered as the seven reviewable migrations
+[`0001`–`0007`](./migration-strategy.md#9-migration-roadmap-00010007).
 
 ---
 

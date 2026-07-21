@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft: reproduce-first RED skeletons for the `/v1` contract, mapped to the 15 mandated test types |
+| 2 | 2026-07-22 | swarm (API & SDKs) | Extended the anti-bluff maturity-annotation negative control to the new `/v1/event-sinks` build_new operations; the event-bus §chaos skeletons now target the verified module-reality gap (durable-consumer replay, last-value sticky) documented in [event-bus-contract §2a](./event-bus-contract.md). |
 
 The API area's docs fix a **contract**; this file fixes how that contract is **proven**.
 Every behaviour asserted in [rest-endpoints.md](./rest-endpoints.md),
@@ -272,7 +273,9 @@ func TestOpenAPI_NonGAOperationsCarryMaturity(t *testing.T) {
     nonGA := []string{"syncChannel","triggerProcessing","triggerReprocessing","search",
         "redownloadAsset","listDownloads","registerChannel","listSkills","registerSkill",
         "listEventDescriptors","getStickyEvent","ingestCallback","getSubscription",
-        "setSubscription","getUsage"}
+        "setSubscription","getUsage",
+        // evt-2: outbound-webhook sinks (Event Bus service is BUILD-NEW)
+        "listEventSinks","createEventSink","getEventSink","updateEventSink","deleteEventSink"}
     for _, id := range nonGA {
         op := spec.OperationByID(id)
         require.Contains(t, []string{"foundation","build_new","design"}, op.Ext["x-thready-maturity"],

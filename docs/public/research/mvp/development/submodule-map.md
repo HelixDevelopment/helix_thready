@@ -2,10 +2,11 @@
   Title           : Helix Thready — Reused Submodule Map & Maturity
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/submodule-map.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Status          : Review — v0.2
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
   Related         : ./index.md, ./build-new-subsystems.md, ./workable-items.md,
+                    ./workable-items-detail.md,
                     ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
 
@@ -14,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial map — every reused module, role, import path, maturity |
+| 2 | 2026-07-22 | swarm (development, pass 3) | Pass-3 source verification — `session_orchestrator` upgraded DESIGN-ONLY → **FOUNDATION** (real `claim` registry read at source); `LLMOrchestrator` `AgentPool` contract confirmed; `Agentic` confirmed to exist; herald `channels.Channel` seam pinned to `commons_messaging/channels/channel.go` |
 
 This document maps **every** `vasic-digital` / `HelixDevelopment` / `milos85vasic` submodule
 Helix Thready reuses or extends, its role, its import path (where confirmed), and its **maturity**
@@ -74,19 +76,24 @@ honest build-readiness of each so no scaffold is mistaken for production.
 |--------|------|---------------|------------------|----------------|-----------|
 | HelixLLM | Local llama.cpp serving (OpenAI+Anthropic APIs); embeddings endpoint | `HelixDevelopment/HelixLLM` | PRODUCTION **with traps** / VERIFIED | HARDEN: enforce `llama` embedder, kill `HashEmbedder` default; remove 768 hardcode | ATM-040, ATM-041 · **[GAP 2.1]** |
 | LLMProvider | 40+ provider adapters; retry/circuit-breaker/health | `digital.vasic.llmprovider` | PRODUCTION / FLAGGED (adapters unaudited) | WIRE + per-adapter contract tests | ATM-064 · [GAP 2.3] |
-| LLMOrchestrator | Dev-time headless-agent pool orchestration (`AgentPool`) | `digital.vasic.llmorchestrator` | PRODUCTION / VERIFIED (core); `AgentPool` contract `[OPEN]` | WIRE for dev fleet; document `AgentPool` | ATM-067 · [GAP 2.4] |
+| LLMOrchestrator | Dev-time headless-agent pool orchestration (`AgentPool`) | `vasic-digital/LLMOrchestrator` (`pkg/agent`) | PRODUCTION / **VERIFIED** (`AgentPool` contract read at source: `Acquire(ctx, AgentRequirements)(Agent,error)`/`Release`) | WIRE for dev fleet | ATM-067 (**closed**) · [GAP 2.4] |
 | HelixAgent | Ensemble/debate agent hub | `dev.helix.agent` | FOUNDATION / FLAGGED (identity blur) | HARDEN: resolve identity split; pin only needed pkgs | ATM-063 · [GAP 2.2] |
 | LLMsVerifier | Model scoring/selection for the fallback chain | `digital.vasic.llmsverifier` | PRODUCTION core / VERIFIED | HARDEN: reconcile `:7061`/`:8080`; stable scoring API | ATM-065 · [GAP 2.5] |
 | VisionEngine | LLM-vision adapters; CV analyzer (`StubAnalyzer` behind `-tags vision`) | `digital.vasic.visionengine` | FOUNDATION / VERIFIED (**no OCR**) | EXTEND: add `OCRProvider` seam | ATM-033 · **[GAP 2.6]** |
 | Memory / HelixMemory | Semantic/cognitive memory | `digital.vasic.memory` · HelixMemory | PRODUCTION / VERIFIED | DEFER or back `Memory` with `vectordb` | — · [GAP 2.8] |
 | token_optimizer | Prompt token optimization pipeline | `digital.vasic.token_optimizer` | **partial/WIP** / VERIFIED | HARDEN or scope-out | ATM-061 · [GAP 2.9] |
 | TOON | Token-Oriented Object Notation encoder | `digital.vasic.TOON` | **SCAFFOLD (not implemented)** / VERIFIED | HARDEN or scope-out; use toolkit `toon.mjs` meanwhile | ATM-061 · [GAP 2.9] |
-| session_orchestrator | Atomic track-claim registry | `digital.vasic.session_orchestrator` | **DESIGN-ONLY** / VERIFIED | BUILD the claim registry | ATM-062 · [GAP 2.9] |
-| Normalize / conversation / SkillRegistry / ToolSchema / MCP_Module / Agentic / Planning / AgentWrapper | Agent-support modules | (paths partly unconfirmed) | FLAGGED (docs-only) | **Source-verify + pin** before reliance | ATM-068 · [GAP 2.9] |
+| session_orchestrator | Atomic track-claim registry (exactly-once claim + deadlock-free device-lock) | `vasic-digital/session_orchestrator` (`claim/`, `alias/`, `scheduler/`, `supervisor/`) | ~~DESIGN-ONLY~~ **FOUNDATION** / **VERIFIED** (Pass 3 — real `Registry.TryClaim`/`Release` at source) | ~~BUILD~~ **WIRE + verify + integrate** the shipped registry (realizes §11.4.176(A); reused by runtime single-claim ATM-023) | ATM-062 · [GAP 2.9] |
+| Normalize / conversation / SkillRegistry / ToolSchema / MCP_Module / Agentic / Planning / AgentWrapper | Agent-support modules | `vasic-digital/Agentic` **confirmed** ("graph-based agentic workflow orchestration"); other seven paths still unconfirmed | Agentic VERIFIED; rest FLAGGED (docs-only) | **Source-verify + pin** the residual seven before reliance | ATM-068 · [GAP 2.9] |
 
 > **Anti-bluff, do not misread.** HelixLLM is production **with a trap** — its default local
-> embedder is a non-semantic `HashEmbedder` stub; `TOON`/`session_orchestrator` have **no working
-> code**. These are cited as gaps, not capabilities.
+> embedder is a non-semantic `HashEmbedder` stub (VERIFIED at
+> `HelixLLM/internal/knowledge/embedding_providers.go`: `NewEmbedder` maps `"hash"/"local"` **and any
+> unrecognised provider name** to `NewHashEmbedder`); `TOON` has **no working code**
+> (`ErrTOONEncodingNotImplemented`). **Correction (Pass 3):** `session_orchestrator` — previously
+> listed here as "no working code" — **now ships a real exactly-once claim `Registry`** at source, so
+> it is upgraded to FOUNDATION and is **no longer** cited as a no-code gap. The honest rule stands: a
+> claim is only made when it has been read at source.
 
 ## 4. Skills & processing
 
@@ -100,7 +107,7 @@ honest build-readiness of each so no scaffold is mistaken for production.
 
 | Module | Role | Import / repo | Maturity / Conf. | Thready action | Item / Gap |
 |--------|------|---------------|------------------|----------------|-----------|
-| herald | Messengers/posts/replies + fan-out; `gotd/td` MTProto in `qaherald` | `vasic-digital/herald` | FOUNDATION / VERIFIED (**MTProto trapped in QA; Max stub**) | EXTEND: promote MTProto reader; add Max; ThreadReader | ATM-016, ATM-017, ATM-018 · **[GAP 5.1]** |
+| herald | Messengers/posts/replies + fan-out; `gotd/td` MTProto in `qaherald` | `vasic-digital/herald` (seam: `commons_messaging/channels/channel.go`) | FOUNDATION / VERIFIED (**MTProto trapped in QA; Max stub** — no `channels/max` or `channels/mtproto` pkg, only `docs/guides/messengers/MAX.md`) | EXTEND: promote MTProto reader; add Max; ThreadReader — all implement `channels.Channel` (`SendReplyGeneric`/`BotSelfIdentity`/`DownloadAttachment` + `commons.Channel`) | ATM-016, ATM-017, ATM-018 · **[GAP 5.1]** |
 | Catalogizer | Multi-protocol asset store (SQLCipher, JWT+RBAC, WS) | `vasic-digital/Catalogizer` | PRODUCTION / VERIFIED (not decoupled) | BUILD-NEW: decouple as Asset Service | ATM-012 · [GAP 6.1] |
 | Boba-Base | Torrent search/download (SSE + `POST /api/v1/hooks`) | `milos85vasic/Boba-Base` | FOUNDATION / VERIFIED | EXTEND: standardize callback | ATM-032 · [GAP 6.4] |
 | YT-DLP (MeTube) | Video/streaming download (poll-only API) | `milos85vasic/YT-DLP` | FOUNDATION / VERIFIED (**no outbound webhook**) | EXTEND: add completion webhook | ATM-031 · [GAP 6.5] |
@@ -175,21 +182,30 @@ flowchart TB
 ```
 
 **Explanation (for readers/models that cannot see the diagram).** Colour encodes maturity: green =
-PRODUCTION, amber = FOUNDATION (real but early, with the specific trap noted inline), red = SCAFFOLD/
-stub, blue = BUILD-NEW. The green data spine — `database` → `vectordb` (pgvector) with `embeddings`
-— is production and wired directly. `HelixLLM` feeds `embeddings` but is amber because its default
-embedder is the `HashEmbedder` stub (`ATM-040`). The processing spine flows `eventbus` → `background`
-→ the **new** Skill-dispatch engine, which reads the amber `helix_skills` Skill-Graph (knowledge
-only — no execution engine). The dispatch engine drives the **new** Download Manager (reusing the
-amber `filesystem`, which lacks an HTTP source), which emits the **new** standardized callback that
-`Boba` and the amber `MeTube` (no webhook today) also emit, all landing in the **new** Asset Service
-(decoupled from the green `Catalogizer`). The amber `VisionEngine` (no OCR) gains a **new** OCR
-adapter; the amber `herald` (MTProto trapped in a QA harness) gains a **new** ThreadReader and Max
-adapter. The green `auth` + `security` plus the **red** `Security-KMP` stub back the **new** User
-Service. Finally the dispatch engine and the green `embeddings`/`vectordb` feed the **new**
-Semantic-search service. Every blue node has a design plan in
-[build-new-subsystems.md](./build-new-subsystems.md); every amber/red trap has a `[GAP]` and a
-hardening item.
+PRODUCTION, amber = FOUNDATION (real but early, with the specific trap noted inline), red =
+SCAFFOLD/stub, blue = BUILD-NEW. Reading the colours before the arrows is the point of the diagram —
+it shows at a glance where Thready builds on solid ground and where it must first harden or build.
+
+The **data spine** is mostly green and wired directly: `database` → `vectordb` (pgvector) with
+`embeddings`. The one amber node in it is `HelixLLM`, which feeds `embeddings` but carries the
+`HashEmbedder`-default trap (`ATM-040`) — production code with a stub embedder behind it, which is why
+it is not drawn green. The **processing spine** then flows `eventbus` → `background` → the **new**
+(blue) Skill-dispatch engine, which reads the amber `helix_skills` Skill-Graph (knowledge/ordering
+only — no execution engine of its own).
+
+From the dispatch engine the **asset/download river** runs: it drives the **new** Download Manager
+(reusing the amber `filesystem`, which lacks an HTTP source), which emits the **new** standardized
+callback that `Boba` and the amber `MeTube` (no webhook today) also emit, all landing in the **new**
+Asset Service decoupled from the green `Catalogizer`. Two more amber modules gain blue extensions on
+the side: `VisionEngine` (no OCR) gains a **new** OCR adapter, and `herald` (MTProto trapped in a QA
+harness, Max an empty stub) gains a **new** ThreadReader and Max adapter.
+
+The **service backing** completes the picture: the green `auth` + `security` plus the **red**
+`Security-KMP` stub back the **new** User Service (the red node is why mobile token storage is a
+release blocker, `ATM-015`), and the dispatch engine together with the green `embeddings`/`vectordb`
+feed the **new** Semantic-search service. The invariant the diagram enforces: every blue node has a
+design plan in [build-new-subsystems.md](./build-new-subsystems.md), and every amber/red trap carries
+a `[GAP]` and a hardening item — no node is relied on for more than its colour honestly permits.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/submodule-maturity.mmd](./diagrams/submodule-maturity.mmd).
 

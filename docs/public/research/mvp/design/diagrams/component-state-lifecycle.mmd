@@ -1,0 +1,19 @@
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Loading: mount / fetch
+  Loading --> Skeleton: > 150ms (avoid flash)
+  Skeleton --> Content: data resolved
+  Loading --> Content: data resolved (fast)
+  Loading --> Empty: resolved, zero rows
+  Loading --> Error: fetch failed
+  Content --> Loading: refetch / refresh
+  Error --> Loading: retry
+  Empty --> Loading: primary action (e.g. Add channel)
+  Content --> Disabled: RBAC / offline
+  Content --> Focused: keyboard focus-visible
+  Focused --> Content: blur
+  Content --> Validating: form submit
+  Validating --> Content: 200 ok (optimistic confirmed)
+  Validating --> InvalidInline: 4xx field errors (--danger)
+  InvalidInline --> Validating: correct + resubmit
+  Content --> [*]: unmount

@@ -2,11 +2,12 @@
   Title           : Helix Thready — Development & Orchestration (Area Index)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/index.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
-  Related         : ./workable-items.md, ./agent-orchestration.md, ./submodule-map.md,
-                    ./coding-standards.md, ./contribution-guidelines.md, ./build-new-subsystems.md,
+  Related         : ./workable-items.md, ./workable-items-detail.md, ./agent-orchestration.md,
+                    ./submodule-map.md, ./coding-standards.md, ./contribution-guidelines.md,
+                    ./git-workflow-internals.md, ./build-new-subsystems.md,
                     ../index.md, ../CONVENTIONS.md
 -->
 
@@ -17,6 +18,7 @@
 | 1 | 2026-07-21 | swarm (development) | Initial draft — index, dependency map, area file links |
 | 2 | 2026-07-21 | swarm (development, review) | Review pass — tracked the pending `architecture/`+`database/` `index.md` cross-links as `ATM-072` |
 | 3 | 2026-07-21 | orchestrator (integration) | Integration pass — `architecture/index.md` + `database/index.md` now present and the §3 cross-links resolve; `ATM-072` closed |
+| 4 | 2026-07-22 | swarm (development, pass 3) | Depth pass — added `workable-items-detail.md` (full-granularity cards) + `git-workflow-internals.md` (verified hook/wrapper mechanics); closed `[OPEN: agentpool-contract]` (ATM-067) and rescoped ATM-062 after reading `session_orchestrator` at source; updated §6 open-items ledger |
 
 This is the canonical entry point for the **Development & Orchestration** area of the Helix
 Thready MVP. It defines *how the system is built*: the granular workable-item backlog, the
@@ -53,6 +55,8 @@ the authoritative sources of truth (see below). Provenance tags used throughout:
 | File | Purpose |
 |------|---------|
 | [workable-items.md](./workable-items.md) | The granular `ATM-NNN` backlog — every item decoupled, agent-implementable, mapped to the four phases (§5.1.2), with acceptance criteria, dependencies, test-type coverage and `[GAP: …]` tags |
+| [workable-items-detail.md](./workable-items-detail.md) | The **full-granularity** expansion of the backlog: per-item cards with task-level sub-items (`ATM-NNN.k`), Given/When/Then acceptance, explicit blocks/blocked-by edges, and `[VERIFIED-SOURCE]` anchors for every claim read at module source in Pass 3 |
+| [git-workflow-internals.md](./git-workflow-internals.md) | The **verified mechanics** behind the contribution rules: the symlink hook installer, the marker-based `--no-verify` bypass audit, the scoped pre-push secret scan, the atomic commit-all lock, and the buffered background `push_all` fan-out — each `[VERIFIED-SOURCE]` to the org tooling clone it was read from |
 | [agent-orchestration.md](./agent-orchestration.md) | The dev-fleet plan: native-alias-first `[§11.4.196/198]`, subagent-driven `[§11.4.20/70]`, automatic multi-track ruler `[§11.4.187]`, exactly-once claim registry `[§11.4.176]`, git-worktree isolation, Fable @ xhigh review `[§11.4.209]` |
 | [submodule-map.md](./submodule-map.md) | Every reused `vasic-digital` / `HelixDevelopment` / `milos85vasic` submodule, its role, import path and **maturity** from the gap register (PRODUCTION / FOUNDATION / SCAFFOLD / DESIGN-ONLY / BUILD-NEW) |
 | [coding-standards.md](./coding-standards.md) | Go 1.26 standards, TDD reproduce-first `[§11.4.43]`, design patterns, SOLID, decoupling `[§11.4.28]`, concurrency, error handling, anti-bluff |
@@ -92,22 +96,33 @@ flowchart LR
   DEV --> UG[user-guides]
   subgraph DEV_files[development area files]
     WI[workable-items] --- AO[agent-orchestration]
+    WID[workable-items-detail] --- GWI[git-workflow-internals]
     SM[submodule-map] --- CS[coding-standards]
     CG[contribution-guidelines] --- BN[build-new-subsystems]
   end
   DEV --- DEV_files
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** The development area sits
-downstream of the architecture, API and database areas plus the two authoritative planning
-inputs (the decision matrix and the private gap register): those define *what* to build, while
-this area defines *how* and *in what order*. The development area then feeds four downstream
-areas — testing (which expands each item's declared test types into full banks), deployment
-(which consumes the contribution and release rules), and design plus user-guides (which consume
-the Phase-3 client-application items). Internally the area is six coupled files: the workable-item
-backlog and the agent-orchestration plan are the operational core; the submodule map, coding
-standards, contribution guidelines and build-new-subsystem design plans are the reference
-material every item is implemented against.
+**Explanation (for readers/models that cannot see the diagram).** The left edge of the graph is the
+development area's **upstream**. It consumes the architecture area (component boundaries, the event
+model, the concurrency model), the API area (the OpenAPI/Protobuf contracts the SDK-codegen and
+REST-skeleton items target), and the database area (the schema/migration definitions the DB-wiring
+items implement). Overlaid on those three is the pair of authoritative planning inputs drawn as a
+single cylinder — the decision matrix and the private gap register — which constrain every choice.
+Together the upstream answers *what* to build; this area answers *how* and *in what order*.
+
+The right edge is the **downstream** the development area feeds. Testing expands each item's declared
+test types into the full 15-type banks; deployment consumes the contribution and release rules to
+drive the pipeline; and design plus user-guides consume the Phase-3 client-application items. The
+arrows are one-directional on purpose: development never reaches back up into architecture/API/database
+to redefine a contract — it implements them and surfaces gaps as tracked items.
+
+Internally (the `DEV_files` subgraph) the area is now **eight** coupled files. The workable-item
+backlog (summary + full-granularity detail) and the agent-orchestration plan are the operational
+core; the submodule map, coding standards, contribution guidelines, git-workflow internals and the
+build-new-subsystem design plans are the reference material every item is implemented against. The
+two documents added in Pass 3 — `workable-items-detail.md` and `git-workflow-internals.md` — sit
+inside this same cluster and inherit the same upstream/downstream edges.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/dev-area-deps.mmd](./diagrams/dev-area-deps.mmd).
 
@@ -145,18 +160,26 @@ flowchart TB
   XC[Cross-cutting: anti-bluff, decoupling audit, SDK codegen] -.-> P1 & P2 & P3 & P4
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** Phase 1 (Foundation) stands up
-infrastructure, the core services (User Service, Event Bus service, Asset Service), and the
-messenger/database/API integration. Phase 2 (Processing Engine) builds acquisition, the
-processing pipeline, Skills dispatch and semantic search on top of that foundation. Phase 3
-(Client Applications) delivers the Web portal, Desktop, Mobile, CLI/TUI and design-system
-surfaces. Phase 4 (Testing & Deployment) runs the mandated test types and the production
-deployment. A cross-cutting band of items — the anti-bluff sweep, the decoupling audit and SDK
-codegen — spans every phase because those disciplines apply continuously rather than at one
-milestone. The phases are drawn sequentially, but the orchestration model (see
-[agent-orchestration.md](./agent-orchestration.md)) runs non-contending items from different
-phases concurrently across isolated git-worktree tracks whenever their dependencies are already
-satisfied.
+**Explanation (for readers/models that cannot see the diagram).** The four stacked subgraphs are the
+sequential phases of final request §5.1.2, each split into its sub-phases. Phase 1 (Foundation)
+stands up infrastructure (1.1), the core services (1.2 — User Service, Event Bus service, Asset
+Service), and the messenger/database/API integration (1.3). Phase 2 (Processing Engine) builds
+content acquisition (2.1), the processing pipeline (2.2), Skills integration (2.3) and semantic
+search (2.4) on top of that foundation.
+
+Phase 3 (Client Applications) delivers the Web portal, Desktop, Mobile, CLI/TUI and design-system
+surfaces (3.1–3.5), and Phase 4 (Testing & Deployment) runs the mandated test types (4.1–4.5) and
+the production deployment (4.6). The solid `P1 --> P2 --> P3 --> P4` spine encodes the *hard*
+ordering: a later phase's items may only start once their specific upstream dependencies in an
+earlier phase are `DONE` — not once the whole earlier phase completes.
+
+The dotted cross-cutting band (`XC`) — the anti-bluff sweep, the decoupling audit and SDK codegen —
+attaches to all four phases because those disciplines apply continuously rather than at one
+milestone. Crucially, the sequential drawing is a *dependency* statement, not a *schedule*: the
+orchestration model (see [agent-orchestration.md](./agent-orchestration.md)) runs non-contending
+items from different phases concurrently across isolated git-worktree tracks the moment their
+individual dependencies are satisfied, which is why the four "rivers" of the
+[critical-path DAG](./workable-items-detail.md#2-critical-path-dependency-dag) flow in parallel.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/dev-phase-map.mmd](./diagrams/dev-phase-map.mmd).
 
@@ -184,8 +207,17 @@ headline open items are:
   before relying on the precise wording (tracked as `ATM-066`).
 - `[OPEN: max-oneme-go-port]` — the Max OneMe user-WebSocket reference implementations are Python;
   a Go port is unproven and needs a research spike (tracked as `ATM-018` / build-new plan).
-- `[OPEN: agentpool-contract]` — `digital.vasic.llmorchestrator`'s `AgentPool` capability-matching
-  contract is not locally cloned; re-verify at source (tracked as `ATM-067`).
+- ~~`[OPEN: agentpool-contract]`~~ **CLOSED (Pass 3, 2026-07-22).** The `AgentPool` contract was read
+  at source — `vasic-digital/LLMOrchestrator/pkg/agent/pool.go`: `type AgentPool interface { Acquire(ctx,
+  requirements AgentRequirements) (Agent, error); Release(agent Agent) }`, capability-matched via
+  `Agent.Capabilities() AgentCapabilities` vs `AgentRequirements`. Documented in
+  [workable-items-detail.md §ATM-067](./workable-items-detail.md#atm-067--llmorchestrator-agentpool-contract-open--closed)
+  and [agent-orchestration.md §3](./agent-orchestration.md#3-native-alias-first-model-selection-1141961198).
+- **Pass-3 finding — `session_orchestrator` is no longer DESIGN-ONLY.** Reading
+  `vasic-digital/session_orchestrator` at source revealed a shipped exactly-once claim `Registry`
+  (`claim/claim.go`), superseding the gap register's DESIGN-ONLY status; `ATM-062` is rescoped from
+  build-from-scratch to wire+verify+integrate. See
+  [workable-items-detail.md §ATM-062](./workable-items-detail.md#atm-062--session_orchestrator-wire-the-now-implemented-claim-registry).
 - ~~`[OPEN: sibling-area-index-missing]`~~ **CLOSED (integration pass, 2026-07-21).** The upstream
   cross-links in §3 to `../architecture/index.md` and `../database/index.md` now resolve: both areas
   publish their canonical `index.md` `[§11.4.212]`, matching every other sibling area. The integration

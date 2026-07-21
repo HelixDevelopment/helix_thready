@@ -14,6 +14,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft: envelope, code table, retry semantics |
 | 2 | 2026-07-21 | swarm (API & SDKs) | Added the idempotency-key store DDL (API-owned); linked contract-tests.md; noted universal 401/429/500 |
+| 3 | 2026-07-22 | swarm (API & SDKs) | Split the failure-map diagram explanation into true multi-paragraph form (CONVENTIONS §4); tied the retryable/non-retryable handler split to the SDK retry policy. |
 
 ## Table of Contents
 
@@ -126,14 +127,23 @@ floor, scopes, and tenant match); a failure yields 403 `permission_denied`. Next
 request is validated — a malformed body or bad parameter is 400 `invalid_argument`, while
 a well-formed but semantically impossible request (e.g. an unknown enum value in a filter)
 is 422 `unprocessable`. The rate limiter runs before the handler, so an over-quota caller
-gets 429 `rate_limited` with a `Retry-After` header without touching business logic. Once
-inside the handler, a missing target is 404 `not_found`; an unmet precondition or an
+gets 429 `rate_limited` with a `Retry-After` header without touching business logic. These
+four gates are the middleware chain: they run in the same order for every route, so an
+attacker never learns from the error *which* deeper resource exists — a cross-tenant probe
+is stopped at 403 before the 404/200 distinction is even computed.
+
+Once inside the handler, a missing target is 404 `not_found`; an unmet precondition or an
 idempotency/optimistic-lock clash is 409 `conflict` or 412 `failed_precondition`; a failed
 or timed-out downstream subsystem (Herald, Asset Service, search, JetStream) surfaces as
 503 `unavailable` or 504 `deadline_exceeded`, both retryable with back-off; and an
-unexpected fault becomes 500 `internal`. Every one of these terminal states is rendered
-through the single error envelope, so a client parses errors uniformly regardless of which
-gate failed. Success paths (2xx) skip the envelope entirely.
+unexpected fault becomes 500 `internal`. The split between the retryable
+(`unavailable`/`deadline_exceeded`) and non-retryable (`not_found`/`failed_precondition`)
+handler outcomes is exactly what the SDK retry policy keys on (§5).
+
+Every one of these terminal states is rendered through the single error envelope, so a
+client parses errors uniformly regardless of which gate failed. Success paths (2xx) skip the
+envelope entirely — the envelope is a pure failure channel, which is why a `code` value is
+always safe for application code to branch on.
 
 ## 5. Retry, idempotency & rate limiting
 

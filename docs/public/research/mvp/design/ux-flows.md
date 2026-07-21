@@ -14,12 +14,15 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: add channel, process post, search, manage account — with states, errors, event hooks |
+| 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: new **messenger sign-in** state machine (§2.1, interactive vs. non-interactive, +`.mmd`); new **reprocess** sequence (§3.1, idempotent single-claim + `409`, +`.mmd`); per-flow error/status‑code tables mapped to the shared [error model](../api/error-model.md); expanded cross-flow principles |
 
 ## Table of contents
 
 - [1. How to read these flows](#1-how-to-read-these-flows)
 - [2. Add channel](#2-add-channel)
+  - [2.1 Messenger sign-in (sub-flow)](#21-messenger-sign-in-sub-flow)
 - [3. Process post](#3-process-post)
+  - [3.1 Reprocess (sub-flow)](#31-reprocess-sub-flow)
 - [4. Search](#4-search)
 - [5. Manage account](#5-manage-account)
 - [6. Cross‑flow UX principles](#6-cross-flow-ux-principles)
@@ -91,10 +94,69 @@ reason; a private channel the account can't access returns `403` with guidance. 
 uncertain, the wizard defaults to "Notes/Everything" and flags it for review (never silently drops)
 `[§Q32]`.
 
+**Status codes the UI maps** (from the shared [error model](../api/error-model.md)):
+
+| Step | Code | UI treatment |
+|------|------|--------------|
+| `channels:resolve` | `422` unresolvable link | inline `--danger` on the link field + reason |
+| `channels:resolve` | `403` private/no access | "This account can't access that channel" + sign‑in hint |
+| `messengers/{kind}/signin` | `401`/`422` bad code/env | retry on the code/env field |
+| `POST /channels` | `409` already added | "You already track this channel" → open it |
+| any | `429` rate‑limited | back‑off toast, auto‑retry |
+
 **Honesty.** Telegram resolution is real via `gotd/td` `[IN-HOUSE: herald]`, but the MTProto reader
 is currently trapped in a QA harness and must be promoted to a first‑class channel
 `[GAP: 5.1 herald]`. **Max is a stub** — the whole Max path is `[BUILD-NEW]`; the wizard shows a
 clear "coming/setup" state for Max until the adapter lands.
+
+### 2.1 Messenger sign-in (sub-flow)
+
+Screens: [Settings › Messenger accounts §3.11](./wireframes.md#311-settings--branding--messenger-accounts),
+Add‑Channel step 2. Component: `thready-messenger-signin`.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Choose
+  Choose --> Interactive: interactive (phone/code/2FA)
+  Choose --> NonInteractive: non-interactive (env vars)
+  Interactive --> AwaitPhone: POST /v1/messengers/{kind}/signin
+  AwaitPhone --> AwaitCode: phone accepted -> code sent
+  AwaitCode --> AwaitPassword: 2FA enabled
+  AwaitCode --> SessionReady: no 2FA
+  AwaitPassword --> SessionReady: password accepted
+  AwaitCode --> AwaitCode: wrong code (retry, --danger)
+  AwaitPassword --> AwaitPassword: wrong password (retry)
+  NonInteractive --> ValidateEnv: read TG_* / MAX_* env
+  ValidateEnv --> SessionReady: complete + valid
+  ValidateEnv --> MissingEnv: absent/invalid -> 422
+  MissingEnv --> Choose: fix env, retry
+  SessionReady --> Persisted: store session (Security-KMP / server vault)
+  Persisted --> [*]: signed in
+  AwaitCode --> Expired: session/code expired
+  Expired --> Choose: restart sign-in
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/flow-messenger-signin.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** Signing a messenger account in is a
+small state machine with **two entry modes**. The user first **chooses** interactive or
+non‑interactive. The **interactive** path (`POST /v1/messengers/{kind}/signin`) collects the phone
+number, then the login code sent to the device (`AwaitCode`); if the account has 2FA it then collects
+the cloud password (`AwaitPassword`) before the session is ready, otherwise it is ready straight
+away. A wrong code or password loops back to the same step with a `--danger` message and a retry,
+never advancing on bad input.
+
+The **non‑interactive** path reads credentials from environment variables (`TG_*` / `MAX_*`) — the
+CI/pipeline mode — and validates them; complete and valid env yields a ready session, while
+absent/invalid env returns `422` and drops to a `MissingEnv` state whose message names exactly which
+variable is missing, then returns to the choice.
+
+Both paths converge on `SessionReady`, and the session is **persisted** to secure storage — the
+server vault on the backend, or platform Keychain/KeyStore on mobile (which is the release‑gating
+`Security‑KMP` stub today, `[GAP: 7.3]`). Two time‑based edges close the machine: a code/session can
+**expire** mid‑flow, which restarts the sign‑in rather than hanging. Telegram drives this for real via
+`gotd/td` `[IN-HOUSE: herald]`; the entire **Max** branch is `[GAP: 5.1 — BUILD‑NEW]`, so its
+`Choose → …` transitions render a "coming/setup" state until the adapter lands.
 
 ## 3. Process post
 
@@ -153,6 +215,60 @@ DAG, not a runner `[GAP: 4.1 helix_skills]`. MeTube has **no completion webhook*
 `[GAP: 6.5]`; the flow assumes the BUILD‑NEW webhook. VisionEngine has **no OCR** engine
 `[GAP: 2.6]`; the analyze step depends on the BUILD‑NEW Tesseract/PaddleOCR adapter. The UI is
 specified against the target contract; the register tracks what must be built to make it real.
+
+### 3.1 Reprocess (sub-flow)
+
+Screens: [Post detail §3.6](./wireframes.md#36-post-detail-processing). Triggered by the web/mobile
+**Reprocess** button, the TUI `r` key, or `thready post reprocess <id>` (CLI). This is the
+user‑initiated counterpart to the automatic pipeline above, and its whole point is **idempotency**.
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant W as Post detail (Web/CLI/TUI/Mobile)
+  participant API as REST /v1
+  participant SYS as System (BackgroundTasks)
+  participant EVT as Event Bus (JetStream)
+  U->>W: click "Reprocess" (or CLI `thready post reprocess <id>`)
+  W->>W: confirm (destructive-ish: re-runs pipeline)
+  W->>API: POST /v1/posts/{id}:reprocess
+  API->>SYS: enqueue reprocess (idempotent single-claim)
+  alt already in-flight
+    SYS-->>API: 409 already processing
+    API-->>W: 409 -> toast "already running"
+  else claimable
+    SYS->>EVT: processing.progress (per step)
+    EVT-->>W: live per-step updates (WS/SSE)
+    SYS->>EVT: processing.completed | processing.failed
+    EVT-->>W: final state + generated assets
+    API-->>W: 202 accepted (subscription active)
+  end
+  W-->>U: pipeline animates live; retry-step on failure
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/flow-reprocess.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** The user asks to reprocess a post
+from any surface. Because reprocessing re‑runs the full pipeline (and can overwrite generated assets),
+the client first shows a lightweight **confirm** — this is treated as mildly destructive, not a silent
+action. On confirm the client calls `POST /v1/posts/{id}:reprocess`, and the System enqueues the work
+behind the **same single‑claim guard** the automatic path uses (a Postgres row/advisory lock).
+
+The `alt` fork is the important part. If the post is **already in flight** — the user double‑clicked,
+two surfaces raced, or an automatic run is underway — the System returns `409 already processing` and
+the client shows a "already running" toast instead of starting a second run. This is the UI‑level
+expression of the "never double‑process" invariant `[§3.3]`, and it is exactly what the
+`thready-processing-pipeline` retry contract enforces at the component level (the retry is
+disabled‑after‑claim, [component-library §6](./component-library.md#6-component-contract-anatomy--props--states--a11y)).
+
+If the post is **claimable**, the System begins emitting `processing.progress` events per step, which
+stream over WS/SSE so the Post‑detail pipeline animates live; on finish it emits
+`processing.completed` or `processing.failed`, delivering the final state and any regenerated assets,
+and the API's `202` confirms the subscription is active. A failed step still exposes the idempotent
+**retry step** affordance, so recovery is granular rather than all‑or‑nothing. The CLI mirror
+(`thready post reprocess`) returns exit code `7` on the `409`
+([wireframes §4.2](./wireframes.md#42-exit-codes--error-model)), so scripts can distinguish "already
+running" from a real failure.
 
 ## 4. Search
 

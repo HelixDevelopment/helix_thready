@@ -15,6 +15,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — classification, dispatch, recipe matrix, OCR |
 | 2 | 2026-07-21 | swarm (review pass) | Add §5.1 token optimization (closes GAP 2.9 token-opt half); PROC-4 open item |
+| 3 | 2026-07-22 | swarm (Pass 3 depth) | Split the §6 pipeline-diagram explanation into true multi-paragraph form (funnel intent → classify/indirect → map+order → five stages → cross-cutting embed/retry/ordering) per CONVENTIONS §4 |
+| 4 | 2026-07-22 | swarm (critic consistency) | Close PROC-2 — SkillRegistry (`dev.helix.agent/skillregistry`) & MCP (`digital.vasic.mcp`) import paths source-confirmed via CAT-2; carry corrected paths into §2 (was stale FLAGGED docs-only, contradicting index §7 "PROC-2 resolved by CAT-2") |
 
 ## Table of Contents
 
@@ -49,7 +51,11 @@ Thready reuses `HelixDevelopment/helix_skills` `[IN-HOUSE: helix_skills]`. Skill
 **knowledge units** organized as a DAG (`atomic → composite → umbrella`) with typed hard-closure
 edges (`requires`/`extends`/`composes`) and advisory edges
 (`recommends`/`related_to`/`alternative_to`). Discovery is via `register.sh` symlinks + a
-generated `INDEX.md`; runtime registration via `SkillRegistry`; tool exposure via `MCP_Module`.
+generated `INDEX.md`; runtime registration via **`SkillRegistry`** (module
+`dev.helix.agent/skillregistry`, a flat package — source-confirmed, see
+[component-catalog.md](./component-catalog.md) §8 `[CLOSED: CAT-2]`); tool exposure via
+**`MCP_Module`** (module `digital.vasic.mcp`, `pkg/{server,client,protocol,registry,adapter,config}`
+— source-confirmed).
 
 > **`[GAP: 4.1]` No processing/execution engine.** Skills are knowledge units in a DAG, **not
 > runnable jobs**. The Skill-Graph gives *ordering/knowledge*, not *task execution*. Thready's
@@ -201,17 +207,28 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/processing-pipeline.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** A claimed `post.received`
-first goes to classification, which reads the union of hashtags plus content-type and thread
-context. If tags are absent or insufficient, indirect determination fills them in from link
-shape (a torrent link becomes `Torrent`, a GitHub link becomes `Research`, a media link becomes
-download-plus-research-if-IT). The resulting category set is mapped to concrete Skills by
-resolving the HelixSkills Skill-Graph, then ordered by the fixed precedence and each Skill's
-`SortOrder`. Execution then proceeds through the five strict stages: download (delegated to
+**Explanation (for readers/models that cannot see the diagram).** The diagram reads as a funnel
+that narrows a messy inbound post down to a deterministic, ordered list of Skill steps and then
+fans that list out through five strict stages. The value of reading it whole is seeing that every
+classification branch converges on the *same* ordered pipeline, so no matter how a post is
+categorized it is processed by one predictable machine rather than a bespoke path per hashtag.
+
+A claimed `post.received` first goes to classification, which reads the union of hashtags plus
+content-type and thread context. If tags are absent or insufficient, **indirect determination**
+fills them in from link shape — a torrent link becomes `Torrent`, a GitHub link becomes `Research`,
+a media link becomes download-plus-research-if-IT — so a link-only post is never left unclassified.
+The resulting category set is mapped to concrete Skills by resolving the HelixSkills Skill-Graph
+(the knowledge/ordering source, which does *not* itself execute anything, per §2), then ordered by
+the fixed precedence and each Skill's `SortOrder` so the run order is fully deterministic before a
+single step fires.
+
+Execution then proceeds through the five strict stages: download (delegated to
 Boba/MeTube/Download Manager), convert (generate `…-web` renditions while keeping the raw),
 analyze (Vision + OCR + transcript + content classification), research (multi-pass web research
 that also grows the Skill-Graph and knowledge base), and finally reply (post the status reply and
-mark the post processed, emitting `post.processed`). Crucially, stages 1–4 each embed their
+mark the post processed, emitting `post.processed`).
+
+Two properties the diagram encodes beyond the linear flow are worth calling out. Stages 1–4 each embed their
 artifacts into the semantic index as they complete, and the download stage has a self-loop
 indicating per-step retry with back-off — a transient download failure retries just that step,
 not the whole post. The order is not cosmetic: research in stage 4 can analyze the media
@@ -346,9 +363,13 @@ func TestClassify_NeverDrops(t *testing.T) {
 - `[OPEN: PROC-1]` The canonical `SKILL.md` schema (frontmatter fields, versioning) must be
   finalized before migrating the no-frontmatter Skill dirs `[GAP: 4.1]`; tracked as a workable
   item against helix_skills.
-- `[OPEN: PROC-2]` The exact `SkillRegistry`/`MCP_Module` import paths are FLAGGED (docs-only) in
-  the gap register; the dispatcher references them abstractly until source-confirmed (re-verify
-  backlog).
+- `[CLOSED: PROC-2]` (was: exact `SkillRegistry`/`MCP_Module` import paths FLAGGED docs-only).
+  **Source-verified via CAT-2** ([component-catalog.md](./component-catalog.md) §8, `go.mod` read):
+  `SkillRegistry` = **`dev.helix.agent/skillregistry`** (flat package: `executor.go`/`loader.go`/
+  `manager.go`/`registry.go`/`storage.go`+`storage_postgres.go`/`validator.go`/`types.go`) — **not**
+  the earlier-quoted `digital.vasic.skill_registry`; `MCP_Module` = **`digital.vasic.mcp`**
+  (`pkg/{server,client,protocol,registry,adapter,config}`) — **not** `digital.vasic.mcp_module`. §2/§3
+  now carry the corrected paths; no residual verification needed (anti-bluff correction).
 - `[OPEN: PROC-3]` Per-Skill concurrency caps and per-category soft timeouts are
   `[DEFAULT — adjustable]` (research-heavy 30 min); final values need load-testing in the testing
   pack.

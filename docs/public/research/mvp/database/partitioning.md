@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (database) | Initial: time-partitioned firehose tables, read replicas, maintenance job |
 | 2 | 2026-07-21 | reviewer (database) | Topology diagram: added the `posts_default` safety-net node (parity with the `.mmd` sibling) |
+| 3 | 2026-07-22 | swarm (database, Pass 3) | Added §4.1 concrete HASH sub-partition DDL (whale-tenant escalation, `ATM-DB-021`) + a LIST-partition worked example; §4.2 range-bound conventions; explicit per-partition autovacuum/`fillfactor` ALTER DDL in §7 |
 
 ## Table of Contents
 
@@ -22,6 +23,8 @@
 2. [What is partitioned and how](#2-what-is-partitioned-and-how)
 3. [Topology diagram](#3-topology-diagram)
 4. [Declarative range partitioning DDL](#4-declarative-range-partitioning-ddl)
+   - [4.1 Sub-partitioning & list-partitioning DDL (escalation path)](#41-sub-partitioning--list-partitioning-ddl-escalation-path)
+   - [4.2 Range-bound & naming conventions](#42-range-bound--naming-conventions)
 5. [Partition maintenance (create-ahead + detach-old)](#5-partition-maintenance-create-ahead--detach-old)
 6. [Read replicas & routing](#6-read-replicas--routing)
 7. [Connection pooling & pgvector co-location tuning](#7-connection-pooling--pgvector-co-location-tuning)
@@ -99,19 +102,28 @@ flowchart TB
 ```
 
 **Explanation (for readers/models that cannot see the diagram).** Writes land on the single
-PostgreSQL 16 **primary**. The four firehose tables are declared as RANGE-partitioned
-parents; each month has its own child partition (e.g. `posts_2026_07`). A **maintenance
-job** runs on a schedule to (a) create next month's partitions *ahead* of need so inserts
-never hit the `DEFAULT` partition, and (b) detach partitions that have aged past their
-retention window. Two **streaming read replicas** receive WAL from the primary: `replica-1`
-serves the read-heavy API paths (search hydration, dashboards) so read load never competes
-with ingestion writes; `replica-2` serves heavy analytics/exports so a long report cannot
-stall the API. The REST `/v1` read paths are routed to `replica-1`. When a partition ages
-out, the **archive job** detaches it, copies it to the MinIO/S3 cold tier
-(`digital.vasic.storage`), records it in `archived_partitions`, and drops the live
-partition — the flow detailed in [retention-archive.md](./retention-archive.md). Writes and
-strongly-consistent reads (the processing claim, billing) always target the primary to
-avoid replica lag correctness issues.
+PostgreSQL 16 **primary**, shown as the top box. The four firehose tables are declared as
+RANGE-partitioned parents; each month has its own child partition (e.g. `posts_2026_07`), and
+a `posts_default` safety-net partition catches any row whose timestamp falls outside the
+provisioned months. That default is deliberately drawn separately because it is *alerted on* —
+a row landing there means the maintenance job fell behind, not that the write should silently
+succeed forever in the wrong place.
+
+A **maintenance job** (the `PM` node) runs on a schedule to (a) create next month's partitions
+*ahead* of need so inserts never hit the `DEFAULT` partition, and (b) detach partitions that
+have aged past their retention window. It touches all four parents on the same monthly cadence.
+Two **streaming read replicas** receive WAL from the primary: `replica-1` serves the read-heavy
+API paths (search hydration, dashboards) so read load never competes with ingestion writes;
+`replica-2` serves heavy analytics/exports so a long report cannot stall the API. The REST
+`/v1` read paths are routed to `replica-1`.
+
+When a partition ages out, the **archive job** detaches it, copies it to the MinIO/S3 cold
+tier (`digital.vasic.storage`), records it in `archived_partitions`, and drops the live
+partition — the flow detailed in [retention-archive.md](./retention-archive.md) and shown as
+the `P1 → ARCH → Cold` edge. One correctness rule governs the whole topology: writes and
+strongly-consistent reads (the processing claim, billing, auth) always target the **primary**,
+because a claim or a balance read against a lagging replica could act on stale state. Only
+lag-tolerant reads are offloaded to the replicas.
 
 ---
 
@@ -144,6 +156,78 @@ the baseline (no extension dependency, fully controlled by our migrations + job)
 that prefer a battle-tested manager may adopt **`pg_partman`** with `p_type := 'range'`,
 `p_interval := '1 month'`, `p_premake := 3`, and its `run_maintenance_proc()` on a schedule —
 the DDL above is compatible with either. `[DEFAULT — adjustable]`
+
+### 4.1 Sub-partitioning & list-partitioning DDL (escalation path)
+
+**HASH sub-partition by account — the whale-tenant escalation (`ATM-DB-021`, not MVP).**
+Monthly range partitions are the MVP baseline. If a single tenant's volume dominates a month
+and its rows contend on the same partition's indexes/autovacuum, a monthly partition can be
+declared as a *further* partitioned table and sub-partitioned by `HASH (account_id)` so one
+whale's writes spread across N sub-partitions:
+
+```sql
+-- Escalation: make ONE month a hash-sub-partitioned parent (do this only for hot months).
+-- Composite partition key must include BOTH range and hash columns.
+CREATE TABLE posts_2027_01
+  PARTITION OF posts
+  FOR VALUES FROM ('2027-01-01') TO ('2027-02-01')
+  PARTITION BY HASH (account_id);
+
+-- 4 hash buckets for that month (bucket count is fixed at creation; pick a power of two).
+CREATE TABLE posts_2027_01_h0 PARTITION OF posts_2027_01
+  FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+CREATE TABLE posts_2027_01_h1 PARTITION OF posts_2027_01
+  FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+CREATE TABLE posts_2027_01_h2 PARTITION OF posts_2027_01
+  FOR VALUES WITH (MODULUS 4, REMAINDER 2);
+CREATE TABLE posts_2027_01_h3 PARTITION OF posts_2027_01
+  FOR VALUES WITH (MODULUS 4, REMAINDER 3);
+```
+
+Because `posts`' PK is `(id, posted_at)` and `account_id` is a plain column, the hash sub-key
+does not change the PK; queries that carry `account_id` prune to one hash bucket, and queries
+that don't still prune by month then scan all four buckets. The trade-off is more relations to
+manage, so this is reserved for genuinely hot months — the `MonthlyRange.EnsureAhead` helper
+(§5) creates flat monthly partitions by default and only emits the sub-partitioned form for
+tenants/months flagged in config.
+
+**LIST partition worked example (alternative axis).** Where the dominant access pattern is by
+a low-cardinality discriminator rather than time — e.g. isolating one messenger platform's
+firehose, or separating a `sensitive` asset tier for a distinct autovacuum/retention regime —
+`PARTITION BY LIST` is the right tool. Illustrative (assets are *not* partitioned in the MVP;
+this shows the DDL shape for the escalation):
+
+```sql
+-- Illustrative LIST partitioning of an asset-events firehose by sensitivity tier.
+CREATE TABLE asset_events (
+  id          uuid NOT NULL DEFAULT gen_random_uuid(),
+  account_id  uuid NOT NULL,
+  sensitivity text NOT NULL,          -- LIST PARTITION KEY
+  payload     jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at  timestamptz NOT NULL,
+  PRIMARY KEY (id, sensitivity)
+) PARTITION BY LIST (sensitivity);
+CREATE TABLE asset_events_public    PARTITION OF asset_events FOR VALUES IN ('public');
+CREATE TABLE asset_events_internal  PARTITION OF asset_events FOR VALUES IN ('internal');
+CREATE TABLE asset_events_sensitive PARTITION OF asset_events FOR VALUES IN ('sensitive');
+CREATE TABLE asset_events_default   PARTITION OF asset_events DEFAULT;
+```
+
+The same DEFAULT-partition safety-net + alert discipline applies to LIST partitioning: an
+unexpected discriminator value lands in `*_default` and raises the maintenance alert.
+
+### 4.2 Range-bound & naming conventions
+
+- **Half-open ranges.** Every range is `[start, end)` — inclusive lower, exclusive upper — so
+  adjacent months never overlap and a timestamp of exactly `'2026-08-01T00:00:00Z'` belongs to
+  `posts_2026_08`, not `posts_2026_07`. This is Postgres' native RANGE semantics; the
+  maintenance helper always emits `FROM firstOfMonth(m) TO firstOfMonth(m+1)`.
+- **UTC boundaries.** Bounds are UTC (`timestamptz` compared in UTC on a UTC server), so a
+  month boundary is unambiguous regardless of client timezone.
+- **Naming.** `<table>_<YYYY>_<MM>` for monthly ranges, `<table>_<YYYY>_<MM>_h<n>` for hash
+  sub-buckets, `<table>_default` for the safety net. The archive catalog
+  (`archived_partitions.partition_name`) stores this exact name so a detached partition is
+  re-attachable by name.
 
 ---
 
@@ -243,7 +327,26 @@ func (m MonthlyRange) DetachAged(ctx context.Context, db database.Database, now 
     dedicated Postgres+pgvector instance **or** to Qdrant behind the same `VectorStore`
     interface (`[GAP: vectordb-3.1]`) — a config change, not a schema change.
 - **Autovacuum.** Tune per-partition `autovacuum_vacuum_scale_factor` down on hot
-  partitions (e.g. 0.02) so bloat is controlled; freeze aggressively before archival.
+  partitions (e.g. 0.02) so bloat is controlled; freeze aggressively before archival. Because
+  storage parameters are set per relation, apply them to the **current** partition (where all
+  the churn is), not the parent:
+
+```sql
+-- Aggressive autovacuum on the hot (current-month) partition: vacuum after ~0.02*rows dead.
+ALTER TABLE posts_2026_07 SET (
+  autovacuum_vacuum_scale_factor  = 0.02,
+  autovacuum_analyze_scale_factor = 0.02,
+  autovacuum_vacuum_cost_delay    = 2   -- ms; let it keep up under the 10k+/day insert rate
+);
+-- Append-mostly firehose: a high fillfactor packs pages tightly (few in-place updates).
+ALTER TABLE posts_2026_07 SET (fillfactor = 95);
+-- Before a month ages out and is archived, freeze it so the cold copy needs no later vacuum:
+VACUUM (FREEZE, ANALYZE) posts_2025_01;
+```
+
+  The maintenance job (§5) stamps these storage parameters on each new partition it creates,
+  so every hot partition inherits the aggressive-autovacuum profile without manual steps; older
+  partitions can relax back to defaults since they no longer receive writes.
 
 ---
 

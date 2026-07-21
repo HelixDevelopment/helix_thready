@@ -13,6 +13,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial mobile clients guide + security caveats |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the architecture diagram explanation into multi-paragraph form; added a pre-ship security gate checklist |
 
 Helix Thready's mobile clients are **native per platform** — Jetpack Compose (Android), SwiftUI (iOS),
 ArkTS (HarmonyOS), Qt (Aurora) — with **KMP** shared logic on Android/iOS `[IN-HOUSE]`
@@ -77,15 +78,26 @@ flowchart TB
 **Explanation (for readers/models that cannot see the diagram).** Android and iOS share a KMP logic
 layer — `Auth-KMP`, `Security-KMP`, `Database-KMP`, `Concurrency-KMP`, `UI-Components-KMP` — beneath
 their native Compose/SwiftUI UIs, so business logic (auth flows, models, concurrency) is written once
-for those two. HarmonyOS (ArkTS) and Aurora (Qt) **cannot** consume KMP or Flutter, so they take a
-native-only path with `helix_shims` and re-implement the shared logic natively; the diagram marks both
-`helix_shims` and the HarmonyOS/Aurora clients as scaffolds. All four platforms ultimately speak to the
-same REST `/v1` + WebSocket/SSE surface and thence the Thready System. The critical annotation is on
-`Security-KMP`: its mobile secure storage is currently an **in-memory stub**, and the edge to
-"Platform secure storage (to implement)" marks the **Android Keystore / iOS Keychain** work that is
-**required before any real device ship** — without it, secrets would sit in plaintext memory. The
-diagram therefore encodes both the "native-because-of-HarmonyOS/Aurora" decision and the hard security
-prerequisite.
+for those two platforms and consumed by two different native UIs. This is the "shared logic, native
+shell" pattern that keeps behaviour consistent while letting each platform use its idiomatic toolkit.
+
+HarmonyOS (ArkTS) and Aurora (Qt) **cannot** consume KMP or Flutter, which is the whole reason the
+mobile strategy is native-per-platform rather than one cross-platform codebase. They take a native-only
+path with `helix_shims` and re-implement the shared logic natively. The diagram marks both
+`helix_shims` and the HarmonyOS/Aurora clients as scaffolds — they exist as skeletons, not shippable
+clients.
+
+All four platforms ultimately speak to the **same** REST `/v1` + WebSocket/SSE surface and thence the
+Thready System. This convergence matters: whatever the UI toolkit, the server contract is identical, so
+the backend never special-cases a platform and RBAC/rate-limiting apply uniformly.
+
+The critical annotation is on `Security-KMP`. Its mobile secure storage is currently an **in-memory
+stub**, and the edge to "Platform secure storage (to implement)" marks the **Android Keystore / iOS
+Keychain** work that is **required before any real-device ship** — without it, JWT/refresh tokens and
+secrets would sit in plaintext memory. The diagram therefore encodes two things at once: the
+"native-because-of-HarmonyOS/Aurora" *decision*, and the hard security *prerequisite* that gates any
+production mobile release. The first is why the architecture looks the way it does; the second is why
+§3 says do not ship yet.
 
 ## 3. Security status — read before you ship
 
@@ -99,9 +111,20 @@ current `Security-KMP` would store JWT/refresh tokens and secrets in plaintext m
 - `Database-KMP` is implemented (it is **interfaces-only** today — no SQLDelight/Room) so offline
   state has a real store.
 
-Until then, mobile builds are for **internal evaluation on non-sensitive accounts only** (Firebase App
-Distribution, dev/staging), never production tenants. The Web/CLI/TUI surfaces have no such caveat and
-are the recommended clients for the zero version.
+**Pre-ship security gate (all rows must be ✅ before a store release).**
+
+| Gate | Requirement | Verify | Blocking gap |
+|------|-------------|--------|--------------|
+| Secure storage (Android) | Android Keystore replaces the stub | on-device test round-trips an encrypted token | `[GAP: 7]` |
+| Secure storage (iOS) | iOS Keychain replaces the stub | on-device test round-trips an encrypted token | `[GAP: 7]` |
+| Secure storage (Wasm) | Real store replaces the stub | round-trip test | `[GAP: 7]` |
+| Offline store | `Database-KMP` implemented (SQLDelight/Room) | offline read/write works | `[GAP register §8.4]` |
+| Diagnostics honesty | In-app *Secure storage backend* reads a real backend, not `in-memory (stub)` | manual check | `[GAP: 7]` |
+| KMP CI/publish | KMP fleet has CI + Maven publish | pipeline green | `[GAP register §8.4]` |
+
+Until every row is ✅, mobile builds are for **internal evaluation on non-sensitive accounts only**
+(Firebase App Distribution, dev/staging), never production tenants. The Web/CLI/TUI surfaces have no
+such caveat and are the recommended clients for the zero version.
 
 ## 4. Installing (App Distribution)
 

@@ -1,0 +1,17 @@
+flowchart TD
+  A["Alert / report:\nsomething is wrong"] --> B{"Public probe\n/health/ready over TLS"}
+  B -->|"200 healthy"| C["Not an outage — check the\nspecific alert (WAL, backup, disk)"]
+  B -->|"TLS/cert error"| D["Cert playbook §5"]
+  B -->|"5xx / no answer"| E{"podman-compose ps\nwhich service?"}
+  E -->|"edge (caddy) down"| F["Restart edge unit;\ncheck 80/443 bind + sysctl §8"]
+  E -->|"a Required app/data\nservice unhealthy"| G["Service playbook §4"]
+  C -->|"WALArchiveStalled"| H["RPO playbook §6"]
+  C -->|"disk / write errors"| I["Disk playbook §7"]
+  C -->|"backup missing"| J["Backup playbook §6/§11 drill"]
+  G --> K{"Recovered &\nanti-bluff gate green?"}
+  F --> K
+  D --> K
+  H --> K
+  I --> K
+  K -->|"yes"| L["Close: record RCA,\nupdate this runbook if new"]
+  K -->|"no"| M["Escalate: consider\nrestore runbook (backup-dr §7)"]

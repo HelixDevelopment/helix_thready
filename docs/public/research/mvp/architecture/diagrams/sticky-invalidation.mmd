@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  participant CL as Client (WS/SSE)
+  participant EBS as Event Bus Service
+  participant KV as Sticky store (compacted subject / KV + L1 cache)
+  participant BUS as JetStream (EVENTBUS stream, LimitsPolicy)
+  participant PROC as Skill Dispatch
+  participant API as REST /v1
+
+  Note over PROC,KV: Normal run — sticky last-value is written on every transition
+  PROC->>KV: PublishState(post.state) last-value keyed post_id (TTL 24h)
+  PROC->>BUS: publish thready.<env>.<acct>.post.state.<id> (one-time delivery)
+  CL->>EBS: Subscribe(account, types=post.state,post.processed)
+  EBS->>KV: read sticky snapshot (current last-value)
+  KV-->>EBS: {state,progress,asset_refs,last_error}
+  EBS-->>CL: deliver STICKY snapshot FIRST
+  BUS-->>EBS: then live events (durable consumer)
+  EBS-->>CL: fan-out live post.state / post.processed
+
+  Note over API,PROC: Reprocess invalidates the sticky value
+  API->>PROC: POST /v1/posts/{id}/reprocess (RBAC-gated)
+  PROC->>KV: Invalidate(post_id) — Delete last-value + L1 entry
+  PROC->>BUS: publish post.state.invalidate.<id>
+  BUS-->>EBS: post.state.invalidate
+  EBS-->>CL: invalidate → client clears stale sticky
+  PROC->>KV: PublishState(post.state=reprocessing) — re-establishes sticky
+  PROC->>BUS: publish fresh post.state (re-run)
+  EBS-->>CL: new sticky snapshot on next connect

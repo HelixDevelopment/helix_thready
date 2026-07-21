@@ -11,6 +11,7 @@ flowchart TB
     CH[challenges-scenarios\ndigital.vasic.challenges]
     SA[static-analysis\nSonarQube + Snyk]
     PC[performance-and-chaos\nSLO + DDoS + DR]
+    GATE[acceptance-gates\nper-type gate ladder]
   end
   subgraph Upstream["Upstream areas (contracts under test)"]
     ARCH[architecture]
@@ -24,8 +25,15 @@ flowchart TB
   TYPES --> CH
   TYPES --> SA
   TYPES --> PC
+  TYPES --> GATE
+  TDD --> GATE
+  QA --> GATE
+  CH --> GATE
+  SA --> GATE
+  PC --> GATE
   ARCH --> STRAT
   API --> STRAT
   DB --> STRAT
-  STRAT --> DEP[deployment\ngating + DR runbook]
+  GATE --> DEP[deployment\ngating + DR runbook]
+  STRAT --> DEP
   STRAT --> DEV[development\nATM-NNN workable items]

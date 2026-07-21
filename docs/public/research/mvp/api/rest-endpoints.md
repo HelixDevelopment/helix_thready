@@ -15,6 +15,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft: resource groups, conventions, maturity |
 | 2 | 2026-07-21 | swarm (API & SDKs) | Added p95 SLO; documented `x-thready-maturity` values (now real in `openapi.yaml`); expanded idempotency scope; fixed shell-quoting in the example; linked contract-tests.md |
+| 4 | 2026-07-22 | swarm (API & SDKs) | Completeness-critic pass: addressed the `[GAP: #8 VectorDB]` pgvector-only/Qdrant-swap-by-config seam honestly at §2.8 and in the §3 maturity table (Search row now `#1, #8, New`). |
+| 3 | 2026-07-22 | swarm (API & SDKs) | Added the **Event Sinks** (§2.13) and **Version** (§2.14) groups (now in `openapi.yaml`, closing evt-2/ver-2); updated the maturity count to 20; resolved rest-1 (per-op request/response examples now live in `openapi.yaml` + [sdk-examples.md](./sdk-examples.md)). |
 
 The authoritative machine contract is [openapi.yaml](./openapi.yaml). This document
 explains **behaviour** the OpenAPI cannot fully express: resource-group semantics,
@@ -31,6 +33,7 @@ says its backing module is a stub/scaffold).
    - [2.6 Processing](#26-processing) · [2.7 Assets & Downloads](#27-assets--downloads)
    - [2.8 Search](#28-search) · [2.9 Skills](#29-skills) · [2.10 Billing](#210-billing)
    - [2.11 Events](#211-events) · [2.12 Ops](#212-ops)
+   - [2.13 Event sinks](#213-event-sinks) · [2.14 Version](#214-version)
 3. [Backing-service maturity (no-bluff)](#3-backing-service-maturity-no-bluff)
 4. [Gaps addressed & open items](#4-gaps-addressed--open-items)
 
@@ -195,6 +198,14 @@ API-key creation requires the key's scopes to be a subset of the caller's (403 o
   The service **must** run with `HELIX_EMBEDDING_PROVIDER=llama` (real llama.cpp embeddings)
   and **fail loudly** (`503 unavailable`) if the hash embedder is active in a search context.
   `SearchResult.embedder` echoes the active provider so callers can verify.
+- **Vector backend maturity** — `[GAP: #8 VectorDB]` `vectordb` is PRODUCTION on **pgvector
+  only** (`VERIFIED`); the Qdrant / Pinecone / Milvus adapters are "constructor + config"
+  maturity (`FLAGGED`, not integration-tested end-to-end). Thready ships on **pgvector**
+  (co-located with the relational store, one datastore) and treats the vector backend as a
+  **config-swappable seam**: hardening the Qdrant backend to full pgvector parity (with ANN
+  index tuning against the `< 500 ms p95` SLO) is a `P1` tracked item, so a Large-scale
+  deployment can switch backends without a contract change. The `/search` response shape and
+  the `SearchResult.embedder` / `score` / `source_id` contract are identical across backends.
 
 ### 2.9 Skills
 
@@ -230,11 +241,32 @@ specified in [event-bus-contract.md](./event-bus-contract.md).
 [versioning.md](./versioning.md) §2; `/metrics` is Prometheus-scraped, not in the product
 contract). Backed by `observability/pkg/health`.
 
+### 2.13 Event sinks
+
+`GET/POST /event-sinks`, `GET/PATCH/DELETE /event-sinks/{sinkId}` (`account_admin`+, scope
+`events:read` + `accounts:admin`). Registers **outbound-webhook sinks** for server-to-server
+subscribers that prefer HTTP push over a persistent socket. The generated HMAC `secret` is
+returned **once** at creation and never again (Thready signs each delivery with it via
+`X-Thready-Signature`). Backed by the API-plane-owned `event_sink` / `event_sink_delivery`
+tables and the retry/back-off contract in
+[event-bus-contract.md](./event-bus-contract.md) §9; modelled as the `eventDelivery` channel
+in [asyncapi.yaml](./asyncapi.yaml). **Maturity** — `build_new` (the Event Bus service is
+new). Closes `[OPEN: evt-2]`.
+
+### 2.14 Version
+
+`GET /version` (`user`+) returns build + contract identity — `api_version` (semver),
+`contract_hash` (sha256 of the canonical OpenAPI + proto set), `proto_package`,
+`build_commit`, `built_at`, and any active `deprecations` with `Sunset` dates. It exists for
+support diagnosability (correlate a client bug to the exact deployed contract) and is the
+machine complement to the deprecation policy in [versioning.md](./versioning.md) §6. Closes
+`[OPEN: ver-2]`.
+
 ## 3. Backing-service maturity (no-bluff)
 
 Per the gap register — **do not present a group as GA when its backing module is a
 stub/scaffold**. `x-thready-maturity` (one of `ga` | `foundation` | `build_new` | `design`)
-is annotated on every affected operation in `openapi.yaml` — 15 operations carry it (verify
+is annotated on every affected operation in `openapi.yaml` — 20 operations carry it (verify
 with `grep -cE '^\s+x-thready-maturity:' openapi.yaml`). The negative-control test in
 [contract-tests.md](./contract-tests.md) §security fails the build if any operation whose
 backing row below is non-GA is missing the annotation, so the two cannot drift.
@@ -248,7 +280,7 @@ backing row below is non-GA is missing the annotation, so the two cannot drift.
 | Assets (serve) | Catalogizer → Asset Service | PRODUCTION (decouple P1) | `#9, 6.1` | Serve GA; decouple + HLS/DASH transcoder pending. |
 | Downloads | Download Manager | **BUILD-NEW** | `#4, 6.3` | Generic multi-protocol manager is new (P0). |
 | Downloads (video) | MeTube | FOUNDATION | `#5, 6.5` | Poll-only today; internal bridge until webhook lands. |
-| Search | Semantic-search svc + embeddings | **BUILD-NEW** + trap | `#1, New` | **Must use real llama.cpp embedder**; fail loudly on hash stub. |
+| Search | Semantic-search svc + embeddings + vectordb | **BUILD-NEW** + trap | `#1, #8, New` | **Must use real llama.cpp embedder**; fail loudly on hash stub. pgvector GA; Qdrant swap-by-config is `P1`. |
 | Skills (read) | `helix_skills` | FOUNDATION | `#6, 4.1` | Graph read OK; format/backlog caveats. |
 | Events | Event Bus service | **BUILD-NEW** | `#5, New` | Client-facing wrapper over eventbus/JetStream is new. |
 | Billing | metering/subscription | design | `#12` | Schema fixed; provider integration in deployment pack. |
@@ -264,9 +296,11 @@ backing row below is non-GA is missing the annotation, so the two cannot drift.
   idempotency single-claim, tenant isolation, maturity annotation, search fail-loud) are in
   [contract-tests.md](./contract-tests.md), mapped to the 15 mandated test types
   `[CONSTITUTION §11.4.27]`.
-- `[OPEN: rest-1]` The full per-endpoint request/response examples set is expanded in the
-  SDK quickstarts (Docs Chain) once the servers exist; this doc + `openapi.yaml` fix the
-  contract.
+- `[RESOLVED: rest-1]` Per-endpoint request/response **examples** now live in `openapi.yaml`
+  (login, listPosts, triggerProcessing, search incl. the fail-loud 503, ingestCallback,
+  getStickyEvent, event-sink create, version) and end-to-end **usage** recipes per language
+  are in [sdk-examples.md](./sdk-examples.md). Runnable per-language quickstart repos still
+  ship via Docs Chain once the servers exist (`[OPEN: sdkx-2]` there).
 - `[OPEN: rest-2]` `/metrics` exposure format (Prometheus text vs OTLP) is set in the
   deployment pack; it is out of the product `/v1` contract.
 

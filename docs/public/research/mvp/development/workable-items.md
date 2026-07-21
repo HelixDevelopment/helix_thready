@@ -2,11 +2,12 @@
   Title           : Helix Thready — Workable-Items Backlog (ATM-NNN)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/workable-items.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
-  Related         : ./index.md, ./agent-orchestration.md, ./build-new-subsystems.md,
-                    ./submodule-map.md, ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
+  Related         : ./index.md, ./workable-items-detail.md, ./agent-orchestration.md,
+                    ./build-new-subsystems.md, ./submodule-map.md,
+                    ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
 
 # Helix Thready — Workable-Items Backlog (ATM-NNN)
@@ -15,6 +16,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial backlog — ATM-001…ATM-069 mapped to the four phases |
 | 2 | 2026-07-21 | swarm (development, review) | Review pass — added ATM-070/071/072; completed the §9 gap-register coverage matrix (added 2.4, 2.8, 7.4, 8.3, 9.2, 9.4, 13) so the completeness claim holds |
+| 3 | 2026-07-22 | swarm (development, pass 3) | Depth pass — added the full-granularity companion [workable-items-detail.md](./workable-items-detail.md); closed ATM-067 (AgentPool read at source); rescoped ATM-062 (session_orchestrator now shipped, not DESIGN-ONLY); partial-closed ATM-068 (`Agentic` verified); updated the §8 open-items register accordingly |
+| 4 | 2026-07-22 | swarm (development, critic pass) | Linked the `test_types` field to the new canonical **15 mandated test types** enumeration in [coding-standards.md §8](./coding-standards.md#8-anti-bluff-discipline-114-27) so each item's coverage is verifiable against a self-contained list |
 
 This document is the granular, decoupled, agent-implementable backlog for Helix Thready. Every
 item is an `ATM-NNN` ("**A**utonomous **T**hready **M**odule") workable item: independently
@@ -28,6 +31,11 @@ request §5.1.2. Items are the unit the orchestration model claims, dispatches a
 > Markdown by `workable-items sync md-to-db`. This document is the human-readable projection; the
 > DB is the machine source. The DB is **never gitignored** and is committed + pushed alongside the
 > MD on every state change.
+
+> **Full-granularity companion.** This file is the **summary** view (id/kind/pri/deps/gap tables).
+> The **implementation-ready** per-item cards — task-level sub-items (`ATM-NNN.k`), Given/When/Then
+> acceptance, explicit blocks/blocked-by edges, and `[VERIFIED-SOURCE]` anchors for every claim read
+> at module source in Pass 3 — live in [workable-items-detail.md](./workable-items-detail.md).
 
 ## Table of Contents
 
@@ -76,6 +84,9 @@ Field notes: `kind=PRODUCTION-WIRE` means "wire an existing production module by
 means "add capability to an existing owned module"; `BUILD-NEW` is a confirmed new-submodule gap;
 `HARDEN` raises a scaffold to reliance-grade; `AUDIT` is a re-verification/decoupling task. Every
 non-unit test type exercises the real system `[CONSTITUTION §11.4.27]`; mocks/stubs are unit-only.
+Each item's `test_types` names the **applicable subset** of the canonical **15 mandated test types**
+enumerated in [coding-standards.md §8](./coding-standards.md#8-anti-bluff-discipline-114-27) (target:
+100% test-type coverage per feature × platform cell, not a line-percentage).
 
 ## 2. Item lifecycle
 
@@ -92,17 +103,25 @@ stateDiagram-v2
   DONE --> [*]
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** A workable item begins `TODO`.
-The automatic multi-track ruler `[§11.4.187]` claims it exactly once through the append-only claim
+**Explanation (for readers/models that cannot see the diagram).** A workable item begins `TODO`. The
+automatic multi-track ruler `[§11.4.187]` claims it exactly once through the append-only claim
 registry `[§11.4.176]`, moving it to `CLAIMED`; no second track may claim the same item or its
 hidden-coupling logical group. A headless worker then takes it to `IN_PROGRESS` on its own isolated
-git-worktree so concurrent tracks never collide in one checkout. If it hits an external dependency
-(hardware, a not-yet-merged prerequisite item, a long build) it goes `BLOCKED` and is auto-backfilled
-with other actionable work rather than idling `[§11.4.192/94]`. When the reproduce-first RED test
-turns GREEN and every mandated test type passes, the item enters `REVIEW`: an independent AI review
-runs on **Fable @ xhigh (Opus xhigh fallback)** `[§11.4.209]`. A `NO-GO` sends it back to
-`IN_PROGRESS` to iterate `[§11.4.134]`; a `GO` merges onto the latest main (no force-push,
-`[§11.4.113]`) and the item is `DONE`.
+git-worktree so concurrent tracks never collide in one checkout.
+
+The middle of the lifecycle handles the two ways real work stalls or is judged. If an item hits an
+external dependency (hardware, a not-yet-merged prerequisite item, a long build) it goes `BLOCKED`
+and the track is auto-backfilled with other actionable work rather than idling `[§11.4.192/94]`;
+when the dependency clears it returns to `IN_PROGRESS`. When the reproduce-first RED test turns GREEN
+and every mandated test type passes, the item enters `REVIEW`, where an independent AI review runs on
+**Fable @ xhigh (Opus xhigh fallback)** `[§11.4.209]` — a genuine second opinion in a different
+model/context than the author.
+
+The terminal transitions are the two review verdicts. A `NO-GO` sends the item back to `IN_PROGRESS`
+to iterate `[§11.4.134]` and be re-reviewed; a `GO` merges it onto the latest main with no force-push
+`[§11.4.113]` and the item is `DONE`. Because `REVIEW → DONE` is gated on `GO` and `IN_PROGRESS →
+REVIEW` is gated on all test types GREEN, an item can never reach `DONE` on a red test or an
+unreviewed diff — the state machine itself is the anti-bluff enforcement.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/item-lifecycle.mmd](./diagrams/item-lifecycle.mmd).
 
@@ -256,7 +275,7 @@ These span all phases (see the dotted band in [index.md §4](./index.md#4-how-th
 | **ATM-059** | **Decoupling audit** `[§11.4.28]` — each reused submodule verified project-not-aware/config-injected; no nested own-org chains | AUDIT | P1 | 12 |
 | **ATM-060** | SDK codegen — OpenAPI 3.1 + Protobuf via the `helix_proto` pattern (`buf` → Go/Rust; `openapi-generator` → TS/Dart) + thin idiomatic layer per language | BUILD-NEW | P1 | 13 |
 | **ATM-061** | `TOON` + `token_optimizer` — implement (load-bearing for the token-optimization mandate `[§11.4.198]`) **or** explicitly mark out-of-scope for MVP | HARDEN | P1 | 2.9 |
-| **ATM-062** | `session_orchestrator` — implement the atomic track-claim registry the multitrack layer relies on (design-only today) | BUILD-NEW | P1 | 2.9 |
+| **ATM-062** | `session_orchestrator` — **rescoped (Pass 3):** the atomic track-claim registry is **now shipped at source** (`vasic-digital/session_orchestrator/claim/claim.go` — exactly-once `Registry.TryClaim`/`Release`), superseding the gap register's DESIGN-ONLY status; item is **wire+verify+integrate**, not build-from-scratch `[VERIFIED-SOURCE]` | HARDEN | P1 | 2.9 |
 | **ATM-063** | HelixAgent — resolve the HelixAgent↔HelixCode identity/module split; enumerate + close admitted stub/bluff areas; pin only the packages Thready needs | HARDEN | P2 | 2.2 |
 | **ATM-064** | LLMProvider — per-adapter contract tests for every adapter Thready relies on; confirm embeddings interface location | AUDIT | P1 | 2.3, 13 |
 | **ATM-065** | LLMsVerifier — reconcile the `:7061` vs `:8080` port; expose a stable scoring API for HelixLLM's fallback chain; prune doc sprawl | HARDEN | P2 | 2.5 |
@@ -273,8 +292,8 @@ Tracked `[OPEN: …]` items, each carried as a workable item so nothing is paper
 |----|-------------|----------------|-----------------|
 | **ATM-066** | `constitution-anchor-verify` | Local Constitution submodule copy tops out at §11.4.192; **§11.4.196/198/209** wording taken from the final request's descriptions, not read at source | Re-verify against the canonical `HelixDevelopment/helix_constitution` before relying on precise normative text; update citations |
 | **ATM-018/ATM-067** | `max-oneme-go-port` | OneMe user-WS reference impls are Python; Go port unproven | Research spike + protocol capture; ship Bot-API scope first (see build-new plan) |
-| **ATM-067** | `agentpool-contract` | `digital.vasic.llmorchestrator` `AgentPool` capability-matching contract not locally cloned / not source-verified | `gh repo view vasic-digital/llmorchestrator`; document the capability-match contract for the dev-fleet; add HarmonyOS/Aurora build-agent capabilities |
-| **ATM-068** | `flagged-modules-verify` | `Normalize`/`conversation`/`SkillRegistry`/`ToolSchema`/`MCP_Module`/`Agentic`/`Planning`/`AgentWrapper` import paths unconfirmed (docs-only in gap register) | Source-verify + pin exact import paths before any item depends on them `[GAP: 2.9, §13]` |
+| **ATM-067** | ~~`agentpool-contract`~~ **CLOSED (Pass 3)** | Was not locally cloned; now **read at source** — `vasic-digital/LLMOrchestrator/pkg/agent/pool.go`: `AgentPool.Acquire(ctx, AgentRequirements) (Agent, error)` + `Release(Agent)`, capability-matched via `Agent.Capabilities() AgentCapabilities` `[VERIFIED-SOURCE]` | **Done** — contract documented in [workable-items-detail.md §ATM-067](./workable-items-detail.md#atm-067--llmorchestrator-agentpool-contract-open--closed) + [agent-orchestration.md §3](./agent-orchestration.md#3-native-alias-first-model-selection-1141961198). Residual (non-blocking): add HarmonyOS/Aurora build-agent capabilities if those become agent tasks |
+| **ATM-068** | `flagged-modules-verify` **(partial, Pass 3)** | `vasic-digital/Agentic` now **verified to exist** at source ("Graph-based agentic workflow orchestration"); `Normalize`/`conversation`/`SkillRegistry`/`ToolSchema`/`MCP_Module`/`Planning`/`AgentWrapper` still **not** individually source-verified | Source-verify + pin exact import paths for the residual seven before any item depends on them `[GAP: 2.9, §13]` |
 | **ATM-069** | `docs-chain-tooling` | Docs Chain honest-SKIPs md→HTML/PDF when `pandoc`/`weasyprint` are absent (as on the current host) | Provision pandoc/weasyprint on dev/CI hosts so `ATM-009` siblings generate `[GAP: 10.1]` |
 | **ATM-072** | `sibling-area-index-missing` | The `../architecture/index.md` and `../database/index.md` canonical entry points `[§11.4.212]` do not yet exist, so the upstream cross-links from [index.md §3](./index.md#3-upstream--downstream-dependencies) resolve only once those areas add their `index.md` (every other sibling area — api/testing/deployment/design/user-guides — already has one) | Architecture and Database area owners create their `index.md`; until then the links target the canonical path, tracked here so the dead reference is not papered over `[CONVENTIONS §5/§7]` |
 
@@ -294,7 +313,7 @@ gaps are cross-referenced to their owning area.)
 | 2.6 VisionEngine | No OCR engine | ATM-033 |
 | 2.7 Embeddings | No native llama.cpp backend | ATM-041, ATM-039 |
 | 2.8 Memory / HelixMemory | Word-overlap search; HelixMemory heavyweight | ATM-070 (standardize on vectordb+embeddings+rag; defer HelixMemory) |
-| 2.9 agent-support | TOON/token_optimizer/session_orchestrator design-only; FLAGGED modules | ATM-061, ATM-062, ATM-068 |
+| 2.9 agent-support | TOON/token_optimizer design-only; `session_orchestrator` **now shipped** (claim registry read at source — ATM-062 rescoped to wire/verify); FLAGGED modules (`Agentic` verified, seven residual) | ATM-061, ATM-062, ATM-068 |
 | 3.1 VectorDB | Qdrant/others unverified | ATM-042 |
 | 3.2 database/storage | No partitioning; MinIO signed-URL parity | ATM-043 |
 | 4.1 helix_skills | No execution engine; format inconsistency; 95 findings | ATM-025, ATM-037, ATM-038, ATM-036 |

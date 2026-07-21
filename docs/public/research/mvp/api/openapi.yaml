@@ -2,17 +2,27 @@
 #  Title           : Helix Thready — REST /v1 OpenAPI 3.1 Contract
 #  Classification  : PUBLIC
 #  Location        : docs/public/research/mvp/api/openapi.yaml
-#  Status          : Draft — v0.2
-#  Revision        : 2 (2026-07-21)
+#  Status          : Draft — v0.4
+#  Revision        : 4 (2026-07-22)
 #  Author          : Helix Thready documentation swarm (API & SDKs)
 #  Related         : ./rest-endpoints.md, ./authn-authz.md, ./error-model.md,
 #                    ./versioning.md, ./event-bus-contract.md, ./sdk-strategy.md,
-#                    ./contract-tests.md
+#                    ./contract-tests.md, ./asyncapi.yaml, ./sdk-examples.md
 #  Rev 2 changes   : Added hmacAuth scheme + wired to callback/webhook; completed
 #                    oauth2 scope list (events:read, billing:read); added Unprocessable
 #                    (422) response; added x-thready-maturity vendor extensions to every
 #                    non-GA operation; added Idempotency-Key to all unsafe async POSTs;
 #                    documented p95 SLO + universal 401/429/500 responses.
+#  Rev 3 changes   : Depth pass — added GET /version (closes ver-2) + VersionInfo;
+#                    added /v1/event-sinks CRUD (closes evt-2) + EventSink/EventSinkCreate;
+#                    added request/response `examples` to the primary operations (login,
+#                    createApiKey, listPosts, getThread, triggerProcessing, search,
+#                    ingestCallback, getStickyEvent); expanded search 503 + process 409 with
+#                    fail-loud / lost-race error examples. Sibling AsyncAPI 3.0 at asyncapi.yaml.
+#  Rev 4 changes   : Completeness-critic pass — fixed the stale `[OPEN: evt-2]`/"deferred to
+#                    the User Service pack" note inside the eventDelivery webhook description;
+#                    it now points at the shipped /v1/event-sinks CRUD group (createEventSink)
+#                    and the once-only HMAC secret, so the file no longer contradicts itself.
 #  Provenance      : [DEFAULT — adjustable] surface derived from the decision
 #                    matrix + Q1–Q45; RBAC vendor-extension pattern reused
 #                    verbatim from vasic-digital/helix_proto (openapi/helix.v1.yaml).
@@ -760,6 +770,59 @@ components:
         trace_id: { type: string }
         metadata: { type: object, additionalProperties: { type: string } }
 
+    # ----- Version / diagnostics -----
+    VersionInfo:
+      type: object
+      description: >-
+        Machine-readable build + contract identity (closes `[OPEN: ver-2]`). Lets support
+        correlate a client against the exact deployed contract; unversioned in spirit but
+        served under /v1 for discoverability.
+      required: [api_version, contract_hash]
+      properties:
+        api_version: { type: string, description: "info.version semver, e.g. 1.0.0." }
+        contract_hash: { type: string, description: "sha256 of the canonical openapi.yaml + proto set." }
+        proto_package: { type: string, example: "helix.thready.v1" }
+        build_commit: { type: string, description: "Short git SHA of the running build." }
+        built_at: { type: string, format: date-time }
+        deprecations:
+          type: array
+          description: Currently-deprecated operationIds with their Sunset dates.
+          items:
+            type: object
+            properties:
+              operation_id: { type: string }
+              sunset: { type: string, format: date }
+
+    # ----- Outbound event sinks (closes evt-2) -----
+    EventSink:
+      type: object
+      description: >-
+        A registered outbound-webhook sink (see event-bus-contract.md §9 DDL `event_sink`).
+        The HMAC `secret` is returned ONCE at creation, never again.
+      required: [id, url, event_types, active, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        url: { type: string, format: uri }
+        event_types:
+          type: array
+          items: { type: string }
+          description: Subscribed dot-notation types (glob allowed, e.g. "processing.*").
+        secret:
+          type: [string, "null"]
+          description: HMAC signing secret — returned ONCE at creation, never again.
+        active: { type: boolean, default: true }
+        max_attempts: { type: integer, default: 8, description: Exponential back-off ceiling. }
+        created_at: { type: string, format: date-time }
+        last_delivery_at: { type: [string, "null"], format: date-time }
+    EventSinkCreate:
+      type: object
+      required: [url, event_types]
+      properties:
+        url: { type: string, format: uri }
+        event_types: { type: array, items: { type: string }, minItems: 1 }
+        max_attempts: { type: [integer, "null"] }
+
 # ---------------------------------------------------------------------------
 #  Paths
 # ---------------------------------------------------------------------------
@@ -778,12 +841,27 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/LoginRequest' }
+            examples:
+              adminWithTotp:
+                summary: Admin tier (TOTP mandatory)
+                value: { email: "admin@t1.example", password: "correct-horse-battery", totp: "123456" }
+              standardUser:
+                summary: Standard user (TOTP optional)
+                value: { email: "user@t1.example", password: "correct-horse-battery" }
       responses:
         '200':
           description: Authenticated.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TokenPair' }
+              examples:
+                pair:
+                  value:
+                    access_token: "eyJhbGciOiJSUzI1Ni4…"
+                    refresh_token: "eyJhbGciOiJSUzI1Ni4…"
+                    token_type: Bearer
+                    expires_in: 900
+                    refresh_expires_in: 604800
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
@@ -1285,6 +1363,23 @@ paths:
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/Post' } }
                   meta: { $ref: '#/components/schemas/PageMeta' }
+              examples:
+                onePageFailed:
+                  summary: One page of failed posts (cursor present, estimate at Large scale)
+                  value:
+                    data:
+                      - id: "9b1e4c00-0000-4000-8000-000000000001"
+                        channel_id: "3a2b1c00-0000-4000-8000-000000000009"
+                        external_id: "tg:1024"
+                        is_root: true
+                        author: { external_id: "u:42", display_name: "poster", is_system: false }
+                        body: "Great docs here #research https://example.org/paper"
+                        hashtags: ["research"]
+                        categories: ["research"]
+                        links: ["https://example.org/paper"]
+                        posted_at: "2026-07-22T09:12:00Z"
+                        processing: { status: "failed", progress: 0.4, attempt: 3, max_attempts: 5, last_error: "download source unreachable", updated_at: "2026-07-22T09:14:10Z" }
+                    meta: { next_cursor: "b3f0…opaque", total_estimate: 1284 }
 
   /posts/{postId}:
     parameters:
@@ -1352,7 +1447,25 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ProcessingJob' }
-        '409': { $ref: '#/components/responses/Conflict' }
+              examples:
+                claimed:
+                  summary: Single claim won; deterministic precedence returned
+                  value:
+                    id: "7c9a…job"
+                    post_id: "9b1e4c00-0000-4000-8000-000000000001"
+                    status: { status: "claimed", progress: 0, attempt: 1, max_attempts: 5 }
+                    precedence: ["download", "convert", "analyze", "research", "reply"]
+                    created_at: "2026-07-22T09:20:00Z"
+        '409':
+          description: >-
+            conflict — a concurrent claim already won (single-claim guarantee), or the
+            Idempotency-Key was replayed with a different body.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                lostRace:
+                  value: { error: { code: conflict, message: "post already claimed for processing", status: 409, trace_id: "a1b2…" } }
         '422': { $ref: '#/components/responses/Unprocessable' }
 
   /posts/{postId}/reprocess:
@@ -1446,6 +1559,13 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/Callback' }
+            examples:
+              metubeCompleted:
+                summary: MeTube reports a completed video download
+                value: { job_id: "dl-9931", provider: "metube", state: "completed", progress: 1.0, result_asset_ref: "asset:5f2a…", error: null }
+              bobaFailed:
+                summary: Boba reports a failed torrent fetch
+                value: { job_id: "dl-9932", provider: "boba", state: "failed", progress: 0.12, result_asset_ref: null, error: "no seeders" }
       responses:
         '204': { description: Accepted. }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -1607,16 +1727,47 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/SearchRequest' }
+            examples:
+              hybrid:
+                summary: Hybrid search over posts + generated materials
+                value: { query: "self-hosted vector database benchmarks", mode: "hybrid", sources: ["posts", "generated"], top_k: 20, rerank: true }
       responses:
         '200':
           description: Results.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SearchResult' }
+              examples:
+                ranked:
+                  summary: Ranked results with the active real embedder echoed back
+                  value:
+                    results:
+                      - source_id: "9b1e4c00-0000-4000-8000-000000000001"
+                        kind: "post"
+                        score: 0.8123
+                        span: "para:3"
+                        snippet: "…benchmarks for pgvector vs. dedicated vector stores…"
+                    took_ms: 214
+                    embedder: "llama"
         '400': { $ref: '#/components/responses/BadRequest' }
         '422': { $ref: '#/components/responses/Unprocessable' }
         '429': { $ref: '#/components/responses/RateLimited' }
-        '503': { $ref: '#/components/responses/Unavailable' }
+        '503':
+          description: >-
+            unavailable — the real embedder is not active (fail-loud on the HashEmbedder
+            stub, `[GAP: #1]`) or a downstream (vectordb/embeddings) is degraded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                hashEmbedderFailLoud:
+                  value:
+                    error:
+                      code: unavailable
+                      message: "semantic search requires a real embedding provider (HELIX_EMBEDDING_PROVIDER=llama)"
+                      status: 503
+                      trace_id: "b2c3…"
+                      retry_after: 5
 
   # ============================== SKILLS ==============================
   /skills:
@@ -1813,6 +1964,120 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EventEnvelope' }
+              examples:
+                lastProgress:
+                  summary: Last-value processing.progress for a post (reconnect reconcile)
+                  value:
+                    id: "8f0e…-uuid"
+                    type: "processing.progress"
+                    source: "processing-engine"
+                    payload: { post_id: "9b1e4c00-0000-4000-8000-000000000001", progress: 0.6, stage: "analyze" }
+                    timestamp: "2026-07-22T09:22:00Z"
+                    trace_id: "c3d4…"
+                    metadata: { account_id: "a1c2…", channel_id: "3a2b…" }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ============================== EVENT SINKS (outbound webhooks) ==============================
+  /event-sinks:
+    get:
+      tags: [events]
+      operationId: listEventSinks
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: List registered outbound-webhook sinks for the tenant.
+      description: >-
+        Closes `[OPEN: evt-2]`. Backed by the API-plane-owned `event_sink` table
+        (event-bus-contract.md §9). Requires scope `events:read` + `accounts:admin`.
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Sinks (secrets never included after creation).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EventSink' } }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+    post:
+      tags: [events]
+      operationId: createEventSink
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Register an outbound-webhook sink (HMAC secret returned once).
+      description: >-
+        The generated HMAC `secret` is returned ONCE in this response and never again;
+        Thready signs each delivery with it (`X-Thready-Signature`). See the `eventDelivery`
+        webhook and asyncapi.yaml `eventDelivery` channel.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventSinkCreate' }
+            examples:
+              processingSink:
+                value: { url: "https://ci.example.org/thready-hook", event_types: ["processing.*", "asset.ready"], max_attempts: 8 }
+      responses:
+        '201':
+          description: Created (secret present exactly once).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventSink' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /event-sinks/{sinkId}:
+    parameters:
+      - name: sinkId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [events]
+      operationId: getEventSink
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Fetch a sink (without its secret).
+      responses:
+        '200':
+          description: Sink.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventSink' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [events]
+      operationId: updateEventSink
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Enable/disable a sink or change its subscribed types.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                active: { type: boolean }
+                event_types: { type: array, items: { type: string } }
+                max_attempts: { type: integer }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventSink' }
+    delete:
+      tags: [events]
+      operationId: deleteEventSink
+      x-required-roles: [account_admin]
+      x-thready-maturity: build_new
+      summary: Delete a sink (cascades its delivery ledger).
+      responses:
+        '204': { description: Deleted. }
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ============================== OPS ==============================
@@ -1836,6 +2101,32 @@ paths:
         '200': { description: Ready. }
         '503': { $ref: '#/components/responses/Unavailable' }
 
+  /version:
+    get:
+      tags: [ops]
+      operationId: getVersion
+      x-required-roles: [user]
+      summary: Build + contract identity (support diagnosability).
+      description: >-
+        Closes `[OPEN: ver-2]`. Returns the deployed API semver, a hash of the canonical
+        contract (openapi + proto), the proto package, the build commit, and any active
+        deprecations with their Sunset dates. See versioning.md §6/§8.
+      responses:
+        '200':
+          description: Version info.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VersionInfo' }
+              examples:
+                current:
+                  value:
+                    api_version: "1.0.0"
+                    contract_hash: "sha256:9f2c…"
+                    proto_package: "helix.thready.v1"
+                    build_commit: "c1abcad"
+                    built_at: "2026-07-22T08:00:00Z"
+                    deprecations: []
+
 # ---------------------------------------------------------------------------
 #  Webhooks (OpenAPI 3.1) — outbound callbacks Thready SENDS to subscribers.
 # ---------------------------------------------------------------------------
@@ -1847,9 +2138,11 @@ webhooks:
         Alternative to WS/SSE for server-to-server subscribers. Thready signs each
         delivery with an `X-Thready-Signature` HMAC-SHA256 header over the raw body
         (the receiver verifies it — see `hmacAuth`); non-2xx triggers exponential
-        back-off retry from the durable stream. Payload is the same EventEnvelope used
-        on the live streams. Sink registration is `[OPEN: evt-2]` (`/v1/event-sinks`,
-        deferred to the User Service pack).
+        back-off retry from the durable stream (bounded by `EventSink.max_attempts`).
+        Payload is the same EventEnvelope used on the live streams. Sinks are
+        registered and managed via the `/v1/event-sinks` CRUD group (`createEventSink`
+        et al., `x-thready-maturity: build_new`); the per-sink HMAC secret is returned
+        once at creation. Closes `[OPEN: evt-2]`.
       security:
         - hmacAuth: []
       requestBody:

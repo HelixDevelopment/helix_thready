@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: shared `.ds-*` primitives (verbatim), Thready composites, per‑platform adapters, states/anatomy, build backlog, testing |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: added a TDD reproduce‑first (RED) test for `thready-processing-pipeline`; added the mandated **Challenges** scenario‑bank test type (`[GAP: 9.3]`) + backlog item |
+| 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: verbatim primitives table completed against source (`--btn--secondary/--ghost`, `--elev-flat`, `--fg-2`/`--meta`/`--border-soft` aliases); component state-lifecycle diagram (§5b) + `.mmd`; **per-platform variant matrix for every composite** (§7.1 Angular/React/KMP/Flutter/TUI + status); five more component contracts (thread-row, hashtag-chip, search-bar, wizard, branding-editor, toast, §6.1); a11y name/role/keyboard per composite |
 
 ## Table of contents
 
@@ -23,8 +24,11 @@
 - [3. Shared primitives (verbatim from design_system)](#3-shared-primitives-verbatim-from-design_system)
 - [4. Angular adapters (verbatim interfaces)](#4-angular-adapters-verbatim-interfaces)
 - [5. Thready composite components](#5-thready-composite-components)
+- [5b. Component state lifecycle](#5b-component-state-lifecycle)
 - [6. Component contract (anatomy · props · states · a11y)](#6-component-contract-anatomy--props--states--a11y)
+  - [6.1 Additional component contracts](#61-additional-component-contracts)
 - [7. Per‑platform adapters](#7-per-platform-adapters)
+  - [7.1 Per‑component variant matrix (all platforms)](#71-per-component-variant-matrix-all-platforms)
 - [8. States, empty/skeleton/error](#8-states-emptyskeletonerror)
 - [9. Testing the library](#9-testing-the-library)
 - [10. Build backlog & gaps](#10-build-backlog--gaps)
@@ -117,17 +121,32 @@ collisions. All are token‑bound (a theme swap re‑tints them) and AA‑inheri
 | Badge | `.ds-badge` + `--success`/`--warn`/`--danger` | semantic, `color-mix` tint |
 | Brand mark | `.ds-brand-mark` | decorative `--brand` only |
 
-Example (verbatim button contract):
+Example (verbatim button contract, **all three variants** `[VERIFIED — components/css/components.css]`):
 
 ```css
 .ds-btn { display:inline-flex; align-items:center; gap:var(--space-2);
   font:500 var(--text-base)/1 var(--font-body); padding:var(--space-3) var(--space-5);
   border-radius:var(--radius-sm); border:1px solid transparent; cursor:pointer;
-  transition: background-color var(--motion-fast) var(--ease-standard), … ; }
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard); }
 .ds-btn:focus-visible { outline:none; box-shadow:var(--focus-ring); }
-.ds-btn--primary { background:var(--accent); color:var(--accent-on); }
+.ds-btn--primary   { background:var(--accent); color:var(--accent-on); }
+.ds-btn--primary:hover  { background:var(--accent-hover); }   /* color-mix(accent, black 8%)  */
+.ds-btn--primary:active { background:var(--accent-active); }  /* color-mix(accent, black 14%) */
+.ds-btn--secondary { background:transparent; color:var(--fg); border-color:var(--border-strong); }
+.ds-btn--secondary:hover { background:var(--surface-warm); }
+.ds-btn--ghost     { background:transparent; color:var(--accent); }
+.ds-btn--ghost:hover { background:color-mix(in oklab, var(--accent), transparent 90%); }
 @media (prefers-reduced-motion: reduce) { .ds-btn { transition:none; } }
 ```
+
+The `.ds-container` responsive gutters and `.ds-section` rhythm are token‑driven at the two
+breakpoints (768 / 1024px) `[VERIFIED]`; the badge tints use `color-mix(in oklab, <semantic>,
+transparent 90%)`, so a theme swap re‑tints every semantic badge without new CSS. Additional
+verified structural aliases the primitives lean on: `--elev-flat: none`, `--fg-2`/`--meta` (=`--fg`
+/`--muted`), and `--border-soft` (=`--border`) — declared once in `core.css`/theme so composites
+never hard‑code a value.
 
 ## 4. Angular adapters (verbatim interfaces)
 
@@ -175,6 +194,52 @@ API names.
 | `thready-toast` / live‑region | Async result + SR announcements | tokens, ARIA live | global |
 | `thready-empty` / `thready-skeleton` | Empty & loading states | tokens | every list/detail |
 
+## 5b. Component state lifecycle
+
+Every data‑bearing composite moves through **one** state machine (the legend in
+[wireframes §1.1](./wireframes.md#11-interaction-state-legend)). Specifying it once means no screen
+ships a missing state and the visual‑regression matrix (§9) has an exhaustive list of cells to cover.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Loading: mount / fetch
+  Loading --> Skeleton: > 150ms (avoid flash)
+  Skeleton --> Content: data resolved
+  Loading --> Content: data resolved (fast)
+  Loading --> Empty: resolved, zero rows
+  Loading --> Error: fetch failed
+  Content --> Loading: refetch / refresh
+  Error --> Loading: retry
+  Empty --> Loading: primary action (e.g. Add channel)
+  Content --> Disabled: RBAC / offline
+  Content --> Focused: keyboard focus-visible
+  Focused --> Content: blur
+  Content --> Validating: form submit
+  Validating --> Content: 200 ok (optimistic confirmed)
+  Validating --> InvalidInline: 4xx field errors (--danger)
+  InvalidInline --> Validating: correct + resubmit
+  Content --> [*]: unmount
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/component-state-lifecycle.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** A component starts **Idle**, then
+enters **Loading** on mount or fetch. To avoid a flash of placeholder for fast responses, the skeleton
+only shows after ~150ms (`Loading → Skeleton`); a fast response goes straight to **Content**. A
+resolved fetch with zero rows becomes **Empty** (never a blank pane — an icon, a one‑line reason, and
+a primary action), and a failed fetch becomes **Error** (page‑level with retry, or field‑level inline).
+
+From **Content** the component can refetch (back to Loading), take keyboard focus (**Focused**, drawn
+with the verified `--focus-ring`), or — for forms — submit into **Validating**. A validating submit
+that the server accepts returns to Content with the optimistic value confirmed; one the server rejects
+with `4xx` field errors moves to **InvalidInline** (`--danger`, `aria-describedby` to the message),
+from which the user corrects and resubmits. **Disabled** covers RBAC‑gated or offline controls (muted,
+`aria-disabled`, not focus‑trapping). Retry and the empty‑state primary action both re‑enter Loading,
+so the loop is closed. Every arrow here is a **test cell**: the Challenges scenario banks (§9) drive a
+component through each transition and capture runtime evidence, and each terminal state is a row in the
+visual‑regression theme×state matrix.
+
 ## 6. Component contract (anatomy · props · states · a11y)
 
 Every Thready component is documented to this contract. Worked example — `thready-processing-pipeline`:
@@ -209,6 +274,81 @@ The same contract (anatomy / props / all interaction states / a11y name+role+key
 light+dark) is authored for **every** component in §5 — this is the spec the Figma component set
 ([prototypes.md](./prototypes.md)) and the implementation must both satisfy.
 
+### 6.1 Additional component contracts
+
+The five most load‑bearing composites, to the same contract `[DEFAULT — adjustable API names,
+OPEN THREADY-DES-11]`:
+
+**`thready-thread-row`** — one complete post (root + organic reply count).
+
+```typescript
+export interface ThreadRow {
+  postId: string; author: string; excerpt: string; replyCount: number;
+  tags: HashTag[]; status: 'queued'|'running'|'processed'|'failed';
+  hasSystemReplies: boolean;                 // system replies are separated, not counted
+}
+@Component({ selector: 'thready-thread-row' })
+export class ThreadRowComponent {
+  row     = input.required<ThreadRow>();
+  expanded = model(false);                    // ▸/▾ discloses the organic reply chain inline
+  open     = output<string>();                // routes to Post detail
+}
+```
+
+- **Anatomy:** excerpt + `↩N` reply count + hashtag chips + status badge + disclosure caret.
+- **States:** default / hover / focus‑visible / expanded / running (inline % on the status badge) /
+  failed (danger badge). **A11y:** row is a `role="button"` with `aria-expanded`; `Enter/Space`
+  toggles disclosure, `→`/`←` expand/collapse; the count reads "12 replies".
+
+**`thready-hashtag-chip`** — a tag with the **direct vs. AI‑indirect** distinction.
+
+```typescript
+export interface HashTag { label: string; origin: 'direct'|'indirect'; }
+// direct  = --brand fill / brand-ink; indirect = --muted outline + a "derived" tooltip.
+```
+
+- **A11y:** indirect chips append "(derived)" to the accessible name so the origin is not
+  color‑only; chips are focusable when interactive (filter‑on‑click) and inert when decorative.
+
+**`thready-search-bar`** — query + mode + scope + filters.
+
+- **Props:** `query = model<string>()`, `mode = model<'semantic'|'keyword'|'hybrid'>()`,
+  `scope = model<Scope[]>()`, `filters`, `search = output<SearchRequest>()`.
+- **States:** idle (recent searches) / typing / validating (busy) / degraded (`--warn` banner + score
+  column hidden when on the hash‑embedder `[GAP: 2.1]`). **A11y:** a labelled `role="search"`; mode is
+  a radio group, scope a checkbox group with ≥ 1 enforced; results announced via a polite live region.
+
+**`thready-wizard`** (stepper) — multi‑step flows (Add‑Channel).
+
+- **Props:** `steps`, `current = model<number>()`, per‑step `valid` guard, `complete = output()`.
+- **Behavior:** *Next* gated on step validity; *Back*/`Esc` never loses entered data. **A11y:**
+  `aria-current="step"`; each step is a labelled region; the busy step sets `aria-busy` (Resolve).
+
+**`thready-branding-editor`** + **live AA meter** — the white‑label surface.
+
+```typescript
+export interface AccentCheck { hex: string; surface: string; ratio: number; passes: boolean; suggestion?: string; }
+@Component({ selector: 'thready-branding-editor' })
+export class BrandingEditorComponent {
+  value  = model<Branding>();
+  aaLight = computed<AccentCheck>(() => contrast(this.value().accentLight, '#ffffff'));
+  aaDark  = computed<AccentCheck>(() => contrast(this.value().accentDark,  '#020817'));
+  save   = output<Branding>();                // disabled while any AccentCheck.passes === false
+}
+```
+
+- **Contract:** the client meter and the server `ValidateAccent` gate **MUST agree on the ratio**
+  ([theming §10.1](./theming.md#101-tdd-reproduce-first-red-then-green)); a server `422` re‑opens the
+  offending field. **States:** default / dirty (unsaved guard) / previewing / validating / `422` /
+  success (audit‑logged). **A11y:** each swatch pairs a hex `<input>` with a color picker sharing one
+  label; the AA readout is `aria-live="polite"` ("accent 3.1:1, below AA 4.5:1 — try #446E12").
+
+**`thready-toast` / live‑region** — async results + SR announcements.
+
+- **Props:** `kind: 'success'|'warn'|'danger'|'info'`, `message`, `action?`, `timeout`.
+- **A11y:** `role="status"` (polite) for info/success, `role="alert"` (assertive) for danger;
+  auto‑dismiss pauses on hover/focus; never the only channel for a critical error (also inline).
+
 ## 7. Per‑platform adapters
 
 The composites are specified once and realized per platform from the same tokens. Honest status:
@@ -224,6 +364,40 @@ The composites are specified once and realized per platform from the same tokens
 **Cross‑platform component parity is a contract, not an aspiration:** each composite's states and
 a11y semantics must match across platforms (a `processing-pipeline` behaves the same on Web, Compose
 and the TUI). Parity is enforced by the visual‑regression bank (§9) once CI lands `[GAP: 9.3]`.
+
+### 7.1 Per‑component variant matrix (all platforms)
+
+Each composite is realized per platform from the same tokens. The cell records the **realization
+mechanism** and honest **status**; a blank/`—` means "renders as its primitives, no bespoke work".
+Legend: ✅ usable today · ◐ scaffold/needs‑hardening · ○ not‑yet / deferred.
+
+| Composite | Angular (Web/Desktop) ✅ | React ◐ `[GAP: 8.6]` | KMP/Compose ◐ `[GAP: 8.4]` | Flutter/Qt ◐ `[GAP: 8.2/8.3]` | TUI ✅ `[VERIFIED]` |
+|-----------|-------------------------|----------------------|----------------------------|------------------------------|--------------------|
+| `stat-card` | `.ds-card` + type tokens ✅ | Card ◐ | `Card`/`Surface` ◐ | `Card` ○ | Lipgloss bordered box ✅ |
+| `thread-row` / `reply-chain` | standalone cmp ✅ | list item ◐ | `LazyColumn` row ◐ | `ListTile` ○ | list row + disclosure ✅ |
+| `hashtag-chip` (direct/indirect) | `.ds-badge` variants ✅ | badge ◐ | `AssistChip` ◐ | `Chip` ○ | tinted `#tag` span ✅ |
+| `processing-pipeline` | signal‑input cmp ✅ | ◐ | `Column` of step rows ◐ | ○ | vertical step list ✅ |
+| `progress` + retry | `<progress>`/`.ds-btn--ghost` ✅ | ◐ | `LinearProgressIndicator` ◐ | `LinearProgressIndicator` ○ | `▓▓░` bar + `[r]etry` ✅ |
+| `status-badge` | `.ds-badge` semantics ✅ | ◐ | badge ◐ | badge ○ | glyph `✓⭮◷⚠` ✅ |
+| `search-bar` + filters | `.ds-input` + chips ✅ | ◐ | `SearchBar` ◐ | `TextField` ○ | query line + selectors ✅ |
+| `search-result` | list row ✅ | ◐ | row ◐ | row ○ | scored row ✅ |
+| `asset-card` / `media-viewer` | `<video>` + Range/HLS ✅ | ◐ | `ExoPlayer`/`AVPlayer` ◐ | platform player ○ | (link‑out; no inline media) ◐ |
+| `wizard` (stepper) | `.ds-card` steps ✅ | ◐ | `HorizontalPager` ◐ | `Stepper` ○ | numbered steps ✅ |
+| `account-switcher` | menu on `.ds-nav` ✅ | ◐ | `DropdownMenu` ◐ | `PopupMenu` ○ | `acct:` selector ✅ |
+| `branding-editor` + AA meter | inputs + swatches ✅ | ◐ | color pickers ◐ | ○ | (read‑only preview) ◐ |
+| `messenger-signin` | form + `.ds-btn` ✅ | ◐ | form ◐ | form ○ | prompt sequence ✅ |
+| `toast` / live‑region | ARIA live ✅ | ◐ | `Snackbar` ◐ | `SnackBar` ○ | `notifications.go` pane ✅ |
+| `empty` / `skeleton` | tokens ✅ | ◐ | shimmer/placeholder ◐ | shimmer ○ | text placeholder ✅ |
+
+**How to read the honesty here.** Only the **Angular** and **TUI** columns are grounded in usable
+in‑house code today (the `.ds-*` set + adapters, and the verified Bubble Tea/Lipgloss pattern). The
+**KMP/Compose**, **Flutter/Qt** and **React** columns are the *plan* on scaffolds — their status
+badges are the gap‑register reality (`[GAP: 8.2/8.3/8.4/8.6]`), and the token bridge (§7) is what
+makes a Compose/Flutter cell a re‑tint rather than a re‑author. A cell is only marked ✅ when its
+platform package is real; nothing in a ◐/○ column may be claimed to "work" until its workable item
+(§10) closes. Two intentional non‑parity cells: the TUI `media-viewer` and `branding-editor` are
+link‑out / read‑only (a terminal cannot show inline video or a live color picker), which is a
+documented, tested divergence rather than a missing state.
 
 ## 8. States, empty/skeleton/error
 

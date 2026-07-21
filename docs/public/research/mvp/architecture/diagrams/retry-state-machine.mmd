@@ -1,0 +1,17 @@
+stateDiagram-v2
+  [*] --> pending : Enqueue (INSERT post_processing_state\nON CONFLICT (post_id,task_kind) DO NOTHING)
+  pending --> queued : scheduled_at reached / priority-ordered
+  queued --> running : Dequeue — SELECT ... FOR UPDATE SKIP LOCKED\n(claimed_by=worker_id, claimed_at=now)
+  running --> completed : Execute ok → publish post.processed
+  running --> paused : TaskExecutor.Pause() → checkpoint BYTEA
+  paused --> running : TaskExecutor.Resume(checkpoint)
+  running --> stuck : StuckDetector.IsStuck (stale LastHeartbeat)
+  stuck --> pending : GetStaleTasks(threshold) → Requeue (reclaim)
+  running --> pending : failure & RetryCount < MaxRetries\nRequeue(delay = exp backoff+jitter)\nemit task.retrying / skill.step.retried
+  running --> dead_letter : failure & RetryCount >= MaxRetries\nMoveToDeadLetter(reason) → publish post.failed
+  running --> cancelled : TaskExecutor.Cancel() (operator/user)
+  dead_letter --> pending : DeadLetterTask.ReprocessAfter\n(manual reprocess, RBAC-gated)
+  completed --> running : reprocess trigger →\npost.state.invalidate + new claim
+  completed --> [*]
+  cancelled --> [*]
+  dead_letter --> [*] : abandoned (retention)

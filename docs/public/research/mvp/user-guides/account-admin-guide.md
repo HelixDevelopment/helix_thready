@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial Account Admin operations guide |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the onboarding sequence-diagram explanation into multi-paragraph form; added the VERIFIED `SKILL.md` frontmatter schema (`name`/`description`/`version` + `register.sh`) read from `helix_skills` source; added a channel-onboarding checklist |
 
 An **Account Admin** has full control of **one Account** and its members (final request §6.1). This
 guide covers managing members, onboarding channels/groups, configuring skills & hashtag recipes,
@@ -121,19 +122,33 @@ sequenceDiagram
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/account-onboarding.mmd](./diagrams/account-onboarding.mmd).
 
-**Explanation (for readers/models that cannot see the diagram).** The Account Admin onboards a
-channel by POSTing an invite link to `/v1/accounts/{id}/channels`. The REST API hands the request to
-the Thready System, which asks Herald's Telegram client to join the channel and resolve its
-`access_hash`; once joined, the API returns `201` with the channel in a `recognizing` state while the
-system auto-detects the thread type (Notes/everything vs project-management, etc.). From then on a
-loop runs continuously: on each scheduled poll **and** on `post.received` push events, Herald delivers
-new posts — each assembled as a **complete post** (root + full organic reply chain, excluding the
-system's own replies). The system enqueues every post into the BackgroundTasks queue, which
-**claims it exactly once** (no double-processing under an event storm), dispatches the matching
-Skill(s) for its hashtags/content type, and emits a `post.processed` event over WebSocket/SSE that the
-Admin's clients receive in real time. In parallel the Admin invites Standard Users and tunes the
-Account's retention, branding and skills. The key guarantee the diagram encodes is **single-claim
-idempotency**: the same post is never processed twice, even though both a poll and an event may see it.
+**Explanation (for readers/models that cannot see the diagram).** The sequence begins with the Account
+Admin POSTing a Telegram invite link to `/v1/accounts/{id}/channels`. The REST API hands the request to
+the Thready System, which asks Herald's **MTProto user client** (`HERALD_MTPROTO_*`) to join the
+channel and resolve its `access_hash`. The user client — not a bot token — is used here precisely
+because only it can subsequently read the channel's full history; a bot could post but never backfill.
+
+Once joined, the API returns `201` with the channel in a `recognizing` state while the system
+auto-detects the thread type (Notes/everything vs project-management, etc.). This recognizing phase is
+why a freshly-added channel does not immediately show categorized posts: the system is first deciding
+*what kind* of channel it is before it decides *how* to process each post.
+
+From then on a steady-state loop runs. On each scheduled poll (`THREADY_POLL_INTERVAL`) **and** on
+`post.received` push events, Herald delivers new posts, each assembled as a **complete post** — root
+message plus the full organic reply chain, excluding the system's own status replies. The two triggers
+(poll and event) are intentionally redundant so a missed push is caught by the next poll and vice
+versa.
+
+The system enqueues every post into the BackgroundTasks queue, which **claims it exactly once** via a
+Postgres lock, dispatches the matching Skill(s) for its hashtags/content type, and emits a
+`post.processed` event over WebSocket/SSE that the Admin's clients receive in real time. The
+single-claim step is the load-bearing guarantee of the whole diagram: because both a poll and an event
+can independently observe the same new post, the exactly-once claim is what prevents double-processing.
+
+In parallel with all of this, the Admin invites Standard Users and tunes the Account's retention,
+branding, and skills — these are independent of the ingest loop and can happen at any time. The
+diagram's essential message is that ingest is **continuous and idempotent**, and onboarding is just the
+one-time act that starts the loop.
 
 ```bash
 # CLI equivalent
@@ -177,6 +192,31 @@ precedence `download > convert > analyze > research > reply`. See
 > **Skill file format caveat** `[GAP: 6]`. HelixSkills currently has inconsistent Skill files (some
 > `SKILL.md` with YAML frontmatter, some without). A canonical `SKILL.md` schema is being standardized;
 > if you author custom recipes, use the frontmatter form.
+
+**VERIFIED `SKILL.md` schema (read at source in `helix_skills`).** A Skill is a directory containing a
+`SKILL.md` (the knowledge unit) and a `register.sh` (activation script). The `SKILL.md` opens with
+YAML frontmatter whose fields are exactly `name`, `description` (a *"Use when …"* trigger phrase), and
+`version`; the body is Markdown prose. Real example (VERIFIED — `constitution/skills/…/SKILL.md`):
+
+```markdown
+---
+name: Workable Item Lifecycle
+description: Use when moving a tracked item through its lifecycle — starting work, marking it ready
+  for testing, closing it, reopening it, marking it obsolete or operator-blocked…
+version: 1.0.0
+---
+
+# Workable Item Lifecycle
+
+<Markdown body: the knowledge the Skill encodes.>
+```
+
+When you author a custom Thready recipe, use this exact frontmatter form (`name`/`description`/
+`version`) so it registers cleanly. Skills carry a **complexity** level in the catalog index
+(`intermediate` / `advanced`) and are organized `atomic → composite → umbrella` in the DAG. Note the
+distinction the gap register draws `[GAP: 6]`: this is the *knowledge-unit* format — the thing that
+maps a hashtag to instructions — **not** an execution engine. Thready's Skill-dispatch engine
+(`[BUILD-NEW]` P0) is what actually *runs* the ordered steps; the `SKILL.md` only describes them.
 
 ## 7. Per-account retention & branding
 
@@ -230,8 +270,10 @@ You see only your Account's meter. Rating/invoicing is Root/deployment-scoped
 
 ## 11. Open items
 
-- `[OPEN: acct-1]` Custom Skill authoring UX depends on the canonical `SKILL.md` schema
-  standardization `[GAP: 6]`. Tracked: **ATM — standardize Skill file format + editing UI**.
+- `[OPEN: acct-1]` The `SKILL.md` **frontmatter schema is now VERIFIED** from `helix_skills` source
+  (`name`/`description`/`version` + `register.sh`, documented in §6). What remains open is the
+  authoring **UX** and enforcing the schema consistently across the existing mixed Skill files
+  `[GAP: 6]`. Tracked: **ATM — lint/normalize existing Skill files to the verified schema + editing UI**.
 - `[OPEN: acct-2]` Max channel onboarding blocked on the `[BUILD-NEW]` Max adapter `[GAP: 3]`.
   Tracked: **ATM — Max adapter**, then add a Max onboarding path to §5.
 - `[OPEN: acct-3]` Per-account branding availability is gated by a Root toggle whose exact policy

@@ -2,10 +2,11 @@
   Title           : Helix Thready — Build-New Subsystems (Scoped Design Plans)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/build-new-subsystems.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
-  Related         : ./index.md, ./submodule-map.md, ./workable-items.md, ../api/index.md,
+  Related         : ./index.md, ./submodule-map.md, ./workable-items.md, ./workable-items-detail.md,
+                    ../api/index.md,
                     ../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
 
@@ -15,6 +16,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial design plans for every `[BUILD-NEW]` gap |
 | 2 | 2026-07-21 | swarm (development, review) | Review pass — added OpenAPI 3.1 control surfaces for Asset Service, User Service and Semantic-search; added the Event Bus SSE/WS subscription contract `[CONVENTIONS §6]` |
+| 3 | 2026-07-22 | swarm (development, pass 3) | Pinned the Max adapter (§3) and ThreadReader (§9) to the **VERIFIED** herald `channels.Channel` seam (`commons_messaging/channels/channel.go`); added `[VERIFIED-SOURCE]` reconciliation notes distinguishing the real adapter contract from the illustrative Thready reader seam |
+| 4 | 2026-07-22 | swarm (development, critic pass) | Completeness fix — added a concrete **forward/rollback expand-contract migration** pair (`§7 User Service`) so the mandated `[CONVENTIONS §6]` migration-script requirement is satisfied with real up/down DDL, not only prose references |
 
 This document turns every confirmed `[BUILD-NEW]` gap (gap register §11) into a scoped, decoupled,
 enterprise-grade design plan. Each new capability becomes its **own repo** under `vasic-digital` /
@@ -108,13 +111,19 @@ stateDiagram-v2
   cancelled --> [*]
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** A task begins `queued`. When a
-worker picks it up it moves to `running` and emits periodic progress updates between 0 and 1. On
-success it transitions to `succeeded` carrying the Asset Service `asset_ref`; on error it goes
-`failed` with an error object whose `retryable` flag decides whether it re-enters `queued` under
-exponential back-off or terminates. A cancel request moves a running job to `cancelled`. `succeeded`
-and `cancelled` are terminal. Because delivery is at-least-once, every consumer treats duplicate
-updates as idempotent.
+**Explanation (for readers/models that cannot see the diagram).** The happy path runs down the left
+of the machine. A task begins `queued`; when a worker picks it up it moves to `running` and emits
+periodic progress updates between 0 and 1 (the `running --> running` self-loop). On success it
+transitions to `succeeded` carrying the Asset Service `asset_ref`, which is the payload every
+downstream consumer (the Processing Engine, the Asset Service) actually waits for.
+
+The right of the machine is the failure and cancellation handling. On error a running job goes
+`failed` with an error object whose `retryable` flag is the decision point: a retryable failure
+re-enters `queued` under exponential back-off, while a non-retryable one terminates. A cancel request
+moves a running job to `cancelled`. Both `succeeded` and `cancelled` are terminal states. Because
+delivery is at-least-once (a webhook may be redelivered, an Event Bus message replayed), every
+consumer must treat duplicate `JobUpdate`s as idempotent — the same `job_id`+`state` observed twice
+is a no-op, never a double-completion.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/callback-job-fsm.mmd](./diagrams/callback-job-fsm.mmd).
 
@@ -148,6 +157,29 @@ type maxAdapter struct {
     user *oneme.Client    // OneMe user WebSocket — Go port, spike-gated (full history)
 }
 ```
+
+> **The real seam this adapter satisfies `[VERIFIED-SOURCE]`.** The `Channel` above is the
+> Thready-facing *reader* shape (Connect/ListDialogs/ReadThread/Subscribe) used for illustration; the
+> **binding contract** the Max adapter must implement is herald's own `channels.Channel`, read at
+> source in `vasic-digital/herald/commons_messaging/channels/channel.go`:
+>
+> ```go
+> // herald/commons_messaging/channels/channel.go — VERIFIED (Wave 7 richer adapter interface).
+> type Channel interface {
+>     commons.Channel // Name / Capabilities / Send / Subscribe / HealthCheck
+>     // Reply quoting replyToID, fanning out each attachment as its own reply at the same depth.
+>     SendReplyGeneric(ctx context.Context, recipient commons.Recipient, body, replyToID string, attachments []commons.Attachment) (string, error)
+>     // Channel-native bot identity; MUST cross the wire on first call; Subscribe refuses to boot without it.
+>     BotSelfIdentity(ctx context.Context) (SelfIdentity, error)
+>     // Streams a channel-hosted file into ~/.herald/inbox/<channel>/<sha256>.<ext>, hashing inline.
+>     DownloadAttachment(ctx context.Context, externalID, mime string) (finalPath, sha256Hex string, err error)
+> }
+> ```
+>
+> The Max adapter's Bot-API transport implements this directly (`var _ channels.Channel =
+> (*maxAdapter)(nil)`); the OneMe user-WS transport adds the *history-backfill* reads the reader shape
+> models. There is **no** `channels/max` or `channels/mtproto` package in herald today — only
+> `docs/guides/messengers/MAX.md` (placeholder) — which is exactly why this is `[BUILD-NEW]`.
 
 **Sequencing (honest, anti-bluff).** Bot-API scope ships first and is testable against the operator's
 Max invite links (Appendix A fixtures). The OneMe user-WS Go port is **P0 but spike-gated**: a
@@ -399,6 +431,35 @@ CREATE TABLE app_user ( id BIGSERIAL PRIMARY KEY, email CITEXT UNIQUE NOT NULL, 
 CREATE TABLE membership ( user_id BIGINT REFERENCES app_user(id), account_id BIGINT REFERENCES account(id), role TEXT NOT NULL, PRIMARY KEY (user_id, account_id) );
 ```
 
+**Forward/rollback migration (expand-contract, `[CONVENTIONS §6]` / `[Q30]`).** Schema changes ship
+as reversible `migration.Runner` pairs, never in-place `ALTER`s that a rollback cannot undo. Every
+`ATM-NNN` that touches the schema (`ATM-019`, this service, the Asset Service §6) provides both
+directions; `ATM-003.2`'s round-trip harness asserts `up` then `down` leaves **no residue**. Worked
+example — adding a per-account membership expiry the expand-contract way (add nullable column + backfill,
+never a `NOT NULL` add that locks/breaks old writers):
+
+```sql
+-- migrations/00042_membership_expiry.up.sql  (EXPAND: additive, backward-compatible)
+BEGIN;
+ALTER TABLE membership ADD COLUMN expires_at TIMESTAMPTZ NULL;          -- nullable: old writers unaffected
+CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_membership_expiry
+  ON membership (expires_at) WHERE expires_at IS NOT NULL;              -- partial: only live expiries
+COMMIT;
+-- (a later CONTRACT migration may set NOT NULL + drop the default once every writer populates it.)
+```
+
+```sql
+-- migrations/00042_membership_expiry.down.sql  (exact inverse — round-trips to zero residue)
+BEGIN;
+DROP INDEX CONCURRENTLY IF EXISTS ix_membership_expiry;
+ALTER TABLE membership DROP COLUMN IF EXISTS expires_at;
+COMMIT;
+```
+
+`CREATE/DROP INDEX CONCURRENTLY` runs outside the surrounding txn on Postgres in production
+(`migration.Runner` splits them); the `BEGIN/COMMIT` shown is the SQLite-dev shape. Destructive
+`down` steps require a hardlinked backup + operator authorization `[§9.2]`.
+
 **OpenAPI (control surface).** Every mutation is authorized through `security/pkg/policy`; the
 authz matrix (root/account-admin/user) is enforced server-side, never trusted from the client.
 
@@ -529,6 +590,15 @@ type ThreadReader interface {
 type Thread struct { Root Post; Replies []Post; Hashtags []string; Attachments []Attachment }
 ```
 
+> **Reuses the verified herald primitives `[VERIFIED-SOURCE]`.** `ThreadReader` is a decoupled layer
+> *above* the herald `channels.Channel` seam (§3): it drives each channel's `Subscribe` (inbound
+> events), pulls attachments via `DownloadAttachment(ctx, externalID, mime)` (content-hashed into
+> `~/.herald/inbox/`), and uses `BotSelfIdentity` to exclude the system's own replies from the
+> assembled `Thread` — the echo-loop guard herald already enforces (`Subscribe` "refuses to boot
+> without a self-identity"). Telegram forum-topic/reply reads (`channels.getForumTopics` /
+> `messages.getReplies`) come from the promoted MTProto channel (`ATM-016`); `ThreadReader` normalizes
+> them into the messenger-agnostic `Thread` the Skill-dispatch engine consumes.
+
 **Why critical (VERIFIED, §3.2.1).** Tags are frequently added as a *reply* to a link-only or
 text-only root post; assembling the full chain is required before classification. **Test types:**
 unit, integration (live Telegram/Max fixtures), e2e.
@@ -607,17 +677,24 @@ flowchart TB
   classDef p1 fill:#ffe08a,stroke:#8a6d00,color:#3a2e00;
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** Red nodes are P0 (block the MVP),
-amber are P1 (GA-grade). The callback module (`ATM-030`) is foundational: the Download Manager,
-MeTube webhook and Boba callback all depend on it, and the Download Manager additionally needs the
-`filesystem` HTTP-source fix (`ATM-029`). The Download Manager and MeTube both feed the Asset Service
-(`ATM-012`). On the messenger side, Herald's promoted MTProto reader (`ATM-016`) feeds the
-ThreadReader abstraction (`ATM-017`), which the Max adapter (`ATM-018`) reuses. The User Service
-(`ATM-010`) depends on the RS256/EdDSA upgrade to `auth` (`ATM-013`). The Event Bus service
-(`ATM-011`) is a prerequisite for the Skill-dispatch engine (`ATM-025`). The Semantic-search service
-(`ATM-039`) is hard-gated on the llama-embedder enforcement (`ATM-040`) so it never ships on the
-`HashEmbedder` stub. The OCR adapter (`ATM-033`) is independent and can proceed in parallel. This
-graph is the sequencing the multi-track ruler follows when claiming build-new items.
+**Explanation (for readers/models that cannot see the diagram).** Colour encodes priority: red nodes
+are P0 (block the MVP), amber are P1 (GA-grade). The graph has three loosely-connected clusters that
+the ruler can saturate in parallel.
+
+The asset/download cluster is anchored by the callback module (`ATM-030`), which is foundational: the
+Download Manager, the MeTube webhook and the Boba callback all depend on it, and the Download Manager
+additionally needs the `filesystem` HTTP-source fix (`ATM-029`). The Download Manager and MeTube both
+feed the Asset Service (`ATM-012`), so the Asset Service sits at the cluster's sink. The messenger
+cluster is a short chain: Herald's promoted MTProto reader (`ATM-016`) feeds the ThreadReader
+abstraction (`ATM-017`), which the Max adapter (`ATM-018`) reuses.
+
+The remaining edges wire the service spine. The User Service (`ATM-010`) depends on the RS256/EdDSA
+upgrade to `auth` (`ATM-013`); the Event Bus service (`ATM-011`) is a prerequisite for the
+Skill-dispatch engine (`ATM-025`); and the Semantic-search service (`ATM-039`) is hard-gated on the
+llama-embedder enforcement (`ATM-040`) so it never ships on the `HashEmbedder` stub. The OCR adapter
+(`ATM-033`) has no inbound edge — it is genuinely independent and can proceed in parallel the instant
+a track is free. Taken together, this graph is exactly the sequencing the multi-track ruler follows
+when it claims build-new items: an item is claimable only once all its inbound edges are `DONE`.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/build-new-deps.mmd](./diagrams/build-new-deps.mmd).
 

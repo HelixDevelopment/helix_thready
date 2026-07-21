@@ -14,6 +14,8 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — auth, RBAC, encryption, sensitive content |
+| 2 | 2026-07-22 | swarm (Pass 3 depth) | Close SEC-1 — real `security/pkg/policy` (`Enforcer`, `Policy`/`Rule`/`Condition`, `EvaluationContext`, `Decision` allow/deny/audit, most-restrictive `EvaluateAll`) read at source; replace imagined `Allow(sub,action,resource)`; deepen RBAC explanation |
+| 3 | 2026-07-22 | swarm (Pass 3 depth) | Split the §7 sensitive-content diagram explanation into true multi-paragraph form (fork → dual store → RBAC-gated reveal; never-plaintext-in-vector invariant) per CONVENTIONS §4 |
 
 ## Table of Contents
 
@@ -80,13 +82,51 @@ Membership is many-to-many: a user may belong to multiple accounts, create their
 Every domain row carries `account_id`; every service handler runs account-scoped queries; the
 policy enforcer gates each action **before** the handler touches data.
 
+**SEC-1 correction (source-verified this pass).** `security/pkg/policy` was read at source
+(`policy.go`). Its real surface is a **rules-and-conditions `Enforcer`**, not an
+`Allow(subject, action, resource)` method — there are no `Action`/`Resource` types:
+
 ```go
-// Enforcement at the handler boundary (illustrative over security/pkg/policy).
+// digital.vasic.security/pkg/policy — VERIFIED at source (Pass 3)
+type Decision string                       // "allow" | "deny" | "audit"
+type Operator string                       // equals|not_equals|contains|starts_with|ends_with|in|not_in|exists|not_exists
+type Condition struct { Field string; Operator Operator; Value string; Values []string }
+type Rule      struct { Name string; Conditions []Condition; Decision Decision }
+type Policy    struct { Name, Description string; Rules []Rule; DefaultDecision Decision }
+type EvaluationContext struct { Fields map[string]string }
+type EvaluationResult  struct { Decision Decision; MatchedRule, Reason string }
+
+type Enforcer struct { /* … */ }
+func NewEnforcer() *Enforcer
+func (e *Enforcer) LoadPolicy(p *Policy) error
+func (e *Enforcer) Evaluate(ctx, policyName string, ec *EvaluationContext) (*EvaluationResult, error)
+func (e *Enforcer) EvaluateAll(ctx, ec *EvaluationContext) (*EvaluationResult, error) // most-restrictive: Deny > Audit > Allow
+```
+
+RBAC decisions are made by building an `EvaluationContext` of string fields (role, action,
+resource account, the subject's own account, …) and calling `EvaluateAll`, which returns the
+**most restrictive** decision across all loaded policies (`Deny > Audit > Allow`; empty ruleset
+defaults to Allow with reason "no policies loaded"). Thready wraps this in a small `Allow(...)`
+helper so handlers stay terse while the real enforcer does the work:
+
+```go
+// Thready-side helper over the VERIFIED policy.Enforcer + EvaluationContext.
+func (h *PostHandler) allow(ctx context.Context, sub auth.Sub, action, resourceAcct string) bool {
+    res, err := h.enforcer.EvaluateAll(ctx, &policy.EvaluationContext{Fields: map[string]string{
+        "role":            sub.Role,            // root_admin | account_admin | user
+        "action":          action,              // e.g. "post:reprocess"
+        "resource_account": resourceAcct,       // the post's account_id
+        "subject_account":  sub.AccountID,      // caller's account_id
+    }}) // cross-account rule: Deny unless subject_account == resource_account or role == root_admin
+    return err == nil && res.Decision == policy.DecisionAllow
+}
+
+// Enforcement at the handler boundary.
 func (h *PostHandler) Reprocess(w http.ResponseWriter, r *http.Request) {
     sub := auth.Subject(r.Context())                 // from validated JWT/API-key
     postID := chi.URLParam(r, "id")
     acct := h.posts.AccountOf(r.Context(), postID)
-    if !h.policy.Allow(sub, policy.Action("post:reprocess"), policy.Resource{Account: acct}) {
+    if !h.allow(r.Context(), sub, "post:reprocess", acct) {
         httpx.Forbidden(w); return                    // RBAC denies cross-account access
     }
     h.svc.Reprocess(r.Context(), postID)
@@ -120,17 +160,30 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/rbac.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** The top half shows the
-authority chain: the single Root Admin creates and edits Account Admins; each Account Admin
-invites and manages Standard Users; and a Standard User may create their own account, at which
-point they become an Account Admin of it (the dashed self-edge). The bottom half shows how any
-of those principals is enforced on every request: the client presents a token to the API
-Gateway, which authenticates it via `auth` (JWT, API key, or OAuth2); the request then passes
-through the `security/pkg/policy` RBAC enforcer, which checks the subject's role against the
-requested action and the target account **before** the service handler runs; the handler
-finally executes an account-scoped query so the database only ever returns rows matching the
-caller's `account_id`. There are two independent gates (policy check + row-level account filter)
-so a bug in one does not silently leak cross-tenant data.
+**Explanation (for readers/models that cannot see the diagram).** The diagram has two halves — an
+authority hierarchy and an enforcement pipeline — and the design intent is that the hierarchy is
+*data* while the enforcement is *mechanism*, so adding a role never means adding a code path.
+
+The top half is the authority chain. The single Root Admin (bootstrapped owner-only at deploy)
+creates and edits Account Admins; each Account Admin invites and manages the Standard Users of its
+own account and sets that account's branding/policy; and a Standard User may create their own
+account, at which point they become an Account Admin *of that account* — the dashed self-edge. The
+key subtlety the diagram encodes is that "Account Admin" is not global: a principal can be an Admin
+of account A and a plain User of account B simultaneously, which is why every decision must be made
+against a *specific* target account rather than a global role bit.
+
+The bottom half is how any of those principals is enforced on every request. The client presents a
+token to the API Gateway, which authenticates it via `auth` (JWT, API key, or OAuth2) and extracts
+the subject (role + the caller's own `account_id`). The request then passes through the
+`security/pkg/policy` enforcer, which — per the verified API above — evaluates the loaded policies
+against an `EvaluationContext` whose fields include the subject's role, the requested action, the
+**resource's** account, and the **subject's** account, and returns the **most restrictive**
+decision (`EvaluateAll`: `Deny > Audit > Allow`). Only if the decision is `Allow` does the service
+handler run, and it then executes an account-scoped query so the database returns only rows
+matching the caller's `account_id`. Two independent gates therefore stand between a caller and
+another tenant's data — the policy decision and the row-level `account_id` filter — so a bug in
+either one alone cannot silently leak cross-tenant data, and the `audit` decision gives a third
+outcome (allow-but-record) for sensitive-but-permitted actions without a separate code path.
 
 ## 5. Encryption in transit & at rest
 
@@ -219,15 +272,31 @@ flowchart LR
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/sensitive-content.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** When a post contains a secret,
-`security/pkg/pii` detects and classifies it. Two things then happen in parallel: the **raw
-value** is encrypted with AES-256-GCM into the sealed secret store, and a **redacted surrogate**
-(intent-preserving, value-stripped) is produced. Only the surrogate is embedded and written to
-pgvector, so a later semantic query like "aws key" matches the surrogate — the vector store
-never holds the plaintext. When a match is found, revealing the raw value passes through an RBAC
-gate; only if the caller is allowed does the sealed store return the plaintext through the
-account-scoped Asset/secret endpoint. An unauthorized caller can, at most, learn that a secret
-*exists* by its surrogate, never its value.
+**Explanation (for readers/models that cannot see the diagram).** The diagram resolves an apparent
+contradiction in the original requirement — secrets must be *encrypted at rest yet semantically
+searchable* — by forking the data at the moment of detection so that the value and its *meaning*
+travel down two physically separate paths that only ever rejoin behind an RBAC gate. Reading it
+left to right shows the fork, the two stores it feeds, and the single guarded door back.
+
+The fork is the `security/pkg/pii` node: when a post contains a secret it is detected and
+classified, and two things then happen **in parallel**. On the upper path the **raw value** is
+encrypted with AES-256-GCM (`securestorage`) into the sealed secret store — that store is the only
+place the plaintext ever exists on disk. On the lower path a **redacted surrogate** is produced —
+intent-preserving but value-stripped, e.g. `AWS_ACCESS_KEY_ID … REDACTED for service=prod-billing`
+— and *only* the surrogate is embedded and written to pgvector. This is the load-bearing invariant
+the diagram exists to make visible: the vector store and the logs never receive the plaintext, so
+there is no index, cache, or replica from which a leaked secret could later be reconstructed.
+
+The right half is the query-and-reveal path, and its shape is what makes "searchable but sealed"
+honest rather than a euphemism. A semantic query such as "aws key" is matched against the
+**surrogate**, so search returns intent hits without ever touching the sealed store. Revealing the
+underlying raw value is a *second, explicit* action that passes through the same
+`security/pkg/policy` RBAC gate as every other resource: only if the caller is allowed does the
+sealed store hand back the plaintext, and only through the account-scoped Asset/secret endpoint. An
+unauthorized caller therefore hits the hard boundary the design guarantees — at most it can learn
+that a secret *exists* (by its surrogate) and never its value — which is the precise trade the
+`[GAP: 7.1]` improvement was written to deliver. The concrete token-boundary scheme that keeps a
+surrogate searchable without leaking entropy is still a spec item (`[OPEN: SEC-2]`).
 
 ## 8. Secrets & key management
 
@@ -286,9 +355,14 @@ func TestSecureStore_RefuseInsecureStart(t *testing.T) {
 
 ## 12. Open items
 
-- `[OPEN: SEC-1]` Exact `security/pkg/policy` API (`Allow`, `Action`, `Resource`) is illustrative;
-  the policy enforcer surface must be source-confirmed (only `securestorage` was read
-  field-by-field this pass). Tracked in the re-verification backlog.
+- `[CLOSED: SEC-1]` (was: exact `security/pkg/policy` API). **Source-verified this pass**
+  (`policy.go`): the enforcer is rules/conditions-based — `Enforcer` (`NewEnforcer`, `LoadPolicy`,
+  `Evaluate`, `EvaluateAll` most-restrictive `Deny > Audit > Allow`), `Policy`/`Rule`/`Condition`
+  (nine `Operator`s), `EvaluationContext{Fields map[string]string}`, `Decision`
+  (`allow`/`deny`/`audit`). There is **no** `Allow(subject, action, resource)` and no
+  `Action`/`Resource` type; §3 now shows the real surface and the Thready `allow(...)` wrapper that
+  builds the `EvaluationContext`. No residual verification needed; the concrete cross-account
+  *policy document* (rules JSON) is a data artifact for the User Service build.
 - `[OPEN: SEC-2]` The redaction/tokenization scheme for searchable-but-sealed secrets needs a
   concrete spec (which token boundaries preserve searchability without leaking entropy);
   tracked as a P2 workable item with `security/pkg/pii`.

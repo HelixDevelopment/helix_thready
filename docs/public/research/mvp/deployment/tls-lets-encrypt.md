@@ -2,11 +2,12 @@
   Title           : Helix Thready — TLS with lets_encrypt (ACME)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/deployment/tls-lets-encrypt.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (deployment)
   Related         : ./index.md, ./environments.md, ./deploy-and-rollback.md,
-                    ./hetzner-provisioning.md, ./secrets-and-config.md, ../testing/index.md
+                    ./hetzner-provisioning.md, ./secrets-and-config.md,
+                    ./operations-runbook.md, ../testing/index.md
 -->
 
 # Helix Thready — TLS with `lets_encrypt` (ACME)
@@ -15,6 +16,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (deployment) | Initial ACME issuance/renewal/rotation, atomic deploy-hook + risk-free rollback, per-subdomain certs |
 | 2 | 2026-07-21 | swarm (deployment review) | Added a reproduce-first (RED) cert-rollback test; split the renewal-flow prose into multiple paragraphs |
+| 3 | 2026-07-22 | swarm (deployment) | Pass 3: narrowed `[OPEN: dns-provider]` with the verified `dns_loopia` hook + acme.sh env vars; added `LE_BACKUP_DIR`/`LE_CA_SERVER`/`LE_ACME_HOME` (verified config vars); enriched the `status.sh --json` field list; verified all script/engine names at source |
 
 TLS/HTTPS for all three subdomains is provided by **`vasic-digital/lets_encrypt`** (Q44), a
 decoupled ACME automation module wired into Thready's deploy scripts by reference. This document
@@ -29,6 +31,7 @@ specifies how certificates are issued (HTTP-01 / DNS-01), renewed, rotated, atom
 2. [The injection contract (config)](#2-the-injection-contract-config)
 3. [Per-subdomain certificate model](#3-per-subdomain-certificate-model)
 4. [Challenge types: HTTP-01 vs DNS-01](#4-challenge-types-http-01-vs-dns-01)
+   - [4.1 Concrete DNS-01 with the Loopia hook](#41-concrete-dns-01-with-the-loopia-hook)
 5. [Issuance (first time)](#5-issuance-first-time)
 6. [Renewal + rotation (automated)](#6-renewal--rotation-automated)
 7. [Risk-free renewal flow diagram](#7-risk-free-renewal-flow-diagram)
@@ -86,6 +89,15 @@ variables (verified from `config/lets_encrypt.conf.example`):
 | `LE_STAGING` | `1` = staging CA, `0` = production | `0` (after staging rehearsal) |
 | `LE_RENEW_DAYS` | renew when < N days remain | `30` |
 | `LE_ROTATE_ALWAYS_NEW_KEY` | force new key on rotate | `1` |
+| `LE_BACKUP_DIR` | where pre-change cert snapshots are kept for rollback | *(default `LE_CERT_DIR/.backup`)* |
+| `LE_CA_SERVER` | override the ACME directory entirely (wins over `LE_STAGING`) | *(unset; e.g. `letsencrypt_test` for staging)* |
+| `LE_ACME_HOME` | acme.sh state/home (rootless) | `/home/thready/.acme.sh` |
+| `LE_CLIENT` | ACME client backend | `acme.sh` |
+
+> All of the above are `[VERIFIED: config/lets_encrypt.conf.example]` — the module carries zero
+> project literals; each is injected. `LE_BACKUP_DIR` is the directory the risk-free gate snapshots
+> the current cert into before an atomic install (the `.backup` in [§7](#7-risk-free-renewal-flow-diagram)),
+> and `LE_CA_SERVER` lets an operator point at an alternate ACME directory without touching `LE_STAGING`.
 
 Config files live at `/home/thready/<env>/config/lets_encrypt.conf`, `chmod 600`. **DNS-01 secrets**
 (if used) are read from the **environment** by acme.sh — exported from the gitignored
@@ -126,10 +138,51 @@ because the operator chose per-subdomain certs.
   preferred. It needs the DNS provider's acme.sh hook name and its secrets (exported from
   `api_keys.sh`).
 
-> `[OPEN: dns-provider]` — the acme.sh DNS hook for the `hxd3v.com` zone (e.g. `dns_cf`,
-> `dns_loopia`, `dns_hetzner`, …) is **not yet confirmed**. HTTP-01 is the working default and needs
-> no provider; DNS-01/wildcard stays documented-but-pending until the provider is known. Tracked as a
-> workable item.
+> `[OPEN: dns-provider]` (**narrowed, Rev 3**) — the acme.sh DNS hook for the `hxd3v.com` zone is not
+> formally confirmed by the operator, but two independent in-repo signals point at **Loopia**: the
+> `lets_encrypt` config example ships `LE_DNS_PROVIDER=dns_loopia` as its documented example
+> `[VERIFIED: config/lets_encrypt.conf.example]`, and [secrets-and-config.md §4](./secrets-and-config.md#4-file-conventions--permissions)
+> already reserves `LOOPIA_*` keys in `api_keys.sh`. The concrete DNS-01 path is therefore documented
+> in [§4.1](#41-concrete-dns-01-with-the-loopia-hook); HTTP-01 remains the working default, and this
+> item closes fully once the operator confirms the registrar of the `hxd3v.com` zone.
+
+### 4.1 Concrete DNS-01 with the Loopia hook
+
+When DNS-01/wildcard is wanted (port 80 blocked, or a single `*.thready.hxd3v.com` cert), Thready's
+strongly-indicated provider is **Loopia**, driven by acme.sh's built-in `dns_loopia` hook. The
+config sets the challenge + hook name; the **secrets stay in the environment** (from `api_keys.sh`),
+never in the config file `[CONSTITUTION §11.4.10]`:
+
+```ini
+# /home/thready/prod/config/lets_encrypt.conf  (DNS-01 variant — chmod 600)
+LE_CHALLENGE=dns-01
+LE_DNS_PROVIDER=dns_loopia          # acme.sh built-in hook (VERIFIED as the config-example provider)
+LE_DOMAINS="thready.hxd3v.com *.thready.hxd3v.com"   # wildcard covers dev./sta. in one cert (optional)
+LE_KEY_TYPE=ec-256
+LE_RELOAD_CMD="podman kill -s HUP caddy"
+LE_VALIDATE_URL="https://thready.hxd3v.com/health/ready"
+```
+
+```bash
+# /home/thready/secrets/api_keys.sh  (chmod 600, sourced at runtime — NEVER committed)
+# acme.sh dns_loopia reads these from the environment:
+export LOOPIA_User="apiuser@loopiaapi"      # Loopia API sub-account user
+export LOOPIA_Password="__from_private_repo__"
+# export LOOPIA_Api="https://api.loopia.se/RPCSERV"   # default endpoint; override only if needed
+```
+
+The issuance/renewal commands are **identical** to the HTTP-01 flow ([§5](#5-issuance-first-time),
+[§6](#6-renewal--rotation-automated)) — only the config challenge differs — because `lets_encrypt`
+injects the challenge type and lets acme.sh drive the provider API. This means switching an env to
+DNS-01 is a config-file change plus two exported secrets, with **no** change to the deploy scripts,
+the renewal timer, or the risk-free gate. A wildcard cert collapses the three per-subdomain lifecycles
+into one; whether to keep strict per-subdomain certs (the [operator default](#3-per-subdomain-certificate-model))
+or adopt the wildcard is the operator's call.
+
+> `[RESEARCH]` The `LOOPIA_User`/`LOOPIA_Password`/`LOOPIA_Api` variable names are acme.sh's documented
+> `dns_loopia` contract; the *values* live only in the private repo. If the operator confirms a
+> different registrar, only `LE_DNS_PROVIDER` and the two exported secret names change — the rest of
+> this section is provider-agnostic.
 
 ## 5. Issuance (first time)
 
@@ -287,9 +340,19 @@ cd /home/thready/submodules/lets_encrypt/api && go build -o le-api .
 # → {"command":"renew","ok":true,"exit_code":0}
 ```
 
-The result shape is `{command, ok, exit_code, message?, status?}`; commands are
-`status|issue|renew|rotate|revoke`. Thready's deploy verification calls `le-api status` to assert the
-cert is valid and not near expiry before promoting.
+The result shape is `{command, ok, exit_code, message?, status?}` `[VERIFIED: api/main.go]`; commands
+are `status|issue|renew|rotate|revoke` (flags `--config`, `--scripts`, `--force`, `--yes`). For
+`status`, the embedded `status` object is the parsed `status.sh --json`, whose **verified** fields are:
+
+```json
+{ "present": true, "primary_domain": "thready.hxd3v.com",
+  "subject": "CN=thready.hxd3v.com", "issuer": "…", "not_before": "…", "not_after": "…",
+  "sans": "thready.hxd3v.com", "days_left": 63, "renew_days": 30, "renew_due": false }
+```
+
+Thready's deploy verification calls `le-api status` and asserts `present==true`, `renew_due==false`
+and `days_left > 0` before promoting — a cert that is absent or already inside its renewal window is a
+pre-flight signal, not a surprise at expiry. `[VERIFIED: scripts/status.sh]`
 
 ## 10. Rootless systemd timer install
 
@@ -335,9 +398,13 @@ runbook.
 
 ## 13. Open items
 
-- `[OPEN: dns-provider]` — DNS-01/wildcard pending the confirmed `hxd3v.com` acme.sh DNS hook +
-  secrets; HTTP-01 is the working default meanwhile.
-- `[OPEN: acme-email]` — confirm the ACME account contact email for expiry notices.
+- `[OPEN: dns-provider]` (**narrowed, Rev 3**) — the concrete DNS-01 path is now documented against the
+  verified `dns_loopia` hook + `LOOPIA_*` env secrets ([§4.1](#41-concrete-dns-01-with-the-loopia-hook)),
+  consistent with the `LOOPIA_*` keys already reserved in `api_keys.sh`. It **fully** closes once the
+  operator confirms the `hxd3v.com` registrar; HTTP-01 is the working default meanwhile, so nothing is
+  blocked.
+- `[OPEN: acme-email]` — confirm the ACME account contact email for expiry notices (`LE_ACME_EMAIL`;
+  `admin@hxd3v.com` is the working default).
 
 ---
 

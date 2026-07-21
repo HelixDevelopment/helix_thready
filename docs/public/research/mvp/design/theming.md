@@ -15,12 +15,14 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: light/dark resolution, per‑account white‑label model, DDL, runtime injection, generated‑document branding |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: aligned `account_branding` DDL to canonical `uuid` PKs + reconciled with `accounts.branding` JSONB; fixed malformed injected‑CSS example + uuid account scope; added `422` error schema + `bearerAuth` scheme to the OpenAPI slice; added a TDD reproduce‑first (RED) test for the AA accent gate |
+| 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: shipped-theme **precedents** table (§3.1, helix-green/vasic-red/helix-ota-blue as verified evidence a white-label = one brand + AA accent); noted the verified `default` slogan string + the `vasic-red` PLACEHOLDER caveat |
 
 ## Table of contents
 
 - [1. Two orthogonal axes](#1-two-orthogonal-axes)
 - [2. Light / dark resolution](#2-light--dark-resolution)
 - [3. White‑labeling model](#3-white-labeling-model)
+  - [3.1 Shipped-theme precedents (verified evidence)](#31-shipped-theme-precedents-verified-evidence)
 - [4. The white‑label cascade](#4-the-white-label-cascade)
 - [5. Data model (DDL)](#5-data-model-ddl)
 - [6. Runtime injection (web, SSR‑safe)](#6-runtime-injection-web-ssr-safe)
@@ -91,6 +93,27 @@ Per §8.3 and the request `[OPERATOR]`:
 | Structural tokens (type/space/radius/motion) | ❌ | One system across all Accounts |
 | Neutral surfaces / semantic tokens | ❌ by default | Kept AA‑tuned; advanced override gated behind AA validation |
 | **Helix Development attribution footer** | ❌ | Always present |
+
+### 3.1 Shipped-theme precedents (verified evidence)
+
+The white‑label model is not speculative — the design system **already ships three brand themes** by
+exactly the mechanism an Account override uses (one `--brand`, one AA‑pinned `--accent`, shared
+neutrals). They are the proof that "swap `--brand`/`--accent`, keep the slate" produces an accessible,
+consistent result `[VERIFIED — docs/THEMES.md + tokens/themes/*.css]`:
+
+| Theme | `--brand` | `--accent` light / dark | AA (measured) | Note |
+|-------|-----------|-------------------------|---------------|------|
+| helix-green (Thready base) | `#B6E376` | `#446E12` / `#B6E376` | 6.03:1 / 13.56:1 ✅ | eyedrop mean of 1.63M logo pixels |
+| vasic-red | `#E11D2A` | `#B91C1C` / `#F87171` | 6.47:1 / 7.23:1 ✅ | ⚠ brand hex is a **PLACEHOLDER** until the vasic logo asset lands |
+| helix-ota-blue | `#2563EB` | `#2563EB` / `#3B82F6` | ✅ | HelixOTA shadcn blue |
+
+Two facts this evidence pins down for the white‑label editor. First, **a red brand ships without
+masking errors**: `vasic-red` proves `--accent` (brand) and `--danger` (semantic error) stay separate
+tokens `[VERIFIED — THEMES.md "Brand-red vs danger-red"]`, which is why §10.2 forbids overriding
+`--danger`. Second, the **default slogan string is a real shipped default** — the canonical API models
+it as `slogan` defaulting to `"Made with love ♥ by Helix Development"`
+`[VERIFIED — api/openapi.yaml#/components/schemas/Branding]`; an Account may replace it, but the locked
+Helix Development attribution (§9) renders regardless.
 
 ## 4. The white‑label cascade
 
@@ -356,8 +379,9 @@ func ValidateAccent(accentHex, surfaceHex string) error {
 ### 10.1 TDD reproduce‑first (RED then GREEN) `[CONSTITUTION §11.4.27/43]`
 
 Per the reproduce‑first mandate, the AA gate is specified by a **failing RED test first** — a
-white‑label accent that a designer *would* try (`#7AA590`, the Thready teal) is only **2.0:1** on
-white, so it MUST be rejected. The test is authored and run **before** `ValidateAccent` exists (it
+white‑label accent that a designer *would* try (`#7AA590`, a soft teal; note the captured Thready
+`--brand-2 #ABDDC9` is even lighter and likewise fails, which is exactly why decorative brand tokens
+are never used as text) is only **2.0:1** on white, so it MUST be rejected. The test is authored and run **before** `ValidateAccent` exists (it
 fails to compile / returns nil → RED); implementing the gate above turns it GREEN; then it is
 extended to the full matrix (dark surface, the AA‑passing `#446E12`, the boundary at 4.5:1).
 

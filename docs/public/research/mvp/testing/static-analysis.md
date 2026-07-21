@@ -5,7 +5,7 @@
   Status          : Draft — v0.1
   Revision        : 1 (2026-07-21)
   Author          : Helix Thready documentation swarm (testing)
-  Related         : ./test-strategy.md, ./test-types.md, ../deployment/index.md
+  Related         : ./test-strategy.md, ./test-types.md, ./acceptance-gates.md, ../deployment/index.md
 -->
 
 # Helix Thready — Static Analysis & Continuous Quality (SonarQube + Snyk)
@@ -13,6 +13,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (testing) | Initial draft — SonarQube (CLI + rootless server), Snyk, quality gates, cadence, AI review |
+| 2 | 2026-07-22 | swarm (testing) | Pass 3 — linked G-SONAR/G-SNYK gate IDs; noted Docs-Chain export proven in-org |
 
 SonarQube + Snyk are the **two major columns of product quality and real-time checks**
 `[RESEARCH: request §Testing]`. All technical documentation and code MUST pass comprehensive
@@ -66,13 +67,17 @@ git-hook, which invokes two tools in parallel: the `sonar-scanner` CLI (on PATH 
 scanner reports to a **SonarQube server run in rootless Podman** (the `sonarqube:community`
 image plus its Postgres, stood up via `digital.vasic.containers`), which evaluates the change
 against its **Quality Gate** (the built-in Sonar Way plus Thready custom conditions). Snyk
-evaluates severity. If the Quality Gate fails or Snyk finds a high/critical issue, the change is
-bounced to fix/waive and re-enters the hook. When both pass, the change proceeds to
-**independent AI review** (Fable @ xhigh → GO) and then the pre-tag full-suite retest. A **daily
-scheduled scan** (systemd timer) re-runs both tools independently of commits so newly disclosed
-CVEs and rule updates surface even without a code change. There is no server-side CI — the
-server is a local rootless container, and all orchestration is local hooks/timers
-`[CONSTITUTION §11.4.156/161]`.
+evaluates severity.
+
+If the Quality Gate fails or Snyk finds a high/critical issue, the change is bounced to fix/waive
+and re-enters the hook. When both pass, the change proceeds to **independent AI review** (Fable @
+xhigh → GO) and then the pre-tag full-suite retest. A **daily scheduled scan** (systemd timer)
+re-runs both tools independently of commits so newly disclosed CVEs and rule updates surface even
+without a code change.
+
+There is no server-side CI — the server is a local rootless container, and all orchestration is
+local hooks/timers `[CONSTITUTION §11.4.156/161]`. These two gates are `G-SONAR` and `G-SNYK` at
+Gate-2 of the acceptance-gate ladder ([acceptance-gates.md §1](./acceptance-gates.md#1-the-gate-ladder)).
 
 ## 2. SonarQube — CLI + rootless-Podman server
 
@@ -130,6 +135,11 @@ The Thready Quality Gate (on top of Sonar Way) blocks a change when, on **new co
 A failing gate returns the change to the author (pipeline in
 [test-strategy.md §4](./test-strategy.md#4-tdd-reproduce-first)). Waivers require a documented
 justification and appear as a tracked risk in the workable-item register `[RESEARCH: final §22.4]`.
+This SonarQube Quality Gate is the `G-SONAR` acceptance gate, and the Snyk severity gate below is
+`G-SNYK`, both at Gate-2 (pre-push) of the ladder
+([acceptance-gates.md §2](./acceptance-gates.md#2-gate-register-one-row-per-type)); a new
+Blocker/Critical finding on either is a non-waivable release blocker
+([acceptance-gates.md §4](./acceptance-gates.md#4-blocking-severity-policy)).
 
 ## 5. Snyk
 

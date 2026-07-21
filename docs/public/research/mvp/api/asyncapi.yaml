@@ -1,0 +1,474 @@
+# =============================================================================
+#  Title           : Helix Thready — Real-Time Event Channels (AsyncAPI 3.0)
+#  Classification  : PUBLIC
+#  Location        : docs/public/research/mvp/api/asyncapi.yaml
+#  Status          : Draft — v0.1
+#  Revision        : 1 (2026-07-22)
+#  Author          : Helix Thready documentation swarm (API & SDKs)
+#  Related         : ./event-bus-contract.md, ./openapi.yaml, ./authn-authz.md,
+#                    ./error-model.md, ./sdk-examples.md
+#  Provenance      : Envelope + subjects VERIFIED at source in digital.vasic.eventbus
+#                    (pkg/event/event.go event.Event; pkg/nats/nats.go subject
+#                    "<SubjectPrefix>.<sanitized type>", stream "EVENTBUS"). Catalog
+#                    [DEFAULT — adjustable] mirrors event-bus-contract.md §4.
+#  Notes           : Machine contract for the real-time plane that OpenAPI cannot
+#                    model (WS upgrade, infinite SSE, pub/sub messages). The REST
+#                    discovery + sticky-snapshot endpoints live in openapi.yaml; the
+#                    behavioural spec (sticky invalidation, replay, back-pressure) is
+#                    in event-bus-contract.md. One message per event type.
+# =============================================================================
+asyncapi: 3.0.0
+
+info:
+  title: Helix Thready Event Plane
+  version: "1.0.0"
+  description: |
+    The real-time event contract for Helix Thready — the client-facing **Event Bus
+    service** `[GAP: New#Event Bus service]` wrapping `digital.vasic.eventbus` + NATS
+    JetStream. Every event is the verified `event.Event` envelope
+    (`id, type, source, payload, timestamp, trace_id, metadata`) rendered identically on
+    WebSocket frames, SSE `data:` lines, sticky snapshots and outbound webhooks.
+
+    - **Subjects** — on the wire each event is a JetStream message on
+      `eventbus.thready.<sanitized type>` (VERIFIED: `pkg/nats` derives
+      `<SubjectPrefix>.<sanitized event.Type>`, stream `EVENTBUS`). Clients never address
+      subjects directly; they subscribe by dot-notation `type` (glob allowed).
+    - **AuthZ** — every subscription is JWT/API-key authenticated and tenant-filtered on
+      `metadata.account_id` (VERIFIED backing: `filter.ByMetadata`); each message lists its
+      `x-required-scope`.
+    - **Delivery** — at-least-once on the durable path; consumers dedupe on `id`.
+    See `event-bus-contract.md` for reconnect/replay, sticky invalidation and back-pressure.
+  contact:
+    name: Helix Thready API team
+    url: https://thready.hxd3v.com
+
+defaultContentType: application/json
+
+servers:
+  wsProduction:
+    host: thready.hxd3v.com
+    pathname: /v1/events/ws
+    protocol: wss
+    description: Bidirectional WebSocket (subscribe/ack/unsubscribe frames + events).
+    security:
+      - $ref: '#/components/securitySchemes/bearerAuth'
+      - $ref: '#/components/securitySchemes/apiKeyAuth'
+  sseProduction:
+    host: thready.hxd3v.com
+    pathname: /v1/events/stream
+    protocol: https
+    description: One-way Server-Sent Events (id/event/data framing; Last-Event-ID resume).
+    security:
+      - $ref: '#/components/securitySchemes/bearerAuth'
+
+channels:
+
+  events:
+    address: /v1/events/ws
+    title: Live event stream (WebSocket)
+    description: |
+      Bidirectional stream. Client sends `subscribe`/`ack`/`unsubscribe` control frames;
+      server sends `event` frames wrapping an EventEnvelope. `types` accepts exact
+      dot-notation types or globs (`processing.*`). `replay_sticky: true` emits the current
+      sticky value of each subscribed sticky type before the live stream.
+    messages:
+      subscribe:        { $ref: '#/components/messages/SubscribeFrame' }
+      ack:              { $ref: '#/components/messages/AckFrame' }
+      unsubscribe:      { $ref: '#/components/messages/UnsubscribeFrame' }
+      channelRegistered:    { $ref: '#/components/messages/ChannelRegistered' }
+      channelSynced:        { $ref: '#/components/messages/ChannelSynced' }
+      postReceived:         { $ref: '#/components/messages/PostReceived' }
+      postProcessingClaimed: { $ref: '#/components/messages/PostProcessingClaimed' }
+      processingProgress:   { $ref: '#/components/messages/ProcessingProgress' }
+      processingCompleted:  { $ref: '#/components/messages/ProcessingCompleted' }
+      assetDownloadProgress: { $ref: '#/components/messages/AssetDownloadProgress' }
+      assetReady:           { $ref: '#/components/messages/AssetReady' }
+      searchIndexUpdated:   { $ref: '#/components/messages/SearchIndexUpdated' }
+      subscriptionUpdated:  { $ref: '#/components/messages/SubscriptionUpdated' }
+
+  eventsSse:
+    address: /v1/events/stream
+    title: Live event stream (SSE)
+    description: |
+      One-way stream selected by `?types=` query. Standard `id:`/`event:`/`data:` framing;
+      the `id:` is the EventEnvelope id, echoed back as `Last-Event-ID` on reconnect to
+      resume. Same message set as the WebSocket channel (server → client only).
+    messages:
+      channelSynced:        { $ref: '#/components/messages/ChannelSynced' }
+      postReceived:         { $ref: '#/components/messages/PostReceived' }
+      processingProgress:   { $ref: '#/components/messages/ProcessingProgress' }
+      processingCompleted:  { $ref: '#/components/messages/ProcessingCompleted' }
+      assetReady:           { $ref: '#/components/messages/AssetReady' }
+
+  eventDelivery:
+    address: '{sinkUrl}'
+    title: Outbound webhook delivery (Thready → subscriber)
+    parameters:
+      sinkUrl:
+        description: The registered sink URL (see /v1/event-sinks in openapi.yaml).
+    description: |
+      HTTP push alternative to a persistent socket. Thready POSTs the same EventEnvelope,
+      signed with an `X-Thready-Signature` HMAC-SHA256 header over the raw body. Any 2xx
+      acks; non-2xx triggers exponential back-off retry from the durable stream (max_attempts
+      per sink). Mirrors the `eventDelivery` webhook in openapi.yaml.
+    messages:
+      delivery: { $ref: '#/components/messages/EnvelopeDelivery' }
+
+  providerCallback:
+    address: /v1/processing/callbacks/{provider}
+    title: Inbound 3rd-party completion callback (Boba/MeTube/Download Manager → Thready)
+    parameters:
+      provider:
+        enum: [boba, metube, download_manager]
+    description: |
+      Machine-to-machine ingress. Authenticated by a per-provider HMAC-SHA256 signature
+      (`X-Thready-Signature`, NOT a JWT). Idempotent on `job_id`. On receipt Thready links
+      the asset and emits `asset.ready` / `processing.progress`. Mirrors `ingestCallback`
+      in openapi.yaml. `[GAP: 6.6 callback module]` `[GAP: 6.5 MeTube webhook]`.
+    messages:
+      callback: { $ref: '#/components/messages/ProviderCallback' }
+
+operations:
+
+  subscribeToEvents:
+    action: receive
+    channel: { $ref: '#/channels/events' }
+    title: Client receives events over WebSocket.
+    description: RBAC- and tenant-filtered server-side; a subscriber never receives a type
+      whose x-required-scope it lacks, nor another account's events.
+    messages:
+      - { $ref: '#/channels/events/messages/channelRegistered' }
+      - { $ref: '#/channels/events/messages/channelSynced' }
+      - { $ref: '#/channels/events/messages/postReceived' }
+      - { $ref: '#/channels/events/messages/postProcessingClaimed' }
+      - { $ref: '#/channels/events/messages/processingProgress' }
+      - { $ref: '#/channels/events/messages/processingCompleted' }
+      - { $ref: '#/channels/events/messages/assetDownloadProgress' }
+      - { $ref: '#/channels/events/messages/assetReady' }
+      - { $ref: '#/channels/events/messages/searchIndexUpdated' }
+      - { $ref: '#/channels/events/messages/subscriptionUpdated' }
+
+  sendControlFrames:
+    action: send
+    channel: { $ref: '#/channels/events' }
+    title: Client sends subscribe/ack/unsubscribe control frames.
+    messages:
+      - { $ref: '#/channels/events/messages/subscribe' }
+      - { $ref: '#/channels/events/messages/ack' }
+      - { $ref: '#/channels/events/messages/unsubscribe' }
+
+  receiveSse:
+    action: receive
+    channel: { $ref: '#/channels/eventsSse' }
+    title: Browser/simple consumer receives events over SSE.
+
+  deliverWebhook:
+    action: send
+    channel: { $ref: '#/channels/eventDelivery' }
+    title: Thready delivers an event to a registered sink (HMAC-signed).
+
+  ingestProviderCallback:
+    action: receive
+    channel: { $ref: '#/channels/providerCallback' }
+    title: Thready ingests a 3rd-party completion callback (HMAC-verified).
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        JWT access token (RS256/EdDSA) — passed as an Authorization Bearer header on the
+        upgrade, or `?access_token=` on the WS/SSE query for browsers.
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: Scoped `sk-…` API key (non-interactive subscribers).
+
+  messages:
+
+    # ---- control frames (client → server) ----
+    SubscribeFrame:
+      name: subscribe
+      title: Subscribe control frame
+      summary: Register interest in one or more event types (exact or glob).
+      payload:
+        type: object
+        required: [op, types]
+        properties:
+          op: { type: string, const: subscribe }
+          types:
+            type: array
+            items: { type: string }
+            examples: [["processing.*", "asset.ready"]]
+          account_id: { type: [string, "null"], format: uuid, description: root-only tenant scope. }
+          replay_sticky: { type: boolean, default: false }
+    AckFrame:
+      name: ack
+      title: Ack control frame
+      summary: Advance the durable cursor past a delivered event id.
+      payload:
+        type: object
+        required: [op, id]
+        properties:
+          op: { type: string, const: ack }
+          id: { type: string, format: uuid }
+    UnsubscribeFrame:
+      name: unsubscribe
+      title: Unsubscribe control frame
+      payload:
+        type: object
+        required: [op, types]
+        properties:
+          op: { type: string, const: unsubscribe }
+          types: { type: array, items: { type: string } }
+
+    # ---- envelope-carrying messages (server → client) ----
+    ChannelRegistered:
+      name: channel.registered
+      title: A channel was registered.
+      summary: One-time. Fired when a channel/group is registered for reading.
+      x-sticky: false
+      x-required-scope: events:read
+      payload: { $ref: '#/components/schemas/ChannelRegisteredEnvelope' }
+    ChannelSynced:
+      name: channel.synced
+      title: A channel poll/backfill completed.
+      summary: Sticky (last-value per channel). Carries new/updated post counts.
+      x-sticky: true
+      x-required-scope: events:read
+      x-sticky-key: channel_id
+      payload: { $ref: '#/components/schemas/ChannelSyncedEnvelope' }
+    PostReceived:
+      name: post.received
+      title: A new post/thread was ingested by Herald.
+      summary: One-time. Triggers the processing pipeline downstream.
+      x-sticky: false
+      x-required-scope: posts:read
+      payload: { $ref: '#/components/schemas/PostReceivedEnvelope' }
+    PostProcessingClaimed:
+      name: post.processing.claimed
+      title: A post was claimed for processing (single-claim).
+      summary: One-time. Exactly one claim wins under an event storm.
+      x-sticky: false
+      x-required-scope: posts:read
+      payload: { $ref: '#/components/schemas/PostProcessingClaimedEnvelope' }
+    ProcessingProgress:
+      name: processing.progress
+      title: Processing progress update.
+      summary: Sticky (last-value per post). Invalidated by processing.completed.
+      x-sticky: true
+      x-required-scope: posts:read
+      x-sticky-key: post_id
+      payload: { $ref: '#/components/schemas/ProcessingProgressEnvelope' }
+    ProcessingCompleted:
+      name: processing.completed
+      title: Processing finished (success/partial/fail).
+      summary: One-time terminal. Invalidates the sticky processing.progress for the post.
+      x-sticky: false
+      x-required-scope: posts:read
+      payload: { $ref: '#/components/schemas/ProcessingCompletedEnvelope' }
+    AssetDownloadProgress:
+      name: asset.download.progress
+      title: Asset download progress.
+      summary: Sticky (last-value per download job).
+      x-sticky: true
+      x-required-scope: assets:read
+      x-sticky-key: job_id
+      payload: { $ref: '#/components/schemas/AssetDownloadProgressEnvelope' }
+    AssetReady:
+      name: asset.ready
+      title: An asset (incl. …-web rendition) is ready.
+      summary: One-time. Emitted after a download/transcode/callback links the asset.
+      x-sticky: false
+      x-required-scope: assets:read
+      payload: { $ref: '#/components/schemas/AssetReadyEnvelope' }
+    SearchIndexUpdated:
+      name: search.index.updated
+      title: New content was embedded/indexed.
+      summary: One-time. A source_id became searchable.
+      x-sticky: false
+      x-required-scope: search:read
+      payload: { $ref: '#/components/schemas/SearchIndexUpdatedEnvelope' }
+    SubscriptionUpdated:
+      name: subscription.updated
+      title: Plan/usage state changed.
+      summary: Sticky (last-value per account).
+      x-sticky: true
+      x-required-scope: billing:read
+      x-sticky-key: account_id
+      payload: { $ref: '#/components/schemas/SubscriptionUpdatedEnvelope' }
+
+    EnvelopeDelivery:
+      name: eventDelivery
+      title: Outbound webhook body.
+      summary: Any EventEnvelope, HMAC-signed via X-Thready-Signature.
+      headers:
+        type: object
+        properties:
+          X-Thready-Signature: { type: string, description: HMAC-SHA256 of the raw body. }
+      payload: { $ref: '#/components/schemas/EventEnvelope' }
+
+    ProviderCallback:
+      name: providerCallback
+      title: Inbound completion callback.
+      summary: Standardized cross-provider callback, HMAC-signed, idempotent on job_id.
+      headers:
+        type: object
+        properties:
+          X-Thready-Signature: { type: string }
+      payload: { $ref: '#/components/schemas/Callback' }
+
+  schemas:
+
+    # The base envelope (VERIFIED shape: digital.vasic.eventbus event.Event).
+    EventEnvelope:
+      type: object
+      required: [id, type, source, timestamp]
+      properties:
+        id: { type: string, format: uuid, description: Dedupe key (at-least-once delivery). }
+        type: { type: string, description: Dot-notation topic. }
+        source: { type: string, description: Producing service. }
+        payload: { description: Event-specific; see the per-type schemas below. }
+        timestamp: { type: string, format: date-time }
+        trace_id: { type: string, description: Correlates to REST trace_id + logs. }
+        metadata:
+          type: object
+          additionalProperties: { type: string }
+          description: Carries account_id (tenant routing), channel_id, etc.
+
+    # Per-event payload envelopes: the base envelope with a typed `payload`.
+    ChannelRegisteredEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [channel_id, messenger]
+              properties:
+                channel_id: { type: string, format: uuid }
+                messenger: { type: string, enum: [telegram, max] }
+                external_ref: { type: string }
+    ChannelSyncedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [channel_id]
+              properties:
+                channel_id: { type: string, format: uuid }
+                new_posts: { type: integer }
+                updated_posts: { type: integer }
+                backfill: { type: boolean }
+                last_synced_at: { type: string, format: date-time }
+    PostReceivedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [post_id, channel_id]
+              properties:
+                post_id: { type: string, format: uuid }
+                channel_id: { type: string, format: uuid }
+                is_root: { type: boolean }
+                hashtags: { type: array, items: { type: string } }
+    PostProcessingClaimedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [post_id, job_id]
+              properties:
+                post_id: { type: string, format: uuid }
+                job_id: { type: string, format: uuid }
+    ProcessingProgressEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [post_id, progress]
+              properties:
+                post_id: { type: string, format: uuid }
+                progress: { type: number, minimum: 0, maximum: 1 }
+                stage: { type: string, description: e.g. download|convert|analyze|research|reply. }
+    ProcessingCompletedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [post_id, status]
+              properties:
+                post_id: { type: string, format: uuid }
+                status: { type: string, enum: [succeeded, partial, failed] }
+                skills_applied: { type: array, items: { type: string } }
+    AssetDownloadProgressEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [job_id, progress]
+              properties:
+                job_id: { type: string, format: uuid }
+                progress: { type: number, minimum: 0, maximum: 1 }
+                bytes_done: { type: [integer, "null"] }
+    AssetReadyEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [asset_id]
+              properties:
+                asset_id: { type: string, format: uuid }
+                post_id: { type: [string, "null"], format: uuid }
+                rendition: { type: [string, "null"], description: e.g. 1080p-web. }
+    SearchIndexUpdatedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [source_id, kind]
+              properties:
+                source_id: { type: string, format: uuid }
+                kind: { type: string, enum: [post, generated, asset] }
+    SubscriptionUpdatedEnvelope:
+      allOf:
+        - { $ref: '#/components/schemas/EventEnvelope' }
+        - type: object
+          properties:
+            payload:
+              type: object
+              required: [account_id, status]
+              properties:
+                account_id: { type: string, format: uuid }
+                status: { type: string, enum: [trialing, active, past_due, canceled] }
+
+    Callback:
+      type: object
+      description: Standardized 3rd-party completion callback (shared across providers).
+      required: [job_id, state]
+      properties:
+        job_id: { type: string }
+        provider: { type: string, enum: [boba, metube, download_manager] }
+        state: { type: string, enum: [queued, running, completed, failed] }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        result_asset_ref: { type: [string, "null"] }
+        error: { type: [string, "null"] }

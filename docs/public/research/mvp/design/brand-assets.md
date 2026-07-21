@@ -13,17 +13,21 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: icon concept, construction, detail tiers, light/dark, OS export matrix, org logo usage, footer slogan + heart |
+| 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: numeric icon geometry spec (grid/safe-zones/coil growth, §3.1); concrete per-platform manifests — `manifest.webmanifest`, favicon `<head>`, Android `ic_launcher.xml` + adaptive/monochrome, iOS `Contents.json`, HarmonyOS layered JSON (§5.1); per-surface **slogan-placement matrix** (§8.1); corrected heart-color provenance to the **verified** `--accent-ink` token + exact i18n keys (`footer.made`/`footer.by`/`a11y.love`) |
 
 ## Table of contents
 
 - [1. Requirements (verbatim intent)](#1-requirements-verbatim-intent)
 - [2. The mark: reading Logo.png](#2-the-mark-reading-logopng)
 - [3. Launcher‑icon concept & construction](#3-launcher-icon-concept--construction)
+  - [3.1 Numeric geometry spec](#31-numeric-geometry-spec)
 - [4. Detail tiers & light/dark variants](#4-detail-tiers--lightdark-variants)
 - [5. OS / platform export matrix](#5-os--platform-export-matrix)
+  - [5.1 Concrete platform manifests](#51-concrete-platform-manifests)
 - [6. Export pipeline](#6-export-pipeline)
 - [7. Helix Development org logo (attribution)](#7-helix-development-org-logo-attribution)
 - [8. The footer slogan & heart glyph](#8-the-footer-slogan--heart-glyph)
+  - [8.1 Per‑surface slogan placement](#81-per-surface-slogan-placement)
 - [9. Brand on generated documents](#9-brand-on-generated-documents)
 - [10. Clear‑space, misuse, and file inventory](#10-clear-space-misuse-and-file-inventory)
 - [11. Gaps & open items](#11-gaps--open-items)
@@ -60,8 +64,8 @@ Color reading (informs the theme in [design-system.md](./design-system.md)):
 
 | Region | Color (approx.) | Role |
 |--------|-----------------|------|
-| Outer sweep, left | Chartreuse / lime green | Primary brand — `--brand` helix‑green `#B6E376` `[VERIFIED base]` |
-| Flowing to right | Mint / soft teal | Secondary — `--brand-2` teal `#7AA590` `[DEFAULT — provisional, OPEN THREADY-DES-01]` |
+| Outer sweep, left | Chartreuse / lime green | Primary brand — `--brand` helix‑green `#B6E376` `[VERIFIED base]` (Logo.png green‑region eyedrop `#BAE448`, n≈1.06M, corroborates) |
+| Flowing to right | Mint / soft teal | Secondary — `--brand-2` teal `#ABDDC9` `[VERIFIED — eyedrop mean of Logo.png mint region, n=618,886; median #B7EBD6]` |
 | Spiral negative space | White | The coil / thread path |
 
 The mark is **already letter‑free** and **already carries the Helix spiral** — so the product icon
@@ -81,8 +85,9 @@ as the Helix element. Letter‑free by construction.
   - a **full‑bleed** zone for maskable/adaptive backgrounds.
 - **Geometry:** the ribbon width, coil count and eye position are proportion‑locked to the master;
   the spiral uses a logarithmic (golden‑ratio‑ish) growth so it stays balanced when simplified.
-- **Fill:** a chartreuse→teal gradient (`--brand` → `--brand-2`) on the ribbon; white/transparent
-  negative space for the coil path. A **flat** (non‑gradient) fill is the small‑size fallback.
+- **Fill:** a chartreuse→teal gradient (`--brand #B6E376` → `--brand-2 #ABDDC9`, both eyedrop‑captured
+  from `Logo.png`) on the ribbon; white/transparent negative space for the coil path. A **flat**
+  (non‑gradient) fill is the small‑size fallback.
 - **No letters, no wordmark inside the icon.** The wordmark "Thready" is a *separate* lockup used
   only in headers/marketing, never inside the launcher icon.
 
@@ -121,6 +126,29 @@ emits every platform bundle: web favicons + PWA maskable icons + apple‑touch, 
 an adaptive foreground/background pair and a monochrome layer, the iOS `AppIcon` asset catalog, the
 desktop `.icns`/`.ico`/PNG set (Linux hicolor 16–512), the HarmonyOS layered image, and the Aurora
 sizes. Because the master is a single vector, every downstream size stays perfectly consistent.
+
+### 3.1 Numeric geometry spec
+
+So the master is reproducible (not "draw a nice spiral"), the construction is pinned to numbers on
+the **1024×1024** master `[DEFAULT — adjustable, pending the OpenDesign authoring pass]`:
+
+| Property | Value | Rationale |
+|----------|-------|-----------|
+| Master canvas | 1024×1024 px | OS‑canonical largest source |
+| **Keyline safe circle** (Android adaptive / iOS squircle) | Ø 768 px, centered (75%) | Android adaptive masks to ~66–75%; the spiral **eye** sits at center so no coil clips |
+| **Full‑bleed** zone (maskable / adaptive bg) | full 1024, art within Ø 916 | maskable icons need art inside the 80% inner circle |
+| Spiral eye center | canvas center (512, 512) | mask‑safe under circle **and** squircle |
+| Ribbon stroke width | 96 px at outer turn → 40 px at the eye | tapered ribbon reads as a thread narrowing into the coil |
+| Coil count | 2.75 turns (full tier) → 2.0 (simplified) → 1.75 (mono) | fewer turns as size shrinks so it never muddies |
+| Growth | logarithmic, ratio ≈ 1.618 per quarter‑turn (golden) | stays balanced when simplified |
+| Clear‑space | ≥ 128 px (⅛ box ≈ one outer ribbon width) | matches §10 clear‑space rule |
+| Corner radius (adaptive fg) | n/a — art only; the OS applies the mask | never bake platform corners into the art |
+
+**Fills.** Full tier = a linear gradient `--brand #B6E376 → --brand-2 #ABDDC9` along the ribbon's sweep,
+white/transparent negative space for the coil path. Simplified/mono tiers = a single flat tone
+(`--accent #446E12` light, `--brand #B6E376` dark) so the mark survives at 16–32 px and in tinted
+Android‑monochrome / notification slots. **No letters** are ever inside any tier (the OS prints the
+title). The `--brand-2` endpoint is the eyedrop‑captured `#ABDDC9` `[VERIFIED — closes THREADY-DES-01]`.
 
 ## 4. Detail tiers & light/dark variants
 
@@ -185,6 +213,69 @@ All exported from the single master `[DEFAULT — adjustable]`. Sizes are the pl
 | HarmonyOS | layered image (`foreground`+`background` PNG + `layered_image` JSON) | via ArkTS client (scaffold) |
 | Aurora (auroraos.ru) | PNG | 86, 108, 128, 172, 250 (per Sailfish/Aurora density buckets) `[RESEARCH — verify at integration]` |
 
+### 5.1 Concrete platform manifests
+
+The export pipeline emits these files verbatim (not just sizes) so each client wires the icon with
+no guesswork `[DEFAULT — adjustable]`:
+
+**Web — `manifest.webmanifest` + `<head>`:**
+
+```json
+{
+  "name": "Thready", "short_name": "Thready",
+  "theme_color": "#020817", "background_color": "#ffffff", "display": "standalone",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
+```
+
+```html
+<!-- self-hosted, no external CDN (CSP hygiene) -->
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#020817" media="(prefers-color-scheme: dark)">
+```
+
+**Android — `res/mipmap-anydpi-v26/ic_launcher.xml` (adaptive + Android‑13 monochrome):**
+
+```xml
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>   <!-- #FFFFFF light / handled by themed -->
+    <foreground android:drawable="@drawable/ic_launcher_foreground"/> <!-- spiral, art within 66dp safe -->
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome"/> <!-- 1-color spiral (themed icons) -->
+</adaptive-icon>
+```
+
+**iOS — `Assets.xcassets/AppIcon.appiconset/Contents.json` (single‑size + dark + tinted, iOS 18):**
+
+```json
+{ "images": [
+  { "idiom": "universal", "platform": "ios", "size": "1024x1024", "filename": "icon-1024.png" },
+  { "idiom": "universal", "platform": "ios", "size": "1024x1024", "filename": "icon-1024-dark.png",
+    "appearances": [ { "appearance": "luminosity", "value": "dark" } ] },
+  { "idiom": "universal", "platform": "ios", "size": "1024x1024", "filename": "icon-1024-tinted.png",
+    "appearances": [ { "appearance": "luminosity", "value": "tinted" } ] }
+], "info": { "author": "opendesign-export", "version": 1 } }
+```
+
+**HarmonyOS — `resources/base/media/layered_image.json` (ArkTS client, `[GAP: 8.5 scaffold]`):**
+
+```json
+{ "layered-image": { "background": "$media:ic_launcher_background",
+                     "foreground": "$media:ic_launcher_foreground" } }
+```
+
+Aurora consumes plain PNGs at the density buckets in §5 `[OPEN: THREADY-DES-05 — verify at
+integration]`. Because all of these reference art derived from the **one** master, a master change
+re‑emits every file through Docs Chain (§6).
+
 ## 6. Export pipeline
 
 ```yaml
@@ -230,13 +321,18 @@ logo/colors/slogan, but the **Helix Development attribution persists** in footer
 replaced by a heart glyph in a proper color**.
 
 The in‑house `design_system` **already ships this exact pattern** in `reference.footer.component.ts`
-`[VERIFIED]`, and Thready reuses it:
+`[VERIFIED — inspected source]`, and Thready reuses it:
 
 - The heart is the canonical **lucide `Heart` SVG** (`fill=currentColor`), tinted by a brand token,
-  with `aria-label="love"` so the **accessible name reads "Made with love by Helix Development"**.
-- **Ordered visual fallbacks** (the head script toggles `html.no-svg`): lucide SVG → `U+2665` (♥)
-  glyph → literal word "love". This guarantees the slogan renders in any environment (including the
-  TUI and plain‑text/email exports).
+  with `[attr.aria-label]="i18n.t('a11y.love')"` so the **accessible name reads "Made with love by
+  Helix Development"**.
+- The text around it is localized via the exact shipped i18n keys `footer.made` … heart …
+  `footer.by` (`[VERIFIED — `{{ i18n.t('footer.made') }}` / `{{ i18n.t('footer.by') }}` in the
+  component]`), so the slogan translates (en/ru/sr‑Cyrl) without hard‑coding.
+- **Ordered visual fallbacks** (the head script toggles `html.no-svg`, applied via
+  `:host-context(html.no-svg)` in the shipped component): lucide SVG → `U+2665` (♥) glyph → literal
+  word "love". This guarantees the slogan renders in any environment (including the TUI and
+  plain‑text/email exports).
 
 ```html
 <!-- Thready footer slogan (adapted from design_system reference.footer) [VERIFIED pattern] -->
@@ -260,12 +356,15 @@ The in‑house `design_system` **already ships this exact pattern** in `referenc
 html.no-svg .heart-svg { display:none; } html.no-svg .heart-glyph { display:inline; }
 ```
 
-**Heart "proper color".** `--ds-heart` defaults to the **brand accent** (the in‑house precedent
-uses the brand accent‑ink so the heart is AA‑legible in light and dark) `[VERIFIED — reference.footer]`.
-Whether the operator prefers a **classic love‑red** instead is `[OPEN: THREADY-DES-03]`; if red is
-chosen, keep it distinct from `--danger` (error) and ensure the mark is ≥ 3:1 as a meaningful
-non‑text graphic. The heart is decorative (its meaning is carried by the accessible name "love"),
-so a red does not need text‑contrast — but a legible mark is still required.
+**Heart "proper color".** The shipped precedent tints the heart with **`var(--accent-ink)`** — the
+accessible accent‑ink token — so it is AA‑legible in light and dark `[VERIFIED — `.heart { color:
+var(--accent-ink); }` in `reference.footer.component.ts`]`. Thready exposes this as a `--ds-heart`
+token that defaults to that accent‑ink (in the Thready theme, `--accent` already resolves to the
+AA‑pinned `#446E12` light / `#B6E376` dark). Whether the operator prefers a **classic love‑red**
+instead is `[OPEN: THREADY-DES-03]`; if red is chosen, keep it distinct from `--danger` (error) and
+ensure the mark is ≥ 3:1 as a meaningful non‑text graphic. The heart is decorative (its meaning is
+carried by the accessible name "love"), so a red does not need text‑contrast — but a legible mark is
+still required.
 
 **Surface variants of the slogan:**
 
@@ -273,6 +372,24 @@ so a red does not need text‑contrast — but a legible mark is still required.
 - **TUI/CLI:** the `U+2665` (♥) glyph, tinted with the Lipgloss `Accent` (or `Danger`‑red)
   style — e.g. `Made with ♥ by Helix Development`.
 - **Generated Markdown/PDF/HTML:** `♥` glyph (matches this doc's own footer).
+
+### 8.1 Per‑surface slogan placement
+
+The slogan and attribution appear on **every** surface; placement and glyph differ by medium but the
+accessible string is always "Made with love by Helix Development". This is the locked contract the
+white‑label cannot remove (§7, [theming §3](./theming.md#3-white-labeling-model)):
+
+| Surface | Location | Heart rendering | Attribution logo |
+|---------|----------|-----------------|------------------|
+| Web / Desktop portal | `.ds-footer` app‑shell footer (§ wireframes §3.1) | lucide SVG, `--ds-heart` | Helix Development mark beside slogan |
+| Mobile (More tab / About) | Settings › About + app footer | SVG (Compose/SwiftUI vector) | mark in About |
+| TUI | bottom rail under the live pane (§ wireframes §5) | `♥` glyph, Lipgloss `Accent` | text "Helix Development" |
+| CLI | `thready version` / `--help` epilogue | `♥` glyph (or `love` if `--no-color`/no‑UTF8) | text |
+| Generated docs (PDF/HTML/MD) | document **footer**, every page | `♥` glyph | Helix Development attribution logo (§9) |
+| Login / splash | under the wordmark ("read your threads, smarter") | SVG | product logo (Account‑branded) above |
+| Launcher icon | **never** — the icon is letter‑free by construction | — | — |
+
+The one place the slogan/heart must **not** appear is inside the launcher icon (§1: "no letters").
 
 ## 9. Brand on generated documents
 
@@ -315,7 +432,10 @@ assets/brand/
   add `thready` theme + Thready icon set to the published package (workable item THREADY‑DES‑DS‑01).
 - `[GAP: 8.5 helix_shims / HarmonyOS+Aurora]` — HarmonyOS layered icon + Aurora sizes are produced
   now but consumed by native clients that are still scaffolds; do not claim those launchers ship.
-- `[OPEN: THREADY-DES-01]` — finalize `--brand-2` teal from a formal Logo.png eyedrop.
+- `[CLOSED: THREADY-DES-01]` — `--brand-2` teal captured from a formal `assets/Logo.png` eyedrop
+  (mint region mean **`#ABDDC9`**, n = 618,886; dark median `#B7EBD6`), replacing the `#7AA590`
+  stand‑in; method in [design-system §3.2](./design-system.md#32-the-thready-brand-theme). Re‑confirm
+  with the design‑system's own eyedrop tool at integration.
 - `[OPEN: THREADY-DES-03]` — heart color: brand accent (default) vs. love‑red.
 - `[OPEN: THREADY-DES-05]` — Aurora density buckets `[RESEARCH]` must be verified against current
   Aurora OS packaging docs at integration.

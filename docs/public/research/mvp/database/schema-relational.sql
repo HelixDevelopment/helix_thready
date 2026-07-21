@@ -2,8 +2,10 @@
 --  Helix Thready — Relational Schema (PostgreSQL 16, production)
 --  Classification : PUBLIC
 --  Location       : docs/public/research/mvp/database/schema-relational.sql
---  Status         : Draft — v0.1
---  Revision       : 1 (2026-07-21) — swarm (database)
+--  Status         : Draft — v0.2
+--  Revision       : 2 (2026-07-22) — swarm (database, Pass 3): appended the full column-level
+--                   data dictionary (COMMENT ON COLUMN/CONSTRAINT for every table) + the
+--                   FK on-delete action matrix; cross-linked the shipped 0002–0007 migrations.
 --  Owner module   : digital.vasic.database  [IN-HOUSE: database]
 --  Applied via    : digital.vasic.database/pkg/migration.Runner  (see migration-strategy.md)
 --  Related        : ./schema-vector.sql  ./indexing.md  ./partitioning.md
@@ -592,7 +594,90 @@ CREATE TABLE archived_partitions (
 );
 
 -- =============================================================================
+--  DATA DICTIONARY — column & constraint comments (Pass 3)
+--  These COMMENT statements are the machine-readable data dictionary (readable via
+--  \d+, information_schema, or pg_description). They document every non-obvious column,
+--  each FK's ON DELETE choice, and each CHECK domain. They are idempotent metadata and
+--  carry no data risk; the loader may include them in 0001–0005 or a trailing 0008_comments
+--  migration. Columns already commented inline above are not repeated.
+-- =============================================================================
+
+-- ---- Domain A: tenancy & identity ------------------------------------------
+COMMENT ON TABLE  accounts             IS 'Tenant boundary. Every business row is scoped by account_id. Branding holds white-label config; retention default lives here.';
+COMMENT ON COLUMN accounts.slug        IS 'Case-insensitive (citext) unique tenant handle used in URLs/branding.';
+COMMENT ON COLUMN accounts.branding    IS 'White-label JSONB: {colors, logo_url, slogan}. Rendered by the client theme.';
+COMMENT ON COLUMN accounts.status      IS 'active | suspended | deleted. Soft-lifecycle; hard delete cascades to owned rows.';
+COMMENT ON COLUMN accounts.created_by  IS 'Bootstrapping user (soft ref — no FK: the first account may predate any user row).';
+COMMENT ON TABLE  users                IS 'Global identities. One email may hold memberships in many accounts. Exactly one is_root (uq_users_single_root).';
+COMMENT ON COLUMN users.password_hash  IS 'Argon2id digest (digital.vasic.security). Never a plaintext or reversible form.';
+COMMENT ON COLUMN users.totp_secret_enc IS 'AES-256-GCM sealed TOTP secret (security/pkg/securestorage). Key material lives in security, never in the DB.';
+COMMENT ON COLUMN users.is_root        IS 'The single Root Admin flag; a partial UNIQUE index guarantees at most one true row (final request §6.1).';
+COMMENT ON COLUMN roles.account_id     IS 'NULL = system role (root/account_admin/user tiers). Non-NULL = account-scoped custom role. ON DELETE CASCADE with the account.';
+COMMENT ON COLUMN roles.tier           IS 'Coarse tier the role belongs to: root | account_admin | user. Drives default capability sets.';
+COMMENT ON COLUMN permissions.code     IS 'Fine-grained capability code, e.g. post.read, account.manage, billing.view. UNIQUE.';
+COMMENT ON TABLE  role_permissions     IS 'RBAC bundle (M:N roles×permissions). Both FKs CASCADE so deleting a role or permission cleans the bundle.';
+COMMENT ON COLUMN memberships.role_id  IS 'ON DELETE RESTRICT: a role in use by a membership cannot be deleted (prevents silent privilege loss).';
+COMMENT ON COLUMN memberships.invited_by IS 'Inviting user (ON DELETE SET NULL: the trail survives the inviter''s deletion).';
+
+-- ---- Domain B: messenger & ingestion ---------------------------------------
+COMMENT ON COLUMN messengers.capabilities IS 'Platform feature advert as JSONB, e.g. {"forum_topics":true,"reply_threads":true}.';
+COMMENT ON COLUMN messenger_accounts.messenger_id IS 'ON DELETE RESTRICT: cannot remove a platform type while connected accounts reference it.';
+COMMENT ON COLUMN messenger_accounts.external_ref IS 'Non-secret handle (phone / bot username). The secret session lives in session_enc.';
+COMMENT ON COLUMN messenger_accounts.session_enc  IS 'AES-256-GCM sealed gotd/td (Telegram) or Max session. Never logged (final request §14.4/§3.6).';
+COMMENT ON COLUMN messenger_accounts.auth_state   IS 'unauthenticated | pending_code | pending_2fa | authenticated | revoked (login state machine).';
+COMMENT ON COLUMN channels.access_hash_enc IS 'AES-256-GCM sealed Telegram access_hash (required to resolve peers). Sealed, never logged.';
+COMMENT ON COLUMN channels.poll_interval_seconds IS 'Configurable poll cadence for the thread reader (>0). Default 300s.';
+COMMENT ON COLUMN channels.retention_days  IS 'Most-specific retention override (NULL = inherit account/global). See retention-archive.md §2.';
+COMMENT ON COLUMN threads.root_post_id     IS 'Soft ref to the root posts.id (partitioned target -> no DB FK). Set in the same tx that inserts the root post.';
+COMMENT ON COLUMN threads.root_post_posted_at IS 'Denormalised partition key of the root post for pruned joins.';
+COMMENT ON COLUMN threads.external_topic_id IS 'Forum topic id (channels.getForumTopics) for forum-kind channels; NULL otherwise.';
+COMMENT ON COLUMN posts.thread_id          IS 'ON DELETE SET NULL: a post may outlive its thread envelope (rare repair path).';
+COMMENT ON COLUMN posts.content_hash       IS 'sha256(normalised body) for dedup/idempotency; pairs with the (channel, external_message_id, posted_at) UNIQUE.';
+COMMENT ON COLUMN posts.lang               IS 'BCP-47 language tag; NULL until detected. Drives per-language FTS (ATM-DB-011) and translation Skills.';
+COMMENT ON COLUMN replies.parent_post_id   IS 'Soft ref to posts.id (partitioned -> no DB FK). parent_reply_id chains nested replies (also soft).';
+COMMENT ON COLUMN replies.thread_id        IS 'ON DELETE CASCADE: replies die with their thread.';
+
+-- ---- Domain D/E: processing, skills, assets --------------------------------
+COMMENT ON COLUMN processing_state.status     IS 'pending | claimed | running | done | failed | skipped. The claim moves pending->claimed under SKIP LOCKED.';
+COMMENT ON COLUMN processing_state.visible_at IS 'Backoff gate: the row is not claimable until now() >= visible_at (retry with exponential backoff).';
+COMMENT ON COLUMN processing_state.max_attempts IS 'Retry ceiling (default 5, §3.3). On exhaustion status -> failed and the row leaves the claim index.';
+COMMENT ON COLUMN processing_state.precedence IS 'Resolved highest precedence_class for the post so ordering is observable/auditable.';
+COMMENT ON COLUMN skill_runs.skill_id         IS 'ON DELETE RESTRICT: a Skill referenced by run history cannot be hard-deleted (audit integrity).';
+COMMENT ON COLUMN generated_artifacts.post_id IS 'Soft ref to the producing post (partitioned -> no DB FK); post_posted_at denormalised for pruned joins.';
+COMMENT ON COLUMN assets.storage_backend      IS 'minio | s3 | local. The schema is backend-agnostic; signed-URL parity is an Asset-Service concern (ATM-DB-033).';
+COMMENT ON COLUMN assets.sensitivity          IS 'public | internal | sensitive. sensitive + is_encrypted select the specially-encrypted asset dir (§3.6).';
+COMMENT ON COLUMN asset_links.role            IS 'source | generated | rendition — the relationship of the asset to its subject.';
+
+-- ---- Domain F/G/H: events, billing, audit ----------------------------------
+COMMENT ON COLUMN events.entity_id            IS 'Sticky last-value key: the entity whose latest state this sticky event carries (§3.4).';
+COMMENT ON COLUMN events.invalidated          IS 'Sticky invalidation flag: true once the retained value is stale (state change or TTL).';
+COMMENT ON COLUMN event_subscriptions.user_id IS 'Optional owning user (ON DELETE CASCADE). NULL = account-wide subscription.';
+COMMENT ON COLUMN subscriptions.plan_id       IS 'ON DELETE RESTRICT: an in-use plan cannot be deleted; deactivate via plans.is_active instead.';
+COMMENT ON COLUMN invoices.subscription_id    IS 'ON DELETE SET NULL: the invoice (a financial record) survives subscription deletion.';
+COMMENT ON COLUMN audit_log.target_type       IS 'Entity kind the action targeted (e.g. account, user, channel); target_id is its uuid.';
+
+-- =============================================================================
+--  FK ON DELETE ACTION MATRIX (summary of the choices commented above)
+--   CASCADE  : child is meaningless without parent — memberships, channels, posts,
+--              replies, threads, messenger_accounts, role_permissions, most *_hashtags,
+--              subscriptions, usage_records, invoices→account, asset_links→asset,
+--              generated_artifacts→account, assets→account.
+--   RESTRICT : deleting the parent would erase audit/authorisation meaning —
+--              messenger_accounts→messengers, memberships→roles, skill_runs→skills,
+--              subscriptions→plans.
+--   SET NULL : reference is advisory and must survive parent loss —
+--              posts→threads, memberships.invited_by→users, invoices→subscriptions,
+--              assets.parent_asset_id→assets.
+--   (no FK)  : soft refs INTO partitioned tables (threads/replies/processing_state/
+--              skill_runs/generated_artifacts/asset_links → posts|replies) and high-volume
+--              soft refs (events/audit_log → accounts/users). See erd.md §9.
+-- =============================================================================
+
+-- =============================================================================
 --  End of relational schema. Structural indexes are declared here as PK/UNIQUE;
 --  the FULL secondary-index + FTS + ANN strategy lives in ./indexing.md and is
---  applied by later migrations. Vector tables live in ./schema-vector.sql.
+--  applied by ./migrations/0007_secondary_indexes.sql. The domain tables above are
+--  shipped as migrations 0001–0005 (see ./migration-strategy.md §9). Vector tables
+--  live in ./schema-vector.sql (migration 0006). Referential-integrity rationale for
+--  the partitioned firehose tables is in ./erd.md §9.
 -- =============================================================================

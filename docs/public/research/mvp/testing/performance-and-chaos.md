@@ -5,8 +5,8 @@
   Status          : Draft — v0.1
   Revision        : 1 (2026-07-21)
   Author          : Helix Thready documentation swarm (testing)
-  Related         : ./test-strategy.md, ./test-types.md, ../architecture/index.md,
-                    ../database/index.md, ../deployment/index.md
+  Related         : ./test-strategy.md, ./test-types.md, ./acceptance-gates.md,
+                    ../architecture/index.md, ../database/index.md, ../deployment/index.md
 -->
 
 # Helix Thready — Performance, Scaling, Stress, Chaos & DDoS
@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (testing) | Initial draft — SLO/benchmark/stress/scaling/chaos/DDoS plans + DR validation |
+| 2 | 2026-07-22 | swarm (testing) | Pass 3 — cited reusable helix_qa perf/chaos banks + verifier harnesses; linked G-PERF/G-BENCH/G-SCALE/G-STRESS/G-DDOS/G-CHAOS/G-DR gate IDs |
 
 This document covers the six load-and-resilience test types (**scaling, chaos, stress,
 performance, benchmarking, DDoS**) against the **Aggressive SLOs** and **Large / multi-tenant
@@ -23,6 +24,16 @@ production-like `sta.` tier against the real system.
 **Target SLOs** `[OPERATOR]`: **API p95 < 150 ms · semantic search < 500 ms · page < 1.5 s**;
 processing is async with progress events. **Scale**: 100+ channels, 10k+ posts/day, 100+ users,
 50 TB+ assets. **DR**: **RPO ≈ 1 h, RTO ≈ 4 h**.
+
+The pass/fail lines below map to the acceptance-gate IDs `G-PERF`, `G-BENCH`, `G-SCALE`,
+`G-STRESS`, `G-DDOS`, `G-CHAOS` and `G-DR`
+([acceptance-gates.md §2](./acceptance-gates.md#2-gate-register-one-row-per-type)). Thready does
+not start these banks from scratch: HelixQA already ships **reusable load-and-resilience banks**
+Thready parameterizes for its own services `[IN-HOUSE: helix_qa]` — `benchmarking-baselines.yaml`
+(benchstat baselines), `ddos-ratelimit-comprehensive.yaml` (rate-limiter flood), and the
+`helixllm_coder_{ddos,chaos,memory,race,concurrency,bench}.yaml` family (per-fault-class service
+banks), each backed by a `helixqa-verify-coder-*` harness
+([helixqa-banks.md §6.1](./helixqa-banks.md#61-behavior-proving-verifier-harnesses-helixqa-verify)).
 
 ## Table of contents
 
@@ -90,12 +101,14 @@ HTTP-3 API and the WebSocket/SSE hub; **vegeta** produces DDoS floods against th
 The **system under test** is production-like: the API (with the rate-limiter), the WS/SSE hub,
 the Processing Engine (BackgroundTasks worker pool, default 32), Postgres+pgvector (time-
 partitioned with a read replica), a NATS JetStream cluster, and MinIO/S3 holding 50 TB of
-assets. A separate **chaos/DR injector** set can `podman kill`/`pause` the Processing Engine,
-Postgres or NATS; apply `tc netem` latency/loss/partition to NATS and the API; and drive a DB
-point-in-time restore from hourly incrementals. **Observability** (Prometheus, `pprof`,
-ClickHouse latency histograms via `digital.vasic.observability`) feeds the **SLO gate**, which
-asserts p95 < 150 ms for the API, < 500 ms for search, and < 1.5 s page load. A breach fails the
-run and blocks the production tag.
+assets.
+
+A separate **chaos/DR injector** set can `podman kill`/`pause` the Processing Engine, Postgres or
+NATS; apply `tc netem` latency/loss/partition to NATS and the API; and drive a DB point-in-time
+restore from hourly incrementals. **Observability** (Prometheus, `pprof`, ClickHouse latency
+histograms via `digital.vasic.observability`) feeds the **SLO gate**, which asserts p95 < 150 ms
+for the API, < 500 ms for search, and < 1.5 s page load. A breach fails the run and blocks the
+production tag (gate `G-PERF`; the injector experiments map to `G-CHAOS`/`G-DR`).
 
 ## 2. Benchmarking (regression baselines)
 

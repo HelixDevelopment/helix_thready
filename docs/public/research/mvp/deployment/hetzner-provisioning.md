@@ -2,11 +2,12 @@
   Title           : Helix Thready — Hetzner Host Provisioning
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/deployment/hetzner-provisioning.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (deployment)
   Related         : ./index.md, ./podman-compose.md, ./secrets-and-config.md,
-                    ./tls-lets-encrypt.md, ./environments.md
+                    ./tls-lets-encrypt.md, ./environments.md, ./compose-files.md,
+                    ./operations-runbook.md
 -->
 
 # Helix Thready — Hetzner Host Provisioning
@@ -15,6 +16,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (deployment) | Initial root→thready provisioning, rootless Podman, firewall, linger, sysctl, first deploy |
 | 2 | 2026-07-21 | swarm (deployment review) | Split the provisioning-phases prose into multiple paragraphs |
+| 3 | 2026-07-22 | swarm (deployment) | Pass 3: added the candidate Hetzner SKU + object-tier split table (§1.1) to make `[OPEN: host-sizing]` implementation-ready; cross-linked the day-2 operations runbook |
 
 This document is the step-by-step provisioning of the single Hetzner dedicated host: from **root**
 bootstrap to the unprivileged **`thready`** user under which all three environments run rootless
@@ -25,6 +27,7 @@ bootstrap to the unprivileged **`thready`** user under which all three environme
 ## Table of Contents
 
 1. [Host baseline (sizing)](#1-host-baseline-sizing)
+   - [1.1 Candidate Hetzner SKUs + object-tier split](#11-candidate-hetzner-skus--object-tier-split)
 2. [Provisioning phases diagram](#2-provisioning-phases-diagram)
 3. [Phase A — root bootstrap (one time)](#3-phase-a--root-bootstrap-one-time)
 4. [The privileged-port sysctl (why root is needed once)](#4-the-privileged-port-sysctl-why-root-is-needed-once)
@@ -51,7 +54,40 @@ bootstrap to the unprivileged **`thready`** user under which all three environme
 
 `[OPEN: host-sizing]` — exact Hetzner SKU (e.g. a dedicated **AX**/**EX** line box) and whether MinIO
 uses local disks or a Hetzner volume/Storage Box for the object tier is finalized after load tests.
-HelixLLM's GPU node topology is separate.
+HelixLLM's GPU node topology is separate. The candidate mapping in [§1.1](#11-candidate-hetzner-skus--object-tier-split)
+makes this implementation-ready without pre-committing the operator to a purchase.
+
+### 1.1 Candidate Hetzner SKUs + object-tier split
+
+`[RESEARCH]` `[DEFAULT — adjustable]` — mapping the abstract baseline (≥ 16 vCPU / ≥ 64 GB, NVMe for
+the DB, a large pool for 50 TB+ assets) onto concrete, purchasable Hetzner **dedicated** hardware. The
+central sizing tension is that **fast compute** (AX/EX line, NVMe) and **bulk storage** (SX line, many
+large HDDs) live in different product families — so the decision is really "one box or two tiers":
+
+| Option | Family / representative SKU | Compute | RAM | Storage profile | Fit |
+|--------|-----------------------------|---------|-----|-----------------|-----|
+| **A — single compute box + external object tier** *(recommended default)* | **AX** line (e.g. AX102-class, Ryzen 9, 16C/32T) | 16C/32T | 128 GB DDR5 | 2× ~2 TB NVMe (RAID1) for DB + hot state | Best DB/pgvector latency; assets go to a **separate object tier** (below) |
+| **B — single storage box** | **SX** line (e.g. SX-class storage server) | 8–16C | 64–128 GB | many large HDDs (tens of TB) + small NVMe | Holds 50 TB+ assets *on-box* but HDD-backed Postgres hurts pgvector latency |
+| **C — split: AX compute + SX/Storage-Box object tier** | AX compute **+** SX server or Storage Box | 16C+/32T+ | 128 GB+ | NVMe DB on AX; HDD object pool off-box | Cleanest at scale; object tier doubles as the [backup secondary](./backup-dr.md#6-secondary-store--retention) candidate |
+
+**Object-tier decision (the 50 TB+ MinIO volume).** Three backings, in order of preference:
+
+1. **Hetzner dedicated storage server (SX)** or a **large NVMe/HDD RAID** on the same host — highest
+   MinIO throughput, simplest network path; best when assets and compute can share one box (Option B)
+   or a second SX box (Option C).
+2. **Hetzner Volume** attached to the AX box — elastic, but capped per-volume and network-latency
+   bound; fine for a smaller-than-50 TB start that grows.
+3. **Hetzner Storage Box** (SFTP/rclone) — cheapest, off-host; already the
+   [backup secondary default](./backup-dr.md#6-secondary-store--retention), so reusing it as the live
+   object tier would couple primary and backup — **avoid** for the live tier, keep it for backups.
+
+**Recommendation:** start **Option A** (one AX compute box, NVMe DB, assets on a Volume or a small SX
+tier) and split to **Option C** once asset volume approaches the 50 TB envelope — the compose files
+and port plan do not change, only the MinIO volume's backing does. The GPU that HelixLLM needs is
+**not** on this host under any option; it stays the operator workstation / GPU node reached as an
+[external endpoint](./container-topology.md#9-helixllm-as-an-external-endpoint). Exact SKU codes drift
+with Hetzner's catalogue, so the *family + profile* is what is fixed here; the specific model is
+confirmed at purchase after the load test sets the real asset-growth and pgvector-working-set curves.
 
 ## 2. Provisioning phases diagram
 

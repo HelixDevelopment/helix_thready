@@ -1,0 +1,23 @@
+flowchart TB
+  subgraph SVCS["Thready services (per env)"]
+    APP["thready-api / herald / processing / semsearch\nobservability/pkg/metrics + health + logrus + OTLP"]
+    DATA["postgres / nats / minio\n(exporters where available)"]
+  end
+  subgraph OBS["Observability plane (per env — isolated)"]
+    PROM["Prometheus\nscrape /metrics (compose DNS)\nevaluate alert.rules"]
+    PG_PUSH["Pushgateway\nbackup scripts push thready_backup_*"]
+    JAEGER["Jaeger (OTLP 4317)\ntrace spans"]
+    CH["ClickHouse\nstructured logs + analytics"]
+    GRAF["Grafana\ndashboards + SLO panels"]
+    AM["Alert routing\n(Alertmanager / observability notifier)"]
+  end
+  APP -->|/metrics 15s| PROM
+  DATA -->|exporter /metrics| PROM
+  APP -. OTLP spans .-> JAEGER
+  APP -. logrus (correlation id) .-> CH
+  PG_PUSH --> PROM
+  PROM -->|datasource| GRAF
+  CH -->|datasource| GRAF
+  PROM -->|fired alerts| AM
+  AM -->|page| ONCALL["On-call route\n(email / Telegram / PagerDuty)\n[OPEN: alerting-route]"]
+  GRAF -. SSH tunnel (loopback) .-> OPERATOR["Operator workstation"]

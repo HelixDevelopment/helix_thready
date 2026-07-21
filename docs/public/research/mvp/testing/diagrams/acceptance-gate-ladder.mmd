@@ -1,0 +1,38 @@
+flowchart TB
+  subgraph L0["Author loop (RED-first)"]
+    RED[RED test written first]
+    GREEN[Implement to GREEN]
+    RED --> GREEN
+  end
+  subgraph L1["Gate 1 — pre-commit (fast, local)"]
+    G_UNIT[G-UNIT race-clean unit]
+    G_FMT[G-STATIC fmt/vet/lint]
+    G_SEC1[G-SECRET secret-leak scan]
+    G_AB[G-ANTIBLUFF paired mutation exit0/exit99]
+  end
+  subgraph L2["Gate 2 — pre-push (integration, local deps)"]
+    G_INT[G-INT real Postgres/NATS/MinIO]
+    G_CONTRACT[G-CONTRACT OpenAPI + WS envelope]
+    G_DECOUP[G-DECOUPLE config-injected reuse]
+    G_QG[G-SONAR + G-SNYK quality gate]
+  end
+  subgraph L3["Gate 3 — pre-tag full-suite (dev./sta.)"]
+    G_E2E[G-E2E canonical journey]
+    G_FULLAUTO[G-FULLAUTO HelixQA autonomous]
+    G_UIUX[G-UI + G-UX visual + a11y]
+    G_CH[G-CHALLENGE banks + meta-runner]
+    G_QA[G-HELIXQA banks + evidence]
+    G_PERF[G-PERF + G-BENCH SLO + baseline]
+    G_LOAD[G-SCALE + G-STRESS + G-DDOS + G-CHAOS + G-DR]
+    G_REVIEW[G-REVIEW independent AI GO]
+  end
+  GREEN --> G_UNIT --> G_FMT --> G_SEC1 --> G_AB
+  G_AB -->|clean=0, mutation=99| G_INT
+  G_INT --> G_CONTRACT --> G_DECOUP --> G_QG
+  G_QG -->|pass| G_E2E
+  G_E2E --> G_FULLAUTO --> G_UIUX --> G_CH --> G_QA --> G_PERF --> G_LOAD --> G_REVIEW
+  G_REVIEW -->|GO + evidence| TAG[Tag PREFIX-version -> 4 upstreams]
+  G_AB -.->|any other outcome| BLOCK[[RELEASE BLOCKER]]
+  G_QG -.->|fail / high-sev| BLOCK
+  G_QA -.->|evidence-less PASS| BLOCK
+  G_LOAD -.->|SLO breach / data loss > RPO| BLOCK

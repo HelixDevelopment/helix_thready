@@ -13,6 +13,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial Bubble Tea TUI guide |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the screen-layout diagram explanation into multi-paragraph form; added VERIFIED `helix_track_cli` facts (Bubble Tea + Lip Gloss, OpenDesign theme alignment, `~/.config/<app>/config.yaml`, FOUNDATION/design-first); expanded the keybinding reference and tutorials |
 
 The Thready TUI is a full-screen terminal application built with **Bubble Tea + Cobra + Lipgloss**
 (the `helix_track_cli` pattern) `[IN-HOUSE]`. "Everything possible from the Web works from the TUI"
@@ -71,18 +72,32 @@ flowchart TB
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/tui-layout.mmd](./diagrams/tui-layout.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** The TUI is a single full-screen
-layout with four horizontal bands. The **header** shows the active brand (respecting per-Account
-white-label), the selected Account, connection health to the API/event bus, and your MFA/auth state.
-The **body** is split into three vertical panes: a **left navigation** list of views (Channels,
-Threads, Search, Assets, Events, and an Admin section marked `*` that only appears for Admin tiers);
-a **center list** showing the rows for the selected view (threads, search results, or assets); and a
-**right detail** pane rendering the selected item — a complete post with its status reply and asset
-links, or an asset's metadata — including its **live processing state** that updates as events arrive.
+layout with four horizontal bands, stacked top to bottom. This four-band structure is what makes the
+terminal client feel like a dashboard rather than a REPL: persistent context at the top, the working
+area in the middle, a live feed near the bottom, and help at the very bottom.
+
+The **header** shows the active brand (respecting per-Account white-label), the selected Account,
+connection health to the API/event bus, and your MFA/auth state. It is always visible so you never
+lose track of *which* account you are acting on or whether the live connection is healthy — a dropped
+event-bus link shows here before you notice stale data.
+
+The **body** is split into three vertical panes that form a classic master-detail flow. The **left
+navigation** lists the views (Channels, Threads, Search, Assets, Events, and an Admin section marked
+`*` that only appears for Admin tiers). The **center list** shows the rows for the selected view —
+threads, search results, or assets. The **right detail** pane renders the selected item — a complete
+post with its status reply and asset links, or an asset's metadata — including its **live processing
+state** that updates as events arrive. Focus flows left→center→right as you drill in.
+
 Across the bottom sits the **live event stream**, a scrolling log of `post.received` /
 `post.processed` / error events pushed over WebSocket/SSE, so you watch processing happen in real time
-without refreshing. The **footer** shows context-sensitive keybindings and carries the Helix
-Development slogan. Focus moves between the three body panes and the event stream; the layout is the
-terminal analogue of the [web portal](./web-portal-guide.md) master-detail screens.
+without refreshing. Because this band is always on screen, the TUI is the best surface for *watching* a
+channel process a burst of posts, where the Web portal would need you to keep a feed panel open.
+
+The **footer** shows context-sensitive keybindings and carries the Helix Development slogan. Focus
+moves between the three body panes and the event stream via `Tab`; the whole layout is the terminal
+analogue of the [web portal](./web-portal-guide.md) master-detail screens, which is why a workflow
+learned in one transfers to the other. The colour theme aligns with the shared **OpenDesign** tokens,
+matching the VERIFIED `helix_track_cli` reference (Bubble Tea + Lip Gloss).
 
 ## 3. Navigation & keybindings
 
@@ -120,7 +135,10 @@ terminal analogue of the [web portal](./web-portal-guide.md) master-detail scree
 
 The bottom band subscribes to the event bus (WebSocket, SSE fallback). It renders one line per event
 with a severity color. Durable JetStream consumers replay missed events on reconnect (final request
-§3.4), so if your terminal drops the connection you don't lose events — the stream backfills.
+§3.4), so if your terminal drops the connection you don't lose events — the stream backfills. The full
+set of topics the stream can show (and their one-time vs sticky semantics) is the consolidated
+[event catalog](./sdk-quickstart.md#61-event-catalog-topics--payloads--semantics); the `ge` Events view
+lets you filter to any subset.
 
 ```text
 09:41:02  post.received   chan=devops  post=8f3a…  #Research #Video
@@ -155,8 +173,12 @@ with a severity color. Durable JetStream consumers replay missed events on recon
 
 - `[OPEN: tui-1]` Pane layout & keymap are `[DEFAULT — adjustable]`; validate against the implemented
   Bubble Tea models. Tracked: **ATM — finalize TUI keymap + panes**.
-- `[OPEN: tui-2]` `helix_track_cli` reference not deep-audited `[GAP register §8.6]`. Tracked:
-  **ATM — audit helix_track_cli before adopting widgets wholesale**.
+- `[OPEN: tui-2]` `helix_track_cli` reference is **VERIFIED FOUNDATION / design-first** — its README
+  states "no functional code yet" and its `docs/CLI_SPEC.md` holds the *planned* Bubble Tea screen map
+  and keybindings. The stack (Bubble Tea + Lip Gloss, OpenDesign theme, `~/.config/<app>/config.yaml`)
+  is confirmed and adopted; the concrete widgets are not yet implemented, so validate the pane models
+  against Thready's own build before freezing. Tracked: **ATM — implement + snapshot-test TUI panes
+  against the frozen keymap**.
 
 ---
 

@@ -15,6 +15,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial zero-version user documentation set |
 | 2 | 2026-07-21 | orchestrator (integration) | Integration pass — all upstream sibling area indexes now committed; cross-area links verified to resolve; status caveat in §4 updated |
+| 3 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: added [quickstart.md](./quickstart.md); recorded the VERIFIED messenger-name correction (`HERALD_MTPROTO_*` / `HERALD_TGRAM_*`) read from `vasic-digital/herald`; split the reading-path diagram explanation into multi-paragraph form; refreshed the gap table wording |
+| 4 | 2026-07-22 | swarm (user-guides, Critic pass) | Completeness pass: added the consolidated [event catalog](./sdk-quickstart.md#61-event-catalog-topics--payloads--semantics) (final request §3.4) cross-linked from CLI/TUI/Web; added the user-visible `[GAP: 11]` (native/Qt-Aurora theming) row to §6; noted the events catalog under the anti-bluff coverage |
 
 This is the canonical entry point for **consumer-facing** documentation of Helix Thready: how to
 install it, configure it, and operate it from every surface (Web, CLI, TUI, Desktop, Mobile, SDK)
@@ -56,7 +58,8 @@ create their own Account and become its Admin) — see [account-admin-guide.md](
 
 | Guide | Scope |
 |-------|-------|
-| [installation.md](./installation.md) | Prerequisites, local (dev) bring-up with rootless Podman Compose, and the 3-environment Hetzner deploy; Root Admin bootstrap |
+| [quickstart.md](./quickstart.md) | **Fast on-ramp** — a ~5-minute quickstart per surface (Web, CLI, TUI, SDK, Mobile) plus Admin bootstrap, each cross-linked to its deep guide |
+| [installation.md](./installation.md) | Prerequisites, local (dev) bring-up with rootless Podman Compose, and the 3-environment Hetzner deploy; Root Admin bootstrap; first-run verification matrix |
 | [configuration.md](./configuration.md) | **Complete documented environment-variable reference** — every `.env` variable the system supports, plus config-resolution precedence and messenger sign-in |
 | [root-admin-guide.md](./root-admin-guide.md) | System ownership: accounts, global retention, white-label branding, MFA policy, pause/resume, audit, backup/DR runbook |
 | [account-admin-guide.md](./account-admin-guide.md) | Account operations: members, channel/group onboarding, skills & hashtag recipes, per-account retention, branding, billing |
@@ -98,19 +101,33 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/user-guide-map.mmd](./diagrams/user-guide-map.mmd).
 
-**Explanation (for readers/models that cannot see the diagram).** The map shows the intended
-order in which a newcomer consumes this area. Everyone starts at **installation**, which gets a
-running system (locally for evaluation, or on the Hetzner host for real use). Installation flows
-into **configuration**, because nothing works until the `.env` is populated — messenger
-credentials, database DSNs, the embedding provider, and storage all come from there. From
-configuration the reader branches by **role**: the system owner reads the Root Admin guide, an
-account operator reads the Account Admin guide, and a consumer reads the End-User manual. All
-three roles then converge on a **surface** choice — Web, CLI, TUI, Mobile, or the SDK — each of
-which has its own dedicated guide. Every surface path terminates at a shared **help** decision
-that routes to the FAQ for conceptual questions and to troubleshooting for concrete failures.
-The diagram is deliberately a funnel: role guides describe *what* you can do, surface guides
-describe *where and how* you do it, and the two are read together (e.g. an Account Admin driving
-the Web portal reads both `account-admin-guide.md` and `web-portal-guide.md`).
+**Explanation (for readers/models that cannot see the diagram).** The map shows the intended order in
+which a newcomer consumes this area. Everyone starts at **installation**, which gets a running system —
+locally for evaluation, or on the Hetzner host for real use. Readers who want the shortest possible
+path can instead jump to [quickstart.md](./quickstart.md), which collapses install→configure→first
+success into a five-minute per-surface on-ramp; the map below is the thorough route, the quickstart is
+the express one.
+
+Installation flows into **configuration**, because nothing works until the `.env` is populated —
+messenger credentials, database DSNs, the embedding provider, and storage all come from there. This
+ordering is not cosmetic: the embedder gate `[GAP: 1]` and the messenger sign-in both live in
+configuration, and skipping it is the single most common cause of "it installed but does nothing".
+
+From configuration the reader branches by **role**: the system owner reads the Root Admin guide, an
+account operator reads the Account Admin guide, and a consumer reads the End-User manual. The role
+guides answer *what* you are allowed to do and *why* — they are the authority on the permission model,
+retention, branding, and the account hierarchy.
+
+All three roles then converge on a **surface** choice — Web, CLI, TUI, Mobile, or the SDK — each with
+its own dedicated guide. Surface guides answer *where and how*: the same capability (say, reprocessing
+a post) is described once per surface in the idiom of that surface. Role and surface guides are meant
+to be read **together** — an Account Admin driving the Web portal reads both `account-admin-guide.md`
+and `web-portal-guide.md`.
+
+Every surface path terminates at a shared **help** decision that routes to the FAQ for conceptual
+questions and to troubleshooting for concrete failures. The diagram is deliberately a funnel: role
+guides describe *what*, surface guides describe *where and how*, and help closes the loop when either
+leaves you stuck.
 
 ## 4. Upstream / Downstream dependencies
 
@@ -153,6 +170,15 @@ Provenance tags from the source docs are reused inline: `[CONSTITUTION §x]`, `[
 `[RESEARCH]`, `[OPERATOR]`, `[DEFAULT — adjustable]`, `[BUILD-NEW]`, and `[GAP: id]` (addresses a
 gap-register item). `[OPEN: …]` marks anything unresolved plus a tracked workable item.
 
+> **Verification updates (Pass 3, Rev 3).** The following were promoted from ASSUMPTION to **VERIFIED**
+> by reading module source: the Telegram/Max **messenger env-var names** (`HERALD_MTPROTO_*` /
+> `HERALD_TGRAM_*` / reserved `HERALD_MAX_*`, from `vasic-digital/herald/.env.example` +
+> `docs/guides/messengers/`); the **VisionEngine** variables (`HELIX_VISION_*`, `HELIX_OLLAMA_*`,
+> `HELIX_LLAMACPP_RPC_*`, from `helix_track/vision_engine/.env.example`); additional **LLMProvider**
+> keys and **`CONTAINERS_REMOTE_*`** variables; the CLI/TUI stack and config-path convention
+> (`vasic-digital/helix_track_cli` — VERIFIED FOUNDATION/design-first); and the **`SKILL.md`** frontmatter
+> schema (`helix_skills`). See each guide's Rev 2 revision row for specifics.
+
 > **Gap-reference numbering scheme.** The gap register carries two coordinate systems and both are
 > cited here: a **Priority Summary Matrix** with rows numbered **1–20**, and per-subsystem
 > **sections** numbered `§N.M`. Accordingly, `[GAP: 9]` (a bare integer) means **matrix row 9**
@@ -178,6 +204,7 @@ Every gap-register item with a user-visible consequence is surfaced honestly in 
 | `[GAP: 8]` Only pgvector wired; Qdrant/others unverified | [configuration.md §Vector DB](./configuration.md#7-datastores) |
 | `[GAP: 9]` Asset Service not decoupled from Catalogizer; `Streaming` is a WebSocket hub, **not** media byte/transcode streaming (HLS/DASH is a `P1` transcoder-integration item) | [end-user-manual.md §Assets](./end-user-manual.md#7-media-assets-and-downloads), [configuration.md §Assets](./configuration.md#13-assets--media-directories) |
 | `[GAP: 10]` auth JWT default HMAC-SHA256; asymmetric keys planned | [configuration.md §Auth](./configuration.md#11-authentication--security), [sdk-quickstart.md §Auth](./sdk-quickstart.md#4-authentication) |
+| `[GAP: 11]` `helix_design` non-web (Flutter/Qt-Aurora/CSS) token packages are a SCAFFOLD — native clients derive brand tokens ad hoc | [mobile-guide.md §Open items](./mobile-guide.md#8-open-items) (`mob-5`), [web-portal-guide.md §Open items](./web-portal-guide.md#11-open-items) (`web-2`) |
 | `[GAP: 20]` New subsystems (Asset Service, Download Manager, User Service, Max adapter, OCR, MeTube webhook) | flagged `[BUILD-NEW]` wherever a feature depends on them |
 
 ## 7. How these guides are verified (anti-bluff TDD)
@@ -214,7 +241,9 @@ Run RED first (`go test ./... -run TestSearchContext_RejectsHashEmbedder` fails 
 absent) → implement the abort in `NewSearchService` → the same test asserts GREEN → extend to the other
 documented invariants (single-claim idempotency never double-processes a post; `thready doctor`
 red-lines the Max/OCR/Download-Manager `[BUILD-NEW]` gaps; RBAC returns `403`/exit `77`, never a partial
-action). Each tutorial's assertion becomes a HelixQA YAML bank case + a `challenges` scenario carrying
+action; the [event catalog](./sdk-quickstart.md#61-event-catalog-topics--payloads--semantics)'s
+sticky/one-time + at-least-once replay semantics hold — a replayed event is a no-op and a fresh
+subscriber receives sticky last-values). Each tutorial's assertion becomes a HelixQA YAML bank case + a `challenges` scenario carrying
 mandatory runtime evidence (logs/screenshots), so a green suite proves the documented behaviour is real,
 not a stub. This is the mechanism behind the "never claims a stub works" promise at the top of this
 index.

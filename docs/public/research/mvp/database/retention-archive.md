@@ -101,19 +101,29 @@ flowchart TB
 ```
 
 **Explanation (for readers/models that cannot see the diagram).** Retention resolves top to
-bottom: the global default (keep-indefinitely, owned by Root) is overridden by an optional
-per-account window, which is overridden by an optional per-channel window; the *most
-specific non-null* value wins. If the result is indefinite, the data stays hot in the
-primary's partitions forever. If a finite window `N` has elapsed, the row/partition becomes
-an age-out candidate. The archive step either **detaches** a fully-drainable monthly
-partition or row-deletes just the aged tenants within a still-live partition; either way the
-data is first **copied** to the MinIO/S3 cold tier as a Parquet or SQL dump, a bookkeeping
-row is written to `archived_partitions`, and only then is the live partition dropped —
-"archive before drop" guarantees no irreversible loss. Two side flows sit outside the age
-timer: a **GDPR erasure request** triggers a targeted purge (relational rows + their vector
-rows + asset unlink/garbage-collection) regardless of retention; and **asset dedup/GC**
-reclaims cold-tier space for orphaned blobs. This directly closes the retention/archive half
-of `[GAP: database-3.2]` at the schema+job layer.
+bottom through the three source nodes: the global default (keep-indefinitely, owned by Root) is
+overridden by an optional per-account window (`accounts.default_retention_days`), which is in
+turn overridden by an optional per-channel window (`channels.retention_days`). The `RESOLVE`
+decision node applies the *most specific non-null* rule — the narrowest explicitly-set window
+wins, and if none is set the effective retention is indefinite.
+
+The two outcomes of `RESOLVE` are the crux. If the result is indefinite, the data stays hot in
+the primary's partitions forever (the `KEEP` branch) — which, given the operator's default, is
+what happens to most data. If a finite window `N` has elapsed, the row/partition becomes an
+age-out candidate (the `AGE` branch). From there the archive step either **detaches** a
+fully-drainable monthly partition or row-deletes just the aged tenants within a still-live
+partition (because retention differs per tenant/channel while data is co-mingled in one monthly
+partition).
+
+Either path funnels through the same safety invariant: the data is first **copied** to the
+MinIO/S3 cold tier as a Parquet or SQL dump, a bookkeeping row is written to
+`archived_partitions`, and only then is the live partition dropped — the `DETACH → ARCHIVE →
+CATALOG → DROP` chain. "Archive before drop" guarantees no irreversible loss. Two side flows
+sit outside the age timer (drawn with dotted edges): a **GDPR erasure request** triggers a
+targeted purge (relational rows + their vector rows + asset unlink/garbage-collection)
+regardless of retention, and **asset dedup/GC** reclaims cold-tier space for orphaned blobs.
+Together these close the retention/archive half of `[GAP: database-3.2]` at the schema+job
+layer.
 
 ---
 

@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial Root Admin operations guide |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the hierarchy diagram explanation into multi-paragraph form; expanded the security-policy and DR sections; strengthened the User Service open item |
 
 The Root Admin **owns the whole system**. Exactly one exists (final request §6.1). This guide covers
 everything only the Root Admin can do: managing all Accounts, setting global defaults, white-label
@@ -75,17 +76,31 @@ flowchart TB
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/rbac-hierarchy.mmd](./diagrams/rbac-hierarchy.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** At the top sits the single Root
-Admin, who owns the entire system. The Root Admin creates and can edit every Account (Acme, Globex,
-…) and sets the **global defaults** that every Account inherits: the default data-retention policy,
-the MFA policy, the white-label branding defaults applied to new Accounts, and the backup schedule.
+Admin, who owns the entire system. There is exactly one, created once at deploy time, and its
+singular-ness is a deliberate security property: system-wide powers cannot be diffused across many
+accounts, so there is one throat to choke and one credential set to protect above all others.
+
+The Root Admin creates and can edit every Account (Acme, Globex, …) and sets the **global defaults**
+that every Account inherits: the default data-retention policy, the MFA policy, the white-label
+branding defaults applied to new Accounts, and the backup schedule. These defaults cascade downward —
+an Account starts from them and may only tighten, never loosen beyond the Root's caps.
+
 Each Account has one or more **Account Admins**, who in turn invite and manage **Standard Users**,
 onboard the Account's channels and skills, and may override the Account's own retention and branding
-within the limits the Root Admin allows. Standard Users consume the system — browsing threads,
-searching, downloading assets, and triggering re-processing. Crucially, the membership graph is not a
-strict tree: a Standard User can **create their own Account** and become its Admin (the dotted edge),
-and a person can be an Admin in one Account while being a Standard User in another. The two dotted
-edges from Root Admin down to any Account Admin or User express the override power — the Root Admin
-can edit **any** node in the graph, which no other tier can do.
+within the limits the Root Admin allows. This is the middle tier of delegation: an Account Admin has
+full authority *inside* their Account and none outside it.
+
+Standard Users consume the system — browsing threads, searching, downloading assets, and triggering
+re-processing. They are the leaf of the authority graph but the primary audience of the product; most
+day-to-day value flows through this tier.
+
+Crucially, the membership graph is **not a strict tree**. A Standard User can create their own Account
+and become its Admin (the dotted self-service edge), and a single person can be an Admin in one Account
+while being a Standard User in another — role is per-Account, not global. The two dotted edges from
+Root Admin down to any Account Admin or User express the **override power**: the Root Admin can edit
+*any* node in the graph, which no other tier can do. That override is exactly the capability the
+`[BUILD-NEW]` User Service `[GAP: 20]` must implement carefully, since it is the one edge that crosses
+account boundaries.
 
 ## 3. Bootstrap & securing the root account
 

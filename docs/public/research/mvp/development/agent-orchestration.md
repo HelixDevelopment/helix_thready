@@ -2,10 +2,11 @@
   Title           : Helix Thready — Agent-Fleet Orchestration Plan
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/agent-orchestration.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
-  Related         : ./index.md, ./workable-items.md, ./contribution-guidelines.md,
+  Related         : ./index.md, ./workable-items.md, ./workable-items-detail.md,
+                    ./contribution-guidelines.md, ./git-workflow-internals.md,
                     ../../../../private/research/mvp/helix_thready_research_request_final.md
 -->
 
@@ -15,6 +16,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial draft — alias-first, multi-track, claim registry, Fable review |
 | 2 | 2026-07-21 | swarm (development, review) | Review pass — corrected the `track_claim` DDL to a partial unique index (`WHERE released_at IS NULL`) so a released key can be re-claimed; added a TTL-expiry recovery index |
+| 3 | 2026-07-22 | swarm (development, pass 3) | Depth pass — added the VERIFIED `AgentPool` capability-match contract to §3 (closes `[OPEN: agentpool-contract]`); updated §6 + §11 after reading `vasic-digital/session_orchestrator` at source (the exactly-once claim `Registry` now ships — no longer DESIGN-ONLY) |
 
 This document defines how the Helix Thready codebase is **built by an autonomous agent fleet**.
 It is the development-time process, reconciling the original request's "fine-granulated workable
@@ -83,20 +85,28 @@ flowchart TB
   W1 & W2 & W3 & W4 -.uses.-> ALIAS
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** The operator launches a single
-**conductor** session — the ruler mandated by §11.4.187. The conductor reads the tracked
-`workable_items.db` `[§11.4.93/95]`, consults the append-only **claim registry** `[§11.4.176]`, and
-programmatically spawns one headless worker per **track** (native `claude -p --output-format
-stream-json`, capturing the `session_id` from the first `init` event and reading success from the
-`result` event). Each track owns a canonical domain (foundation, processing, clients, testing) so
-tracks do not contend. A worker further delegates to **subagents** `[§11.4.20/70]` for sub-scopes
-and works inside its **own git worktree** so concurrent tracks never collide in one checkout. When
-an item's tests are GREEN, the worker submits it for **independent AI review on Fable @ xhigh
-(Opus xhigh fallback)** `[§11.4.209]`; a `GO` merges it onto the latest main with no force-push
-`[§11.4.113]` and pushes to all four upstreams via the commit-all wrapper `[§2.1]`; a `NO-GO`
-iterates `[§11.4.134]`. Underpinning all of this, every worker resolves its model through the
-**native-alias-first** chain `[§11.4.196/198]` — `deepseek → xiaomi → opencode → kimi → …` — into
-which the local Helix LLM is registered as one option.
+**Explanation (for readers/models that cannot see the diagram).** The top of the diagram is the
+control plane. The operator launches a single **conductor** session — the ruler mandated by
+§11.4.187. The conductor reads the tracked `workable_items.db` `[§11.4.93/95]` and consults the
+append-only **claim registry** `[§11.4.176]` (now realizable directly on the shipped
+`session_orchestrator` claim `Registry`, see §6) before it does anything, so no two tracks ever act
+on the same item.
+
+The middle band is the worker fleet. The conductor programmatically spawns one headless worker per
+**track** — native `claude -p --output-format stream-json`, capturing the `session_id` from the
+first `init` event and reading success from the `result` event, which is what lets it resume or
+monitor a track later. Each track owns a canonical domain (foundation, processing, clients, testing)
+so tracks do not contend, and each worker further delegates to **subagents** `[§11.4.20/70]` for
+sub-scopes while working inside its **own git worktree** so concurrent tracks never collide in one
+checkout.
+
+The bottom of the flow is the merge gate and the model plane. When an item's tests are GREEN the
+worker submits it for **independent AI review on Fable @ xhigh (Opus xhigh fallback)** `[§11.4.209]`;
+a `GO` merges it onto the latest main with no force-push `[§11.4.113]` and pushes to all four
+upstreams via the commit-all wrapper `[§2.1]`, while a `NO-GO` iterates `[§11.4.134]`. Underpinning
+every worker, model access resolves through the **native-alias-first** chain `[§11.4.196/198]` —
+`deepseek → xiaomi → opencode → kimi → …` — into which the local Helix LLM is registered as one
+option, and from which the `AgentPool` (§3) hands out capability-matched agent handles.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/orchestration-topology.mmd](./diagrams/orchestration-topology.mmd).
 
@@ -132,6 +142,41 @@ item's implementation is model-agnostic. `[IN-HOUSE: claude_toolkit]`
 > **Verified vs assumed.** The alias mechanism, transports and example alias names are VERIFIED in
 > the local `claude_toolkit` clone. The exact *preference ordering* for Thready's dev fleet is
 > `[DEFAULT — adjustable]` per the final request §5.1.2 (operator may reorder).
+
+**The `AgentPool` capability-match contract `[VERIFIED-SOURCE]` (closes `[OPEN: agentpool-contract]`,
+`ATM-067`).** Beyond alias resolution, the dev fleet acquires concrete headless-agent handles from
+`digital.vasic.llmorchestrator`'s pool. The contract was read at source
+(`vasic-digital/LLMOrchestrator/pkg/agent/pool.go` + `pkg/agent/agent.go`):
+
+```go
+// vasic-digital/LLMOrchestrator/pkg/agent/pool.go — VERIFIED at source (Pass 3).
+type AgentPool interface {
+    // Acquire blocks until an agent whose Capabilities() satisfy requirements is free.
+    Acquire(ctx context.Context, requirements AgentRequirements) (Agent, error)
+    Release(agent Agent)
+}
+func NewPool() AgentPool // + multi_pool.go, simple_pool.go variants
+
+// pkg/agent/agent.go — the capability-matching types.
+type AgentCapabilities struct {
+    Vision, Streaming, ToolUse bool
+    MaxTokens, MaxImages       int
+    Providers                  []string // which LLM providers this agent supports
+}
+type AgentRequirements struct {
+    NeedsVision, NeedsStreaming bool
+    MinTokens                   int
+    PreferredAgent              string // optional: prefer a specific agent by name
+}
+type Agent interface { Capabilities() AgentCapabilities; ModelInfo() ModelInfo /* … */ }
+```
+
+Concrete agents present at source: `claudecode_agent.go`, `gemini_agent.go`, `junie_agent.go`,
+`opencode_agent.go`, `qwencode_agent.go` — i.e. the pool wraps **headless CLI coding agents** (not
+HTTP model endpoints), which is exactly right for dev-time orchestration `[GAP 2.4]`. A track worker
+that needs vision (e.g. an OCR item, `ATM-033`) acquires with `NeedsVision:true`; the pool matches it
+against each agent's `Capabilities().Vision`. Adding HarmonyOS/Aurora build-agent capabilities (if
+those become agent tasks) is the only residual follow-on, tracked under `ATM-067`.
 
 ## 4. Subagent-driven-by-default `[§11.4.20/70]`
 
@@ -211,9 +256,28 @@ mobile items `ATM-046`; less so to the Go services.)
 
 Thready reuses this concept **twice**: for the **dev fleet** (this document) and, at **runtime**,
 for the idempotent single-claim per post (`ATM-023`) — the same "at most one processor per unit of
-work" invariant. The gap register flags `digital.vasic.session_orchestrator` (the atomic
-track-claim registry) as **DESIGN-ONLY** `[GAP: 2.9]`; `ATM-062` implements it, and until then the
-registry is realized directly on `digital.vasic.background`'s Postgres advisory locks.
+work" invariant. The gap register flagged `digital.vasic.session_orchestrator` (the atomic
+track-claim registry) as **DESIGN-ONLY** `[GAP: 2.9]` — but **Pass 3 read it at source and found it
+now ships real code `[VERIFIED-SOURCE]`.** `vasic-digital/session_orchestrator/claim/claim.go`
+defines a concurrency-safe, exactly-once `Registry`:
+
+```go
+// vasic-digital/session_orchestrator/claim/claim.go — VERIFIED at source (Pass 3).
+// Package doc: "the exactly-once claim + deadlock-free device-lock" (WS-D DESIGN §1.3–§1.4).
+type Registry struct { /* claims map[string]Claim; concurrency-safe */ }
+func New(cfg Config) *Registry
+func (r *Registry) TryClaim(resourceID, holder string, ttl time.Duration) (Outcome, ...) // never errors
+func (r *Registry) Release(resourceID, claimID string) error // ErrNotClaimed | ErrClaimMismatch
+type Claim struct { ClaimID string; GrantedAt time.Time; TTL time.Duration /* … */ }
+func (c Claim) ExpiresAt() time.Time
+```
+
+Sibling packages `alias/` (shared alias pool + health), `scheduler/`, `supervisor/` and
+`claim/select.go` round out the module. This **supersedes** the DESIGN-ONLY status: `ATM-062` is
+therefore **rescoped** from build-from-scratch to *wire + verify + integrate* the shipped registry
+(realizing §11.4.176(A) directly, and reusable for the runtime single-claim `ATM-023`). Until it is
+wired, the interim realization on `digital.vasic.background`'s Postgres advisory locks — the
+`track_claim` partial-unique-index DDL above — remains valid and is the belt-and-braces substrate.
 
 ```sql
 -- Claim-registry substrate (Postgres advisory-lock backed; realizes §11.4.176(A))
@@ -315,9 +379,9 @@ runtime embeddings — a silent hash-embedder would corrupt both dev-time RAG an
 
 | Gap-register § | Impact on orchestration | Item |
 |----------------|-------------------------|------|
-| 2.9 session_orchestrator (DESIGN-ONLY) | The atomic track-claim registry §11.4.176(A) is not implemented; realized on `background` advisory locks meanwhile | ATM-062 |
+| 2.9 session_orchestrator (~~DESIGN-ONLY~~ **now shipped**, Pass 3) | The atomic track-claim registry §11.4.176(A) **exists at source** (`claim/claim.go`); rescoped to wire+verify+integrate; `background` advisory locks remain the interim substrate `[VERIFIED-SOURCE]` | ATM-062 |
 | 2.9 TOON (SCAFFOLD) / token_optimizer (partial) | Token-optimization §11.4.198 leans on toolkit utilities, not these modules | ATM-061 |
-| 2.4 LLMOrchestrator `[OPEN: agentpool-contract]` | `AgentPool` capability-matching not source-verified locally | ATM-067 |
+| 2.4 LLMOrchestrator ~~`[OPEN: agentpool-contract]`~~ **CLOSED** | `AgentPool` capability-match contract read at source (§3) — `Acquire(ctx, AgentRequirements) (Agent, error)` / `Release` `[VERIFIED-SOURCE]` | ATM-067 |
 | 2.2 HelixAgent (FOUNDATION, identity blur) | Only pin the ensemble/debate packages Thready needs | ATM-063 |
 | — §11.4.196/198/209 `[OPEN: constitution-anchor-verify]` | Precise normative text unverified locally | ATM-066 |
 

@@ -1,0 +1,21 @@
+sequenceDiagram
+  actor U as User
+  participant W as Post detail (Web/CLI/TUI/Mobile)
+  participant API as REST /v1
+  participant SYS as System (BackgroundTasks)
+  participant EVT as Event Bus (JetStream)
+  U->>W: click "Reprocess" (or CLI `thready post reprocess <id>`)
+  W->>W: confirm (destructive-ish: re-runs pipeline)
+  W->>API: POST /v1/posts/{id}:reprocess
+  API->>SYS: enqueue reprocess (idempotent single-claim)
+  alt already in-flight
+    SYS-->>API: 409 already processing
+    API-->>W: 409 -> toast "already running"
+  else claimable
+    SYS->>EVT: processing.progress (per step)
+    EVT-->>W: live per-step updates (WS/SSE)
+    SYS->>EVT: processing.completed | processing.failed
+    EVT-->>W: final state + generated assets
+    API-->>W: 202 accepted (subscription active)
+  end
+  W-->>U: pipeline animates live; retry-step on failure

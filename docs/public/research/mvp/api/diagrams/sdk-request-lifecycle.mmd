@@ -1,0 +1,17 @@
+flowchart TB
+  APP[Application code] -->|typed call e.g. Posts.List| THIN[Thin idiomatic layer]
+  subgraph THIN_LAYER["Thin idiomatic layer (hand-written, per language)"]
+    AUTHM[Auth: attach Bearer jwt or sk- key] --> REFRESH{access token near expiry?}
+    REFRESH -- yes --> ROT[refreshToken: rotate pair, store new] --> AUTHM
+    REFRESH -- no --> SEND
+    SEND[Serialize via generated core] --> HTTP[HTTP/3 request]
+  end
+  HTTP --> EDGE[Thready edge: middleware chain + handler]
+  EDGE -->|2xx| DES[Deserialize to generated type]
+  EDGE -->|non-2xx Error envelope| MAP[Map to typed error: code, trace_id, details]
+  MAP --> RETRY{code retryable AND budget left?}
+  RETRY -- yes --> BACKOFF[back-off + jitter, honor Retry-After] --> SEND
+  RETRY -- no --> RAISE[raise typed error to caller]
+  DES --> PAGE{list response?}
+  PAGE -- yes --> ITER[expose lazy cursor iterator over data + next_cursor]
+  PAGE -- no --> RET[return typed value]

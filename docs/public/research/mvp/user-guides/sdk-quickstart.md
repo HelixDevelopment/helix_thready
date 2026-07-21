@@ -13,6 +13,8 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial SDK quickstart (Go + multi-language surface) |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the request/event-flow diagram explanation into multi-paragraph form; linked [quickstart.md](./quickstart.md) |
+| 3 | 2026-07-22 | swarm (user-guides, Critic pass) | Completeness pass: added the consolidated **§6.1 Event catalog** (every topic · when it fires · one-time vs sticky · payload · min scope) mandated by final request §3.4 — the single reference the CLI/TUI/Web event views point to; added the reconnect/replay contract note |
 
 Helix Thready ships **native SDKs** wrapped per language. **Go is the primary language**
 (final request §13.1). SDKs are generated from an **OpenAPI 3.1** REST surface + **Protobuf** event/DTO
@@ -31,6 +33,7 @@ thin hand-written idiomatic layer per language `[DEFAULT — adjustable]`.
 4. [Authentication](#4-authentication)
 5. [Search](#5-search)
 6. [Subscribing to events](#6-subscribing-to-events)
+   - [6.1 Event catalog (topics · payloads · semantics)](#61-event-catalog-topics--payloads--semantics)
 7. [Assets & reprocessing](#7-assets--reprocessing)
 8. [Other languages (surface)](#8-other-languages-surface)
 9. [Errors, retries & SLOs](#9-errors-retries--slos)
@@ -75,16 +78,31 @@ sequenceDiagram
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/sdk-sequence.mmd](./diagrams/sdk-sequence.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** Your application constructs a client
-with an API key and server URL; on construction the SDK performs a lightweight handshake
-(`GET /v1/meta/version`) to negotiate version and capabilities and fail fast on mismatch. A search call
-becomes a `POST /v1/search` with the key as a Bearer token; the API returns result ids with kinds and
-scores, and the SDK hydrates them into typed `SearchResult` values. To receive real-time updates the
-app subscribes to an event topic (`post.processed`); the SDK upgrades to the WebSocket (or SSE)
-transport and returns a Go channel the app ranges over, with **durable replay on reconnect** so no
-event is lost across a dropped connection. Finally a reprocess request is a `POST
-/v1/posts/{id}/reprocess` that returns `202 Accepted` — processing is asynchronous, and the completion
-arrives later as an event on the subscription. The sequence shows the two-transport model every SDK
-follows: request/response over REST for actions and queries, and a live event channel for push updates.
+with an API key and server URL. On construction the SDK performs a lightweight handshake
+(`GET /v1/meta/version`) to negotiate version and capabilities and **fail fast on mismatch** — this is
+deliberate, so an incompatible client/server pair errors at startup rather than deep inside a later
+call where the failure is harder to diagnose.
+
+A search call becomes a `POST /v1/search` with the key as a Bearer token. The API returns result ids
+with kinds and scores, and the SDK **hydrates** them into typed `SearchResult` values by fetching the
+full records from the relational store. This hydration is why the SDK returns rich objects rather than
+bare ids — the caller gets the source post/asset, not just a vector hit.
+
+To receive real-time updates the app subscribes to an event topic (`post.processed`). The SDK upgrades
+to the WebSocket transport (or falls back to SSE where WS is blocked) and returns a Go channel the app
+ranges over, with **durable replay on reconnect** so no event is lost across a dropped connection. The
+channel abstraction hides the transport entirely — the app writes a `for range`, not socket-handling
+code.
+
+Finally a reprocess request is a `POST /v1/posts/{id}/reprocess` that returns `202 Accepted`.
+Processing is **asynchronous**: the 202 means "accepted for processing", and the actual completion
+arrives later as a `post.processed` event on the subscription, not as the response body. An app that
+wants to know when reprocessing finished watches the event stream, it does not block on the HTTP call.
+
+The sequence as a whole shows the **two-transport model** every Thready SDK follows: request/response
+over REST for actions and queries, and a live event channel for push updates. Internalizing this split
+is the key to using any of the SDKs — synchronous answers come back from REST, asynchronous outcomes
+come back over events.
 
 ## 3. Go quickstart
 
@@ -278,6 +296,48 @@ connection" guarantee the diagram encodes (final request §3.4). Sticky topics (
 deliver their last value immediately on subscribe so a fresh client rehydrates state without a REST
 round-trip; clients still reconcile via REST snapshots for authoritative state.
 
+### 6.1 Event catalog (topics · payloads · semantics)
+
+The final request (§3.4) mandates that *"a dedicated document enumerates every system event, when it
+fires, and how to subscribe."* This is that catalog — the **single consolidated reference** the
+[CLI `events tail`](./cli-reference.md#4-content-commands), the
+[TUI live stream](./tui-usage.md#5-the-live-event-stream), and the
+[Web real-time updates](./web-portal-guide.md#7-real-time-updates) all surface. Every topic below is
+subscribable over the same `GET /v1/events` WebSocket (SSE fallback) shown in §6; the `topics=` filter
+takes any comma-separated subset.
+
+> **VERIFIED vs ASSUMPTION.** The *transport* and *semantics* (in-process bus + NATS JetStream, at-least-once,
+> idempotent consumers, sticky = last-value/compaction with invalidation, durable replay) are VERIFIED
+> from the decision matrix and final request §3.4. The **topic names and payload field spellings below
+> are this guide's proposal** `[DEFAULT — adjustable]`, to be frozen against the Protobuf event contract
+> in [../api/index.md](../api/index.md) — see [Open items](#10-open-items) `[OPEN: sdk-4]`.
+
+| Topic | Fires when | Delivery | Key payload fields | Min scope |
+|-------|------------|----------|--------------------|-----------|
+| `post.received` | A complete post (root + organic replies) is ingested and enqueued | one-time | `postId`, `channel`, `account`, `hashtags[]` | `read:events` (own account) |
+| `skill.dispatch` | The matching Skill(s) are selected and ordered for a post | one-time | `postId`, `order[]` (e.g. `[download,research,reply]`) | `read:events` |
+| `download.error` | A download step fails and is scheduled for retry/back-off | one-time | `postId`, `step` (`metube`\|`boba`\|`dlm`), `retry`, `max`, `backoffMs` | `read:events` |
+| `download.complete` | A delegated 3rd-party download finishes (Boba SSE / MeTube poll → webhook `[GAP: 5]`) | one-time | `postId`, `step`, `assetId`, `bytes` | `read:events` |
+| `post.processed` | All dispatched Skills for a post complete | **sticky** (last-value per `postId`) | `postId`, `account`, `assets`, `research`, `tookMs`, `sticky:true` | `read:events` |
+| `post.failed` | A post exhausts the retry ceiling and lands in the DLQ | one-time | `postId`, `step`, `error`, `retry`, `max` | `read:events` |
+| `config.changed` | A runtime-editable setting is changed (client → REST → System) | one-time | `key`, `scope` (`global`\|`account:<id>`), `actor` | `account_admin` (own) / `root` (global) |
+| `processing.paused` / `processing.resumed` | Processing is paused/resumed for a scope | **sticky** (state per scope) | `scope`, `actor`, `at` | `account_admin` (own) / `root` (global) |
+
+**How to read the two delivery modes.** *One-time* events fire once and are consumed; a client that was
+offline receives them via durable JetStream replay on reconnect (`Last-Event-ID`), never a re-fire.
+*Sticky* events retain their last value with explicit invalidation, so a **fresh** subscriber is handed
+the current state immediately on subscribe (e.g. `post.processed` for a post it never saw process, or
+the live `processing.paused` state) without a REST round-trip — the mechanism is a compacted JetStream
+subject / last-value cache keyed by entity id (final request §3.4). Sticky entries are invalidated on
+the next state change or TTL. Because delivery is **at-least-once**, consumers must be idempotent: key
+side-effects on `postId` (or `scope`) so a replayed event is a no-op, exactly as the server's own
+single-claim guarantee does for posts.
+
+**Scopes.** Event visibility is RBAC-scoped like every other surface: a Standard User's `read:events`
+key only receives events for accounts they belong to; `config.changed`/`processing.*` at global scope
+require `root`. A key lacking the scope receives no frames for that topic (it is filtered server-side),
+never a partial or unauthorized payload.
+
 ## 7. Assets & reprocessing
 
 ```go
@@ -337,6 +397,10 @@ deadline; the SDK propagates cancellation.
   then. Tracked: **ATM — SDK JWKS verification support**.
 - `[OPEN: sdk-3]` Lower-priority language SDKs (Zig/Ruby/PHP) are surface-only in the zero version.
   Tracked: **ATM — complete low-priority SDK wrappers**.
+- `[OPEN: sdk-4]` The §6.1 event **topic names and payload spellings** are `[DEFAULT — adjustable]`;
+  freeze them against the Protobuf event contract published in [../api/index.md](../api/index.md) (the
+  transport/semantics are VERIFIED, the names are not). Tracked: **ATM — freeze event topic + payload
+  schema against the api/ Protobuf contract**.
 
 ---
 

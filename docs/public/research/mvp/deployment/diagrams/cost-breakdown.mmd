@@ -1,0 +1,17 @@
+flowchart TB
+  subgraph MONTHLY["Monthly run cost (single Hetzner host topology)"]
+    direction TB
+    COMPUTE["Compute box (AX line)\nRyzen 9 · 128 GB · 2×NVMe RAID1\n≈ €105–130/mo — the DB+app plane for all 3 envs"]
+    OBJ["Object tier — 50 TB+ assets\nVolume (grow) OR SX server (bulk)\n≈ €5–60/mo (Volume) … €90–200/mo (SX)"]
+    BK["Backup secondary — Storage Box\noff-host WAL + base + asset snapshots\n≈ €12–40/mo"]
+    IP["Extra IPv4 / primary IP\n≈ €1–2/mo (IPv6 free)"]
+    BW["Bandwidth\ndedicated: unmetered @ 1 Gbit — €0 incremental"]
+  end
+  GPU["GPU node (HelixLLM)\nOPERATOR WORKSTATION — €0 cloud cost\n(or a rented GPU box if externalized later)"]
+  COMPUTE --> TOTAL["Σ monthly ≈ €150–260 (MVP)\n… €350–600 (at 50 TB+ scale)"]
+  OBJ --> TOTAL
+  BK --> TOTAL
+  IP --> TOTAL
+  BW -. €0 .-> TOTAL
+  GPU -. external, not on the bill .-> TOTAL
+  TOTAL --> OFFSET["Offset by subscription + metered billing (Q11)\nARPU × paying accounts − COGS/account ≥ 0"]

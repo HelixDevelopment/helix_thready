@@ -13,6 +13,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial symptom → cause → fix guide |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: corrected messenger names to VERIFIED Herald `HERALD_MTPROTO_*` / `HERALD_TGRAM_*`; split the triage diagram explanation into multi-paragraph form; added §11 environment-variable & performance troubleshooting matrix and §12 quick symptom index; renumbered Open items to §13. |
 
 Symptom-first troubleshooting. Many entries reference **known scaffold traps** from the
 [gap register](../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md) — these
@@ -31,7 +32,9 @@ Start with `thready doctor` ([cli-reference.md §5.8](./cli-reference.md#58-doct
 8. [Auth / token / RBAC errors](#8-auth--token--rbac-errors)
 9. [Configuration changes not taking effect](#9-configuration-changes-not-taking-effect)
 10. [Where the logs are](#10-where-the-logs-are)
-11. [Open items](#11-open-items)
+11. [Environment-variable & performance troubleshooting matrix](#11-environment-variable--performance-troubleshooting-matrix)
+12. [Quick symptom index](#12-quick-symptom-index)
+13. [Open items](#13-open-items)
 
 ## 1. Post-processing triage (diagram)
 
@@ -59,20 +62,34 @@ flowchart TB
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/troubleshoot-post.mmd](./diagrams/troubleshoot-post.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** The triage starts from a post that
-either never processed or produced a wrong result, and branches on its **status**. If it is *queued
-forever*, first check whether processing is **paused** (resume it) and otherwise check the worker pool
-and queue depth — a starved pool is fixed by raising `THREADY_WORKERS`. If it *failed*, branch on the
-**step**: a `download` failure usually traces to the two documented download gaps (MeTube is poll-only
-`[GAP:5]`, the generic Download Manager doesn't exist yet `[GAP:4]`) or bad 3rd-party URLs, and is
-retried per-step; a `research`/`analyze` failure points at the LLM stack (check `HELIX_LLM_*`, provider
-keys, and whether the circuit breaker tripped); a `reply` failure means the messenger session is
-invalid (re-login). If it *processed but* looks wrong, branch on symptom: irrelevant **search** is the
-classic hash-embedder trap `[GAP:1]` (set `HELIX_EMBEDDING_PROVIDER=llama` and restart); missing **OCR
-text** is the no-OCR-engine gap `[GAP:2]` (LLM-vision fallback only until the adapter ships); and a
-**missing category** usually means the hashtag lived in a reply and the complete-post assembly or a
-reprocess is needed. All failing branches converge on a check: if it still fails after the 5-retry
-ceiling it lands in the dead-letter queue for an Admin to inspect alongside the ClickHouse logs;
-otherwise the retry resolves it.
+either never processed or produced a wrong result, and its first and most important branch is on the
+post's **status**, because "never ran" and "ran wrong" have entirely different root causes. Reading
+the status (`thready post status <id>`) is therefore step zero of every download/processing complaint.
+
+If the post is *queued forever*, the two candidate causes are a **paused pipeline** and a **starved
+worker pool**. Check pause first (`thready processing status`; resume if paused) because it is the
+cheaper explanation and the more common operator mistake; only if processing is running do you look at
+queue depth and raise `THREADY_WORKERS`. A queued-forever post is never lost — it is waiting, so the
+fix is always to restore capacity, never to re-submit.
+
+If the post *failed*, branch on the **step** that failed, because each step has a distinct failure
+domain. A `download` failure usually traces to the two documented download gaps (MeTube is poll-only
+`[GAP:5]`, the generic Download Manager doesn't exist yet `[GAP:4]`) or to a dead 3rd-party URL, and is
+retried per-step. A `research`/`analyze` failure points at the LLM stack — check `HELIX_LLM_*`, the
+provider keys, and whether the circuit breaker tripped on a flapping provider. A `reply` failure means
+the messenger session is invalid, which for Telegram means the `HERALD_MTPROTO_*` session expired and
+needs a re-login.
+
+If the post *processed but* looks wrong, branch on the **symptom**. Irrelevant **search** is the
+classic hash-embedder trap `[GAP:1]` — set `HELIX_EMBEDDING_PROVIDER=llama`, re-embed, and restart.
+Missing **OCR text** is the no-OCR-engine gap `[GAP:2]`, where only the LLM-vision fallback runs until
+the adapter ships. A **missing category** almost always means the hashtag lived in a *reply* to the
+root post, so the fix is to confirm complete-post assembly and reprocess.
+
+All failing branches converge on one final check: if the post still fails after the 5-retry ceiling it
+lands in the **dead-letter queue** for an Admin to inspect alongside the ClickHouse logs; otherwise the
+per-step retry resolves it and the post reaches `processed`. The DLQ is the single place stuck work
+accumulates, which is why every branch routes there rather than silently dropping the post.
 
 ## 2. Service won't start
 
@@ -93,11 +110,12 @@ promoted from the `qaherald` harness). **Max is not implemented** — the adapte
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `messenger 'max' not implemented` | Max adapter is `[BUILD-NEW]` | Expected in the zero version; use Telegram. Track ATM — Max adapter. |
-| Telegram login code never arrives | Wrong `HERALD_TELEGRAM_API_ID/HASH` or phone | Re-check credentials from my.telegram.org. |
-| `2FA required` loop | Account has 2FA | Set `HERALD_TELEGRAM_2FA_PASSWORD`. |
-| Session lost after restart | Session file not persisted | Set `HERALD_TELEGRAM_SESSION_PATH` to a writable, encrypted path. |
-| Can't backfill channel history | Using Bot-API path (can't backfill) | Ensure the MTProto **user** client is active, not a bot token. |
+| `messenger 'max' not implemented` | Max adapter is `[BUILD-NEW]` (Herald `MAX.md` = `PLANNED`) | Expected in the zero version; use Telegram. Track ATM — Max adapter. |
+| Telegram login code never arrives | Wrong `HERALD_MTPROTO_APP_ID`/`APP_HASH` or `HERALD_MTPROTO_PHONE` | Re-check credentials from my.telegram.org/apps; phone must be E.164. |
+| `SESSION_PASSWORD_NEEDED` / 2FA loop | Account has cloud 2FA | Set `HERALD_MTPROTO_PASSWORD`. |
+| Session lost after restart | Session file not persisted | Set `HERALD_MTPROTO_SESSION_FILE` to a writable, encrypted path (default `~/.config/herald/mtproto.session`). |
+| Can't backfill channel history | Using the Bot-API path (`HERALD_TGRAM_BOT_TOKEN`) — a bot cannot read history | Ensure the MTProto **user** client (`HERALD_MTPROTO_*`) is active; the bot token is reply-only. |
+| Replies never post but reading works | Bot token/chat unset | Set `HERALD_TGRAM_BOT_TOKEN` + `HERALD_TGRAM_CHAT_ID`; verify `THREADY_REPLY_ACCOUNT`. |
 
 ## 4. Posts never get processed
 
@@ -173,7 +191,45 @@ only". This is expected in the zero version — not a misconfiguration.
 - **Container logs** — `podman logs <container>` per stack.
 - **Secrets are always redacted** in every sink.
 
-## 11. Open items
+## 11. Environment-variable & performance troubleshooting matrix
+
+Symptoms that trace to a specific misconfigured or under-tuned variable. This complements the
+[configuration reference](./configuration.md) — here you start from the *symptom*, there you look up
+the *variable*.
+
+| Symptom | Likely variable | Cause | Fix |
+|---------|-----------------|-------|-----|
+| Search relevance is garbage | `HELIX_EMBEDDING_PROVIDER` | Set to `hash` (or defaulted) `[GAP: 1]` | Set `=llama`; point `THREADY_EMBEDDING_BASE_URL` at a live llama.cpp; reindex. |
+| Search returns nothing / dimension error | `THREADY_EMBEDDING_DIM` | Mismatch with the model's true dim (RAG path historically hardcoded 768) | Set to the model's real dimension (e.g. `1024`); re-embed. |
+| Search slow (> 500 ms) | `THREADY_VECTOR_INDEX` | Sequential scan (no ANN index) | Set `=hnsw`; ensure the index is built on the embedding column. |
+| Whole system slow under load | `THREADY_WORKERS` / `THREADY_DB_MAX_OPEN_CONNS` | Worker or connection-pool starvation | Raise workers; raise pool to match; watch Prometheus queue depth. |
+| Downloads pile up | `THREADY_DOWNLOAD_CONCURRENCY` | Too few parallel download jobs | Raise it; confirm the 3rd-party service (Boba/MeTube) is reachable. |
+| LLM steps time out | `THREADY_POST_TIMEOUT` / `HELIX_LLM_BASE_URL` | Model host unreachable or budget too tight for research-heavy posts | Verify the llama.cpp host; raise the soft budget; check the circuit breaker. |
+| Tokens rejected across services | `THREADY_JWT_SIGNING_ALG` | HS256 is single-service only `[GAP: 10]` | Move to `RS256` with a shared public key. |
+| Vision de-dupes but never OCRs text | `HELIX_VISION_OPENCV_ENABLED` vs OCR | OpenCV ≠ OCR `[GAP: 2]` | Expected; OCR adapter is `[BUILD-NEW]`. OpenCV only finds near-duplicates. |
+| Assets 404 via a direct path | `THREADY_ASSET_SERVICE_URL` | Client used a raw path instead of resolving through the Asset Service | Always resolve links via the Asset Service; never store direct file paths. |
+| MinIO signed URLs expire mid-download | `THREADY_STORAGE_SIGNED_URL_TTL` | TTL too short for large assets | Raise it; retry `thready asset get`. |
+| Config edit "does nothing" | *(shell export)* | A `~/.bashrc`/`~/.zshrc` `export` overrides `.env` | Unset the stale export, or change the value there. |
+| Secret rotation not applied | *(any secret)* | Secrets read once at boot — not hot-reloaded | Restart the service after rotating. |
+
+## 12. Quick symptom index
+
+Jump straight to the section for a one-line symptom:
+
+| You see… | Go to |
+|----------|-------|
+| `ABORT: missing required var` on start | [§2](#2-service-wont-start) |
+| `ABORT: non-semantic embedder blocked` | [§2](#2-service-wont-start) / [§5](#5-semantic-search-returns-irrelevant-results) |
+| `messenger 'max' not implemented` | [§3](#3-cant-sign-in-to-a-messenger) |
+| Login code never arrives | [§3](#3-cant-sign-in-to-a-messenger) |
+| Posts stuck `queued` | [§4](#4-posts-never-get-processed) |
+| Search results irrelevant | [§5](#5-semantic-search-returns-irrelevant-results) |
+| Download never finishes | [§6](#6-a-download-never-completes) |
+| Comic/screenshot text missing | [§7](#7-comicscreenshot-text-isnt-extracted) |
+| `401`/`403` (exit 4/77) | [§8](#8-auth--token--rbac-errors) |
+| Variable-specific slowness/errors | [§11](#11-environment-variable--performance-troubleshooting-matrix) |
+
+## 13. Open items
 
 - `[OPEN: trb-1]` `thready search reindex` depends on the semantic-search service `[GAP register §11]`;
   confirm the exact reindex command once implemented.

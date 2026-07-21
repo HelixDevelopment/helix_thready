@@ -2,10 +2,11 @@
   Title           : Helix Thready — Contribution Guidelines
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/contribution-guidelines.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Status          : Review — v0.2
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
-  Related         : ./index.md, ./coding-standards.md, ./agent-orchestration.md, ./workable-items.md
+  Related         : ./index.md, ./coding-standards.md, ./agent-orchestration.md, ./workable-items.md,
+                    ./git-workflow-internals.md
 -->
 
 # Helix Thready — Contribution Guidelines
@@ -13,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial draft — commit-all, all-upstreams, tags, hooks, no-CI |
+| 2 | 2026-07-22 | swarm (development, pass 3) | Linked the new [git-workflow-internals.md](./git-workflow-internals.md) — the `[VERIFIED-SOURCE]` mechanics (symlink installer, marker-based bypass audit, scoped pre-push secret scan, atomic commit-all lock, buffered `push_all` fan-out) behind the policy stated here |
 
 Every contribution — human or agent — follows this workflow. It implements the Constitution's
 multi-upstream push `[§2.1]`, no-server-CI `[§11.4.156]`, project-prefixed tags `[§11.4.151]`,
@@ -117,13 +119,20 @@ flowchart LR
   BG --> GV[GitVerse]
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** A contribution enters through
-`commit_all.sh`, which runs the pre-commit and commit-msg gates (doc-sibling check, mutation-residue
-scan, message policy). Once the commit is recorded, the wrapper immediately releases the commit lock
-so the working tree is free again, then pushes **detached in the background** `[§11.4.88]` to all
-four upstreams — GitHub (primary), GitLab, GitFlic and GitVerse — in parallel. A push that reaches
-only one upstream is a §2.1 violation; the `upstreams/*.sh` recipes plus `install_upstreams.sh`
-guarantee the fan-out.
+**Explanation (for readers/models that cannot see the diagram).** The left half of the flow is the
+local gate. A contribution enters through `commit_all.sh`, which fires the `pre-commit` and
+`commit-msg` gates — the doc-sibling check `[§11.4.65]`, the mutation-residue scan `[§11.4.84]` and
+the message policy (including the `--no-verify` bypass audit). Only once those pass and the commit is
+durably recorded does control move rightward.
+
+The right half is the fan-out. The wrapper immediately releases the commit lock so the working tree
+is free again, then launches the push **detached in the background** `[§11.4.88]` to all four
+upstreams — GitHub (primary), GitLab, GitFlic and GitVerse — in parallel, each with its own per-remote
+lock and retry. The separation matters: because the push is detached, a slow or flaky remote never
+holds the developer's tree hostage. A push that reaches only one upstream is a §2.1 violation; the
+`upstreams/*.sh` recipes plus `install_upstreams.sh` guarantee the fan-out, and `push_all.sh` exits
+non-zero unless **every** remote succeeded (see
+[git-workflow-internals.md §8](./git-workflow-internals.md#8-push_allsh--buffered-background-fan-out)).
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/commit-fanout.mmd](./diagrams/commit-fanout.mmd).
 
@@ -140,6 +149,13 @@ Enforcement is mechanical via five layers, installed by `scripts/install_git_hoo
 | Final-gate ritual | Operator runs `pre_build_verification.sh` + meta-test before every tag `[§11.4.40]` (remote CI disabled) |
 
 There is **no escape hatch** — no `--skip-hooks`/`--bypass-enforcement`/`--allow-orphan-md`.
+
+> **Verified mechanics.** The exact behavior of each hook and wrapper — read at source in the org
+> tooling clones — is documented in [git-workflow-internals.md](./git-workflow-internals.md): the
+> symlink-based idempotent installer, the `.git/ATMO_PRECOMMIT_RAN` marker hand-off that detects a
+> `--no-verify` bypass, the `pre-push` force-push guard (`/proc/PPID/cmdline`) + secret scan **scoped
+> to the pushed commit range** (not the whole working tree), the `mkdir`-atomic commit-all lock, and
+> the per-remote-`flock` buffered `push_all` fan-out (retry ×3, honest all-or-nothing exit).
 
 ## 6. Workable-items DB discipline `[§11.4.93/95]`
 

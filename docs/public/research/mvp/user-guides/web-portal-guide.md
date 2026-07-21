@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial Angular portal guide |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the information-architecture diagram explanation into multi-paragraph form; added a screen-by-screen reference table and linked [quickstart.md](./quickstart.md) |
 
 The Web portal is the **primary management surface** (`[OPERATOR]` Web+CLI first). It is an **Angular**
 app on the shared **OpenDesign `design_system`** (Angular 19 for the product client; Angular 22 for
@@ -75,18 +76,52 @@ flowchart TB
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/web-portal-ia.mmd](./diagrams/web-portal-ia.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** After login and TOTP MFA the user
-lands on the **Dashboard**, which carries an account switcher (for people who belong to multiple
-Accounts), headline KPIs, and a live event feed. From the dashboard the primary navigation fans out to
-**Channels** (add/list channels, see auto-recognition and poll settings), **Threads & Posts** (the
-complete-post reading experience, with each post's status reply and linked assets), **Semantic
-Search** (a query box with structured filters and facets), **Assets** (renditions, reheal, downloads),
-and **Skills/Recipes** (enable and tune the per-hashtag recipes). An **Administration** section marked
-`*` is visible only to Admin tiers and expands to Members & Roles, Retention, White-label branding,
-processing Pause/Resume, Billing & Usage, and — for the Root Admin only — the Audit log. Two drill-down
-paths are shown explicitly: a thread opens a **Post detail** view with reprocess/retry-step controls
-and that post's event history; and a search result links straight back to its **source post or asset**,
-so search is a navigation entry point, not a dead end. The IA mirrors the [CLI command tree](./cli-reference.md#2-command-tree-diagram)
-and the [TUI views](./tui-usage.md#4-views) one-to-one.
+lands on the **Dashboard**, which is the hub of the whole IA. It carries an account switcher (for
+people who belong to multiple Accounts), headline KPIs, and a live event feed. The account switcher is
+load-bearing: because a person can hold different roles in different Accounts, the switcher is what
+scopes every subsequent screen to a single tenant.
+
+From the dashboard the primary navigation fans out to the consumption surfaces. **Channels** lets you
+add/list channels and see auto-recognition and poll settings. **Threads & Posts** is the complete-post
+reading experience, with each post's status reply and linked assets. **Semantic Search** is a query
+box with structured filters and facets. **Assets** handles renditions, reheal, and downloads. And
+**Skills/Recipes** lets an Admin enable and tune the per-hashtag recipes. These five are what a
+Standard User spends nearly all their time in.
+
+An **Administration** section marked `*` is visible only to Admin tiers. It expands to Members & Roles,
+Retention, White-label branding, processing Pause/Resume, Billing & Usage, and — for the Root Admin
+only — the Audit log. Visibility here is RBAC-driven: the section does not merely disable controls, it
+does not render for users who lack the role, and the server rejects the underlying calls regardless of
+what the UI shows.
+
+Two drill-down paths are shown explicitly because they are the ones users follow most. A thread opens a
+**Post detail** view with reprocess/retry-step controls and that post's event history. A search result
+links straight back to its **source post or asset** — so search is a navigation *entry point*, not a
+dead-end results list. This "search deep-links to source" behaviour is what makes semantic search feel
+like part of the app rather than a bolt-on.
+
+The IA mirrors the [CLI command tree](./cli-reference.md#2-command-tree-diagram) and the
+[TUI views](./tui-usage.md#4-views) one-to-one, which is why a workflow learned in the portal transfers
+directly to the terminal surfaces and vice-versa.
+
+**Screen-by-screen reference.** `[DEFAULT — adjustable]` routes align to the [design area](../design/index.md)
+wireframes on publish (`[OPEN: web-1]`).
+
+| Screen | Route (proposed) | Min role | Primary actions | CLI equivalent |
+|--------|------------------|----------|-----------------|----------------|
+| Dashboard | `/` | user | switch account, view KPIs, watch live feed | `thready events tail` |
+| Channels | `/channels` | account_admin | add/list/recognize/poll | `thready channel …` |
+| Threads & Posts | `/threads` | user | browse complete posts, open detail | `thready thread …` |
+| Post detail | `/threads/:id` | user | reprocess, retry step, view events | `thready post …` |
+| Search | `/search` | user | query + filters, deep-link to source | `thready search` |
+| Assets | `/assets` | user | list renditions, reheal, download | `thready asset …` |
+| Skills / Recipes | `/skills` | account_admin | enable/disable/tune per hashtag | `thready skill …` |
+| Members & Roles | `/admin/members` | account_admin | invite/remove/set role | `thready member …` |
+| Retention | `/admin/retention` | account_admin (global: root) | set per-account default | `thready retention …` |
+| Branding | `/admin/branding` | account_admin (if enabled) | color/logo/slogan | `thready brand set` |
+| Processing | `/admin/processing` | account_admin (global: root) | pause/resume | `thready processing …` |
+| Billing & Usage | `/admin/billing` | account_admin (all: root) | view meter | `thready billing …` |
+| Audit log | `/admin/audit` | root | query/export append-only log | `thready audit …` |
 
 ## 3. Login & MFA
 
@@ -136,7 +171,9 @@ guides.
 
 The portal subscribes to the event bus over WebSocket (SSE fallback). Lists and the post detail view
 update live as `post.received`/`post.processed`/error events arrive; sticky events (last-value with
-invalidation) rehydrate state on load, and durable replay covers reconnects (final request §3.4).
+invalidation) rehydrate state on load, and durable replay covers reconnects (final request §3.4). The
+complete set of topics the portal consumes — and which are one-time vs sticky — is the consolidated
+[event catalog](./sdk-quickstart.md#61-event-catalog-topics--payloads--semantics).
 
 ```typescript
 // Illustrative Angular service (final contract in ../api/index.md)

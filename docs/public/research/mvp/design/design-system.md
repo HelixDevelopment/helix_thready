@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: token architecture, Thready theme, platform fan‑out, typography/spacing/motion, a11y contract, visual‑regression testing |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: clarified Angular 19 (product) vs 22 (marketing) per Q17; added the mandated **Challenges** scenario‑bank test type to §8/§9 (`[GAP: 9.3]` second half) |
+| 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: re-verified every token name at source (`gh`); added the remaining verified core token (`--elev-flat`) and theme aliases (`--fg-2`/`--meta`/`--border-soft`); shipped-brand-themes reference table + measured contrasts (helix-green/vasic-red/helix-ota-blue) + the 4-step "add a theme" process (§3.4); typography weight/variable-axis detail + exact i18n keys |
 
 ## Table of contents
 
@@ -24,6 +25,7 @@
   - [3.1 Theme‑invariant core tokens (verbatim)](#31-theme-invariant-core-tokens-verbatim)
   - [3.2 The Thready brand theme](#32-the-thready-brand-theme)
   - [3.3 Import order and entry](#33-import-order-and-entry)
+  - [3.4 Shipped brand themes & adding a theme](#34-shipped-brand-themes--adding-a-theme)
 - [4. Typography](#4-typography)
 - [5. Spacing, radius, elevation, motion](#5-spacing-radius-elevation-motion)
 - [6. Accessibility contract](#6-accessibility-contract)
@@ -154,6 +156,7 @@ and **never re‑bound per theme**:
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 9999px;
 
   /* Elevation & accent formula tokens (reference per-theme --fg/--border/--accent) */
+  --elev-flat:   none;
   --elev-ring:   0 0 0 1px var(--border);
   --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
   --accent-hover:  color-mix(in oklab, var(--accent), black 8%);
@@ -188,7 +191,7 @@ helix‑green accents and adds a **secondary teal** for the second brand color t
 
   /* Brand identity (decorative — logo marks / one focal element, NOT body text) */
   --brand:    #b6e376;   /* helix-green base [VERIFIED] — 1.47:1 on white, decorative only */
-  --brand-2:  #7aa590;   /* Thready teal secondary [DEFAULT — provisional, see OPEN THREADY-DES-01] */
+  --brand-2:  #abddc9;   /* Thready teal/mint secondary [VERIFIED — eyedrop mean of assets/Logo.png, see §3.2] */
   --brand-ink:#0a0f04;   /* readable ink on a --brand fill (13.15:1) [VERIFIED] */
 
   /* Surface / foreground / border — brand-neutral slate, carried from helix-green [VERIFIED] */
@@ -207,7 +210,7 @@ helix‑green accents and adds a **secondary teal** for the second brand color t
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --brand: #b6e376; --brand-2: #8fd3bf; --brand-ink: #0a0f04;
+    --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;  /* brighter teal (Logo.png median) for dark surfaces */
     --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
     --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
     --accent: #b6e376; --accent-on: #0a0f04;   /* logo lime IS the dark accent — 13.56:1 */
@@ -216,7 +219,7 @@ helix‑green accents and adds a **secondary teal** for the second brand color t
   }
 }
 :root[data-theme="dark"], .dark { /* same dark block, for explicit-choice + .dark class */
-  --brand: #b6e376; --brand-2: #8fd3bf; --brand-ink: #0a0f04;
+  --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;
   --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
   --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
   --accent: #b6e376; --accent-on: #0a0f04;
@@ -226,11 +229,18 @@ helix‑green accents and adds a **secondary teal** for the second brand color t
 ```
 
 **Provenance honesty.** `--accent`, `--accent-on`, surfaces, foreground, border and semantic tokens
-are the **verified** helix‑green/slate values (measured, AA). The Thready `--brand-2` teal is
-`[DEFAULT — provisional]`: it uses the in‑house `helix_track/web_client/open-design.config.json`
-secondary `#7AA590` `[VERIFIED — local clone]` as a stand‑in until the formal eyedrop of
-`assets/Logo.png` is captured `[OPEN: THREADY-DES-01]`. The teal is **decorative** (spiral marks,
-gradients, illustration) and MUST NOT be used for body text on light surfaces without an
+are the **verified** helix‑green/slate values (measured, AA). The Thready `--brand-2` teal is now
+**captured**, not provisional `[VERIFIED — eyedrop of `assets/Logo.png`, closes THREADY-DES-01]`:
+applying the design‑system provenance rule (`§11.4.6` — the mean of a color‑dominant pixel region,
+the same method that produced helix‑green `#B6E376`), the **mint/teal region** of `Logo.png`
+(1916×1522, pixels where `blue > red` and `green ≥ blue`, saturated, opaque — **n = 618,886**) has
+mean **`#ABDDC9`** (median `#B7EBD6`, brightest sample `#B8ECD7`). The light theme uses the mean
+`#ABDDC9`; dark uses the brighter median `#B7EBD6` so the mark holds on the dark surface. The same
+capture over the **green‑dominant** region (n = 1,057,661) returns `#BAE448`, which corroborates the
+documented helix‑green base (`#B6E376`, median `#BEE747`) and validates the method. The exact
+heuristic is reproducible and should be re‑confirmed by the design‑system's own eyedrop tool at
+integration, but the value is captured evidence, not a guess. The teal is **decorative** (spiral
+marks, gradients, illustration) and MUST NOT be used for body text on light surfaces without an
 AA‑verified darkening — matching the `--brand` rule.
 
 ### 3.3 Import order and entry
@@ -266,6 +276,36 @@ export const appConfig = {
 };
 ```
 
+### 3.4 Shipped brand themes & adding a theme
+
+The package ships **three** brand themes today `[VERIFIED — tokens/themes/{helix-green,vasic-red,helix-ota-blue}.css + docs/THEMES.md]`.
+They matter to Thready twice: `helix-green` is the base the Thready theme extends, and all three are
+the **precedent** the per‑Account white‑label follows (a theme = one `--brand` + an AA‑pinned
+`--accent`, neutrals shared). Measured accents:
+
+| Theme | `--brand` | `--accent` light (on white) | `--accent` dark (on `#020817`) | Provenance |
+|-------|-----------|-----------------------------|--------------------------------|------------|
+| **helix-green** (default, Thready base) | `#B6E376` | `#446E12` = **6.03:1** ✅ | `#B6E376` = **13.56:1** ✅ | eyedrop mean of 1,625,855 logo pixels `[VERIFIED]` |
+| **vasic-red** | `#E11D2A` | `#B91C1C` = **6.47:1** ✅ | `#F87171` = **7.23:1** ✅ | ⚠ brand is a **PLACEHOLDER** pending the vasic logo asset `[VERIFIED — THEMES.md]` |
+| **helix-ota-blue** | `#2563EB` | `#2563EB` | `#3B82F6` | HelixOTA canonical shadcn blue `[VERIFIED]` |
+
+The neutral/semantic slate is **shared across all three** (`--bg #ffffff`/`#020817`,
+`--muted #475569`/`#94A3B8`, `--danger #DC2626`/`#EF4444`, …) and is AA‑tuned — a theme changes only
+`--brand`/`--accent`(+`-on`). The theme file also declares convenience aliases the components read:
+`--fg-2` (=`--fg`), `--meta` (=`--muted`), `--border-soft` (=`--border`) `[VERIFIED — helix-green.css]`.
+
+**Adding a theme (the exact shipped 4‑step, applied to `thready`)** `[VERIFIED — THEMES.md "Adding a theme"]`:
+
+1. Copy `tokens/themes/helix-green.css` → `tokens/themes/thready.css`.
+2. Set `--theme-id`, `--brand`, `--accent`(+`-on`) for light **and** dark; keep the neutral slate
+   unless the brand truly needs a different surface family.
+3. Record the brand‑color provenance + a **measured** accent contrast ratio in `docs/THEMES.md` (no
+   invented values `[CONSTITUTION §11.4.6]`).
+4. Register it in `manifest.json > themes[]`.
+
+This is precisely the workable item `THREADY‑DES‑DS‑01` under `[GAP: 8.1]` — the Thready theme is a
+new theme file added by this exact process, plus a Thready `DS_CONFIG`, nothing forked.
+
 ## 4. Typography
 
 Three shipped variable faces `[VERIFIED — fonts/fonts.css]`, all self‑hostable via `@fontsource`
@@ -278,9 +318,22 @@ Three shipped variable faces `[VERIFIED — fonts/fonts.css]`, all self‑hostab
 | Mono | `--font-mono` | **JetBrains Mono** | Code, post payloads, CLI transcripts, hashtags, IDs |
 
 Type scale is the 8‑step ramp in §3.1 (`--text-xs 12px` … `--text-4xl 64px`). Body line‑height is
-`1.5`; display is `1.2` with `-0.01em` tracking. Cyrillic coverage (ru, `sr-Cyrl`) is required
-`[OPERATOR §12]`: verify each variable face's Cyrillic subset at integration and fall back to the
-system stack per‑glyph — tracked as `[OPEN: THREADY-DES-04]` (Cyrillic subset verification).
+`1.5`; display is `1.2` with `-0.01em` tracking. All three faces are **variable** and self‑hosted via
+`@fontsource` (no external CDN — matches the offline/private posture and CSP hygiene). Weight usage
+`[DEFAULT — adjustable]`: body/UI text 400–500 (`.ds-btn` is `font-weight:500` `[VERIFIED]`), headings
+600–700 on `--font-display`, badges 600 `[VERIFIED — .ds-badge]`; the variable `wght` axis means these
+are subsets of one file, not extra downloads. Numeric/ID/hashtag content uses `--font-mono` with
+tabular figures so columns align in the Dashboard and Post‑detail tables.
+
+**Localization** is wired through the shipped `I18nService` (§ component-library §4) — a `t(key)` read
+tracks the `lang` signal so switching re‑renders instantly `[VERIFIED — i18n.service.ts]`. The footer
+slogan uses the exact keys `footer.made` / `footer.by` with `a11y.love` on the heart, and the language
+picker label uses `a11y.language` `[VERIFIED — reference.footer / language-picker component]`.
+
+**Cyrillic coverage** (ru, `sr-Cyrl`) is required `[OPERATOR §12]`: verify each variable face's
+Cyrillic subset at integration and fall back to the system stack per‑glyph — tracked as
+`[OPEN: THREADY-DES-04]` (Cyrillic subset verification). Because logical properties and the token
+scale are direction‑agnostic (§6.6), the type layer itself makes no LTR assumption.
 
 ## 5. Spacing, radius, elevation, motion
 
@@ -427,7 +480,9 @@ gate:
 
 ## 10. Open items
 
-- `[OPEN: THREADY-DES-01]` Capture the formal `Logo.png` eyedrop mean to finalize `--brand-2`.
+- `[CLOSED: THREADY-DES-01]` Formal `Logo.png` eyedrop captured (§3.2): `--brand-2` = `#ABDDC9`
+  (light, mean of n=618,886 mint pixels) / `#B7EBD6` (dark, median). Re‑confirm with the
+  design‑system eyedrop tool at integration.
 - `[OPEN: THREADY-DES-02]` PenPot + Lottie exports are not native to OpenDesign — bridge needed
   (see [prototypes.md](./prototypes.md)).
 - `[OPEN: THREADY-DES-03]` Heart‑glyph color: brand accent (current default) vs. classic love‑red.

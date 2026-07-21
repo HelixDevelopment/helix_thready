@@ -14,6 +14,9 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — single-claim, backoff, breaker, precedence |
+| 2 | 2026-07-22 | swarm (Pass 3 depth) | Close CONC-1 (real `models.BackgroundTask` — no `DedupeKey`; real 9-value `TaskStatus`) & CONC-2 (`discovery/pkg/resilience.Manager`+`ConnectionState`); add retry/back-off state machine (§5.1); deepen single-claim explanation |
+| 3 | 2026-07-22 | swarm (Pass 3 consistency) | Fix residual `retrying`-as-status in the §4 single-claim diagram + `single-claim.mmd` sibling + §9 partial-index (retry returns to `pending`; `retrying` is the `task.retrying` event, not a status — aligns with §2/§5.1) |
+| 4 | 2026-07-22 | swarm (Pass 3 consistency, cont.) | Fix residual `reprocessing`-as-status in §5 (reprocess re-enters as a fresh `pending → running` cycle; `reprocessing` is the sticky `post.state` *display* value, not a `TaskStatus` — aligns with §2/§5.1, data-flow §7, post-lifecycle §6) |
 
 ## Table of Contents
 
@@ -22,6 +25,7 @@
 3. [Single-claim per post](#3-single-claim-per-post)
 4. [Single-claim diagram](#4-single-claim-diagram)
 5. [Retry, back-off & dead-letter](#5-retry-back-off--dead-letter)
+5.1. [Retry/back-off state machine](#51-retryback-off-state-machine)
 6. [Circuit breaker for external systems](#6-circuit-breaker-for-external-systems)
 7. [Multi-hashtag concurrency & precedence](#7-multi-hashtag-concurrency--precedence)
 8. [Concurrency caps & worker pool](#8-concurrency-caps--worker-pool)
@@ -91,9 +95,26 @@ type StuckDetector interface {
 }
 ```
 
-The `TaskStatus` enum is rich (VERIFIED): `pending, queued, running, retrying, backoff,
-completed, failed, dead_letter, stuck, timeout, paused, reprocessing, refreshing, …`. Thready
-maps its post lifecycle onto this enum rather than inventing a parallel one.
+The `TaskStatus` enum was **re-read field-by-field at source** this pass
+(`models/background_task.go`, VERIFIED) and is **exactly nine** values —
+`pending, queued, running, paused, completed, failed, stuck, cancelled, dead_letter` — with
+`IsTerminal()` (completed/failed/cancelled/dead_letter) and `IsActive()` (queued/running)
+helpers. **Anti-bluff correction:** an earlier draft listed `retrying / backoff / timeout /
+reprocessing / refreshing` as statuses; those are **not** in the enum. Retry is *not* a status —
+it is tracked by the `RetryCount` / `MaxRetries` / `RetryDelaySeconds` / `LastError` /
+`ErrorHistory` fields plus the `task.retrying` execution-history **event** (`models.TaskEventRetrying`);
+a retrying task physically returns to `pending`/`queued`. Thready therefore maps its post
+lifecycle onto the real nine states and models "reprocessing" as a fresh `pending → running`
+cycle (not a distinct status). The module default retry ceiling is `MaxRetries = 3`
+(`NewBackgroundTask`); Thready overrides it to 5 as a `[DEFAULT — adjustable]` (see §5).
+
+`models.BackgroundTask` itself (VERIFIED) carries no dedicated dedup column — its identity/link
+fields are `ID`, `TaskType`, `TaskName`, `CorrelationID *string`, `ParentTaskID *string`, plus
+free-form `Tags`/`Metadata` (`json.RawMessage`) and `Payload json.RawMessage`. This is the crux
+of `[OPEN: CONC-1]`, now **closed**: there is **no `DedupeKey` field and no `ErrDuplicateTask`**
+in the module — so enqueue-dedup cannot lean on the queue model and MUST be enforced Thready-side
+(the `post_processing_state` UNIQUE + `ON CONFLICT` in §3/§9), carrying `post_id` in
+`CorrelationID`.
 
 ## 3. Single-claim per post
 
@@ -110,17 +131,25 @@ combine:
 
 ```go
 // Thready processing enqueue — idempotent on post_id.
-task := &models.BackgroundTask{
-    ID:        uuid.NewString(),
-    Type:      "thready.post.process",
-    Priority:  models.PriorityNormal,
-    Payload:   mustJSON(PostJob{PostID: p.ID, AccountID: p.AccountID}),
-    DedupeKey: p.ID, // maps to UNIQUE(post_id, task_kind)
-}
-if err := queue.Enqueue(ctx, task); err != nil {
-    if errors.Is(err, models.ErrDuplicateTask) { return nil } // storm-safe no-op
+// Uses ONLY real models.BackgroundTask fields (VERIFIED: models/background_task.go).
+// There is no DedupeKey/ErrDuplicateTask in the module — the dedup gate is the
+// Thready-owned post_processing_state UNIQUE(post_id, task_kind) + ON CONFLICT (§9),
+// and post_id rides in CorrelationID (the module's natural correlation field).
+corr := p.ID
+task := models.NewBackgroundTask("thready.post.process", "post "+p.ID,
+    mustJSON(PostJob{PostID: p.ID, AccountID: p.AccountID})) // sets sane defaults
+task.CorrelationID = &corr                                   // = post_id (dedup + tracing key)
+task.Priority = models.TaskPriorityNormal
+task.MaxRetries = 5                                          // Thready override (module default 3)
+
+// 1) Thready-side dedup FIRST: claim the single processing-state row for this post.
+if firstWriter, err := claims.InsertIfAbsent(ctx, p.ID, "thready.post.process"); err != nil {
     return err
+} else if !firstWriter {
+    return nil // duplicate post.received storm → storm-safe no-op (row already exists)
 }
+// 2) Only the first writer enqueues the background task.
+if err := queue.Enqueue(ctx, task); err != nil { return err }
 ```
 
 ## 4. Single-claim diagram
@@ -139,7 +168,7 @@ flowchart TB
   RUN --> OK{success?}
   OK -->|yes| DONE[status=completed\npublish post.processed]
   OK -->|no| RETRY{attempt < max?}
-  RETRY -->|yes| BACKOFF[Requeue delay=exp backoff+jitter\nstatus=retrying]
+  RETRY -->|yes| BACKOFF[Requeue delay=exp backoff+jitter\n→ status=pending (task.retrying event, not a status)]
   BACKOFF --> ROW
   RETRY -->|no| DLQ[MoveToDeadLetter\nstatus=dead_letter\npublish post.failed]
   classDef ev fill:#7a4ea0,stroke:#3c2352,color:#f3e9ff;
@@ -147,18 +176,34 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/single-claim.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** Three duplicate
-`post.received` events (a redelivery storm plus a scheduled poll) all reach `Enqueue`, keyed by
-the same `post_id`. The dedup gate (`INSERT … ON CONFLICT DO NOTHING` on a unique
-`(post_id, task_kind)`) admits the first and turns the others into acknowledged no-ops, so only
-one `background_tasks` row exists in `pending`. A worker then claims it with
-`SELECT … FOR UPDATE SKIP LOCKED`, flipping it to `running`; concurrent workers skip the locked
-row, so exactly one executes. On success the row goes `completed` and `post.processed` is
-published. On failure the retry gate checks the attempt count: if attempts remain, the task is
-`Requeue`d with an exponential-backoff-plus-jitter delay and returns to `pending` (as
-`retrying`); if the ceiling is hit, it is moved to the dead-letter queue as `dead_letter` and
-`post.failed` is published. Two independent dedup layers (enqueue-time and claim-time) mean the
-exactly-once guarantee holds even if the unique constraint is somehow bypassed.
+**Explanation (for readers/models that cannot see the diagram).** The diagram traces one post
+through two independent deduplication layers so that a redelivery storm can never fan out into
+duplicate work. On the left, three copies of the same logical event — `post.received #1` and two
+duplicates (`#2`, `#3`) — arrive together. In production this is exactly what happens: NATS
+JetStream is at-least-once so a consumer restart redelivers the unacknowledged message, and a
+scheduled channel poll can independently rediscover the same root post while the push-triggered
+event is still in flight. All three carry the same `idempotency_key = post_id`, which is what
+lets the system collapse them.
+
+The **first** dedup layer is the enqueue gate. Every arrival attempts to create the single
+`post_processing_state` row for its `post_id` via `INSERT … ON CONFLICT (post_id, task_kind) DO
+NOTHING`. Postgres admits exactly one writer; the losers get zero affected rows and are turned
+into acknowledged no-ops (they are *acked* to JetStream so they are not redelivered forever, but
+they create no work). The outcome is a single `pending` row regardless of how many duplicates
+raced. This layer is Thready-owned precisely because — as `[OPEN: CONC-1]` established at source —
+the `models.BackgroundTask` queue model has no dedup column of its own.
+
+The **second** dedup layer is the claim gate, and it defends against a different failure: two
+*workers* polling the queue at the same instant. `Dequeue` runs `SELECT … FOR UPDATE SKIP
+LOCKED` (VERIFIED in `background_tasks/docs/ARCHITECTURE.md` — "Atomic dequeue with `SELECT … FOR
+UPDATE SKIP LOCKED`"), so the row is row-locked by whichever worker reaches it first and every
+concurrent worker *skips* the locked row rather than blocking on it. Exactly one worker
+transitions `pending → running`, stamping `claimed_by` and `claimed_at`. From there the happy
+path flips the row to `completed` and publishes `post.processed`; the failure path consults the
+attempt counter (§5). Having two orthogonal gates — enqueue-time and claim-time — means the
+exactly-once invariant survives even if one gate is bypassed by a bug, a manual re-insert, or a
+schema regression: the constraint and the row-lock are belt-and-braces for the single most
+load-bearing correctness requirement in the system.
 
 ## 5. Retry, back-off & dead-letter
 
@@ -176,8 +221,10 @@ exactly-once guarantee holds even if the unique constraint is somehow bypassed.
 Retries are **per step and per whole post**: because Skills run in an ordered pipeline
 (download→convert→analyze→research→reply), a transient download failure retries only the
 download step (checkpointed via `TaskExecutor.Pause/Resume`), not the whole post. Manual retry
-(operator/user via REST) and full refresh (reprocess) reuse the same machinery — reprocess sets
-status `reprocessing` and invalidates the sticky `post.state` (see [event-model.md](./event-model.md)).
+(operator/user via REST) and full refresh (reprocess) reuse the same machinery — reprocess re-enters
+the machine as a fresh `pending → running` cycle — there is **no** `reprocessing` task *status*
+(§2/§5.1); the sticky `post.state` *display* value shows `reprocessing`, and the prior sticky value
+is invalidated (see [event-model.md](./event-model.md)).
 
 ```go
 func nextBackoff(attempt int) time.Duration {
@@ -191,16 +238,92 @@ func nextBackoff(attempt int) time.Duration {
 _ = queue.Requeue(ctx, task.ID, nextBackoff(task.Attempt))
 ```
 
-**Stuck recovery** — `StuckDetector` + `GetStaleTasks(threshold)` reclaim tasks whose worker
-died mid-run (heartbeat stale): the row is returned to `pending`, honoring the same idempotency
-(the dead worker's partial side-effects are safe because each Skill step is itself idempotent —
-see [processing-pipeline.md](./processing-pipeline.md)).
+**Stuck recovery** — `StuckDetector.IsStuck(...)` + `TaskRepository.GetStaleTasks(threshold)`
+reclaim tasks whose worker died mid-run (stale `LastHeartbeat`, updated via
+`UpdateHeartbeat`/`ReportHeartbeat` — VERIFIED). The row is returned to `pending`, honoring the
+same idempotency (the dead worker's partial side-effects are safe because each Skill step is
+itself idempotent — see [processing-pipeline.md](./processing-pipeline.md)). The stale threshold
+is per task-type via `StuckDetector.GetStuckThreshold(taskType)`; the module default heartbeat
+interval is 10 s and stuck threshold 300 s (`DefaultTaskConfig`, VERIFIED).
+
+### 5.1 Retry/back-off state machine
+
+The post-processing task walks a fixed state machine grounded in the **real nine-value**
+`models.TaskStatus` enum (§2). Retry, stuck-recovery and reprocess are all expressed as
+transitions *between those states* — there is no separate `retrying`/`backoff` status.
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending : Enqueue (INSERT post_processing_state\nON CONFLICT (post_id,task_kind) DO NOTHING)
+  pending --> queued : scheduled_at reached / priority-ordered
+  queued --> running : Dequeue — SELECT ... FOR UPDATE SKIP LOCKED\n(claimed_by=worker_id, claimed_at=now)
+  running --> completed : Execute ok → publish post.processed
+  running --> paused : TaskExecutor.Pause() → checkpoint BYTEA
+  paused --> running : TaskExecutor.Resume(checkpoint)
+  running --> stuck : StuckDetector.IsStuck (stale LastHeartbeat)
+  stuck --> pending : GetStaleTasks(threshold) → Requeue (reclaim)
+  running --> pending : failure & RetryCount < MaxRetries\nRequeue(delay = exp backoff+jitter)\nemit task.retrying / skill.step.retried
+  running --> dead_letter : failure & RetryCount >= MaxRetries\nMoveToDeadLetter(reason) → publish post.failed
+  running --> cancelled : TaskExecutor.Cancel() (operator/user)
+  dead_letter --> pending : DeadLetterTask.ReprocessAfter\n(manual reprocess, RBAC-gated)
+  completed --> running : reprocess trigger →\npost.state.invalidate + new claim
+  completed --> [*]
+  cancelled --> [*]
+  dead_letter --> [*] : abandoned (retention)
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/retry-state-machine.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** The machine begins when a
+`post.received` is admitted by the enqueue dedup gate, creating the `post_processing_state` row in
+`pending`. Once the row's `scheduled_at` is reached and it wins priority ordering, it becomes
+`queued`; a worker's `Dequeue` (the `FOR UPDATE SKIP LOCKED` claim) is the only transition into
+`running`, which is why exactly one worker ever executes a given post. `running` is the hub of the
+machine — five distinct edges leave it, and understanding them is understanding the whole
+resilience design.
+
+The **success** edge (`running → completed`) publishes `post.processed` and the sticky
+`post.state=done`, then terminates. The **pause/resume** pair (`running ⇄ paused`) exists so a
+long, checkpointable Skill step can yield its worker without losing progress: `TaskExecutor.Pause`
+returns a checkpoint blob that is persisted (`SaveCheckpoint`), and `Resume` restores it — this is
+how a 30-minute research step survives a graceful worker drain. The **stuck** edge (`running →
+stuck → pending`) is the crash-safety net: if a worker dies mid-run its heartbeat goes stale,
+`StuckDetector` flags the task, and `GetStaleTasks` returns it to `pending` for another worker.
+
+The two **failure** edges are the retry/back-off core. On a transient failure with attempts
+remaining (`RetryCount < MaxRetries`), the task is `Requeue`d with an exponential-backoff-plus-
+full-jitter delay (§5) and returns to `pending`; the retry is recorded as the `task.retrying`
+execution-history event (and, per step, `skill.step.retried`) — crucially it is *not* a distinct
+status, so the machine has no illegal states to reconcile. On a failure with the ceiling reached
+(`RetryCount >= MaxRetries`), the task is moved to `dead_letter` via `MoveToDeadLetter(reason)`
+and `post.failed` is published. Two edges re-enter the machine from terminal-ish states:
+`dead_letter → pending` is an operator/user-driven manual reprocess (a `DeadLetterTask` carries
+`ReprocessAfter`/`Reprocessed` fields, VERIFIED), and `completed → running` is the ordinary
+reprocess trigger, which first invalidates the sticky `post.state`
+([event-model.md](./event-model.md)) and then claims a fresh run. Every terminal state
+(`completed`, `cancelled`, and eventually an abandoned `dead_letter`) is reachable exactly once
+per claim, which keeps the post's audit trail linear and its sticky state coherent.
 
 ## 6. Circuit breaker for external systems
 
 Every flapping external dependency is wrapped in a circuit breaker. The pattern already exists
 in `LLMProvider`, `filesystem`, and `lets_encrypt` `[research_request_final §3.3]`; Thready
 reuses it and adds breakers around messenger APIs and the delegated download systems.
+
+**Verified shared home (`[OPEN: CONC-2]`, now narrowed).** A shared resilience package was
+**read at source** this pass: `digital.vasic.discovery/pkg/resilience` exposes a `Manager`
+(`NewManager(logger Logger, metrics MetricsReporter) *Manager`) driving a **four-state
+connection state machine** — `Connected → Disconnected → Reconnecting → Offline` — with health
+metrics (`Healthy = 1.0`, `Degraded = 0.5`, `OfflineHealth = 0.0`) surfaced via
+`ConnectionState.HealthMetric()` and `Source`/`Event`/`EventType` types (VERIFIED). This is a
+**connection-availability/failover** breaker keyed on a `Source` endpoint (ideal for wrapping a
+messenger session, HelixLLM, or a download backend as a monitored source), *not* a generic
+per-call `Do(fn)` wrapper. The remaining ambiguity is therefore narrower than before: a
+**call-level** breaker (open after N consecutive failures on one function call) is provided
+internally by `LLMProvider`; whether Thready adopts `discovery/pkg/resilience.Manager` for
+source-level failover and `LLMProvider`'s internal breaker for call-level, or unifies them, is
+the residual decision tracked in §12. The illustrative `circuitbreaker.New(...).Do(...)` below is
+the *call-level* shape and is representative, not the `resilience.Manager` API.
 
 ```go
 // Illustrative breaker config per dependency (reusing the LLMProvider breaker pattern).
@@ -274,8 +397,10 @@ CREATE TABLE post_processing_state (
 --                    WHERE status='pending' ORDER BY updated_at
 --                    FOR UPDATE SKIP LOCKED LIMIT 1)
 --   RETURNING post_id;
+-- Partial claim index: a retried task returns to 'pending' (retrying is NOT a status — §2),
+-- so the claim hot path filters on 'pending' only.
 CREATE INDEX idx_pps_status ON post_processing_state (status, updated_at)
-    WHERE status IN ('pending','retrying');
+    WHERE status = 'pending';
 ```
 
 Forward/rollback migration is delivered via `database/pkg/migration.Runner` (up/down); the DB
@@ -325,13 +450,18 @@ func TestRetryExhaustion_DeadLetters(t *testing.T) {
 
 ## 12. Open items
 
-- `[OPEN: CONC-1]` Exact `models.BackgroundTask` field names (e.g. `DedupeKey`, `Attempt`) used
-  in snippets are illustrative; the enqueue-dedup must be wired to whatever unique/dedup field
-  `digital.vasic.background` exposes (its `models/background_task.go` was not read field-by-field
-  this pass). Tracked as a workable item to source-confirm before implementation.
-- `[OPEN: CONC-2]` The circuit-breaker package's exact import path (`LLMProvider`'s internal vs a
-  shared `resilience` package) needs source confirmation; `discovery/pkg/resilience` exists and
-  may be the shared home. Tracked for the re-verification backlog.
+- `[CLOSED: CONC-1]` (was: exact `models.BackgroundTask` dedup field). **Source-verified this
+  pass** (`models/background_task.go`): the model has **no `DedupeKey` and no `ErrDuplicateTask`**;
+  its correlation field is `CorrelationID *string`, retry state is
+  `RetryCount`/`MaxRetries`/`RetryDelaySeconds`/`LastError`/`ErrorHistory`, and `TaskStatus` is the
+  nine-value enum in §2. Enqueue-dedup is therefore Thready-side via `post_processing_state`
+  `UNIQUE(post_id, task_kind)` + `ON CONFLICT` (§3/§9), with `post_id` carried in `CorrelationID`.
+  No residual verification needed.
+- `[OPEN: CONC-2]` (narrowed). **Source-verified** that a shared resilience package exists:
+  `discovery/pkg/resilience.Manager` + the `Connected/Disconnected/Reconnecting/Offline`
+  `ConnectionState` machine (§6). Residual decision (not a verification gap): whether Thready
+  standardizes source-level failover on `resilience.Manager` and keeps `LLMProvider`'s internal
+  call-level breaker, or unifies both behind one seam. Tracked as a design workable item.
 
 ---
 

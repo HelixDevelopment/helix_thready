@@ -2,14 +2,15 @@
   Title           : Helix Thready — Deployment & Operations (Area Index)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/deployment/index.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.4
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (deployment)
   Related         : ../CONVENTIONS.md, ../index.md,
-                    ./container-topology.md, ./podman-compose.md, ./environments.md,
-                    ./tls-lets-encrypt.md, ./deploy-and-rollback.md, ./backup-dr.md,
-                    ./service-discovery-ports.md, ./hetzner-provisioning.md,
-                    ./secrets-and-config.md
+                    ./container-topology.md, ./podman-compose.md, ./compose-files.md,
+                    ./environments.md, ./tls-lets-encrypt.md, ./deploy-and-rollback.md,
+                    ./backup-dr.md, ./service-discovery-ports.md, ./hetzner-provisioning.md,
+                    ./secrets-and-config.md, ./operations-runbook.md,
+                    ./monitoring-observability.md, ./cost-and-capacity.md
 -->
 
 # Helix Thready — Deployment & Operations (Area Index)
@@ -18,6 +19,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (deployment) | Initial implementation-ready draft of the full Deployment & Operations pack |
 | 2 | 2026-07-21 | swarm (deployment review) | Review pass: added OpenAPI 3.1 health contract + reproduce-first TDD skeletons, fixed the boot `--wait` contradiction, addressed GAP #17, split single-paragraph diagram explanations |
+| 3 | 2026-07-22 | swarm (deployment) | Pass 3 depth: added `compose-files.md` (complete per-env rootless compose YAML) + `operations-runbook.md` (day-2 ops & incident playbooks); re-verified every module signature at `vasic-digital/containers` + `vasic-digital/lets_encrypt` source; narrowed `[OPEN: dns-provider]` (Loopia/`dns_loopia`) and `[OPEN: host-sizing]` (candidate Hetzner SKUs) |
+| 4 | 2026-07-22 | swarm (deployment critic) | Completeness pass: added `cost-and-capacity.md` (closes the `§16.3` "quantify in the deployment pack" promise — host/object/backup/GPU cost + subscription/metered offset model) and `monitoring-observability.md` (Q42/Q43 depth — SLOs, the service/edge/cert/latency/resource alert rules the runbook referenced but were undefined, routing, dashboards, reproduce-first alert test); completed the deterministic port plan (ClickHouse native `9009`, Jaeger OTLP `4317`) to match the compose files |
 
 This is the canonical entry point for the **Deployment & Operations** documentation of
 Helix Thready. It specifies how the system is provisioned, containerized, secured with TLS,
@@ -167,6 +170,7 @@ files with `chmod 600`, never from a tracked file and never into logs `[CONSTITU
 |----------|-------------------|
 | [container-topology.md](./container-topology.md) | The full per-environment service inventory, container images, networks, volumes, resource limits, and the BUILD-NEW placeholders |
 | [podman-compose.md](./podman-compose.md) | Rootless Podman + `podman-compose` runtime, the `containers` boot/orchestrator API, compose file layout, health gating |
+| [compose-files.md](./compose-files.md) | The complete, copy-paste-ready rootless Podman Compose YAML for the edge + dev/sta/prod, the `buildnew` profile, healthchecks, loopback bindings, and the per-env render step |
 | [environments.md](./environments.md) | The three-environment separation model, subdomain routing, per-env config, promotion flow |
 | [tls-lets-encrypt.md](./tls-lets-encrypt.md) | ACME issuance (HTTP-01/DNS-01), renewal timer, atomic deploy-hook + risk-free rollback, per-subdomain certs |
 | [deploy-and-rollback.md](./deploy-and-rollback.md) | The deploy pipeline (bash + Go health gate), image-tag pinning, expand-contract migrations, rollback |
@@ -174,6 +178,9 @@ files with `chmod 600`, never from a tracked file and never into logs `[CONSTITU
 | [service-discovery-ports.md](./service-discovery-ports.md) | `port_prefix` bands, `discovery`/`mdns`, `serviceregistry`, the deterministic port plan |
 | [hetzner-provisioning.md](./hetzner-provisioning.md) | Root bootstrap → `thready` user, rootless Podman setup, firewall, linger, sysctl, first deploy |
 | [secrets-and-config.md](./secrets-and-config.md) | Secret sources, load precedence, `chmod`, leak-audit, local git-hook enforcement (no server CI) |
+| [operations-runbook.md](./operations-runbook.md) | Day-2 operations: on-call quick card, routine ops, incident-triage, per-failure playbooks (service down, cert, WAL, disk, reboot, stuck deploy, leak), maintenance cadence |
+| [monitoring-observability.md](./monitoring-observability.md) | The Q42/Q43 observability deployment: Prometheus/Grafana/OTel-Jaeger/ClickHouse per env, SLOs, the complete alert-rule set (service-down, edge, cert-expiry, latency, resource), alert routing, dashboards, reproduce-first alert test |
+| [cost-and-capacity.md](./cost-and-capacity.md) | Monthly run-cost quantification (`§16.3`): Hetzner host + object tier + backup secondary + GPU (external), the capacity envelope, three cost scenarios, and the subscription+metered billing-offset model |
 
 ## 6. Gap-register items addressed by this area
 
@@ -192,12 +199,15 @@ of treatment in the relevant document.
 
 ## 7. Open items tracked by this area
 
-| ID | Item | Where |
-|----|------|-------|
-| `[OPEN: dns-provider]` | The acme.sh DNS-01 hook for `hxd3v.com` is unconfirmed; DNS-01 wildcard is documented as an option pending the provider | [tls-lets-encrypt.md](./tls-lets-encrypt.md) |
-| `[OPEN: host-sizing]` | Exact Hetzner SKU + GPU-node topology is a `[DEFAULT — adjustable]` baseline pending load tests | [hetzner-provisioning.md](./hetzner-provisioning.md) |
-| `[OPEN: secondary-store]` | The backup secondary target (Hetzner Storage Box vs a second MinIO) is a proposed default | [backup-dr.md](./backup-dr.md) |
-| `[OPEN: buildnew-images]` | Container images for the BUILD-NEW services do not exist yet; topology reserves their slots | [container-topology.md](./container-topology.md) |
+| ID | Item | Status | Where |
+|----|------|--------|-------|
+| `[OPEN: dns-provider]` | acme.sh DNS-01 hook for `hxd3v.com` | **Narrowed (Rev 3)** — concrete `dns_loopia` path documented (verified config-example provider + reserved `LOOPIA_*` keys); HTTP-01 is the working default; closes on operator registrar confirmation | [tls-lets-encrypt.md §4.1](./tls-lets-encrypt.md#41-concrete-dns-01-with-the-loopia-hook) |
+| `[OPEN: host-sizing]` | Exact Hetzner SKU + object-tier backing | **Narrowed (Rev 3)** — candidate AX/SX SKU families + object-tier split table added; specific model confirmed at purchase after load tests | [hetzner-provisioning.md §1.1](./hetzner-provisioning.md#11-candidate-hetzner-skus--object-tier-split) |
+| `[OPEN: secondary-store]` | Backup secondary target (Storage Box vs 2nd MinIO) | Proposed default (Storage Box); both meet physical-separation | [backup-dr.md](./backup-dr.md) |
+| `[OPEN: buildnew-images]` | Images for BUILD-NEW services do not exist yet | Reserved via the `buildnew` compose profile so a default `up` excludes them | [container-topology.md](./container-topology.md), [compose-files.md §6](./compose-files.md#6-the-build-new-profile-in-the-file) |
+| `[OPEN: pgvector-image]` | `pgvector/pgvector:pg17` vs `postgres:17-alpine` + extension | Both satisfy the topology; owned by the database area | [compose-files.md §10](./compose-files.md#10-open-items) |
+| `[OPEN: alerting-route]` | Where alerts page (email/Telegram/PagerDuty) | The complete rule set (`what` fires, with `severity`/`page` labels) is now defined; `who` is paged is an observability-wiring choice | [monitoring-observability.md §6](./monitoring-observability.md#6-alert-routing), [operations-runbook.md §13](./operations-runbook.md#13-open-items) |
+| `[OPEN: pricing]` | Subscription tier prices + metered rates | This pack quantifies COGS (`§16.3`); the price card is a product/billing decision owned by the User/Billing service | [cost-and-capacity.md §6](./cost-and-capacity.md#6-billing-offset-model-subscription--metered) |
 
 ## 8. Verified vs assumed — reading guide
 

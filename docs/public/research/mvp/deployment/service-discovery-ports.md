@@ -138,7 +138,8 @@ sta (`61`) bands. Only services that publish a host port appear; internal-only s
 | thready-nats (mon) | 8222 | 62223¹ | 61223¹ | 60223¹ | loopback |
 | thready-minio (S3) | 9000 | 62000 | 61000 | 60000 | loopback |
 | thready-minio (console) | 9001 | 62001 | 61001 | 60001 | loopback |
-| thready-clickhouse | 8123 | 62123 | 61123 | 60123 | loopback |
+| thready-clickhouse (HTTP) | 8123 | 62123 | 61123 | 60123 | loopback |
+| thready-clickhouse (native) | 9009 | 62009 | 61009 | 60009 | loopback |
 | thready-herald | 7080 | 62080 | 61080 | 60080 | loopback |
 | thready-assetsvc | 8081 | 62081 | 61081 | 60081 | loopback |
 | thready-downloadmgr | 8082 | 62082 | 61082 | 60082 | loopback |
@@ -150,6 +151,7 @@ sta (`61`) bands. Only services that publish a host port appear; internal-only s
 | thready-prometheus | 9090 | 62090 | 61090 | 60090 | loopback |
 | thready-grafana | 3000 | 62003³ | 61003³ | 60003³ | loopback |
 | thready-jaeger (UI) | 16686 | 62686 | 61686 | 60686 | loopback |
+| thready-jaeger (OTLP gRPC) | 4317 | 62317 | 61317 | 60317 | loopback |
 
 ¹ `8222 mod 1000 = 222` collides with NATS-client `4222`; linear probe → `…223`.
 ² `8000 mod 1000 = 000` collides with MinIO S3 `9000`; probe skips `…000/…001` → `…002`.

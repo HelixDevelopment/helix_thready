@@ -1,0 +1,26 @@
+flowchart TB
+  DEV[developer / agent] --> CA[commit_all.sh]
+  CA --> LOCK[mkdir lock .git/.commit_all.lock.d]
+  LOCK --> CASCADE{--auto-cascade?}
+  CASCADE -->|yes| SUB[commit+push dirty owned submodules first]
+  CASCADE -->|no| STAGE[stage paths]
+  SUB --> STAGE
+  STAGE --> PC[pre-commit hook]
+  PC --> PC1[1 markdown-sibling check §11.4.65]
+  PC --> PC2[2 forbidden-class scan §11.4.30/10]
+  PC --> PC3[3 mutation-residue scan §11.4.84]
+  PC --> MARK[drop .git/ATMO_PRECOMMIT_RAN marker]
+  MARK --> COMMIT[git commit]
+  COMMIT --> CM[commit-msg hook]
+  CM --> CMDET{marker present?}
+  CMDET -->|absent = no-verify bypass| CMF[require Bypass-rationale footer -> audit log]
+  CMDET -->|present = normal| CMOK[consume marker, pass]
+  CMOK --> RELEASE[release commit lock immediately]
+  CMF --> RELEASE
+  RELEASE --> PUSH[push_all.sh detached §11.4.88]
+  PUSH --> PP[pre-push hook: force-push guard + scoped secret scan]
+  PP --> GH[github]
+  PP --> GL[gitlab]
+  PP --> GF[gitflic]
+  PP --> GV[gitverse]
+  POST[post-commit hook: orphan-md sibling autogen] -.-> COMMIT

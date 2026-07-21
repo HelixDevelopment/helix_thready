@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial local + Hetzner install procedures |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: corrected messenger sign-in to VERIFIED Herald `HERALD_MTPROTO_*` names (user client) with the `HERALD_TGRAM_*` reply-path distinction; split the topology diagram explanation into multi-paragraph form; added a first-run verification matrix (§4); linked the new [quickstart.md](./quickstart.md). |
 
 This guide takes you from nothing to a running Helix Thready system — first a **local development**
 stack for evaluation, then the **three-environment Hetzner deployment** (dev/staging/production).
@@ -97,16 +98,28 @@ flowchart TB
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/install-topology.mmd](./diagrams/install-topology.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** A single Hetzner host runs three
-**fully separated** container stacks — `dev.`, `sta.` and `thready.` (production) — each with its
-own Postgres+pgvector database and, for the busier environments, its own NATS JetStream bus; the
-production stack additionally has a MinIO/S3 object tier for the 50 TB+ asset scale. A single HTTP/3
-reverse proxy terminates TLS (one Let's Encrypt certificate per subdomain) and routes each subdomain
-to its isolated stack, so the three environments never share data or ports. Outside the host sit the
-**shared services** the platform delegates to: HelixLLM (llama.cpp) for embeddings/research/vision —
-typically the operator's 32 GB Nvidia workstation or a dedicated GPU node; Boba for torrents; MeTube
-for video downloads; and the Telegram MTProto endpoint that Herald's user client connects to. All
-clients (Web, CLI, TUI, Mobile, SDK) reach the platform only through the reverse proxy — they never
-touch a stack directly. This is the topology `installation.md` provisions; the full
+**fully separated** container stacks — `dev.`, `sta.` and `thready.` (production). The separation is
+the load-bearing property of this topology: each stack carries its own Postgres+pgvector database and,
+for the busier environments, its own NATS JetStream bus, and the production stack additionally has a
+MinIO/S3 object tier sized for the 50 TB+ asset scale. Because the databases and buses are per-stack,
+a schema migration, a data-wipe, or a runaway job in `dev.` cannot reach into `sta.` or production —
+the three environments never share data or ports.
+
+A single HTTP/3 reverse proxy sits in front of all three. It terminates TLS with one Let's Encrypt
+certificate per subdomain and routes each hostname to its isolated stack. This is why the client URL
+you use (`dev.` / `sta.` / bare) deterministically selects an environment, and why there is no way to
+"accidentally" cross environments from a client — routing happens once, at the proxy, by hostname.
+
+Outside the host sit the **shared services** the platform delegates to rather than re-implements:
+HelixLLM (llama.cpp) for embeddings/research/vision — typically the operator's 32 GB Nvidia
+workstation or a dedicated GPU node; Boba for torrents; MeTube for video downloads; and the Telegram
+MTProto endpoint that Herald's user client (`HERALD_MTPROTO_*`) connects to. These are drawn as dotted
+edges from production because they are reached over the network and are not part of any single stack —
+several can be shared across environments or pointed at per-environment instances via configuration.
+
+All clients (Web, CLI, TUI, Mobile, SDK) reach the platform **only** through the reverse proxy; they
+never touch a stack directly. That single ingress is what lets RBAC, rate limiting, and TLS be
+enforced uniformly regardless of surface. This is the topology `installation.md` provisions; the full
 compose/rollback/backup detail lives in [../deployment/index.md](../deployment/index.md).
 
 ## 3. Local development install
@@ -177,6 +190,25 @@ full readiness matrix: DB reachable, pgvector present, embedder real, NATS reach
 storage writable, and messenger session valid. A green `doctor` is the gate before onboarding a
 channel.
 
+**First-run verification matrix.** Work top to bottom; each row is independently checkable, and the
+"Expected" column is the exact signal a healthy install gives. A failure at any row is diagnosed in
+the [troubleshooting](./troubleshooting.md) section named in the last column.
+
+| # | Check | Command | Expected | If it fails |
+|---|-------|---------|----------|-------------|
+| 1 | Process boots | `./thready serve` | Logs `listening on 0.0.0.0:8443`, no `ABORT` | [Service won't start](./troubleshooting.md#2-service-wont-start) |
+| 2 | Readiness | `curl -k https://localhost:8443/health/ready` | `200 {"status":"ready"}` | [Service won't start](./troubleshooting.md#2-service-wont-start) |
+| 3 | Version handshake | `curl -k https://localhost:8443/v1/meta/version` | `200 {"version":…}` | [Service won't start](./troubleshooting.md#2-service-wont-start) |
+| 4 | DB + pgvector | `./thready doctor` (db row) | `✔ db reachable`, `✔ pgvector present` | [Service won't start](./troubleshooting.md#2-service-wont-start) |
+| 5 | Real embedder | `./thready doctor embeddings` | `✔ provider=llama … dim=1024` | [Search irrelevant](./troubleshooting.md#5-semantic-search-returns-irrelevant-results) |
+| 6 | Config resolves | `./thready config validate` | `✔ all required vars present` | [Config not taking effect](./troubleshooting.md#9-configuration-changes-not-taking-effect) |
+| 7 | Messenger session | `./thready doctor messenger` | `✔ telegram session valid`; `max = not implemented` | [Can't sign in](./troubleshooting.md#3-cant-sign-in-to-a-messenger) |
+| 8 | Storage writable | `./thready doctor storage` | `✔ store writable`, signed URLs OK | [Downloads](./troubleshooting.md#6-a-download-never-completes) |
+
+Rows 1–6 must pass before onboarding a channel; rows 7–8 must pass before you expect assets. Row 5 is
+the single most important gate — a green embedder is what makes semantic search real rather than
+garbage `[GAP: 1]`.
+
 ## 5. Hetzner production install
 
 > Full runbook: [../deployment/index.md](../deployment/index.md). Summary here.
@@ -242,16 +274,23 @@ zero version.
 
 ```bash
 ./thready messenger login telegram
-#   → sends a login code to the Telegram account
+#   → sends a login code to the Telegram USER account (HERALD_MTPROTO_PHONE)
 #   Enter code: 12345
-#   Enter 2FA password (if enabled): ********
-#   ✔ Session saved to HERALD_TELEGRAM_SESSION_PATH (encrypted)
+#   Enter 2FA password (if enabled): ********   # HERALD_MTPROTO_PASSWORD
+#   ✔ Session saved to HERALD_MTPROTO_SESSION_FILE (default ~/.config/herald/mtproto.session)
 ```
+
+This uses Herald's **MTProto user client** (`HERALD_MTPROTO_APP_ID`/`APP_HASH`/`PHONE`), the only
+transport that can read a channel's full history. The Bot-API path (`HERALD_TGRAM_BOT_TOKEN`) is used
+separately for posting status replies — a bot token alone can never backfill history.
 
 ### 7.2 Telegram (non-interactive / headless)
 
-For headless deploy, set `THREADY_MESSENGER_SIGNIN_MODE=noninteractive` and provide
-`HERALD_TELEGRAM_*` in the environment; the first run establishes the session, later runs reuse it.
+For headless deploy, set `THREADY_MESSENGER_SIGNIN_MODE=noninteractive` and provide the
+`HERALD_MTPROTO_*` variables in the environment (VERIFIED names — see
+[configuration.md §9](./configuration.md#9-messengers-herald)); the first run establishes the session
+file, later runs reuse it. Persist `HERALD_MTPROTO_SESSION_FILE` on an encrypted, writable path so a
+container restart does not force a re-login (which would need a fresh SMS code).
 
 ### 7.3 Onboard the first channel
 

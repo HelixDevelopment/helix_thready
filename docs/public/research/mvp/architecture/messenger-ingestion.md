@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — Herald, gotd/td, Max adapter, ThreadReader |
+| 2 | 2026-07-22 | swarm (Pass 3 depth) | Close ING-2 — verified CURRENT herald `commons_messaging/channels.Channel` (Wave 7) + self-filter `IsSelfEcho`/`StampSender`/`BotSelfIdentity`/`SelfIdentity`/`IdentityKind` read at source; `SendReplyGeneric`/`DownloadAttachment` back Reply/attachment fetch; deepen thread-assembly explanation |
 
 ## Table of Contents
 
@@ -64,8 +65,48 @@ type Messenger interface {
 type Factory interface { CreateMessenger(config *Config) (Messenger, error) }
 ```
 
-Existing adapters (VERIFIED files): `telegram.go`, `telegram_bot.go`, `mtproto.go`, `slack.go`,
-`max.go`, `registry.go`, `factory.go`, `types.go`, `config.go`.
+Existing adapters (VERIFIED files, earlier `pkg/messenger` layout): `telegram.go`,
+`telegram_bot.go`, `mtproto.go`, `slack.go`, `max.go`, `registry.go`, `factory.go`, `types.go`,
+`config.go`.
+
+**ING-2 closure — the CURRENT verified messaging seam (Wave 7).** The herald repo has since
+evolved; the **current** channel model was re-read at source this pass under
+`commons_messaging/channels` (`channel.go`, `selffilter.go`, `registry.go`, `inbox.go`, plus
+`tgram`/`slack` adapters). The live adapter interface is a *richer* `Channel` that embeds the
+§11.0 `commons.Channel` (`Name`/`Capabilities`/`Send`/`Subscribe`/`HealthCheck`) and adds three
+inbound-runtime methods — **VERIFIED verbatim**:
+
+```go
+// vasic-digital/herald · commons_messaging/channels/channel.go — VERIFIED (Pass 3)
+type IdentityKind string // "username" (Telegram @handle) | "user_id" (Slack) | "address" (email)
+type SelfIdentity struct { Kind IdentityKind; Value string } // username(no @) | user-id | address
+
+type Channel interface {
+    commons.Channel // Name / Capabilities / Send / Subscribe / HealthCheck
+
+    // SendReplyGeneric posts a reply quoting replyToID, then fans out each attachment as its own
+    // reply at the same thread depth. replyToID=="" => fresh message. Returns native message id.
+    SendReplyGeneric(ctx context.Context, recipient commons.Recipient, body string,
+        replyToID string, attachments []commons.Attachment) (string, error)
+
+    // BotSelfIdentity returns the channel-native bot identity; MUST cross the wire on first call
+    // (getMe / auth.test); Subscribe refuses to boot without it (echo-loop hazard).
+    BotSelfIdentity(ctx context.Context) (SelfIdentity, error)
+
+    // DownloadAttachment streams the channel file into ~/.herald/inbox/<channel>/<sha256>.<ext>
+    // while hashing inline; returns (finalPath, sha256Hex, error). Idempotent.
+    DownloadAttachment(ctx context.Context, externalID string, mime string) (string, string, error)
+}
+```
+
+Three verified facts here directly satisfy Thready requirements without new code: (1)
+**`SendReplyGeneric`** is exactly the status-reply-quoting-the-root mechanism Thready's Reply step
+needs (§9 of [processing-pipeline.md](./processing-pipeline.md)); `replyToID=""` is the fresh-post
+sentinel. (2) **`DownloadAttachment`** already returns a content-addressed
+`~/.herald/inbox/<channel>/<sha256>.<ext>` path with the sha256 inline and is **idempotent**
+("content == proof of presence") — this is the ingestion side of the content-hash dedup the Asset
+Service relies on. (3) **`BotSelfIdentity`** + the self-filter below are the verified primitive for
+"never re-ingest our own status replies" (§5).
 
 > **`[GAP: 5.1]` Herald gaps (all addressed below).**
 > 1. **`[GAP: 5.1.1]` MTProto thread reader trapped in a QA harness** — the real `gotd/td` user
@@ -154,9 +195,30 @@ type Thread struct {
 }
 ```
 
-**System-reply exclusion** is by author identity: Thready records the id of its Robot/User
-account per channel; any reply authored by that id is skipped, so the system never processes its
-own status replies `[research_request_final §3.2.3 "Processing skips the system's own replies"]`.
+**System-reply exclusion** is by author identity — and this is a **VERIFIED herald primitive**,
+not Thready-new code (`[GAP: 5.1]` closure detail). `commons_messaging/channels/selffilter.go`
+(read at source) implements the channel-agnostic anti-echo-loop guard:
+
+```go
+// vasic-digital/herald · commons_messaging/channels/selffilter.go — VERIFIED (Pass 3)
+// StampSender records the sender's native identity into ev.Raw so the generalized filter can
+// compare it against the bot's SelfIdentity WITHOUT channel-specific knowledge.
+func StampSender(raw map[string]any, isBot bool, kind IdentityKind, value string)
+
+// IsSelfEcho reports whether ev originates from THIS bot (self-echo) so the inbound runtime drops
+// it before re-dispatching its own reply. A DIFFERENT bot in the same conversation is KEPT.
+func IsSelfEcho(ev commons.InboundEvent, self SelfIdentity) bool
+```
+
+Each adapter calls `StampSender` when it builds an `InboundEvent` (stamping the raw keys
+`sender_is_bot`, `sender_identity_kind`, `sender_identity`); the runtime then drops any event for
+which `IsSelfEcho(ev, self)` is true, where `self` comes from `BotSelfIdentity`. The design is
+deliberately narrow and correct: an **empty** self-identity never classifies as echo (and
+`Subscribe` refuses to boot without one, so the hazard cannot go unnoticed), and a **different**
+bot in the same channel is *kept* (multi-bot collaboration is real traffic). Thready sets its
+Robot/User account as the channel's `SelfIdentity` and inherits this filter unchanged, so it never
+processes its own status replies `[research_request_final §3.2.3 "Processing skips the system's own
+replies"]`.
 
 ## 6. Thread-assembly diagram
 
@@ -188,18 +250,32 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/thread-assembly.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** In the channel, a root post
-(often just a link or a line of text) has a chain of replies: one reply carries the hashtags
-(`#Research #Video`), another is an organic human comment, another is a forwarded post with an
-attachment — and separately, Thready's own earlier status reply hangs off the root. The
-ThreadReader assembles the root together with its organic replies, then filters out the system
-reply by matching the author id against Thready's Robot/User account, so the system never
-re-ingests its own output. It unions all hashtags found *anywhere* in the chain (which is why a
-link-only root still gets classified — the tags came from a reply), then extracts every
-attachment, forwarded message, and link. The result is one **Complete Post** row set (post +
-replies + hashtags + attachments) persisted to the relational store, which emits `post.received`
-onto the EventBus. The whole point of the diagram is that "a post" is a *composite* — collapsing
-it to the single root message would drop the hashtags and the attachments that live in replies.
+**Explanation (for readers/models that cannot see the diagram).** The diagram exists to make one
+non-obvious claim concrete: in these messengers "a post" is a *composite*, and collapsing it to
+the single root message would silently drop the very hashtags and attachments that decide how it
+is processed. Reading it top to bottom shows the assembly and the two filters that make the
+composite trustworthy.
+
+At the top is the source channel. A root post — often just a link or a single line of text — has a
+chain of replies hanging off it: one reply carries the hashtags (`#Research #Video`), another is an
+organic human comment, another is a forwarded post with an attachment. Separately, Thready's own
+earlier status reply also hangs off the root. That last one is the trap the design must avoid: if
+the system re-ingested its own replies it would loop, reprocess, and pollute the thread.
+
+The middle band is the ThreadReader. It assembles the root together with its organic replies, then
+applies the **self-filter** — and, as §5 now documents, this is the *verified herald primitive*
+`IsSelfEcho(ev, SelfIdentity)` fed by `StampSender`, not a bespoke id comparison — so the system
+reply is dropped by matching the bot's channel-native identity, while a different bot's reply would
+be kept. It then **unions all hashtags found anywhere in the chain**, which is precisely why a
+link-only root still classifies: the tags lived on a reply, not the root. Finally it extracts every
+attachment, forwarded message, and link (torrent/magnet, GitHub, YouTube, protocol URLs), using the
+verified `DownloadAttachment` for channel-hosted files so each arrives content-addressed by sha256.
+
+The bottom is the persisted result: one **Complete Post** row set (post + replies + hashtags +
+attachments) written to the relational system of record, which emits `post.received` onto the
+EventBus keyed by `post_id`. Everything downstream — classification, dispatch, dedup — operates on
+this composite, which is the architectural reason the whole pipeline can be messenger-agnostic: the
+ThreadReader is the single place that knows a post is more than its first message.
 
 ## 7. Accounts (sign-in) service
 
@@ -266,9 +342,15 @@ func TestMax_NotBluffed(t *testing.T) {
 - `[OPEN: ING-1]` The Max OneMe WebSocket protocol must be reverse-engineered from the Python
   references (`vkmax`/`max-mcp`/`MaxAPI`) and ported to Go; frame formats and auth handshake are
   `[RESEARCH]` and not yet source-verified. Tracked as a P0 workable item.
-- `[OPEN: ING-2]` Exact herald `Message`/`Channel` struct fields (`types.go`) were not read
-  field-by-field this pass (fetch failed under rate limit); the `Thread`/`Message` shapes above
-  are the ThreadReader's own model and must be mapped to herald's `types.go` at implementation.
+- `[CLOSED: ING-2]` (was: herald `Message`/`Channel` fields unread). **Source-verified this pass**
+  — the current herald messaging model is `commons_messaging/channels`: the `Channel` interface
+  (embedding `commons.Channel` + `SendReplyGeneric`/`BotSelfIdentity`/`DownloadAttachment`),
+  `SelfIdentity{Kind,Value}`, `IdentityKind` (`username`/`user_id`/`address`), and the self-filter
+  `IsSelfEcho`/`StampSender` over `commons.InboundEvent{Sender, Raw}` (§2, §5). Thready's
+  `Thread`/`Message` shapes remain the ThreadReader's own assembly model and map onto these
+  verified types (inbound `InboundEvent` → `Message`; `Channel.Subscribe` feeds `Poll`; `Channel`
+  exposes no history-backfill, which is exactly why the MTProto reader promotion of §3 and the
+  ThreadReader of §5 are still `[BUILD-NEW]`).
 - `[OPEN: ING-3]` Forum-topic vs linear-thread normalization across Telegram and Max needs a
   concrete mapping table (Telegram forum topics ↔ Max thread model); tracked with the
   ThreadReader build.

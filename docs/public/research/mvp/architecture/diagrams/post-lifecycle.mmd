@@ -1,0 +1,39 @@
+sequenceDiagram
+  autonumber
+  participant CH as Channel (Telegram/Max)
+  participant TR as ThreadReader (herald Channel)
+  participant PG as PostgreSQL (SoR)
+  participant BUS as EventBus (JetStream)
+  participant BG as BackgroundTasks (Postgres claim)
+  participant DISP as Skill Dispatch Engine
+  participant DL as Download (Boba/MeTube/DL-Mgr)
+  participant AS as Asset Service
+  participant SEM as Semantic-search
+  participant LLM as HelixLLM / LLMProvider
+
+  CH->>TR: Subscribe stream + Poll(since cursor)
+  TR->>TR: ReadThread → assemble root + organic replies
+  TR->>TR: IsSelfEcho filter (drop own status replies)
+  TR->>PG: persist Complete Post (posts+replies+hashtags+attachments)
+  TR->>BUS: publish post.received (metadata idempotency_key=post_id)
+  BUS->>BG: durable pull consumer (at-least-once, may duplicate)
+  BG->>PG: Enqueue → INSERT post_processing_state ON CONFLICT DO NOTHING
+  BG->>PG: Dequeue → SELECT ... FOR UPDATE SKIP LOCKED (single claim)
+  BG->>BUS: publish post.claimed (worker_id)
+  BG->>DISP: hand claimed post
+  DISP->>DISP: Classify (hashtags + indirect) → resolve Skill set → order
+  loop each stage: download>convert>analyze>research>reply
+    DISP->>BUS: publish post.processing.progress (one-time)
+    DISP->>BUS: publish post.state (STICKY last-value)
+  end
+  DISP->>DL: download stage (delegated, own pool)
+  DL-->>AS: standardized callback (job/state/progress/asset_ref)
+  AS->>PG: post↔asset link + sha256 checksum (content-hash dedup)
+  AS->>BUS: publish asset.stored
+  DISP->>LLM: analyze/research (breaker-wrapped; cloud fallback on open)
+  DISP->>SEM: embed post + artifacts (redacted surrogate for secrets)
+  SEM->>PG: write semantic_chunks (pgvector, co-located)
+  SEM->>BUS: publish index.updated
+  DISP->>TR: SendReplyGeneric status reply to source thread
+  DISP->>PG: post_processing_state=completed
+  DISP->>BUS: publish post.processed (metrics, asset_refs)

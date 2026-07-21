@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — end-to-end flow, data model, partitioning, sensitive flow |
+| 2 | 2026-07-22 | swarm (Pass 3 depth) | Split both diagram explanations (end-to-end flow §2, ERD §3) into true multi-paragraph form per CONVENTIONS §4 — three-ordering-invariant + persist-before-publish + three read paths for the flow; tenancy-tree + post-composite + M2M assets/chunks for the ERD. Also fix §7 reprocess step to not set a `reprocessing` task *status* (nine-value enum — concurrency §2) |
 
 ## Table of Contents
 
@@ -75,11 +76,22 @@ sequenceDiagram
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/data-flow-e2e.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** The flow begins when Herald
+**Explanation (for readers/models that cannot see the diagram).** This sequence is the data-plane
+view of the same lifecycle the [post-lifecycle.md](./post-lifecycle.md) capstone walks at finer
+grain; here the emphasis is deliberately on *where the authoritative bytes live at each step* and
+*what ordering the arrows guarantee*. The single most important property to read out of it is that
+three orderings are never violated: persistence precedes the event, the claim precedes any work,
+and indexing happens for both the original post and every generated artifact.
+
+The flow begins when Herald
 (via the ThreadReader) polls a Telegram/Max channel and/or receives a push trigger, assembles the
 complete post (root + organic reply chain), and persists it to PostgreSQL — the **system of
-record**. Herald then emits `post.received` onto the JetStream EventBus keyed by `post_id`. A
-durable consumer in BackgroundTasks receives it (at-least-once, so possibly duplicated),
+record**. Herald then emits `post.received` onto the JetStream EventBus keyed by `post_id` —
+persisting *before* publishing is the load-bearing choice, because the event is a lightweight
+pointer and any consumer can always re-read authoritative state from the SoR rather than trust a
+payload the transport cannot type-preserve ([event-model.md](./event-model.md) §2).
+
+A durable consumer in BackgroundTasks receives it (at-least-once, so possibly duplicated),
 performs the single-claim row lock that deduplicates, and hands the claimed post to the Skill
 Dispatch engine. Dispatch runs the download stage by delegating to the Download Manager / Boba /
 MeTube, which report completion through the standardized callback to the Asset Service; the Asset
@@ -87,10 +99,13 @@ Service stores the raw plus the `…-web` rendition and writes the post↔asset 
 back to PostgreSQL. Dispatch then embeds the post and its generated artifacts into the semantic
 store (pgvector), which — being co-located in the same Postgres instance — hydrates references
 with a local join. Dispatch posts a status reply to the source thread and emits `post.processed`.
+
 On the read side, the REST `/v1` API reads authoritative data from PostgreSQL, serves semantic
-queries from pgvector, and streams real-time events to clients over WebSocket/SSE. The numbered
-sequence makes the ordering explicit: persistence precedes the event, the claim precedes any
-work, and indexing happens for both the original post and every artifact.
+queries from pgvector, and streams real-time events to clients over WebSocket/SSE. The three read
+arrows are drawn separately on purpose: browse/state reads hit the relational SoR, meaning-based
+reads hit the vector store, and live updates come off the bus — three physically different paths
+for three different latency profiles, which is exactly how the aggressive read SLOs and the
+30-minute processing budget coexist without ever contending for one another.
 
 ## 3. Architecture-level data model (ERD)
 
@@ -116,18 +131,36 @@ erDiagram
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/data-model.mmd`.
 
 **Explanation (for readers/models that cannot see the diagram).** The model is anchored on
-**ACCOUNTS** (the tenant). Users relate to accounts many-to-many through MEMBERSHIPS (a user can
-belong to several accounts, and be an admin of one while a plain user of another). Each account
-monitors CHANNELS, which contain POSTS. A POST owns its REPLIES (the organic chain that, together
+**ACCOUNTS** — the tenant — and the whole shape is best read as a tree hanging off that anchor,
+because tenant isolation is a *physical property of the schema*, not a runtime check bolted on
+afterwards. Every entity below ACCOUNTS carries `account_id`, and that column is the physical basis
+of the row-level isolation the security model enforces ([security-model.md](./security-model.md));
+reading the ERD is in large part reading where that one column propagates.
+
+Users relate to accounts many-to-many through MEMBERSHIPS (a user can belong to several accounts,
+and be an admin of one while a plain user of another) — which is the structural reason the RBAC
+decision in [security-model.md](./security-model.md) must always be made against a *specific* target
+account rather than a global role bit: the join row, not the user row, carries the tier. Each
+account monitors CHANNELS, which contain POSTS.
+
+A POST is the composite the whole system is organized around, and the ERD makes its dependents
+explicit. It owns its REPLIES (the organic chain that, together
 with the root, forms the complete post), its POST_HASHTAGS (the union of tags across the chain),
-and exactly one POST_PROCESSING_STATE row (the single-claim record that guarantees
-exactly-once). POSTS reference ASSETS through ASSET_LINKS (a post can link many assets and an
-asset can be referenced by many posts — content-hash dedup makes the many-to-many real). The
-SEMANTIC_CHUNKS entity is the vector index: chunks are embedded from POSTS, ASSETS **and**
-RESEARCH_DOCS, which is how "search by meaning" spans originals and generated materials. Finally
-ACCOUNTS carry SUBSCRIPTIONS + USAGE_METERING (subscription + metered billing from day one) and
-an append-only AUDIT_LOG. Every entity below ACCOUNTS carries `account_id`, which is the physical
-basis of tenant isolation ([security-model.md](./security-model.md)). Full per-column DDL,
+and exactly **one** POST_PROCESSING_STATE row. That one-to-one processing-state relationship is the
+schema-level expression of the exactly-once invariant: because a post has a single processing-state
+row protected by a UNIQUE constraint, a duplicate `post.received` cannot create a second unit of
+work ([concurrency-and-idempotency.md](./concurrency-and-idempotency.md)).
+
+POSTS reference ASSETS through ASSET_LINKS (a post can link many assets and an
+asset can be referenced by many posts — content-hash dedup makes the many-to-many real).
+
+The SEMANTIC_CHUNKS entity is the vector index, and the crucial detail the ERD encodes is that it is
+embedded from POSTS, ASSETS **and** RESEARCH_DOCS: three source kinds feeding one index is exactly
+what lets "search by meaning" span originals and generated materials uniformly
+([semantic-search.md](./semantic-search.md)). Finally ACCOUNTS carry SUBSCRIPTIONS +
+USAGE_METERING (subscription + metered billing from day one) and an append-only AUDIT_LOG, so
+subscription state, metering and audit history are all tenant-scoped by the same `account_id` that
+isolates the operational rows. Full per-column DDL,
 indexes and migrations are delivered in the database area; the architecture-level entities listed
 in `§19.12` of the final request are all represented here.
 
@@ -199,7 +232,10 @@ only the Asset Service decrypts.
 Reprocessing is an explicit trigger `client → REST /v1/posts/{id}/reprocess → System`
 `[research_request_final §21.4]`:
 
-1. API sets `post_processing_state.status = 'reprocessing'` (RBAC-gated).
+1. API triggers reprocess (RBAC-gated): the task row re-enters a fresh `pending → running` cycle —
+   there is **no** `reprocessing` task *status* (the nine-value enum in
+   [concurrency-and-idempotency.md](./concurrency-and-idempotency.md) §2); the sticky `post.state`
+   *display* value becomes `reprocessing`.
 2. Dispatch publishes `post.state.invalidate` (clears the sticky value —
    [event-model.md](./event-model.md)).
 3. A new claim runs the pipeline; idempotent Skill steps re-run safely (dedup on `post_id`).

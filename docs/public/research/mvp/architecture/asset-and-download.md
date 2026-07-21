@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — Asset Service, Download Manager, Boba/MeTube callbacks |
 | 2 | 2026-07-21 | swarm (review pass) | Add OpenAPI 3.1 asset-serving contract (§8) per CONVENTIONS §6 |
+| 3 | 2026-07-22 | swarm (Pass 3 depth) | Split the §6 asset/download-diagram explanation into true multi-paragraph form (single-callback fan-in intent → routing → standardized callback → Asset Service store/serve → never-a-direct-path payoff) per CONVENTIONS §4 |
 
 ## Table of Contents
 
@@ -172,17 +173,27 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/asset-download.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** The download stage of the
-Skill Dispatch engine routes by link type: torrent/magnet links go to Boba (which already speaks
-SSE + `POST /api/v1/hooks`), YouTube/streaming links go to MeTube (which needs the new outbound
-webhook), and direct protocol URLs (HTTP/FTP/SMB/NFS/WebDAV) go to the new Download Manager
-(which reuses `filesystem` for the non-HTTP protocols). All three report completion through **one
+**Explanation (for readers/models that cannot see the diagram).** The diagram's whole point is the
+fan-in shape: three heterogeneous downloaders on the left collapse into a *single* callback edge in
+the middle, and only past that edge does the Asset Service appear. That shape is the visual proof of
+the fetch-vs-store separation of §1 — the system integrates three very different acquisition
+backends exactly once, through one contract, instead of teaching the Asset Service three download
+protocols.
+
+The download stage of the Skill Dispatch engine routes by link type: torrent/magnet links go to
+Boba (which already speaks SSE + `POST /api/v1/hooks`), YouTube/streaming links go to MeTube (which
+needs the new outbound webhook, `[GAP: 6.5]`), and direct protocol URLs (HTTP/FTP/SMB/NFS/WebDAV) go
+to the new Download Manager (which reuses `filesystem` for the non-HTTP protocols and adds the HTTP
+source, `[GAP: 6.2/6.3]`). All three report completion through **one
 standardized callback** — job id, state, progress, an asset reference, and an error block — to a
-shared callback module, so the rest of the system does not care which downloader ran. The
-callback module hands the artifact to the Asset Service, which keeps the raw original, generates
+shared callback module, so the rest of the system does not care which downloader ran.
+
+The callback module hands the artifact to the Asset Service, which keeps the raw original, generates
 the `…-web` rendition (H.264/AAC fMP4, HLS/DASH), stores bytes in the MinIO/S3 tier, records the
 checksum and the post↔asset link in the relational system of record (deduping by content hash),
-and embeds any transcript/metadata into the semantic index. Finally, clients fetch assets only
+and embeds any transcript/metadata into the semantic index.
+
+Finally, clients fetch assets only
 through `/v1/assets/:id` — **never** a direct file path — so auth/RBAC and virtual-blob
 resolution always apply. The diagram's single-callback fan-in is the architectural payoff of the
 standardized contract: three heterogeneous downloaders, one uniform integration.

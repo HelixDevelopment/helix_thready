@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial Standard User manual |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: split the life-of-a-post diagram explanation into multi-paragraph form; added a hashtag-category quick-reference note and download-status clarity |
 
 This manual is for **Standard Users** — the consumers of Helix Thready. It explains what the system
 does with your channels' posts, how the hashtag categories behave, how to run **semantic search**,
@@ -66,22 +67,36 @@ flowchart LR
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/post-journey.mmd](./diagrams/post-journey.mmd).
 
 **Explanation (for readers/models that cannot see the diagram).** A post's life begins when a human
-posts in a channel — Thready always works with the **complete post**, meaning the root message plus
-its full chain of organic replies (never the system's own status replies). The arrival raises a
-`post.received` event, and the BackgroundTasks queue **claims the post exactly once** so an event
-storm can't process it twice. Pre-processing extracts every hashtag, link, attachment and the full
-thread context. The post is then **classified** by hashtag and content type; if the tags are missing
-or too weak, an **indirect-determination** step infers intent (a GitHub link implies research; a
-torrent link implies download). Classification produces a **dispatch** of one or more Skills, ordered
-`download → convert → analyze → research → reply` — and categories are additive, so a post can both
-download a video *and* trigger deep research. Downloads go to Boba (torrents), MeTube (video) or the
-generic Download Manager, landing in the **Asset Service** as a raw file plus a web-optimized `-web`
-rendition. Research produces documents. Both the assets/metadata and the generated text are
-**embedded into pgvector**, which is what makes everything **searchable by meaning** afterwards. The
-system posts a **status reply** to the original message (success/failure, metrics, asset references),
-marks the post processed (still re-processable on request), and the semantic index becomes queryable
-from any client. The diagram's backbone is the additive, ordered dispatch feeding a single semantic
-index.
+posts in a channel. Thready always works with the **complete post** — the root message plus its full
+chain of organic replies, never the system's own status replies. This "complete post" framing is the
+first thing to understand, because it is why a hashtag added in a *reply* still steers processing: the
+reply is part of the same logical post.
+
+The arrival raises a `post.received` event, and the BackgroundTasks queue **claims the post exactly
+once** so an event storm cannot process it twice. Pre-processing then extracts every hashtag, link,
+attachment, and the full thread context — everything downstream steps will need.
+
+The post is then **classified** by hashtag and content type. If the tags are missing or too weak, an
+**indirect-determination** step infers intent from the content itself: a GitHub link implies research,
+a torrent link implies download, a YouTube link implies video. If it still cannot be classified, the
+post is not dropped — it is generically ingested (stored, embedded, indexed) and queued for manual
+review.
+
+Classification produces a **dispatch** of one or more Skills, ordered `download → convert → analyze →
+research → reply`. Categories are **additive**, which is the single most important behaviour here: a
+post tagged `#Research #Video` both downloads the video *and* runs deep research, rather than one
+winning over the other. The ordering only sequences the steps; it does not make them exclusive.
+
+The work then fans out. Downloads go to Boba (torrents), MeTube (video), or the generic Download
+Manager, landing in the **Asset Service** as a raw file plus a web-optimized `-web` rendition. Research
+produces documents. Both the assets/metadata and the generated text are **embedded into pgvector** —
+this embedding step is precisely what makes everything **searchable by meaning** afterwards, and it is
+the step that silently produces garbage if the hash embedder is in use `[GAP: 1]`.
+
+Finally the system posts a **status reply** to the original message (success/failure, metrics, asset
+references), marks the post processed (still re-processable on request), and the semantic index becomes
+queryable from any client. The diagram's backbone is that single idea: an additive, ordered dispatch
+feeding one semantic index, with a status reply closing the loop back to where the human is looking.
 
 ## 3. Complete posts: root + reply chain
 

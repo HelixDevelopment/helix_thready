@@ -15,6 +15,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — transport, event catalog, sticky/one-time, replay |
 | 2 | 2026-07-21 | swarm (review pass) | Add OpenAPI 3.1 SSE subscription contract (§8) per CONVENTIONS §6 |
+| 3 | 2026-07-22 | swarm (Pass 3 depth) | Fold verified `pkg/nats` mechanics (ephemeral `DeliverNew`+`AckExplicit`, `LimitsPolicy` `EVENTBUS` stream, `SubjectPrefix`+`sanitizeType`, payload re-marshal); anti-bluff on durable replay; add sticky-invalidation sequence (§4.1) |
+| 4 | 2026-07-22 | swarm (Pass 3 depth, cont.) | Split the §5 event-lifecycle-diagram explanation into true multi-paragraph form (produce+claim linchpin → emitted event stream → client durable-replay + reprocess) per CONVENTIONS §4 |
 
 ## Table of Contents
 
@@ -22,6 +24,7 @@
 2. [The `event.Event` envelope (verified interface)](#2-the-eventevent-envelope-verified-interface)
 3. [Subject naming & namespacing](#3-subject-naming--namespacing)
 4. [One-time vs sticky events + invalidation](#4-one-time-vs-sticky-events--invalidation)
+4.1. [Sticky-event invalidation flow](#41-sticky-event-invalidation-flow)
 5. [Event lifecycle diagram](#5-event-lifecycle-diagram)
 6. [Durable replay for disconnected clients](#6-durable-replay-for-disconnected-clients)
 7. [Event catalog (MVP)](#7-event-catalog-mvp)
@@ -41,9 +44,25 @@ transports** behind one event model:
   channels, publish timeout, dead-subscriber cleanup). **VERIFIED** at source: `bus.New(config)`,
   `Config{BufferSize, PublishTimeout, CleanupInterval, MaxSubscribers}`.
 - `pkg/nats` — a **NATS JetStream** adapter that mirrors the same pub/sub surface but persists
-  every published event in a JetStream stream. **VERIFIED**: `nats.New(ctx, Config{URL,
-  StreamName,…})` calls `ensureStream()` and exposes `Publish(e *event.Event) error`,
-  `Subscribe(...)`, `Close()`. The default stream name is `EVENTBUS`.
+  every published event in a JetStream stream. **Re-read at source this pass** (`pkg/nats/nats.go`):
+  `nats.New(ctx, Config{URL, StreamName, SubjectPrefix, ConnectTimeout})` calls `ensureStream()`
+  and exposes `Publish(e *event.Event) error`, `Subscribe(ctx, t event.Type) (<-chan *event.Event,
+  func(), error)`, and `Close()`. `ensureStream()` creates one stream (default name `EVENTBUS`)
+  with `Storage: FileStorage` and **`Retention: LimitsPolicy`**, capturing the wildcard
+  `"<SubjectPrefix>.>"` (default prefix `eventbus`). `Publish` JSON-marshals the event and calls
+  `js.Publish(subject, data)` synchronously.
+
+> **Anti-bluff note on durability (important).** The verified `pkg/nats.Subscribe` opens an
+> **ephemeral push subscription** with **`DeliverNew()` + `AckExplicit()`** — meaning a
+> subscriber sees only events published *after* it subscribes and its cursor does **not** survive
+> a disconnect. So the base adapter does **not**, by itself, provide the durable replay this
+> document relies on: durable per-client replay (§6) is a capability the thin **Event Bus
+> Service** `[BUILD-NEW]` must add by driving the JetStream `JetStreamContext` directly with a
+> **named durable consumer** (`Durable`/`DeliverAll` + explicit ack floor), not by calling
+> `pkg/nats.Subscribe`. The `EVENTBUS` stream being `LimitsPolicy` + `FileStorage` is what makes
+> that durable replay *possible* (events are retained on disk within the limits window); the base
+> `Subscribe` simply does not expose it. This is the honest boundary between the VERIFIED engine
+> and the `[BUILD-NEW]` service.
 
 At Thready's **Large scale** `[OPERATOR]`, **JetStream is the primary transport**; the
 in-process bus is used only for tight intra-service fan-out. Delivery guarantee is
@@ -90,6 +109,15 @@ story across services (the same `TraceID` flows from `post.received` through eve
 `post.processing.*` to `post.processed`). Payloads are typed Go structs serialized to JSON by
 the JetStream adapter (`Publish` marshals to JSON — VERIFIED).
 
+> **Verified payload caveat.** `Event.Payload` is `interface{}`, and the `pkg/nats` package doc
+> spells out the consequence at source: JSON cannot preserve the concrete Go type, so on the
+> **receiving** side a payload published as a struct arrives as a generic
+> `map[string]interface{}` (numbers as `float64`, etc.). Consumers therefore **re-marshal** the
+> received `Payload` into their concrete type, or carry a discriminator in `Type`/`Metadata`.
+> Thready already carries that discriminator in `Type` (e.g. `post.received`) and in `Metadata`,
+> so every consumer does `json.Unmarshal(reencode(evt.Payload), &typed)` on receipt — never a
+> naked type assertion on `evt.Payload`.
+
 ```go
 // Thready publishes a post.received event on ingestion (illustrative composition
 // over the verified event.New signature).
@@ -106,22 +134,34 @@ if err := jetstreamBus.Publish(evt); err != nil { /* retry with backoff */ }
 
 ## 3. Subject naming & namespacing
 
-The JetStream adapter derives a subject from the event `Type` (VERIFIED: `subjectFor(t)` +
-`sanitizeType`). Thready's convention layers three namespaces so one JetStream cluster can host
-all three environments and enforce tenant isolation:
+The JetStream adapter derives the wire subject as `"<SubjectPrefix>.<sanitizeType(event.Type)>"`
+(VERIFIED: `subjectFor(t)` = `b.subjectPrefix + "." + sanitizeType(t)`). `sanitizeType` splits the
+dot-notation type into tokens and replaces any NATS-illegal character *inside a token* (`*`, `>`,
+whitespace) with `_`, preserving the **dot separators between tokens** and the token count so
+routing is stable; an empty type maps to `_`. The default `SubjectPrefix` is `eventbus` and the
+default stream `EVENTBUS` captures `"<prefix>.>"`.
+
+Thready layers three namespaces onto that primitive **by composing them into the two knobs the
+adapter actually exposes** — `SubjectPrefix` and `event.Type`:
 
 ```
-thready.<env>.<account_id>.<event.type>
-        │      │            └── dot-notation event type, e.g. post.processed
-        │      └── account UUID (or "system" for global events)
-        └── dev | sta | prod
+thready.<env> . <account_id>.<event.type>
+└── SubjectPrefix ┘  └────── event.Type (dot-notation) ──────┘
+   e.g. thready.prod      e.g. 9c1e….post.received  → wire: thready.prod.9c1e_….post.received
 ```
 
-Example subjects: `thready.prod.9c1e….post.received`, `thready.prod.system.channel.health`.
-Consumers filter by subject wildcards, e.g. a per-account client subscribes to
-`thready.prod.9c1e….>` (all events for its account) while the Processing service consumes
-`thready.prod.*.post.received` across accounts. This directly resolves
-`[OPEN: OVERVIEW-2]` — env isolation is achievable with subject prefixes on a shared cluster.
+Concretely: the environment lives in the **`SubjectPrefix`** (`thready.dev` / `thready.sta` /
+`thready.prod`), and the account id + event type are composed into the **`event.Type`** the
+publisher passes (e.g. `event.New("9c1e….post.received", …)` or, for global events,
+`"system.channel.health"`). Because a UUID contains `-` (legal in a NATS token) but the sanitizer
+would rewrite any stray `*`/`>`, account ids are lower-cased UUIDs and safe. Consumers then filter
+by subject wildcards: a per-account client subscribes to `thready.prod.9c1e_….>` (all events for
+its account) while the Processing service consumes `thready.prod.*.post.received` across accounts.
+This directly resolves `[OPEN: OVERVIEW-2]` — env isolation is achievable with the `SubjectPrefix`
+knob on a shared cluster, with no change to the verified adapter. (Because the base adapter derives
+one subject per `Type`, the account-in-`Type` composition is the mechanism that makes per-tenant
+wildcards work; the thin Event Bus Service owns building these composite `Type` strings so callers
+never hand-format subjects.)
 
 ## 4. One-time vs sticky events + invalidation
 
@@ -158,6 +198,77 @@ func (p *Publisher) Invalidate(ctx context.Context, accountID, postID string) er
 }
 ```
 
+Note the code uses `p.js.PublishMsg`/`Delete` **directly on the JetStream context and the sticky
+store** — not `pkg/nats.Publish`/`Subscribe` — because (per the anti-bluff note in §1) sticky
+last-value + invalidate + durable replay are precisely the capabilities the base adapter does not
+expose. The sticky store is either a **compacted subject** on a dedicated stream (`MaxMsgsPerSubject
+= 1`) or a `nats.KeyValue` bucket; both are separate from the `LimitsPolicy` `EVENTBUS` stream that
+carries one-time events (see `[OPEN: EVT-2]`).
+
+### 4.1 Sticky-event invalidation flow
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant CL as Client (WS/SSE)
+  participant EBS as Event Bus Service
+  participant KV as Sticky store (compacted subject / KV + L1 cache)
+  participant BUS as JetStream (EVENTBUS stream, LimitsPolicy)
+  participant PROC as Skill Dispatch
+  participant API as REST /v1
+
+  Note over PROC,KV: Normal run — sticky last-value is written on every transition
+  PROC->>KV: PublishState(post.state) last-value keyed post_id (TTL 24h)
+  PROC->>BUS: publish thready.<env>.<acct>.post.state.<id> (one-time delivery)
+  CL->>EBS: Subscribe(account, types=post.state,post.processed)
+  EBS->>KV: read sticky snapshot (current last-value)
+  KV-->>EBS: {state,progress,asset_refs,last_error}
+  EBS-->>CL: deliver STICKY snapshot FIRST
+  BUS-->>EBS: then live events (durable consumer)
+  EBS-->>CL: fan-out live post.state / post.processed
+
+  Note over API,PROC: Reprocess invalidates the sticky value
+  API->>PROC: POST /v1/posts/{id}/reprocess (RBAC-gated)
+  PROC->>KV: Invalidate(post_id) — Delete last-value + L1 entry
+  PROC->>BUS: publish post.state.invalidate.<id>
+  BUS-->>EBS: post.state.invalidate
+  EBS-->>CL: invalidate → client clears stale sticky
+  PROC->>KV: PublishState(post.state=reprocessing) — re-establishes sticky
+  PROC->>BUS: publish fresh post.state (re-run)
+  EBS-->>CL: new sticky snapshot on next connect
+```
+
+> Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/sticky-invalidation.mmd`.
+
+**Explanation (for readers/models that cannot see the diagram).** The diagram separates the two
+regimes a sticky value passes through: steady-state delivery and invalidation-on-reprocess. In the
+top half, every state transition the Skill Dispatch engine makes does two things — it writes the
+current `{state, progress, asset_refs, last_error}` as the **last value** into the sticky store
+keyed by `post_id` (with the 24 h defensive TTL), and it publishes the same `post.state` as a
+one-time event onto the `LimitsPolicy` `EVENTBUS` stream. The sticky write is what a *future*
+subscriber will read; the one-time publish is what *current* subscribers see live. This dual write
+is deliberate: it decouples "what is true now" (the sticky snapshot) from "what just changed" (the
+live event), so neither a slow client nor a fast producer can desynchronize a UI.
+
+The middle of the top half shows why sticky matters for connect latency. When a client subscribes
+through the Event Bus Service, the service first reads the sticky snapshot from the store and
+delivers it **before** any live event, then attaches the client's durable consumer to the live
+stream. The payoff is that a freshly opened dashboard paints the current state of every post
+immediately — no REST round-trip, no waiting for the next transition — and only then begins
+receiving deltas. This ordering (snapshot-first, then live) is the contract §8 promises clients.
+
+The bottom half is the invalidation flow, triggered by an explicit reprocess. The REST layer
+calls into Skill Dispatch, which invalidates the sticky value in two coordinated steps: it
+`Delete`s the last-value entry (and its L1 cache mirror) so no stale snapshot can be served, and
+it publishes a `post.state.invalidate.<id>` event so any *connected* client can proactively clear
+the value it is currently showing. Without the explicit invalidate, a client that connected during
+the previous run could keep displaying a `done` snapshot while the post is actually re-running. The
+engine then immediately re-establishes the sticky value by publishing `post.state=reprocessing`,
+so the store is never left empty for long, and the next connect (or the next live event) reflects
+the fresh run. The TTL is the backstop for the one failure this dance cannot cover — a producer
+that crashes between `Invalidate` and the first re-established `PublishState` — after which the
+stale key simply expires rather than pinning forever.
+
 ## 5. Event lifecycle diagram
 
 ```mermaid
@@ -192,11 +303,13 @@ sequenceDiagram
 Herald ThreadReader publishes `post.received` to JetStream, where it is persisted. A durable
 pull consumer inside BackgroundTasks receives it (at-least-once, so possibly more than once).
 Before doing any work, BackgroundTasks performs the **single-claim** (a Postgres row lock) that
-deduplicates redeliveries — this is the linchpin that makes at-least-once safe. Once claimed,
-the Skill Dispatch engine runs and emits a stream of events: repeated one-time
+deduplicates redeliveries — this is the linchpin that makes at-least-once safe.
+
+Once claimed, the Skill Dispatch engine runs and emits a stream of events: repeated one-time
 `post.processing.progress` events for live UI, a **sticky** `post.state` event that JetStream
-retains as the last value for that `post_id`, and finally a one-time `post.processed`. On the
-client side, a client subscribes through the thin Event Bus Service, which opens a **durable
+retains as the last value for that `post_id`, and finally a one-time `post.processed`.
+
+On the client side, a client subscribes through the thin Event Bus Service, which opens a **durable
 consumer** per client; JetStream replays any events the client missed and then streams live
 ones, fanned out over WebSocket or SSE. If the client drops and reconnects, the durable
 consumer resumes and replays the backlog — no events are lost. Finally, when someone triggers a
@@ -350,12 +463,21 @@ client cannot subscribe to another account's subject).
 
 ## 11. Open items
 
-- `[OPEN: EVT-1]` JetStream retention window for the durable-replay backstop is
-  `[DEFAULT — adjustable]` 7 days / 50 GB per stream; final sizing depends on the deployment
-  pack's disk budget. Tracked as a workable item against the deployment area.
-- `[OPEN: EVT-2]` Whether `post.state` sticky uses a dedicated compacted stream vs a KV bucket
-  (`nats.KeyValue`) is an implementation choice; both satisfy last-value+invalidate. Decision
-  deferred to the Event Bus Service build (`[BUILD-NEW]`).
+- `[OPEN: EVT-1]` (narrowed). **Source-verified** that the default `EVENTBUS` stream is
+  `Storage: FileStorage`, `Retention: LimitsPolicy` (`ensureStream`, `pkg/nats/nats.go`), i.e. the
+  retention *policy* is already the right kind for a durable-replay backstop; only the **window
+  sizing** remains a deployment decision — `[DEFAULT — adjustable]` 7 days / 50 GB per stream —
+  set via the stream's `MaxAge`/`MaxBytes` at creation (the base `ensureStream` sets neither, so
+  the Event Bus Service `[BUILD-NEW]` must create/configure the stream with explicit limits).
+  Tracked against the deployment area.
+- `[OPEN: EVT-2]` Whether `post.state` sticky uses a dedicated **compacted** subject
+  (`MaxMsgsPerSubject = 1` on a `LimitsPolicy` stream) vs a KV bucket (`nats.KeyValue`) is an
+  implementation choice; both satisfy last-value + invalidate, and both are **separate** from the
+  verified `EVENTBUS` one-time stream (which is not compacted). Decision deferred to the Event Bus
+  Service build (`[BUILD-NEW]`).
+- `[NOTE: EVT-3]` `pkg/nats.Subscribe` is ephemeral (`DeliverNew`), so the durable per-client
+  replay of §6 is an Event Bus Service responsibility over the raw `JetStreamContext`, not a base
+  adapter feature (see the anti-bluff note in §1). Not an open verification — a build boundary.
 
 ---
 

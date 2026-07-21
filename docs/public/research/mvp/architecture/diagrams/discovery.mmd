@@ -1,5 +1,7 @@
 %% Helix Thready — Service discovery & dynamic port allocation
 %% Source of truth: helix_thready_research_request_final.md §8.2, §14.3
+%% Model: advertise + discover via discovery/pkg/broadcast (Announcer/Listener) —
+%%        there is NO central registry with Register/Resolve (DISC-1 correction, verified at source).
 flowchart TB
   subgraph Host["Hetzner host — rootless Podman Compose (env band)"]
     PP[port_prefix\nExposed(prefix, internalPort, taken)]:::c
@@ -8,17 +10,18 @@ flowchart TB
       STA[sta → 53xxx]:::b
       PRD[prod → 54xxx]:::b
     end
-    REG[(discovery registry\n+ mDNS advertise)]:::db
+    MC(((env multicast group\n_thready._tcp — NO central registry))):::db
     HC[observability/pkg/health\n/health/live /health/ready]:::c
   end
   SVC1[Ingestion] --> PP
   SVC2[Processing] --> PP
   SVC3[Asset Service] --> PP
   PP --> DEV & STA & PRD
-  SVC1 & SVC2 & SVC3 -->|register name,host,port,health| REG
+  SVC1 & SVC3 -->|broadcast.Announcer\nmulticast ServiceInfo + mDNS advertise| MC
   SVC1 & SVC2 & SVC3 -->|expose| HC
-  REG -->|browse/resolve| SVC2
-  RP[Reverse proxy\ndev./sta./thready. subdomains]:::c --> REG
+  SVC2 -->|broadcast.Listener\nDiscover + pickHealthy name/env| MC
+  MC -.->|discovered set\ngated by pkg/scanner + pkg/resilience| HC
+  RP[Reverse proxy\ndev./sta./thready. subdomains]:::c -->|health-filtered discovered view| MC
   classDef c fill:#1f6f43,stroke:#0c3b22,color:#eafff0;
   classDef db fill:#124a63,stroke:#062634,color:#e6f6ff;
   classDef b fill:#B6E376,stroke:#2f5d0b,color:#12210a;

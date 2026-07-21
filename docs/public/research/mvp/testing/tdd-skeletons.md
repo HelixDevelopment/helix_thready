@@ -2,12 +2,12 @@
   Title           : Helix Thready — TDD Reproduce-First Skeletons
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/testing/tdd-skeletons.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Status          : Draft — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (testing)
   Related         : ./test-strategy.md, ./test-types.md, ./challenges-scenarios.md,
-                    ./helixqa-banks.md, ../architecture/index.md, ../api/index.md,
-                    ../database/index.md
+                    ./helixqa-banks.md, ./acceptance-gates.md, ../architecture/index.md,
+                    ../api/index.md, ../database/index.md
 -->
 
 # Helix Thready — TDD Reproduce-First Skeletons
@@ -15,6 +15,8 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (testing) | Initial draft — RED-first Go/TS/SQL skeletons per component + anti-bluff gates |
+| 2 | 2026-07-22 | swarm (testing) | Pass 3 — added skeletons for Asset Service, User/Account provisioning, Event Bus service, Cache L1/L2, rate limiter, Security-KMP device tier, Cobra CLI, Bubble Tea TUI, Tauri desktop |
+| 3 | 2026-07-22 | swarm (testing) | Pass 4 (critic) — added §13.5 `/v1/downloads` enqueue + standardized completion-callback OpenAPI 3.1 contract test (previously asserted by banks but wire-contract not pinned) |
 
 Reproduce-first: **a failing RED test is the first artifact of any change**
 `[CONSTITUTION §11.4.43/146/115]` `[RESEARCH: request §Testing]`. This document gives concrete,
@@ -42,7 +44,22 @@ the gate that proves real behavior before Thready relies on it.
 - [11. Angular Web portal (TypeScript)](#11-angular-web-portal-typescript)
 - [12. Anti-bluff paired-mutation gates](#12-anti-bluff-paired-mutation-gates)
 - [13. API and event contract tests](#13-api-and-event-contract-tests)
-- [14. Gap-register items addressed](#14-gap-register-items-addressed)
+  - [13.1 `/v1/embeddings` OpenAI-shape](#131-v1embeddings-openai-shape-contract-gap-21) ·
+    [13.2 Per-adapter LLMProvider](#132-per-adapter-llmprovider-contract-gap-23) ·
+    [13.3 WebSocket/SSE processing-event](#133-websocketsse-processing-event-contract) ·
+    [13.4 `/v1/search` response envelope](#134-v1search-response-envelope-contract-gap-21) ·
+    [13.5 `/v1/downloads` + completion callback](#135-v1downloads--completion-callback-contract-gap-6366)
+- [14. Additional component & client skeletons](#14-additional-component--client-skeletons)
+  - [14.1 Asset Service (Go)](#141-asset-service-go) ·
+    [14.2 User Service / Account provisioning (Go)](#142-user-service--account-provisioning-go) ·
+    [14.3 Event Bus service (Go)](#143-event-bus-service-go) ·
+    [14.4 Cache L1/L2 (Go)](#144-cache-l1l2-go) ·
+    [14.5 Rate limiter (Go)](#145-rate-limiter-go) ·
+    [14.6 Security-KMP device-tier (Kotlin)](#146-security-kmp-device-tier-kotlin) ·
+    [14.7 Cobra CLI (Go)](#147-cobra-cli-go) ·
+    [14.8 Bubble Tea TUI (Go)](#148-bubble-tea-tui-go) ·
+    [14.9 Tauri Desktop (Rust + WebDriver)](#149-tauri-desktop-rust--webdriver)
+- [15. Gap-register items addressed](#15-gap-register-items-addressed)
 
 ## 1. The RED→GREEN loop
 
@@ -68,11 +85,16 @@ stateDiagram-v2
 you write a test that reproduces the desired behavior or the bug, and running it FAILS — that
 failure is expected and required (a test that passes before any code exists proves nothing).
 You then implement the **minimal** code to reach **GREEN**. From GREEN you **EXTEND** with edge,
-negative and error cases, keeping everything green. Finally the **paired-mutation gate** runs:
-the suite is executed once clean and once with a deliberately planted defect. If the mutated run
-still PASSes (exit ≠ 99) the test is a **BLUFF** and you return to RED to strengthen it; only
-when the clean run exits 0 and the mutated run exits 99 is the change **DONE**. This is the
-`challenges` round-304 / CONST-035 contract applied to every scaffold-touching change.
+negative and error cases, keeping everything green.
+
+Finally the **paired-mutation gate** runs: the suite is executed once clean and once with a
+deliberately planted defect. If the mutated run still PASSes (exit ≠ 99) the test is a **BLUFF**
+and you return to RED to strengthen it; only when the clean run exits 0 and the mutated run exits
+99 is the change **DONE**. This is the `challenges` round-304 / CONST-035 contract applied to
+every scaffold-touching change, and it is enforced twice over: by the in-engine
+`challenge.ValidateAntiBluff`
+([challenges-scenarios.md §2.1](./challenges-scenarios.md#21-the-challengeresult-contract--anti-bluff-types))
+and by the `G-ANTIBLUFF` gate ([acceptance-gates.md §5](./acceptance-gates.md#5-the-anti-bluff-meta-gate)).
 
 ## 2. Herald ThreadReader (Go)
 
@@ -484,7 +506,10 @@ func TestPairedMutation_Embeddings(t *testing.T) {
 }
 ```
 
-Gate driver (git-hook / pre-tag), mirroring `challenges_describe_challenge.sh`:
+Gate driver (git-hook / pre-tag), mirroring the verified in-house anti-bluff harness —
+`challenges/scripts/anti-bluff/bluff-scanner.sh` + `pre-commit-hook.sh` and `helix_qa`'s
+`challenges/scripts/mutation_ratchet_challenge.sh`
+([challenges-scenarios.md §7](./challenges-scenarios.md#7-the-describe-challenge-meta-runner-anti-bluff)):
 
 ```bash
 #!/usr/bin/env bash
@@ -508,12 +533,17 @@ resume/callback), Skill dispatch (DAG-order-only), VectorDB Qdrant (unverified p
 ## 13. API and event contract tests
 
 Integration tests assert not only *behavior* but the exact **wire contract** the clients and the
-in-house consumers depend on. Two contracts are pinned here as RED-first skeletons: the REST
-**OpenAPI 3.1** response shapes and the **WebSocket/SSE** processing-event envelope. These close
-two gap-register items that the behavior skeletons above do not: the `/v1/embeddings` OpenAI
-response shape and its configurable dimension `[GAP: §2.1 contract test / RAG dim hardcode]`, and
-per-adapter provider contracts `[GAP: §2.3 LLMProvider per-adapter contract tests]`.
-`[IN-HOUSE: embeddings, llmprovider, eventbus]` `[RESEARCH: final §19.11 SDK/OpenAPI 3.1]`
+in-house consumers depend on. Four contracts are pinned here as RED-first skeletons: the REST
+**OpenAPI 3.1** response shapes (`/v1/embeddings`, `/v1/search` and `/v1/downloads` + its
+completion callback) and the **WebSocket/SSE** processing-event envelope. These close two
+gap-register items that the behavior skeletons above do not: the `/v1/embeddings` OpenAI response
+shape and its configurable dimension
+`[GAP: §2.1 contract test / RAG dim hardcode]`, and per-adapter provider contracts
+`[GAP: §2.3 LLMProvider per-adapter contract tests]`; and they pin the **`/v1/search` response
+envelope** — the SLO-central endpoint whose contract carries the *fail-loudly-if-HashEmbedder*
+behavior `[GAP: §2.1]` that a purely behavioral test can miss when the stub returns a
+well-shaped-but-meaningless payload. `[IN-HOUSE: embeddings, llmprovider, eventbus, rag]`
+`[RESEARCH: final §19.11 SDK/OpenAPI 3.1]`
 
 ### 13.1 `/v1/embeddings` OpenAI-shape contract `[GAP: §2.1]`
 
@@ -674,7 +704,382 @@ func TestEvents_ProcessingEnvelope_StickyAndDurableReplay(t *testing.T) {
 }
 ```
 
-## 14. Gap-register items addressed
+### 13.4 `/v1/search` response-envelope contract `[GAP: §2.1]`
+
+`/v1/search` is the endpoint the whole semantic-search SLO hangs on, and its response contract
+encodes the single most dangerous scaffold trap in a wire-checkable form: the `embedder` field
+MUST name a **real** provider and the endpoint MUST **fail loudly with 503** — never return a
+well-shaped-but-meaningless body — when the non-semantic `HashEmbedder` is active
+(source of truth: [`../api/openapi.yaml`](../api/openapi.yaml) `operationId: search`, and the API
+area's [contract-tests.md](../api/contract-tests.md) `search` case). A behavior test that only
+checks "results came back" passes against the stub; the contract test below does not, because it
+asserts the `embedder` name, the score-descending ordering consumers rank on, the `took_ms` SLO
+badge, and the 503-on-hash guarantee. The fragment under test (quoted so the test is
+self-describing — pinned 1:1 to the API area schema):
+
+```yaml
+# OpenAPI 3.1 — fragment the contract test validates against (source of truth: ../api/openapi.yaml)
+openapi: 3.1.0
+paths:
+  /v1/search:
+    post:
+      operationId: search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:   { type: string }
+                mode:    { type: string, enum: [semantic, keyword, hybrid], default: hybrid }
+                sources: { type: array, items: { type: string, enum: [posts, generated, assets] } }
+                top_k:   { type: integer, minimum: 1, maximum: 100, default: 20 }
+                rerank:  { type: boolean, default: true }
+      responses:
+        "200":
+          description: Ranked hybrid-search results
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [source_id, kind, score]
+                      properties:
+                        source_id: { type: string, format: uuid }
+                        kind:      { type: string, enum: [post, generated, asset] }
+                        score:     { type: number }        # cosine / fused — results are score-DESC
+                        span:      { type: [string, "null"] }
+                        snippet:   { type: string }
+                  took_ms:  { type: integer }
+                  embedder: { type: string }               # MUST be a real llama provider, NOT hash
+        "503":
+          description: |
+            Semantic search requires a real embedding provider. Returned (loudly) instead of a
+            garbage-relevance 200 when HELIX_EMBEDDING_PROVIDER is the HashEmbedder stub (§2.1).
+```
+
+```go
+// RED: fails until /v1/search returns the ranked envelope, names a real embedder, meets the
+// < 500 ms SLO in took_ms, and 503s loudly when the HashEmbedder stub is active.
+func TestSearchContract_RankedEnvelope_RealEmbedder_AndFailsLoudOnHash(t *testing.T) {
+	ctx := context.Background()
+	c := newSemanticAPIClient(t) // real search service (no fakes beyond unit)
+
+	// 1) Happy path against a real llama embedder.
+	resp, code, err := c.Search(ctx, SearchRequest{Query: "download backoff config", Mode: "hybrid"})
+	require.NoError(t, err)
+	require.Equal(t, 200, code)
+	require.NotEmpty(t, resp.Results, "a seeded corpus returns ranked results")
+
+	// Envelope shape + the anti-HashEmbedder wire assertion.
+	require.NotEqual(t, "hash", resp.Embedder, "response must name a real provider, not the stub (§2.1)")
+	require.Less(t, resp.TookMs, 500, "took_ms surfaces the < 500 ms search SLO (§18 Q14)")
+	for i := 1; i < len(resp.Results); i++ {
+		require.GreaterOrEqual(t, resp.Results[i-1].Score, resp.Results[i].Score,
+			"results MUST be score-descending — consumers rank on this order")
+		require.Contains(t, []string{"post", "generated", "asset"}, resp.Results[i].Kind)
+	}
+
+	// 2) Fail-loudly: with the HashEmbedder planted, search MUST 503, never a shaped 200.
+	hashClient := newSemanticAPIClientWithProvider(t, "hash")
+	_, code, _ = hashClient.Search(ctx, SearchRequest{Query: "download backoff config"})
+	require.Equal(t, 503, code,
+		"HashEmbedder must yield a loud 503, not a well-shaped garbage-relevance 200 (§2.1 anti-bluff)")
+}
+```
+
+### 13.5 `/v1/downloads` + completion-callback contract `[GAP: §6.3/§6.6]`
+
+The download flow is asserted behaviorally in [§8](#8-download-manager-callback-go) and driven by
+both the HelixQA `download_asset.yaml` bank ([helixqa-banks.md §5](./helixqa-banks.md#5-concrete-banks))
+and the `download_callback` challenge ([challenges-scenarios.md §3](./challenges-scenarios.md#3-banks-from-yamljson)) —
+those banks assert `expect_status: 201`, `$.job_id`, and a callback body carrying `state:completed`
+and `result_asset_ref`. But unlike `/v1/embeddings` and `/v1/search`, the **wire contract** those
+assertions ride on was not pinned, so a reshaped enqueue response or a drifted callback envelope
+would slip past them. This skeleton pins both halves — the synchronous enqueue response **and** the
+asynchronous completion-callback payload (the standardized callback the gap register mandates be
+extracted as a reusable module, §6.6) — as an OpenAPI 3.1 fragment plus a RED contract test.
+`[BUILD-NEW: Download Manager + standardized callback]` `[RESEARCH: final §19.11]`
+
+```yaml
+# OpenAPI 3.1 — fragment the contract test validates against (source of truth: ../api/openapi.yaml)
+openapi: 3.1.0
+paths:
+  /v1/downloads:
+    post:
+      operationId: enqueueDownload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:          { type: string, format: uri }
+                callback_url: { type: string, format: uri }   # where the push callback is delivered
+                segments:     { type: integer, minimum: 1, default: 1 }
+      responses:
+        "201":
+          description: Download job accepted and queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [job_id, state]
+                properties:
+                  job_id: { type: string, format: uuid }
+                  state:  { type: string, enum: [queued, downloading] }
+components:
+  schemas:
+    DownloadCallback:                # the standardized completion callback (§6.6 shared schema)
+      type: object
+      required: [job_id, state, progress]
+      properties:
+        job_id:           { type: string, format: uuid }
+        state:            { type: string, enum: [queued, downloading, completed, failed] }
+        progress:         { type: integer, minimum: 0, maximum: 100 }
+        result_asset_ref: { type: [string, "null"] }   # set on completed; the Asset Service ref
+        error:            { type: [string, "null"] }    # set on failed; null otherwise
+```
+
+```go
+// RED: fails until POST /v1/downloads returns the {job_id,state} envelope and the completion
+// callback delivers the standardized {job_id,state,progress,result_asset_ref,error} shape.
+func TestDownloadContract_EnqueueEnvelope_AndStandardizedCallback(t *testing.T) {
+	ctx := context.Background()
+	c := newDownloadAPIClient(t) // real Download Manager (no fakes beyond unit)
+	sink := newCallbackSink(t)   // records the inbound push callback (§6.5 push, not poll)
+
+	// Enqueue: the synchronous response is pinned to {job_id, state}.
+	resp, code, err := c.Enqueue(ctx, EnqueueRequest{URL: bigTestFileURL(t), CallbackURL: sink.URL()})
+	require.NoError(t, err)
+	require.Equal(t, 201, code, "enqueue is accepted with 201")
+	require.NotEmpty(t, resp.JobID, "response carries a job_id consumers correlate on")
+	require.Contains(t, []string{"queued", "downloading"}, resp.State)
+
+	// Completion: the async push callback is pinned to the standardized shared schema (§6.6).
+	cb := sink.WaitForTerminal(t, resp.JobID)
+	require.Equal(t, resp.JobID, cb.JobID, "callback correlates to the enqueue job_id")
+	require.Equal(t, "completed", cb.State, "a push callback (not a poll) reports terminal state (§6.5)")
+	require.Equal(t, 100, cb.Progress, "progress reaches 100 on completion")
+	require.NotEmpty(t, cb.ResultAssetRef, "completed callback carries the Asset Service ref")
+	require.Empty(t, cb.Error, "error is null on the success path")
+}
+```
+
+## 14. Additional component & client skeletons
+
+Rev 1 covered the ingest→process→reply core. This section extends RED-first coverage to **every
+remaining major service and client surface** so the coverage cube
+([test-types.md §0](./test-types.md#0-the-coverage-cube)) has a first artifact in each cell.
+Import paths follow the decision matrix (`digital.vasic.*` / `dev.helix.*`).
+
+### 14.1 Asset Service (Go)
+
+The Asset Service derives from `digital.vasic.Catalogizer` `[GAP: §6.1]` — content-addressed
+store, dedup, and **signed-URL** serving with MinIO/S3 parity `[GAP: §3.2]`. `[IN-HOUSE: catalogizer, storage]`
+
+```go
+// RED: fails until the Asset Service stores content-addressed, dedups, and serves via signed URL.
+func TestAsset_StoreDedupAndSignedURL(t *testing.T) {
+    ctx := context.Background()
+    as := newAssetService(t) // real MinIO (no fakes beyond unit) — integration tier
+
+    ref1, err := as.Put(ctx, fixtureBytes(t, "panel.png"), Meta{Kind: "image", Sensitivity: "normal"})
+    require.NoError(t, err)
+    ref2, _ := as.Put(ctx, fixtureBytes(t, "panel.png"), Meta{Kind: "image"}) // identical bytes
+    require.Equal(t, ref1.ContentHash, ref2.ContentHash, "content-addressed dedup: one object, not two")
+    require.Equal(t, 1, as.DistinctObjects(ctx), "duplicate upload must not create a second object")
+
+    url, err := as.SignedURL(ctx, ref1, 5*time.Minute)
+    require.NoError(t, err)
+    require.NotEmpty(t, url, "MinIO signed-URL parity with the CloudFront-style path (§3.2)")
+    require.Equal(t, fixtureBytes(t, "panel.png"), httpGet(t, url), "signed URL serves the exact bytes")
+}
+```
+
+### 14.2 User Service / Account provisioning (Go)
+
+Proves the multi-tenant bootstrap ladder — **root → Account → invited user** — and tenant
+isolation `[RESEARCH: final §18 Q10]`. `[IN-HOUSE: auth, user service]`
+
+```go
+// RED: fails until root can bootstrap an Account and invite a user, and tenants are isolated.
+func TestProvisioning_RootBootstrapsAccount_ThenInvitesUser(t *testing.T) {
+    ctx := context.Background()
+    us := newUserService(t)
+    root := us.LoginRoot(t)
+
+    acct := must(us.CreateAccount(ctx, root, "Acme"))          // only root creates accounts
+    invite := must(us.InviteUser(ctx, root, acct.ID, "u@acme"))
+    userTok := must(us.AcceptInvite(ctx, invite.Token, "pw"))
+
+    require.Equal(t, acct.ID, us.WhoAmI(ctx, userTok).AccountID, "invited user belongs to the account")
+
+    // Tenant isolation: a user of Account A cannot see Account B's resources.
+    other := must(us.CreateAccount(ctx, root, "Globex"))
+    _, err := us.ListChannels(ctx, userTok, other.ID)
+    require.ErrorIs(t, err, ErrForbidden, "cross-tenant read must be refused (§18 Q10)")
+}
+```
+
+### 14.3 Event Bus service (Go)
+
+Service-level publish/subscribe over NATS JetStream `[IN-HOUSE: eventbus]` — complements the
+wire-envelope contract test in [§13.3](#13-api-and-event-contract-tests) with durability under
+consumer restart.
+
+```go
+// RED: fails until the Event Bus publishes durably and a restarted consumer resumes at its cursor.
+func TestEventBus_DurableConsumer_ResumesAfterRestart(t *testing.T) {
+    ctx := context.Background()
+    bus := newEventBus(t) // real NATS JetStream
+
+    sub := bus.DurableSubscribe(ctx, "post.processing", "worker-1")
+    for i := 0; i < 10; i++ { require.NoError(t, bus.Publish(ctx, "post.processing", eventN(i))) }
+
+    got := drainN(t, sub, 5)                 // consume 5, then simulate a crash
+    sub.Close()
+    sub2 := bus.DurableSubscribe(ctx, "post.processing", "worker-1") // same durable name
+    got = append(got, drainN(t, sub2, 5)...) // must get the remaining 5, none lost/duplicated
+    require.Equal(t, 10, distinctSeq(got), "durable consumer replays exactly the un-acked events")
+}
+```
+
+### 14.4 Cache L1/L2 (Go)
+
+`digital.vasic.cache` two-tier (in-proc L1 + Redis-class L2) `[RESEARCH: final §19.x]` — proves
+read-through, TTL, and L1↔L2 coherence. `[IN-HOUSE: cache]`
+
+```go
+// RED: fails until read-through + write-invalidation keep L1 and L2 coherent.
+func TestCache_ReadThrough_AndInvalidationCoherence(t *testing.T) {
+    ctx := context.Background()
+    c := newTwoTierCache(t)          // L1 in-proc + real L2
+    var loads int
+    load := func(ctx context.Context, k string) (string, error) { loads++; return "v1:" + k, nil }
+
+    require.Equal(t, "v1:k", must(c.GetOrLoad(ctx, "k", load)))
+    require.Equal(t, "v1:k", must(c.GetOrLoad(ctx, "k", load)))
+    require.Equal(t, 1, loads, "second read is served from cache, loader not called twice")
+
+    require.NoError(t, c.Invalidate(ctx, "k")) // must drop from BOTH tiers
+    _ = c.GetOrLoad(ctx, "k", load)
+    require.Equal(t, 2, loads, "after invalidation the loader runs again (no stale L1)")
+}
+```
+
+### 14.5 Rate limiter (Go)
+
+`digital.vasic.ratelimiter` `[IN-HOUSE: ratelimiter]` — the runtime the DDoS suite
+([performance-and-chaos.md §6](./performance-and-chaos.md#6-ddos--abuse-simulation)) floods.
+Proves deterministic shedding + `Retry-After`.
+
+```go
+// RED: fails until the limiter sheds excess deterministically with a Retry-After hint.
+func TestRateLimiter_ShedsExcess_WithRetryAfter(t *testing.T) {
+    rl := newRateLimiter(t, Limit{RPS: 100, Burst: 100})
+    var ok, shed int
+    for i := 0; i < 300; i++ { // 3x the burst in one instant
+        d := rl.Allow("tenant-A")
+        if d.OK { ok++ } else { shed++; require.Positive(t, d.RetryAfter, "429 carries Retry-After") }
+    }
+    require.Equal(t, 100, ok, "exactly the burst is admitted")
+    require.Equal(t, 200, shed, "the remainder is shed deterministically (DDoS gate)")
+    require.Zero(t, rl.Allow("tenant-B").WaitBlocked, "per-tenant isolation: B not starved by A")
+}
+```
+
+### 14.6 Security-KMP device-tier (Kotlin)
+
+`Security-KMP` is an in-memory stub `[GAP: §7.3]` — the device-tier integration test is the
+anti-bluff gate: a secret must round-trip through the **native Keychain/KeyStore** and survive a
+process restart, not sit in plaintext memory. `[IN-HOUSE: Security-KMP]`
+
+```kotlin
+// RED (Kotest, androidTest/iosTest): fails while the store is the in-memory stub.
+class SecureStoreTest : FunSpec({
+    test("secret survives process restart via native KeyStore/Keychain") {
+        val store = SecureStore.platform()          // Android KeyStore / iOS Keychain — NOT in-memory
+        store.put("thready.tg.session", secretBytes)
+
+        val reopened = SecureStore.platform()        // simulate a fresh process / cold start
+        reopened.get("thready.tg.session") shouldBe secretBytes   // fails if backed by RAM only
+        store.isBackedByNativeKeystore() shouldBe true            // anti-bluff: assert the real backend
+    }
+})
+```
+
+### 14.7 Cobra CLI (Go)
+
+The Cobra CLI is a first-class surface `[OPERATOR: Web+CLI first]`. Proves a command drives the
+real API and renders results deterministically. `[IN-HOUSE: helix_track_cli pattern]`
+
+```go
+// RED: fails until `thready search` calls /v1/search and prints ranked rows within the SLO.
+func TestCLI_Search_RendersRankedResults(t *testing.T) {
+    srv := startFakeAPIForUnit(t)          // unit tier may fake the HTTP boundary; e2e uses dev.
+    var out bytes.Buffer
+    cmd := newRootCmd(WithAPIBase(srv.URL), WithOut(&out))
+    cmd.SetArgs([]string{"search", "backoff config", "--limit", "5", "--json"})
+
+    require.NoError(t, cmd.Execute())
+    var res struct{ Items []struct{ Title string }; Ms int }
+    require.NoError(t, json.Unmarshal(out.Bytes(), &res))
+    require.NotEmpty(t, res.Items, "CLI renders ranked results")
+    require.Less(t, res.Ms, 500, "CLI surfaces the search latency badge < 500 ms")
+}
+```
+
+### 14.8 Bubble Tea TUI (Go)
+
+The Bubble Tea TUI is driven with `teatest` (golden-frame assertions) `[RESEARCH: final §9.4]`.
+`[IN-HOUSE: TUI (Lipgloss/Bubble Tea)]`
+
+```go
+// RED: fails until the TUI model renders the channel list and reacts to key input.
+func TestTUI_ChannelList_RendersAndNavigates(t *testing.T) {
+    tm := teatest.NewTestModel(t, newAppModel(seedChannels(3)), teatest.WithInitialTermSize(80, 24))
+    teatest.WaitFor(t, tm.Output(), func(b []byte) bool { return bytes.Contains(b, []byte("Channels (3)")) })
+
+    tm.Send(tea.KeyMsg{Type: tea.KeyDown}) // navigate
+    tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
+    teatest.WaitFor(t, tm.Output(), func(b []byte) bool { return bytes.Contains(b, []byte("Thread view")) })
+    tm.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
+    tm.WaitFinished(t, teatest.WithFinalTimeout(2*time.Second))
+}
+```
+
+### 14.9 Tauri Desktop (Rust + WebDriver)
+
+The Tauri core is tested with `cargo test`; the desktop journey via the `challenges`
+`DesktopAdapter` (Tauri WebDriver) `[IN-HOUSE: challenges userflow]`.
+
+```rust
+// RED (cargo test): fails until the IPC command returns a real search payload.
+#[tokio::test]
+async fn search_command_returns_ranked_results() {
+    let app = tauri::test::mock_builder().build().unwrap();
+    let res: SearchResponse = tauri::test::invoke(&app, "search",
+        serde_json::json!({ "q": "backoff config", "limit": 5 })).await.unwrap();
+    assert!(!res.items.is_empty(), "IPC search returns ranked rows");
+    assert!(res.ms < 500, "desktop surfaces the < 500 ms search SLO");
+}
+```
+
+The full desktop e2e (window renders, click-through) runs as a `DesktopFlowChallenge` via Tauri
+WebDriver ([challenges-scenarios.md §5](./challenges-scenarios.md#5-user-flow-automation-adapters))
+with Panoptic-recorded video evidence.
+
+## 15. Gap-register items addressed
 
 - `[GAP: §5.1]` Herald MTProto/Max — §2 skeleton + §12 gate.
 - `[GAP: §4.1]` Skill dispatch engine — §4 skeleton.
@@ -682,11 +1087,14 @@ func TestEvents_ProcessingEnvelope_StickyAndDurableReplay(t *testing.T) {
 - `[GAP: §2.1]` HashEmbedder (semantic-not-hash) — §7 skeleton + §12 gate; `/v1/embeddings`
   OpenAI-shape + config-driven dimension contract — §13.1.
 - `[GAP: §2.3]` LLMProvider per-adapter contract tests — §13.2.
-- `[GAP: §6.3/§6.5/§6.6]` Download Manager + callbacks — §8 skeleton + §12 gate.
-- `[GAP: §7.2]` asymmetric JWT / RBAC — §9 skeleton.
+- `[GAP: §6.3/§6.5/§6.6]` Download Manager + callbacks — §8 skeleton + §12 gate; `/v1/downloads`
+  enqueue envelope + standardized completion-callback OpenAPI 3.1 contract — §13.5.
+- `[GAP: §7.2]` asymmetric JWT / RBAC — §9 skeleton; tenant isolation / provisioning — §14.2.
 - `[GAP: §3.1]` Qdrant parity — §12 gate.
-- `[GAP: §7.3]` Security-KMP native storage — §12 gate (device-tier integration).
-- `[GAP: §12 anti-bluff sweep]` — §12 whole section.
+- `[GAP: §7.3]` Security-KMP native storage — §12 gate + §14.6 device-tier integration skeleton.
+- `[GAP: §6.1]` Catalogizer → Asset Service store/dedup — §14.1.
+- `[GAP: §3.2]` MinIO signed-URL parity — §14.1.
+- `[GAP: §12 anti-bluff sweep]` — §12 whole section; every §14 non-unit skeleton runs against real deps.
 
 ---
 

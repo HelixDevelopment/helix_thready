@@ -2,11 +2,11 @@
   Title           : Helix Thready — Coding Standards
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/development/coding-standards.md
-  Status          : Review — v0.2
-  Revision        : 2 (2026-07-21)
+  Status          : Review — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (development)
   Related         : ./index.md, ./contribution-guidelines.md, ./workable-items.md,
-                    ../testing/index.md
+                    ./workable-items-detail.md, ../testing/index.md
 -->
 
 # Helix Thready — Coding Standards
@@ -15,6 +15,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (development) | Initial draft — Go 1.26, TDD, patterns, SOLID, decoupling, concurrency |
 | 2 | 2026-07-21 | swarm (development, review) | Review pass — clarified operator precedence in the anti-bluff embedder guard |
+| 3 | 2026-07-22 | swarm (development, pass 3) | Anchored the anti-bluff embedder guard to the VERIFIED `HelixLLM.NewEmbedder` source signature (the exact silent-fallback trap it defends against) |
+| 4 | 2026-07-22 | swarm (development, critic pass) | Completeness fix — enumerated the **canonical 15 mandated test types** (authoritative final request §9.1) in §8 so every item's `test_types` field is verifiable against a self-contained reference; clarified sub-variants (mutation/contract/race/…) are refinements, not a 16th type |
 
 These are the engineering standards every `ATM-NNN` implementation must meet. They implement the
 final request §5.2 development principles and the Constitution's TDD `[§11.4.43]`, decoupling
@@ -64,12 +66,19 @@ flowchart LR
   EXT --> REV[Fable @ xhigh review §11.4.209]
 ```
 
-**Explanation (for readers/models that cannot see the diagram).** A requirement or bug first becomes
-a RED test that reproduces it precisely — never a fix attempt. Only after a completed root-cause
-investigation (the §11.4.102 Iron Law forbids fixing before understanding) does the minimal
-implementation follow, turning the same test GREEN. The work then extends to all edge cases and adds
-the applicable mandated test types, and finally passes the independent Fable review. The RED test is
-the contract: it must fail for the right reason before it is allowed to pass.
+**Explanation (for readers/models that cannot see the diagram).** The first two nodes are the
+discipline's hard order. A requirement or bug becomes a RED test that reproduces it precisely — never
+a fix attempt — and only *after* a completed root-cause investigation (the §11.4.102 Iron Law forbids
+fixing before understanding) does the minimal implementation follow, turning the same test GREEN. The
+edge from `RED` to `RC` to `IMPL` is deliberately not a shortcut: you may not skip the investigation
+node and jump straight to a patch.
+
+The tail of the flow is where a single passing test becomes releasable evidence. Once GREEN, the work
+extends to all edge cases and adds the applicable mandated test types (the 15-type set where
+relevant), and finally passes the independent Fable review `[§11.4.209]`. The RED test is the
+contract throughout: it must fail *for the right reason* before it is allowed to pass, which is what
+distinguishes a real reproduction from a test that would pass against a stub — the same anti-bluff
+property the paired-mutation gates (§8) enforce mechanically.
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: [diagrams/tdd-reproduce-first.mmd](./diagrams/tdd-reproduce-first.mmd).
 
@@ -194,6 +203,36 @@ func (p *Processor) TryClaim(ctx context.Context, postID int64) (bool, error) {
 
 ## 8. Anti-bluff discipline `[§11.4.27]`
 
+**The 15 mandated test types (canonical, VERIFIED — final request §9.1 / `[§11.4.27]`).** Every
+`ATM-NNN` names the *applicable subset* of these; the target is **100% test-type coverage per
+feature × platform cell** (every applicable type present), not a line-percentage. The testing area
+([../testing/index.md](../testing/index.md)) expands each into runnable banks; this is the reference
+list every item's `test_types` field is checked against:
+
+| # | Type | Notes |
+|---|------|-------|
+| 1 | **unit** | the only tier where mocks/stubs/TODO are permitted `[§11.4.27]` |
+| 2 | **integration** | real cross-module contracts; no fakes beyond unit |
+| 3 | **e2e** | full user-journey against the real system |
+| 4 | **full-automation** | end-to-end automated flows (no manual steps) |
+| 5 | **security** | authn/authz, secret-leak, fuzzing, dependency-CVE, attack sims |
+| 6 | **DDoS** | flood/abuse simulation |
+| 7 | **scaling** | horizontal/fan-out behavior under growth |
+| 8 | **chaos** | fault injection (container/broker/transfer kill → recover) |
+| 9 | **stress** | load beyond nominal to find the breaking point |
+| 10 | **performance** | SLO validation (API p95 < 150 ms, search < 500 ms) |
+| 11 | **benchmarking** | quantified throughput/latency baselines + regression tracking |
+| 12 | **UI** | rendering/interaction correctness (client surfaces) |
+| 13 | **UX** | usability/accuracy (e.g. OCR transcription fidelity, a11y) |
+| 14 | **Challenges** | `vasic-digital/challenges` per-feature real-use-case scenario banks |
+| 15 | **HelixQA** | `HelixDevelopment/helix_qa` YAML banks with **mandatory runtime evidence** (screenshots/logcat/video/stacktrace) — the org anti-bluff rule |
+
+Sub-variants an item may additionally cite — `mutation`/`paired-mutation` (§8 below),
+`contract` (Liskov substitutability, `ATM-064`), `race` (`go test -race`), `migration round-trip`
+(expand-contract, §10), `penetration`/`fuzzing` (rolled under **security**), `visual-regression`
+(Panoptic/`VisualRegression`/`ScreenDiff`, rolled under **UI**) — are refinements of the 15, not a
+16th category. An item that omits an *applicable* type is incomplete, not merely thin.
+
 A green test must prove **real behavior**, not a stub. This is the single most important standard for
 Thready because the gap register flags several dependencies as scaffolds:
 
@@ -205,6 +244,16 @@ Thready because the gap register flags several dependencies as scaffolds:
   the test detects real behavior. `ATM-058` runs this sweep before reliance.
 - **Never claim a stub works.** If `HELIX_EMBEDDING_PROVIDER` is the `HashEmbedder`, the code **fails
   loudly** in a RAG/search context (`ATM-040`), it does not warn-and-continue.
+
+> **The exact trap this guard defends against `[VERIFIED-SOURCE]`.** Read at source —
+> `HelixLLM/internal/knowledge/embedding_providers.go`:
+> `func NewEmbedder(provider, apiKey, model string, dimension int) (Embedder, error)` maps `"llama"`
+> → the real `LlamaEmbedder`, but `"hash"`, `"local"` **and any unrecognised provider name** →
+> `NewHashEmbedder(dimension)` — a deterministic non-semantic stub, today with only a startup WARNING
+> (`cmd/helixllm/embedder_warning_test.go`). A typo in `HELIX_EMBEDDING_PROVIDER` therefore silently
+> yields garbage relevance. The `RequireSemanticEmbedder` guard below rejects `hash`/`local`/unknown
+> in any semantic context, and `ATM-040` converts the WARNING into a hard fail; a paired-mutation gate
+> proves the guard actually fires.
 
 ```go
 // Anti-bluff guard: refuse the non-semantic hash embedder in any semantic context (closes GAP 2.1).

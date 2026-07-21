@@ -14,6 +14,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft: URL-path `/v1`, additive-vs-breaking, buf breaking gate |
 | 2 | 2026-07-21 | swarm (API & SDKs) | Linked the breaking-change gate to its RED-first skeleton in contract-tests.md |
+| 3 | 2026-07-22 | swarm (API & SDKs) | Closed `[OPEN: ver-2]`: `GET /version` (build + contract identity + active deprecations) is now in `openapi.yaml` (`getVersion` → `VersionInfo`). |
 
 ## Table of Contents
 
@@ -133,8 +134,11 @@ When `/v2` ships, `/v1` enters a deprecation window (`[DEFAULT — adjustable]` 
 
 - `[OPEN: ver-1]` The concrete OpenAPI-diff tool (`oasdiff` vs a custom Go differ) is
   selected with the tooling pack; the *policy* (additive-only, local gate) is fixed here.
-- `[OPEN: ver-2]` Whether to expose a machine-readable `/v1/version` endpoint (build +
-  contract hash) is `[DEFAULT — adjustable]`; proposed yes for support diagnosability.
+- `[RESOLVED: ver-2]` The machine-readable **`GET /v1/version`** endpoint is now specified
+  in `openapi.yaml` (`getVersion` → `VersionInfo`: `api_version`, `contract_hash`,
+  `proto_package`, `build_commit`, `built_at`, and active `deprecations` with `Sunset`
+  dates). It is served under `/v1` for discoverability but is operational in spirit; support
+  quotes `contract_hash` + `build_commit` to pin a client to the exact deployed contract.
 
 ---
 

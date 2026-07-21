@@ -2,12 +2,12 @@
   Title           : Helix Thready — Test Strategy (governing document)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/testing/test-strategy.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Status          : Draft — v0.3
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (testing)
   Related         : ./index.md, ./test-types.md, ./tdd-skeletons.md, ./static-analysis.md,
-                    ./performance-and-chaos.md, ../architecture/index.md, ../api/index.md,
-                    ../database/index.md, ../CONVENTIONS.md
+                    ./performance-and-chaos.md, ./acceptance-gates.md, ../architecture/index.md,
+                    ../api/index.md, ../database/index.md, ../CONVENTIONS.md
 -->
 
 # Helix Thready — Test Strategy (governing document)
@@ -15,6 +15,8 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (testing) | Initial draft — TDD covenant, coverage model, no-fakes rule, gating, fixtures, framework matrix |
+| 2 | 2026-07-22 | swarm (testing) | Pass 3 — linked per-type acceptance-gates ladder; closed ios-xctest + canonical-helixqa-repo opens (source-verified) |
+| 3 | 2026-07-22 | swarm (testing) | Pass 4 (critic) — added §12 test-determinism & flaky-test policy; added real coverage-matrix DDL + `coverage_holes` view to §10 |
 
 ## Table of contents
 
@@ -29,8 +31,9 @@
 - [9. Independent AI review integration](#9-independent-ai-review-integration)
 - [10. Feature-map → coverage tracking (DocProcessor)](#10-feature-map--coverage-tracking-docprocessor)
 - [11. Priority & sequencing](#11-priority--sequencing)
-- [12. Gap-register items addressed](#12-gap-register-items-addressed)
-- [13. Open items](#13-open-items)
+- [12. Test determinism & flaky-test policy](#12-test-determinism--flaky-test-policy)
+- [13. Gap-register items addressed](#13-gap-register-items-addressed)
+- [14. Open items](#14-open-items)
 
 ## 1. Purpose & scope
 
@@ -115,18 +118,20 @@ flowchart TB
 workable item. The first artifact is a **RED** test that reproduces the missing behavior or the
 bug; the author then implements only enough to turn it **GREEN**. On commit, a local pre-commit
 git-hook runs the fast gates — `go vet`, `gofmt`, race-enabled unit tests on the Go side, and
-format/lint on the TypeScript, Kotlin, Swift and Rust sides. Both feed the **anti-bluff
-paired-mutation gate**: the suite is run once clean (must exit 0) and once with a deliberately
-planted mutation (must exit 99); a suite that passes its own mutation is itself a bluff and
-blocks. Passing that, static analysis (SonarQube + Snyk) runs and the **quality gate** either
-bounces the change back to the author or forwards it to **independent AI review** (Fable at
-xhigh, Opus xhigh fallback), which iterates until it emits **GO**. Only then does the **pre-tag
-full-suite retest** run — all 15 test types plus the Challenges and HelixQA banks — collecting
-runtime evidence (screenshots, logcat, video, stack traces). A green, evidence-backed suite
-tags a project-prefixed release `PREFIX-version`, merged onto the latest main with no
-force-push, then fanned out to all four upstreams, from where the deployment area picks it up
-for rootless Podman Compose rollout. There is **no server-side CI** anywhere in this chain
-(§8).
+format/lint on the TypeScript, Kotlin, Swift and Rust sides.
+
+Both feed the **anti-bluff paired-mutation gate**: the suite is run once clean (must exit 0) and
+once with a deliberately planted mutation (must exit 99); a suite that passes its own mutation is
+itself a bluff and blocks. Passing that, static analysis (SonarQube + Snyk) runs and the
+**quality gate** either bounces the change back to the author or forwards it to **independent AI
+review** (Fable at xhigh, Opus xhigh fallback), which iterates until it emits **GO**.
+
+Only then does the **pre-tag full-suite retest** run — all 15 test types plus the Challenges and
+HelixQA banks — collecting runtime evidence (screenshots, logcat, video, stack traces). A green,
+evidence-backed suite tags a project-prefixed release `PREFIX-version`, merged onto the latest
+main with no force-push, then fanned out to all four upstreams, from where the deployment area
+picks it up for rootless Podman Compose rollout. There is **no server-side CI** anywhere in this
+chain (§8).
 
 Concrete RED-first skeletons per component are in [tdd-skeletons.md](./tdd-skeletons.md).
 
@@ -160,7 +165,7 @@ owned modules already use, so tests are portable across the org.
 | **TypeScript / Angular** | **Jasmine + Karma** (unit + coverage) | **Cypress** (e2e, `cypress-axe` a11y) / Playwright | Stryker (optional) | Visual regression via Panoptic / VisualRegression / ScreenDiff `[§11.4.162]` |
 | **Kotlin / Android** | JUnit; Compose UI tests | instrumented `androidTest`; HelixQA ADB | — | crash/ANR via HelixQA `detector/android.go` |
 | **KMP** (shared logic) | **Kotest** / kotlin-test | shared-module contract tests | — | `Security-KMP`/`Database-KMP` are scaffolds → anti-bluff gate first |
-| **Swift / iOS** | **XCTest** | XCUITest; HelixQA | — | XCTest inferred; confirm before wiring `[OPEN]` |
+| **Swift / iOS** | **XCTest** | XCUITest; HelixQA (Appium+XCUITest) | — | confirmed `[RESEARCH: final §9.4]`; HelixQA iOS via `nexus-mobile-ios` bank |
 | **Rust** (Tauri core) | **`cargo test`** | Tauri WebDriver via `challenges` DesktopAdapter | — | |
 | **Flutter** (alt family) | **`flutter_test`** | `integration_test` | — | only if HarmonyOS/Aurora deprioritized |
 
@@ -211,6 +216,13 @@ The visual-regression family (Panoptic / VisualRegression / ScreenDiff) currentl
 `[GAP: §9.3]`; Thready wires it into the same local git-hook gate so it runs pre-commit for
 touched UI, closing that gap without introducing server CI.
 
+The exact gate that runs at each of these local tiers — one machine-checkable gate per mandated
+test type, with a stable gate ID, precondition, script-decidable pass condition, required
+evidence, blocking severity and the uniform exit-code protocol (0 pass / 1 iterate / 77 skip /
+99 anti-bluff blocker) — is the **acceptance-gate register** in
+[acceptance-gates.md](./acceptance-gates.md). The pre-commit / pre-push / pre-tag bands above map
+one-to-one to the three tiers of that document's gate ladder.
+
 ## 9. Independent AI review integration
 
 Every change also passes **independent AI review on Fable @ xhigh (Opus xhigh fallback)**
@@ -232,8 +244,46 @@ wires DocProcessor so that:
 - a feature documented but missing a mandated type surfaces as a coverage hole in the pre-tag
   gate — the docs↔tests sync signal `[CONSTITUTION §11.4.65/106]`.
 
+The matrix is a real, queryable artifact, not prose — one row per `(feature, platform, type)`
+cell, so the pre-tag gate can `SELECT` the holes rather than eyeball a table. The store is SQLite
+(portable, no server, committed alongside results); the schema `[DEFAULT — adjustable]`:
+
+```sql
+-- coverage.sqlite — DocProcessor feature-map → test-type coverage (one row per cube cell)
+CREATE TABLE IF NOT EXISTS coverage_cell (
+    feature       TEXT     NOT NULL,               -- from the DocProcessor feature-map
+    platform      TEXT     NOT NULL,               -- svc|web|cli|tui|desktop|mobile (§17 app matrix)
+    test_type     TEXT     NOT NULL,               -- one of the 15 mandated types
+    applicable    INTEGER  NOT NULL DEFAULT 1,     -- 1 if the type applies to this cell (§17 matrix)
+    exists_test   INTEGER  NOT NULL DEFAULT 0,     -- a test of this type exists for the cell
+    last_green    TEXT,                            -- ISO-8601 of last GREEN run (NULL = never green)
+    has_evidence  INTEGER  NOT NULL DEFAULT 0,     -- non-unit types: runtime evidence captured
+    evidence_ref  TEXT,                            -- path/URI into qa-results (screenshot/video/…)
+    gate_id       TEXT,                            -- the acceptance-gate that adjudicates the cell
+    doc_ref       TEXT,                            -- documentation_refs path backing the feature
+    updated_at    TEXT     NOT NULL,
+    PRIMARY KEY (feature, platform, test_type)
+);
+
+-- A cell is a coverage HOLE (blocks the pre-tag gate) when an applicable type is missing,
+-- never went green, or — beyond unit — produced no evidence. The gate runs exactly this query:
+CREATE VIEW IF NOT EXISTS coverage_holes AS
+    SELECT feature, platform, test_type, gate_id, doc_ref
+    FROM   coverage_cell
+    WHERE  applicable = 1
+      AND (exists_test = 0
+           OR last_green IS NULL
+           OR (test_type <> 'unit' AND has_evidence = 0));
+```
+
+A non-empty `coverage_holes` result is a red pre-tag gate; each row names the missing
+`(feature, platform, type)`, the `gate_id` that would adjudicate it, and the `doc_ref` that
+documented the feature — closing the docs↔tests loop mechanically. This is the SQL realization of
+the GREEN predicate in §3.
+
 `[OPEN: docs-chain-tooling]` the HTML/PDF export of the coverage report SKIPs on hosts without
-pandoc/weasyprint; the matrix itself (SQLite + Markdown) is always produced.
+pandoc/weasyprint; the matrix itself (the SQLite table above + a rendered Markdown view) is always
+produced.
 
 ## 11. Priority & sequencing
 
@@ -247,26 +297,71 @@ pandoc/weasyprint; the matrix itself (SQLite + Markdown) is always produced.
    Desktop → Mobile.
 4. **Performance/scaling/DDoS/chaos** validated on `sta.` before the first production tag.
 
-## 12. Gap-register items addressed
+## 12. Test determinism & flaky-test policy
+
+The evidence covenant (§2) has a silent adversary: **non-determinism**. A test that passes only
+sometimes, or is quietly retried until it goes green, manufactures a green summary line without a
+reliable behavioral proof behind it — which is exactly the bluff class §5 forbids. A flaky test is
+therefore treated **not** as a nuisance to paper over with a blanket retry, but as a first-class
+defect on the same severity ladder as a missing feature until it is either fixed or explicitly
+quarantined `[CONSTITUTION §11.4]` `[DEFAULT — adjustable]`.
+
+**Determinism-first construction.** Tests are written to be deterministic by default: no wall-clock
+`sleep`-based waits (use event/poll-until conditions and the `challenges` liveness/stale-threshold
+guard, see [challenges-scenarios.md §1.1](./challenges-scenarios.md#11-verified-pkg-surface-from-source));
+no shared mutable fixtures across parallel cases (each integration case owns an ephemeral
+schema/bucket/subject, per §7); seeded randomness (a fixed `-seed`, logged in the evidence so a
+failure is replayable); and no order-dependence (`go test -shuffle=on` is on in the pre-push band).
+Race is always on for Go (`-race`, `G-UNIT`).
+
+**Retry policy — bounded, visible, evidence-preserving.** Non-unit suites MAY retry a failed case
+at most **twice**, and only under three hard rules: (1) every attempt captures its own runtime
+evidence — a case that passes on retry still carries the passing attempt's evidence, and the
+failed attempts' evidence is retained, never discarded; (2) a case that needed a retry to pass is
+recorded as **FLAKY** (a distinct outcome from PASS) and emitted in the pre-tag report, not folded
+into the green count; (3) retries are **forbidden** for the anti-bluff (`G-ANTIBLUFF`), contract
+(`G-CONTRACT`), security (`G-SECRET`/`G-SONAR`/`G-SNYK`) and DR (`G-DR`) gates — a bluff, a broken
+wire contract, a leaked secret or a missed RPO/RTO is never flaky, it is simply failing.
+
+**Flake budget & quarantine.** The FLAKY outcome feeds a budget: a case that flakes on **≥ 2 of
+the last 20 recorded runs** is auto-quarantined — moved behind a `flaky` build tag, filed as an
+`ATM-NNN` workable item with the retained failed-attempt evidence attached, and **excluded from the
+green count but reported as an open coverage hole** for its cell (§10, `has_evidence`/`last_green`
+stay unsatisfied). Quarantine is a tracked risk with an owner and expiry — never a silent skip; the
+cell it belongs to cannot report GREEN while the quarantine is open. This makes flakiness a
+**visible debt** that blocks coverage completion rather than an invisible tax on the green bar.
+
+**Determinism as an anti-bluff signal.** A suite whose result flips under `-shuffle`, `-race`, or a
+seed change is, by the §5 definition, not proving stable behavior; the paired-mutation gate and the
+`challenges` `StatusStuck`/`StatusTimedOut` liveness outcomes are the mechanical backstops that
+turn "hangs / flips / spins" into a deterministic RED rather than an intermittent, ignorable amber.
+
+## 13. Gap-register items addressed
 
 - `[GAP: §9.4]` DocProcessor feature-map → coverage — §10.
-- `[GAP: §9.2]` HelixStream (SCAFFOLD) — deferred; `[OPEN: helixstream-scope]` in §13.
+- `[GAP: §9.2]` HelixStream (SCAFFOLD) — deferred; `[OPEN: helixstream-scope]` in §14.
 - `[GAP: §12 anti-bluff sweep]` — paired-mutation gate mandated for every scaffold dep — §5.
 - `[GAP: §12 CI-equivalent gating]` — local git-hook + pre-tag retest — §8.
 - `[GAP: §12 decoupling audit]` — contract tests assert config-injected/project-not-aware reuse
   (detailed in [test-types.md §2](./test-types.md#2-integration-tests)).
 - `[GAP: §9.3]` visual-regression family has no CI — wired into local git-hook gate — §8.
 
-## 13. Open items
+## 14. Open items
 
+- `[RESOLVED: ios-xctest]` — the iOS unit framework is **XCTest**, fixed authoritatively by the
+  final research request framework matrix `[RESEARCH: final §9.4]` ("Swift/iOS — XCTest"); HelixQA
+  iOS e2e is **Appium + XCUITest** (verified `helix_qa banks/nexus-mobile-ios.yaml`). See
+  [helixqa-banks.md §8](./helixqa-banks.md#8-platform-coverage--caveats). The §6 framework matrix
+  no longer carries an `[OPEN]` on the iOS row.
+- `[RESOLVED: canonical-helixqa-repo]` — `helix_qa` and `HelixQA` **diffed**: both non-fork, same
+  module path `digital.vasic.helixqa`, same description, both actively synced → co-equal mirror
+  upstreams; import by module path. See
+  [helixqa-banks.md §10](./helixqa-banks.md#10-open-items).
 - `[OPEN: helixstream-scope]` — is streaming-app testing in MVP scope? Deferred by default
-  (§9.2 register).
-- `[OPEN: ios-xctest]` — XCTest is inferred as the iOS framework; source-confirm before wiring
-  (§13 re-verification backlog).
+  (§9.2 register); `HelixDevelopment/HelixStream` exists but is an early scaffold.
 - `[OPEN: docs-chain-tooling]` — provision pandoc/weasyprint so coverage/report siblings stop
-  SKIPping (§10.1 register).
-- `[OPEN: canonical-helixqa-repo]` — confirm `helix_qa` vs `HelixQA` canonical/mirror before
-  wiring banks (§9.1 register).
+  SKIPping (§10.1 register); the export tooling itself is proven in-org (committed `.html`/`.pdf`
+  siblings in helix_qa), so this is host provisioning only.
 
 ---
 

@@ -6,7 +6,7 @@
   Revision        : 1 (2026-07-21)
   Author          : Helix Thready documentation swarm (API & SDKs)
   Related         : ./openapi.yaml, ./versioning.md, ./event-bus-contract.md,
-                    ./error-model.md, ./authn-authz.md
+                    ./error-model.md, ./authn-authz.md, ./sdk-examples.md, ./asyncapi.yaml
 -->
 
 # Helix Thready — SDK Generation Strategy
@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft: helix_proto pattern, 11 languages, publishing |
 | 2 | 2026-07-21 | swarm (API & SDKs) | Linked the round-trip/anti-drift gates to their RED-first skeletons in contract-tests.md |
+| 3 | 2026-07-22 | swarm (API & SDKs) | Added the companion [sdk-examples.md](./sdk-examples.md) (7 usage recipes × 6 languages); grounded the thin-layer refresh on the verified `pkg/tokenmanager` lifecycle; firmed `[OPEN: sdk-1]` (Go/Rust → Connect streaming, REST languages → WS/SSE, per language column in the parity matrix). |
 
 ## Table of Contents
 
@@ -50,6 +51,12 @@ client", with `buf.gen.yaml` wiring `buf.build/protocolbuffers/go`,
 Over each generated core sits a **thin, hand-written idiomatic layer** per language
 (auth, retry/back-off, pagination iterators, event-stream helpers). Each SDK is versioned
 and published to its language registry, with full docs/guides (§13.1 of the final request).
+Concrete, side-by-side **usage** of that layer — the same seven recipes (auth, cursor
+iteration, idempotent async, search + embedder guard, event subscribe/reconnect, typed
+errors, transparent refresh) in Go, TypeScript, Python, Kotlin, Swift and Rust — is in
+[sdk-examples.md](./sdk-examples.md). The refresh recipe is grounded on the verified
+client-side token lifecycle in `digital.vasic.auth/pkg/tokenmanager`
+(`StoreTokenInfo`/`GetAccessToken`/`IsExpired`, `[VERIFIED]`).
 
 ## 2. The pipeline
 
@@ -90,16 +97,21 @@ document for the REST surface and the Protobuf definitions for the event/DTO pla
 the Protobuf, `buf generate` produces Go stubs (message types plus Connect service stubs)
 and, via the local `protoc-gen-prost`/`protoc-gen-tonic` plugins, Rust stubs with tonic;
 a `protoc-gen-dart` stanza produces Dart proto messages (kept commented until a Dart
-toolchain is present, exactly as helix_proto documents). From the OpenAPI, `openapi-generator`
-produces the TypeScript client (`typescript-fetch`), the Dart client (`dart-dio`), and the
-remaining REST clients (Python, JVM, Swift, C++, C#, Ruby, PHP). Go and Rust get their REST
-concerns from the same OpenAPI where a Connect RPC is not used, but their primary core is
-the buf-generated code. Zig has no first-class generator, so its SDK is hand-written over
-the C ABI (or plain REST) — the one exception to codegen. Every generated core is then
-wrapped by a thin, hand-written idiomatic layer that adds authentication, retry/back-off,
-pagination iterators and event-stream helpers, and each wrapped SDK is versioned and
-published to its language registry. Because both contracts are the single source of truth,
-regenerating is deterministic and drift is caught by gates (§6).
+toolchain is present, exactly as helix_proto documents).
+
+From the OpenAPI, `openapi-generator` produces the TypeScript client (`typescript-fetch`),
+the Dart client (`dart-dio`), and the remaining REST clients (Python, JVM, Swift, C++, C#,
+Ruby, PHP). Go and Rust get their REST concerns from the same OpenAPI where a Connect RPC is
+not used, but their primary core is the buf-generated code. Zig has no first-class generator,
+so its SDK is hand-written over the C ABI (or plain REST) — the one exception to codegen.
+
+Every generated core is then wrapped by a thin, hand-written idiomatic layer that adds
+authentication, retry/back-off, pagination iterators and event-stream helpers (the seven
+recipes made concrete in [sdk-examples.md](./sdk-examples.md)), and each wrapped SDK is
+versioned and published to its language registry. Because both contracts are the single
+source of truth, regenerating is deterministic and drift is caught by gates (§6) — a
+hand-edit to a `gen/` core fails `check-no-handwritten`, so ergonomics only ever live in the
+thin layer.
 
 ## 3. The `helix_thready_proto` repo layout
 
@@ -254,10 +266,11 @@ Reusing helix_proto's Makefile gates verbatim `[VERIFIED]`, run by local git-hoo
 
 - `[OPEN: api-3]` **Zig** has no first-class OpenAPI/Protobuf generator; its SDK is
   hand-written over the C ABI / REST. Tracked as a workable item; lowest priority (Low).
-- `[OPEN: sdk-1]` Whether to expose event streaming to SDKs over **Connect streaming**
-  (proto) or the REST WS/SSE contract per language is `[DEFAULT — adjustable]`: Go/Rust use
-  Connect streaming; REST-generated languages use WS/SSE. Reconciled in
-  [event-bus-contract.md](./event-bus-contract.md).
+- `[OPEN: sdk-1 — decided]` Event streaming per language is fixed in the
+  [sdk-examples.md §9 parity matrix](./sdk-examples.md): **Go** → Connect streaming (or WS),
+  **Rust** → tonic/WS, **TS/Python/Kotlin/Swift/C++/C#/Ruby/PHP** → WS/SSE, **Zig** → WS/SSE
+  only. Remaining open only in that the Connect-streaming proto RPCs are emitted with the
+  code (`[OPEN: api-1]`); the transport choice itself is settled.
 - `[OPEN: sdk-2]` A single JVM artifact serving Java/Kotlin/Groovy/Scala vs per-language
   artifacts — proposed single Kotlin-first artifact; confirm with the client teams.
 

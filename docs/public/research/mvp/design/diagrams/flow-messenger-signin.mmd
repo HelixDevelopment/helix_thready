@@ -1,0 +1,19 @@
+stateDiagram-v2
+  [*] --> Choose
+  Choose --> Interactive: interactive (phone/code/2FA)
+  Choose --> NonInteractive: non-interactive (env vars)
+  Interactive --> AwaitPhone: POST /v1/messengers/{kind}/signin
+  AwaitPhone --> AwaitCode: phone accepted -> code sent
+  AwaitCode --> AwaitPassword: 2FA enabled
+  AwaitCode --> SessionReady: no 2FA
+  AwaitPassword --> SessionReady: password accepted
+  AwaitCode --> AwaitCode: wrong code (retry, --danger)
+  AwaitPassword --> AwaitPassword: wrong password (retry)
+  NonInteractive --> ValidateEnv: read TG_* / MAX_* env
+  ValidateEnv --> SessionReady: complete + valid
+  ValidateEnv --> MissingEnv: absent/invalid -> 422
+  MissingEnv --> Choose: fix env, retry
+  SessionReady --> Persisted: store session (Security-KMP / server vault)
+  Persisted --> [*]: signed in
+  AwaitCode --> Expired: session/code expired
+  Expired --> Choose: restart sign-in

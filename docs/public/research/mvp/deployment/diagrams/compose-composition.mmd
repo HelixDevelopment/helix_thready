@@ -1,0 +1,18 @@
+flowchart TB
+  subgraph SRC["Source of truth"]
+    MODEL["[]compose.HelixService\n(containers pkg/compose)\nimages · env(from .env) · healthcheck · limits"]
+    PP["port_prefix.Exposed(prefix, internal, taken)\nfixed service order → deterministic host ports"]
+  end
+  subgraph RENDER["Render (per env)"]
+    TPL["template: compose.thready.<env>.yml"]
+  end
+  MODEL --> TPL
+  PP --> TPL
+  TPL -->|prefix 60, ⅓ limits, LE_STAGING then 0| DEVF["/home/thready/dev/compose.thready.dev.yml\nname: thready-dev · 60xxx"]
+  TPL -->|prefix 61, ⅓ limits| STAF["/home/thready/sta/compose.thready.sta.yml\nname: thready-sta · 61xxx"]
+  TPL -->|prefix 62, full limits| PRODF["/home/thready/prod/compose.thready.prod.yml\nname: thready-prod · 62xxx"]
+  EDGEF["/home/thready/edge/compose.edge.yml\nname: thready-edge · 80/443 (0.0.0.0)"]
+  DEVF & STAF & PRODF -. loopback host ports .- EDGEF
+  ENVDEV[".env dev (chmod 600)"] --> DEVF
+  ENVSTA[".env sta (chmod 600)"] --> STAF
+  ENVPROD[".env prod (chmod 600)"] --> PRODF

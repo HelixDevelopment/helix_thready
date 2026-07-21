@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: Figma plan, interactive vs. non‑interactive prototypes, motion/transition spec, export pipeline (Figma/PenPot/PDF/PNG/SVG/Lottie), review loop, Docs Chain wiring |
+| 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass to parity with the rest of the area: **corrected the unverified "first‑party Figma plugin" claim** to an explicit assumption + a source‑confirmed fallback bridge (§2, §7); added the **interactive‑prototype coverage & traceability matrix** (§4.1, every journey → screens → flow → states/motion → surfaces); added **prototype verification & runtime evidence** (§8.1, the anti‑bluff gate on the review loop); enumerated the design‑relevant subset of the 15 mandated test types the prototypes exercise |
 
 ## Table of contents
 
@@ -21,10 +22,12 @@
 - [2. Tooling: OpenDesign + Figma (+ PenPot, Lottie)](#2-tooling-opendesign--figma--penpot-lottie)
 - [3. Figma source‑of‑record structure](#3-figma-source-of-record-structure)
 - [4. Interactive prototypes](#4-interactive-prototypes)
+  - [4.1 Interactive‑prototype coverage & traceability matrix](#41-interactive-prototype-coverage--traceability-matrix)
 - [5. Non‑interactive prototypes](#5-non-interactive-prototypes)
 - [6. Motion & transition spec](#6-motion--transition-spec)
 - [7. Export pipeline](#7-export-pipeline)
 - [8. Review loop (design ≈ code review)](#8-review-loop-design--code-review)
+  - [8.1 Prototype verification & runtime evidence (anti‑bluff)](#81-prototype-verification--runtime-evidence-anti-bluff)
 - [9. Docs Chain wiring & versioning](#9-docs-chain-wiring--versioning)
 - [10. Deliverables checklist](#10-deliverables-checklist)
 - [11. Gaps & open items](#11-gaps--open-items)
@@ -48,7 +51,12 @@ From the request (§Design) `[OPERATOR]`:
 `[CONSTITUTION + request]` `[Q26]`:
 
 - **OpenDesign** (`nexu-io/open-design`, release 0.13.0 `[VERIFIED]`) is the design‑system **source
-  of truth** and ships a **first‑party Figma plugin**; it drives tokens and generates artifacts.
+  of truth** that drives tokens and generates artifacts. A **first‑party Figma plugin** for the
+  token→Figma sync is **assumed but NOT source‑confirmed** — only `export.ts` emitting
+  `tokens.json`/`theme.json`/CSS/PPTX/PDF was verified `[VERIFIED — export.ts]`. Treat the plugin as
+  `[ASSUMPTION — verify at integration]`; if it does not exist, the **source‑confirmed fallback** is to
+  import `tokens.json` into **Figma Variables** (the tokens map 1:1 to Figma variable collections/modes,
+  §3), so the design→code token sync does not depend on an unverified plugin.
 - **Figma** is the **source of record** for the component set and screen frames + the interactive
   prototype layer (in‑house standard `[IN-HOUSE]`).
 - **PenPot** — required by the request but **not currently used anywhere in the org**; introduced
@@ -92,6 +100,28 @@ surface:
 Each interactive prototype demonstrates: real state transitions (empty→skeleton→content), form
 validation/hints/tooltips, error/retry, theme toggle (light↔dark), language switch (en/ru/sr‑Cyrl),
 and the motion spec (§6). They are the artifact the independent‑agent review (§8) evaluates.
+
+### 4.1 Interactive‑prototype coverage & traceability matrix
+
+Each prototype is not free‑standing — it traces to the exact **wireframe screens** (structural
+contract) and the **UX flow** (behavioral contract) it makes clickable, and it must exercise the full
+interaction‑state set (the shared legend, [wireframes §1.1](./wireframes.md#11-interaction-state-legend))
+and the motion tokens it invokes (§6). This matrix is the checklist the review gate (§8) scores against,
+so no journey ships with a missing state or an off‑spec transition `[DEFAULT — adjustable]`:
+
+| Journey (prototype) | Wireframe screens | Flow (source of truth) | States exercised | Motion (§6) | Surfaces |
+|---------------------|-------------------|------------------------|------------------|-------------|----------|
+| **Add channel** | [§3.4 wizard](./wireframes.md#34-channels-list--add-channel-wizard) + [§3.11 messenger sign‑in](./wireframes.md#311-settings--branding--messenger-accounts) | [ux §2](./ux-flows.md#2-add-channel) + [§2.1](./ux-flows.md#21-messenger-sign-in-sub-flow) | default · validating (Resolve) · resolved‑preview · error (`422`/`403`) · success (optimistic add) | disclosure/step slide, toast enter | Web, Mobile |
+| **Process post** | [§3.6 post detail](./wireframes.md#36-post-detail-processing) + Dashboard queue | [ux §3](./ux-flows.md#3-process-post) + [§3.1 reprocess](./ux-flows.md#31-reprocess-sub-flow) | queued · running (per‑step %) · done · failed+retry · `409` already‑running | processing pulse (looped Lottie), progress fill | Web, Mobile, TUI (recorded) |
+| **Search** | [§3.7 search](./wireframes.md#37-search) | [ux §4](./ux-flows.md#4-search) | idle (recent) · skeleton · content · empty · degraded (`--warn`, hash‑embedder `[GAP: 2.1]`) · timeout | skeleton→content cross‑fade | Web, Mobile |
+| **Manage account** | [§3.10 admin](./wireframes.md#310-admin-accounts-users-billing-audit) + [§3.11 branding](./wireframes.md#311-settings--branding--messenger-accounts) | [ux §5](./ux-flows.md#5-manage-account) | default · dirty · previewing · validating · `422` AA‑fail · success (audit‑logged) | drawer slide, live‑preview re‑tint, toast | Web |
+
+Two honesty constraints the matrix carries forward from the wireframes/flows: the **Process‑post** and
+**Search** prototypes must render the *stub‑degraded* states (MeTube poll‑only `[GAP: 6.5]`, no‑OCR
+`[GAP: 2.6]`, hash‑embedder `[GAP: 2.1]`) — a prototype that only shows the happy path would misrepresent
+what ships today. The **TUI** track for Process‑post is a *recorded* walkthrough (asciinema/VHS), not a
+Figma click‑through, because the TUI's realization is Lipgloss, not Figma
+([wireframes §5](./wireframes.md#5-tui)).
 
 ## 5. Non‑interactive prototypes
 
@@ -159,8 +189,10 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/prototype-export-pipeline.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** OpenDesign (with its Figma plugin)
-seeds tokens into Figma, the source of record for the component set and screen frames. From Figma two
+**Explanation (for readers/models that cannot see the diagram).** OpenDesign seeds tokens into Figma
+— via its Figma plugin **if that plugin exists** (assumed, not source‑confirmed, §2), otherwise via a
+`tokens.json` → Figma Variables import — making Figma the source of record for the component set and
+screen frames. From Figma two
 prototype tracks branch: the interactive (clickable flows with transitions) and the non‑interactive
 (annotated redlines/specs). Both feed the independent‑agent review gate, which iterates back into
 Figma until it returns GO (§8). On GO, the export pipeline runs. Native OpenDesign/Figma exports
@@ -215,6 +247,34 @@ review:
     brand: icon-has-no-letters, helix-attribution-present
   decision: GO | ITERATE
 ```
+
+### 8.1 Prototype verification & runtime evidence (anti‑bluff)
+
+The review gate above is a **rubric**, but per the quality bar `[CONVENTIONS §7]` and the HelixQA
+anti‑bluff posture `[CONSTITUTION §11.4.27]` a `GO` is only credible with **runtime evidence** — a
+green rubric row must be backed by an artifact, not an assertion. The prototype phase therefore
+produces, per journey × surface × theme:
+
+- **Screenshots** of every state in the §4.1 matrix (default/skeleton/empty/error/validating/success),
+  light **and** dark, captured from the clickable prototype — the same cells the implementation's
+  `ScreenDiff` bank ([design-system §8](./design-system.md#8-visual-regression--a11y-testing)) will later
+  lock, so the prototype and the built UI are diffed against **one** baseline.
+- **Recorded interaction walkthroughs** (the interactive prototype click‑path; asciinema/VHS for the
+  TUI track) proving the transitions actually fire and honor `prefers-reduced-motion`.
+- **A contrast/a11y report** per frame (the AA ratios the branding editor and the token themes claim,
+  re‑asserted on the rendered pixels, not just the token file).
+
+This makes the prototypes a **testable predecessor** of the component library, not throwaway art: the
+frames feed the visual‑regression baseline (`THREADY‑DES‑VR‑01`, `[GAP: 9.3]`) and the adversarial
+**Challenges** decks (`THREADY‑DES‑CHAL‑01`, a mandated test type — a 40‑step reply chain, an
+all‑`failed` pipeline, RTL/Cyrillic overflow, a 4.5:1‑boundary accent), so a prototype that "looks
+done" is only accepted when its evidence exists. The design‑relevant subset of the **15 mandated test
+types** `[CONSTITUTION §11.4.27]` the prototype phase exercises: **visual‑regression**, **accessibility**,
+**interaction/e2e** (the clickable flows), **localization** (en/ru/sr‑Cyrl width), **responsive**
+(phone/tablet/desktop), and **Challenges** scenario banks; the remaining mandated types (unit,
+integration, security, performance/load, etc.) attach to the *implementation* the prototype specifies,
+in [component-library §9](./component-library.md#9-testing-the-library) and
+[../testing/index.md](../testing/index.md).
 
 ## 9. Docs Chain wiring & versioning
 

@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (System Architecture) | Initial draft — C4 context+container, scale, SLOs, cross-cutting |
+| 2 | 2026-07-22 | swarm (Pass 3 depth) | Split both C4 diagram explanations (context §3, container §4) into true multi-paragraph form per CONVENTIONS §4 — trust-boundary/actor-RBAC/messenger-duplex/outbound-only for context; five-plane failure-domain reading + the two load-bearing loop edges for container |
 
 ## Table of Contents
 
@@ -89,20 +90,39 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/c4-context.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** The context diagram places
-one box — *Thready Core* — at the center, surrounded by the actors and external systems it
-touches. Three human actor roles interact with it, mirroring the three-tier RBAC hierarchy:
-the **Operator / Root Admin** (exactly one exists) configures monitored channels, accounts and
-global policy; the **Account Admin** manages their own account and its users; the **Standard
-User** consumes the system — searching, browsing generated materials, and triggering
-reprocessing. On the external-system side there are four boundaries. **Telegram** and **Max**
-are bidirectional: Thready reads thread history *from* them (via user-level protocols, not
-just bot APIs) and posts *status replies* back to them. The **Cloud LLM fallback** boundary
-(Anthropic, Google, DeepSeek via `LLMProvider`) is outbound-only and used solely when the
-local HelixLLM stack cannot serve a request. The **Download targets** boundary (YouTube,
-torrents, and HTTP/FTP/SMB/NFS/WebDAV sources) is outbound-only and always reached through the
-delegated download layer, never by clients directly. Everything a client can see is mediated
-by Thready Core; clients never receive direct file URLs or raw messenger tokens.
+**Explanation (for readers/models that cannot see the diagram).** The context diagram exists to
+fix the *trust boundary* of the whole system before any internal structure is drawn: it places one
+box — *Thready Core* — at the centre and shows only the actors and external systems that cross that
+boundary. Reading it is reading the answer to "who talks to Thready, and in which direction?",
+which is what every later security, tenancy and integration decision is derived from. Nothing a
+client can see bypasses the centre box; that single fact is the root of the mediation invariant
+stated at the end of this explanation.
+
+Three human actor roles sit on the left, and they are drawn as three *distinct* roles precisely
+because they mirror the three-tier RBAC hierarchy one-for-one. The **Operator / Root Admin** — of
+which exactly one exists — configures the monitored channels, the messenger accounts and the global
+policy; the **Account Admin** manages their own account and its users and sets that account's
+branding; the **Standard User** only consumes — searching, browsing generated materials, and
+triggering reprocessing. Modelling the actors as the RBAC tiers here (rather than as a single
+undifferentiated "user") is deliberate: it makes visible at the very top level that authority is
+scoped *per account*, which [security-model.md](./security-model.md) then enforces on every request.
+
+On the external-system side there are two very different kinds of boundary, and the diagram
+distinguishes them by arrow direction. **Telegram** and **Max** are *bidirectional*: Thready reads
+thread history *from* them — using user-level protocols (MTProto for Telegram, OneMe + Bot API for
+Max), not merely bot APIs, because bots cannot backfill arbitrary channel history — and posts
+*status replies* back *to* them. That read-and-reply duplex is the reason ingestion and the reply
+step are the two ends of one messenger relationship rather than two separate integrations
+([messenger-ingestion.md](./messenger-ingestion.md)).
+
+The other two external boundaries are strictly *outbound* and only ever reached indirectly. The
+**Cloud LLM fallback** (Anthropic, Google, DeepSeek via `LLMProvider`) is used solely when the
+local HelixLLM stack cannot serve a request, so it is a degradation path, not a primary dependency.
+The **Download targets** boundary (YouTube, torrents, and HTTP/FTP/SMB/NFS/WebDAV sources) is always
+reached through the delegated download layer, never by clients directly. The payoff of drawing these
+as outbound-only is the mediation invariant: everything a client can see is produced *by* Thready
+Core, so clients never receive direct file URLs, raw messenger tokens, or a cloud provider's response
+unmediated — the boundary the diagram draws is also the boundary every credential and asset respects.
 
 ## 4. C4 Level 2 — Container view
 
@@ -170,26 +190,48 @@ flowchart TB
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `diagrams/c4-container.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** The container diagram groups
-Thready into five planes. The **Edge / API** plane terminates client traffic over HTTP/3 (QUIC)
+**Explanation (for readers/models that cannot see the diagram).** The container diagram decomposes
+Thready into five planes, and the grouping is not cosmetic: each plane is a *failure- and
+scaling-domain* boundary, so a plane can be reasoned about, deployed and scaled largely
+independently of the others. Read top to bottom it follows a request from the network edge down to
+durable storage, but the more important reading is horizontal — which plane owns which concern —
+because that ownership is what keeps the aggressive API SLO isolated from a 30-minute Skill run.
+
+The **Edge / API** plane terminates client traffic over HTTP/3 (QUIC)
 with HTTP/2 fallback via `vasic-digital/http3`, applies auth (`digital.vasic.auth`), rate
 limiting (`digital.vasic.ratelimiter`) and security headers (`security/pkg/headers`), and
 exposes a versioned REST `/v1` surface plus a realtime surface (a WebSocket hub +
-Server-Sent-Events for one-way streams). The **Messenger Ingestion** plane is the extended
-Herald: platform readers (Telegram via `gotd/td`, Max via a new adapter) feed a shared
-**ThreadReader** that assembles the root + organic reply chain and writes raw posts to
-PostgreSQL, then emits a `post.received` event. The **Processing plane** is the heart: the
-`post.received` event lands on the **EventBus** (NATS JetStream), is claimed exactly once by
-the Postgres-backed **BackgroundTasks** queue, and handed to the **Skill Dispatch Engine**,
-which orders and runs the matching Skills (from the HelixSkills Skill-Graph) using the LLM
-stack, VisionEngine+OCR, the download layer, and the semantic-search service. The **Assets &
-Download** plane fetches bytes (Download Manager for direct protocols, Boba for torrents,
-MeTube for streaming video) and hands completed artifacts to the **Asset Service** (built on
-Catalogizer), which stores them in the MinIO/S3 object tier. The **Data plane** holds the
-system of record (PostgreSQL), the co-located embedding index (pgvector), the object store
-(MinIO/S3 for the 50 TB+ target), and the L1/L2 cache. Two edges are worth stressing: the
-processing plane both *consumes from* and *produces to* the EventBus (closing the event loop,
-including the status reply back to Herald), and semantic indexing (`SEM → PGV`) happens for
+Server-Sent-Events for one-way streams). Immediately behind it, the **Messenger Ingestion** plane
+is the extended Herald: platform readers (Telegram via `gotd/td`, Max via a new adapter) feed a
+shared **ThreadReader** that assembles the root + organic reply chain, writes raw posts to
+PostgreSQL, and emits a `post.received` event. These two planes are the only ones that touch the
+outside world (clients on one side, messengers on the other), which is why every authentication and
+thread-assembly concern is concentrated there rather than smeared across the system.
+
+The **Processing plane** is the heart of the system and the reason the whole architecture is
+event-driven. The `post.received` event lands on the **EventBus** (NATS JetStream), is claimed
+*exactly once* by the Postgres-backed **BackgroundTasks** queue, and is handed to the **Skill
+Dispatch Engine**, which orders and runs the matching Skills (resolved from the HelixSkills
+Skill-Graph) using the LLM stack (HelixLLM / LLMProvider / HelixAgent), VisionEngine + OCR, the
+download layer, and the semantic-search service. Because this plane sits *behind* the EventBus +
+queue rather than on the request thread, a Skill can run for half an hour without ever threatening
+the < 150 ms API budget — the decoupling visible here is the concrete mechanism behind the
+latency-isolation driver of §5.
+
+The **Assets & Download** plane fetches bytes (Download Manager for direct protocols, Boba for
+torrents, MeTube for streaming video) and hands completed artifacts to the **Asset Service** (built
+on Catalogizer), which stores them in the MinIO/S3 object tier. The **Data plane** underneath holds
+the system of record (PostgreSQL), the *co-located* embedding index (pgvector), the object store
+(MinIO/S3 for the 50 TB+ target), and the L1/L2 cache. Keeping the four datastores in one plane
+makes the system-of-record boundary explicit: the relational store is authoritative and everything
+else — vectors, cache, even the durable event log — is derived and rebuildable from it
+([data-flow.md](./data-flow.md) §4).
+
+Two edges are worth stressing because they are easy to miss and load-bearing. First, the processing
+plane both *consumes from* and *produces to* the EventBus — the arrow back to the bus (and onward to
+Herald as the status reply) closes the event loop, so the pipeline's own outputs re-enter the same
+durable transport that fed it, which is what lets a reprocess or a status reply be just another
+event rather than a special case. Second, semantic indexing (`SEM → PGV`) happens for
 both original posts and every generated artifact, which is what makes "search by meaning"
 work across the whole corpus.
 

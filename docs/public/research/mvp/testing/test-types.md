@@ -6,7 +6,8 @@
   Revision        : 1 (2026-07-21)
   Author          : Helix Thready documentation swarm (testing)
   Related         : ./test-strategy.md, ./tdd-skeletons.md, ./performance-and-chaos.md,
-                    ./helixqa-banks.md, ./challenges-scenarios.md, ./static-analysis.md
+                    ./helixqa-banks.md, ./challenges-scenarios.md, ./static-analysis.md,
+                    ./acceptance-gates.md
 -->
 
 # Helix Thready — The 15 Mandated Test Types
@@ -14,11 +15,20 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (testing) | Initial draft — all 15 types with scope/tools/gates + applicability matrix |
+| 2 | 2026-07-22 | swarm (testing) | Pass 3 — each type's "Gate" line now carries a stable gate ID resolved in acceptance-gates.md |
 
 `[CONSTITUTION §11.4.27]` mandates all fifteen test types for **every feature × platform**
 cell, to **100 % test-type coverage**. Mocks/stubs/TODO are allowed **only in unit tests**;
 every other type exercises the **real system**. This document defines each type's **scope**,
 **tools**, **gate** (the pass condition that blocks a release when unmet) and **Thready mapping**.
+
+> **Gate IDs.** Each "Gate" line below is made machine-checkable — a stable gate ID, precondition,
+> script-decidable pass condition, required runtime evidence, tier and blocking severity — in the
+> [acceptance-gates.md](./acceptance-gates.md) register: unit → `G-UNIT`, integration → `G-INT`/
+> `G-CONTRACT`/`G-DECOUPLE`, e2e → `G-E2E`, full-automation → `G-FULLAUTO`, security →
+> `G-SECRET`/`G-SONAR`/`G-SNYK`, DDoS → `G-DDOS`, scaling → `G-SCALE`, chaos → `G-CHAOS`/`G-DR`,
+> stress → `G-STRESS`, performance → `G-PERF`, benchmarking → `G-BENCH`, UI → `G-UI`, UX →
+> `G-UX`, Challenges → `G-CHALLENGE`, HelixQA → `G-HELIXQA`.
 
 ## Table of contents
 
@@ -69,12 +79,14 @@ flowchart LR
 cube. The **feature axis** lists Thready's capabilities (ingest/thread-reader, process/Skill-
 dispatch, download/asset-service, semantic search, auth/RBAC, events over WebSocket/SSE),
 sourced from the DocProcessor feature-map. The **platform axis** lists the application matrix
-(Go services, Angular web, CLI, TUI, Tauri desktop, native mobile). A **cell** is the
-intersection of one feature and one platform. The **test-type axis** is the ordered list of all
-15 mandated types. A cell is GREEN only when every test type *applicable to that cell* exists,
-runs green, and — for every type except unit — produces runtime evidence. The applicability of
-each type to each cell is fixed by the matrix in §17; the cube, not a line-percentage, is the
-release gate.
+(Go services, Angular web, CLI, TUI, Tauri desktop, native mobile). The **test-type axis** is the
+ordered list of all 15 mandated types.
+
+A **cell** is the intersection of one feature and one platform. A cell is GREEN only when every
+test type *applicable to that cell* exists, runs green, and — for every type except unit —
+produces runtime evidence. The applicability of each type to each cell is fixed by the matrix in
+§17; the cube, not a line-percentage, is the release gate, and each cell's per-type pass/fail is
+adjudicated by the gate IDs in [acceptance-gates.md](./acceptance-gates.md).
 
 ---
 
@@ -148,7 +160,7 @@ release gate.
   validate the rate-limiter, back-pressure and circuit-breakers hold.
 - **Tools.** `vegeta`/`k6` flood generators; assertions on `digital.vasic.ratelimiter`;
   connection-storm against WebSocket. Full plan in
-  [performance-and-chaos.md §5](./performance-and-chaos.md#5-ddos--abuse-simulation).
+  [performance-and-chaos.md §6](./performance-and-chaos.md#6-ddos--abuse-simulation).
 - **Gate.** Under flood, legitimate p95 stays within SLO or degrades gracefully (429 with
   `Retry-After`), no OOM, no crash; the rate-limiter sheds excess deterministically.
 - **Thready mapping.** `/v1/*` endpoints, `/v1/search`, WS event subscription, login endpoint

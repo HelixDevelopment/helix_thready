@@ -16,6 +16,8 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: design system, brand assets, theming, wireframes, UX flows, component library, prototypes |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: fixed cross-link anchors (numbered to match target ToCs), noted `account_branding` reconciliation with canonical `accounts.branding` JSONB, tracked `challenges` scenario bank + delegated-branding open items |
+| 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass to implementation-ready: re-verified all `design_system` token/component/adapter names at source (`gh vasic-digital/design_system`); deepened wireframes (per-screen validation/state tables, CLI flags/exit-codes, **verified** TUI keymap + Lipgloss bindings from `helix_track/llms_verifier/.../tui`, per-platform mobile map); expanded UX flows (+messenger sign-in, +reprocess diagrams); completed component per-platform variant matrix + 6 more contracts + state-lifecycle diagram; finalized brand-assets geometry + concrete platform manifests + slogan-placement matrix; added shipped-theme precedents. 4 new diagrams. |
+| 4 | 2026-07-22 | swarm (design · critic pass) | Completeness/consistency pass: made the index the **canonical registry** — completed the [Open items](#open-items) list (was 4 of 14; now all `THREADY-DES-01…-14`) and added the [Workable-items registry](#workable-items-registry) (was scattered across files; now consolidated with owning gap + file). Brought `prototypes.md` to area depth (Pass 3): corrected the **unverified "first-party Figma plugin"** claim to an assumption + source-confirmed Figma-Variables fallback; added the interactive-prototype traceability matrix + prototype runtime-evidence gate. |
 
 This is the canonical entry point for the **Design & UX** documentation of Helix Thready. It
 specifies the design system (derived from **OpenDesign** and the shared in‑house
@@ -33,6 +35,7 @@ non‑interactive prototype plans. All authors follow **[../CONVENTIONS.md](../C
 - [Sources of truth](#sources-of-truth)
 - [Verified vs. assumption ledger](#verified-vs-assumption-ledger)
 - [Gap‑register items owned by this area](#gap-register-items-owned-by-this-area)
+- [Workable-items registry](#workable-items-registry)
 - [Open items](#open-items)
 - [Conventions applied](#conventions-applied)
 
@@ -147,12 +150,20 @@ downstream, the design system and the prototype exports are consumed by the user
 ## Verified vs. assumption ledger
 
 - **VERIFIED:** The `design_system` token names, exact hex values, `.ds-*` component classes, and
-  the three Angular adapters (`ThemeService`, `I18nService`, `FooterComponent`) are reproduced
-  from source. The helix‑green brand `#B6E376`, light accent `#446E12` (6.03:1 on white), and dark
-  accent `#B6E376` (13.56:1 on `#020817`) are measured, not invented.
-- **ASSUMPTION / `[DEFAULT — adjustable]`:** The **Thready secondary teal** hex, the exact
-  launcher‑icon geometry, motion durations beyond the two shipped tokens, and every wireframe
-  layout are proposed defaults pending operator review and a formal Logo.png eyedrop capture.
+  the Angular adapters (`ThemeService`, `I18nService`, `ThemeToggleComponent`,
+  `LanguagePickerComponent`, `FooterComponent`, `DS_CONFIG`/`DS_LOCALES`/`DS_DICTIONARY`) are
+  reproduced from source — **re‑verified at source via `gh` in Pass 3**. The helix‑green brand
+  `#B6E376`, light accent `#446E12` (6.03:1 on white), and dark accent `#B6E376` (13.56:1 on
+  `#020817`) are measured, not invented; the two sibling shipped themes (`vasic-red` accent 6.47/7.23,
+  `helix-ota-blue`) are likewise measured. The footer heart is tinted with the verified `--accent-ink`
+  token via the localized `footer.made`/`a11y.love`/`footer.by` keys. The **TUI** Bubble Tea/Lipgloss
+  pattern and its keymap are verified against real source (`helix_track/llms_verifier/…/tui`).
+- **ASSUMPTION / `[DEFAULT — adjustable]`:** The exact launcher‑icon geometry (now pinned to a
+  numeric spec in [brand-assets §3.1](./brand-assets.md#31-numeric-geometry-spec) but pending the
+  OpenDesign authoring pass), motion durations beyond the two shipped tokens, the Thready composite
+  public API names, and every wireframe layout are proposed defaults pending operator/team review.
+  (The **Thready secondary teal** is no longer an assumption — it is now the eyedrop‑captured
+  `#ABDDC9`, see THREADY‑DES‑01 below.)
 - **SCAFFOLD (do not claim it works):** `helix_design` (non‑web design arm) and `helix_ui`
   (Flutter) are scaffolds; `UI-Components-KMP` and the KMP fleet have no CI/publish; the
   VisualRegression family has no CI. These are tracked below and in the relevant files.
@@ -172,15 +183,54 @@ Each is addressed with a design plan and/or a tracked workable item in the linke
 | `[GAP: 9.3 VisualRegression family]` Panoptic/ScreenDiff/ReplayBuffer no CI + Thready `challenges` banks | FOUNDATION | [design-system.md](./design-system.md#8-visual-regression--a11y-testing), [component-library.md](./component-library.md) |
 | `[GAP: 7.3 Security-KMP]` mobile secure storage stub (gates mobile release) | SCAFFOLD | [wireframes.md](./wireframes.md#6-mobile-wireframes) (release gate note) |
 
+## Workable-items registry
+
+The concrete build/hardening tasks this area defines, consolidated (they were previously only inline
+in each file). Each closes one or more gap‑register items and is ordered by the **Web + CLI first**
+priority `[OPERATOR]`. IDs are stable and referenced verbatim by the owning files.
+
+| Workable item | What it delivers | Closes | Defined in |
+|---------------|------------------|--------|------------|
+| **THREADY‑DES‑DS‑01** | Add `tokens/themes/thready.css` + Thready `DS_CONFIG` upstream; publish `@vasic-digital/design-system` to npm; mature the standalone package | `[GAP: 8.1]` | [design-system §9](./design-system.md#9-gaps-addressed--tracked-workable-items), [theming §11](./theming.md#11-gaps--open-items), [brand-assets §11](./brand-assets.md#11-gaps--open-items) |
+| **THREADY‑DES‑WEB‑01** | Angular composite set (§5) on the published primitives (git dep until npm) | `[GAP: 8.1]` | [component-library §10](./component-library.md#10-build-backlog--gaps) |
+| **THREADY‑DES‑TUI‑01** | Lipgloss component styles from the token export (verified pattern) | — (pattern verified) | [component-library §10](./component-library.md#10-build-backlog--gaps) |
+| **THREADY‑DES‑VR‑01** | CI for the visual‑regression family (`ScreenDiff`/`VisualRegression`/`ReplayBuffer`) + wire the theme×state bank | `[GAP: 9.3]` (half 1) | [design-system §9](./design-system.md#9-gaps-addressed--tracked-workable-items), [component-library §10](./component-library.md#10-build-backlog--gaps), [prototypes §11](./prototypes.md#11-gaps--open-items) |
+| **THREADY‑DES‑CHAL‑01** | Thready UI/UX **Challenges** scenario banks (mandated test type) | `[GAP: 9.3]` (half 2) | [design-system §9](./design-system.md#9-gaps-addressed--tracked-workable-items), [component-library §9](./component-library.md#9-testing-the-library) |
+| **THREADY‑DES‑KMP‑01** | `UI-Components-KMP` CI + Maven publish + token‑bridge codegen | `[GAP: 8.4]` | [design-system §9](./design-system.md#9-gaps-addressed--tracked-workable-items), [component-library §10](./component-library.md#10-build-backlog--gaps) |
+| **THREADY‑DES‑FLUT‑01 / ‑QT‑01** | `helix_design` per‑platform token packages (Flutter, Qt/Aurora); native ArkTS/Qt via `helix_shims` | `[GAP: 8.2/8.3/8.5]` | [design-system §9](./design-system.md#9-gaps-addressed--tracked-workable-items), [component-library §10](./component-library.md#10-build-backlog--gaps) |
+| **THREADY‑DES‑REACT‑01** | `UI-Components-React` re‑audit + adoption (only if a React surface is needed) | `[GAP: 8.6]` | [component-library §10](./component-library.md#10-build-backlog--gaps) |
+| **THREADY‑DES‑EXPORT‑01** | Build/validate the **PenPot** + **Lottie** export bridges (not native OpenDesign targets) | `[OPEN: THREADY-DES-02]` | [prototypes §11](./prototypes.md#11-gaps--open-items) |
+
 ## Open items
 
-- `[OPEN: THREADY-DES-01]` Capture the formal eyedrop mean of `assets/Logo.png` (pixel‑mean per
-  the `design_system` provenance rule §11.4.6) to fix the Thready secondary/teal token; until
-  then the secondary uses the in‑house `helix_track` precedent `#7AA590` as a provisional value.
-- `[OPEN: THREADY-DES-02]` PenPot and Lottie are **not** native OpenDesign export targets — a
-  bridge/export step must be built (see [prototypes.md](./prototypes.md)).
-- `[OPEN: THREADY-DES-03]` The heart‑glyph "proper color" is set to the brand accent by the
-  in‑house footer precedent; confirm whether the operator wants a classic love‑red instead.
+The full, canonical open‑item list for this area (`THREADY-DES-01…-14`). Each is tracked in its owning
+file; this table is the single place to see them all and their state.
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-01** | `CLOSED` | `--brand-2` teal captured via formal `Logo.png` eyedrop (`#ABDDC9` light / `#B7EBD6` dark), replacing the `#7AA590` stand‑in | [design-system §3.2](./design-system.md#32-the-thready-brand-theme), [brand-assets §11](./brand-assets.md#11-gaps--open-items) |
+| **THREADY-DES-02** | `OPEN` | PenPot + Lottie are **not** native OpenDesign export targets — bridges must be built (`THREADY‑DES‑EXPORT‑01`) | [prototypes.md](./prototypes.md#11-gaps--open-items), [design-system §10](./design-system.md#10-open-items) |
+| **THREADY-DES-03** | `OPEN` | Heart‑glyph "proper color": brand accent‑ink (current default) vs. classic love‑red | [brand-assets §8](./brand-assets.md#8-the-footer-slogan--heart-glyph), [design-system §3.2](./design-system.md#32-the-thready-brand-theme) |
+| **THREADY-DES-04** | `OPEN` | Verify Cyrillic subsets of the three variable faces for ru / sr‑Cyrl | [design-system §4](./design-system.md#4-typography), [component-library §11](./component-library.md#11-open-items), [prototypes §11](./prototypes.md#11-gaps--open-items) |
+| **THREADY-DES-05** | `OPEN` `[RESEARCH]` | Aurora density buckets (86/108/128/172/250) must be verified against current Aurora OS packaging docs | [brand-assets §5.1](./brand-assets.md#51-concrete-platform-manifests) |
+| **THREADY-DES-06** | `OPEN` | Whether Account Admins (tier 2), not only Root, may edit their own Account branding | [theming §11](./theming.md#11-gaps--open-items), [ux-flows §5](./ux-flows.md#5-manage-account) |
+| **THREADY-DES-07** | `OPEN` | Advanced neutral‑surface override (beyond accent) needs a full AA re‑validation matrix before exposure | [theming §11](./theming.md#11-gaps--open-items) |
+| **THREADY-DES-08** | `OPEN` | Confirm whether Desktop (Tauri) needs any native screen beyond the wrapped web UI (tray/notifications) | [wireframes §7](./wireframes.md#7-gaps--open-items) |
+| **THREADY-DES-09** | `OPEN` | High‑fidelity Figma frames for every wireframe screen (produced in prototypes; wireframes are the structural contract) | [wireframes §7](./wireframes.md#7-gaps--open-items), [prototypes.md](./prototypes.md) |
+| **THREADY-DES-10** | `OPEN` | Finalize endpoint/event names with the API area (UX‑flow names are `[DEFAULT — adjustable]`) | [ux-flows §7](./ux-flows.md#7-gaps--open-items) |
+| **THREADY-DES-11** | `OPEN` | Finalize Thready composite public API names with the web implementation team | [component-library §11](./component-library.md#11-open-items) |
+| **THREADY-DES-12** | `OPEN` | Decide which composites are generic enough to contribute upstream to `design_system` vs. keep in Thready | [component-library §11](./component-library.md#11-open-items) |
+| **THREADY-DES-13** | `OPEN` | Decide PenPot's role: mirror of Figma (portability only) vs. a co‑equal editing surface | [prototypes §11](./prototypes.md#11-gaps--open-items) |
+| **THREADY-DES-14** | `OPEN` | Branding model reconciliation (storage **and** contract) with the canonical database + API areas | [theming §5/§7/§11](./theming.md#11-gaps--open-items), below |
+
+Detail on the two highest‑impact opens:
+
+- `[CLOSED: THREADY-DES-01]` Formal eyedrop mean of `assets/Logo.png` captured (pixel‑mean per the
+  `design_system` provenance rule §11.4.6): the Thready secondary/teal `--brand-2` = **`#ABDDC9`**
+  (light, mean of n=618,886 mint‑region pixels) / `#B7EBD6` (dark, median), replacing the provisional
+  `#7AA590` stand‑in. The green‑region eyedrop (`#BAE448`, n≈1.06M) corroborates the documented
+  helix‑green base, validating the method. Re‑confirm with the design‑system's own eyedrop tool at
+  integration. Method: [design-system §3.2](./design-system.md#32-the-thready-brand-theme).
 - `[OPEN: THREADY-DES-14]` Branding model reconciliation (storage **and** contract). **Storage:** the
   authoritative database area models branding as `accounts.branding` **JSONB**
   (`{colors, logo_url, slogan}`), while [theming.md §5](./theming.md#5-data-model-ddl) proposes a

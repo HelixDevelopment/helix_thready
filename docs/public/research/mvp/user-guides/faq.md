@@ -13,6 +13,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (user-guides) | Initial FAQ |
+| 2 | 2026-07-22 | swarm (user-guides, Pass 3) | Depth pass: corrected the headless sign-in var to the VERIFIED `HERALD_MTPROTO_*` names; added quickstart, env-var, and DR FAQ entries |
 
 Short answers with links to the authoritative guide. Answers are grounded in the technology decision
 matrix and the [gap register](../../../../private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md);
@@ -45,6 +46,14 @@ system as decided in the decision matrix. Where a subsystem is a scaffold/stub, 
 **Q: Who makes it?** Helix Development. The footer slogan *"Made with love ♥ by Helix Development"*
 appears on every surface and generated document, and persists even under per-account white-labeling.
 
+**Q: I just want to try it — what's the fastest path?** Read [quickstart.md](./quickstart.md): a
+~5-minute per-surface on-ramp (Web, CLI, TUI, SDK, Mobile) plus the one-time Admin bootstrap, each
+linking to its deep guide.
+
+**Q: Where is the full list of environment variables?** [configuration.md](./configuration.md), whose
+**Appendix A** is a single one-row-per-variable index (name · purpose · default · scope · example) and
+**Appendix B** has worked `.env` files for dev/staging/production.
+
 ## 2. Install & configuration
 
 **Q: What do I need to run it?** Rootless Podman, Go 1.26.x (to build), PostgreSQL 16+ with pgvector,
@@ -67,8 +76,16 @@ promoted from Herald's `qaherald` harness). **Max is not available yet** — the
 `[GAP: 3]`. Plan around Telegram for the zero version.
 
 **Q: Interactive or headless sign-in?** Both. Interactive prompts for the login code/2FA; headless
-(`THREADY_MESSENGER_SIGNIN_MODE=noninteractive`) reads all `HERALD_TELEGRAM_*` from the environment.
-[installation.md §7](./installation.md#7-messenger-sign-in--first-channel).
+(`THREADY_MESSENGER_SIGNIN_MODE=noninteractive`) reads the VERIFIED `HERALD_MTPROTO_*` variables
+(`APP_ID`/`APP_HASH`/`PHONE`/`PASSWORD`/`SESSION_FILE`) from the environment — the user client that
+reads history. The Bot-API path (`HERALD_TGRAM_BOT_TOKEN`) only posts replies.
+[installation.md §7](./installation.md#7-messenger-sign-in--first-channel),
+[configuration.md §9](./configuration.md#9-messengers-herald).
+
+**Q: What are the real messenger env-var names?** For Telegram reading: `HERALD_MTPROTO_APP_ID`,
+`HERALD_MTPROTO_APP_HASH`, `HERALD_MTPROTO_PHONE`, `HERALD_MTPROTO_PASSWORD` (2FA),
+`HERALD_MTPROTO_SESSION_FILE` — VERIFIED from `vasic-digital/herald/.env.example`. Early drafts used
+`HERALD_TELEGRAM_*`; those were wrong and have been corrected.
 
 **Q: Does it read replies too?** Yes — Thready assembles the **complete post** = root + the full chain
 of organic human replies (excluding the system's own replies). Hashtags added in a reply still count.

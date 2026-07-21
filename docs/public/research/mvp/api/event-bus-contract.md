@@ -5,8 +5,8 @@
   Status          : Draft — v0.1
   Revision        : 1 (2026-07-21)
   Author          : Helix Thready documentation swarm (API & SDKs)
-  Related         : ./openapi.yaml, ./rest-endpoints.md, ./authn-authz.md,
-                    ./error-model.md, ../architecture/index.md
+  Related         : ./openapi.yaml, ./asyncapi.yaml, ./rest-endpoints.md, ./authn-authz.md,
+                    ./error-model.md, ./sdk-examples.md, ../architecture/index.md
 -->
 
 # Helix Thready — Event Bus & Real-Time Subscription Contract
@@ -15,11 +15,14 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (API & SDKs) | Initial draft grounded in `digital.vasic.eventbus` |
 | 2 | 2026-07-21 | swarm (API & SDKs) | Added the outbound event-sink DDL + HMAC scheme (`hmacAuth`/`X-Thready-Signature`); linked contract-tests.md |
+| 4 | 2026-07-22 | swarm (API & SDKs) | Completeness-critic pass: added the missing `event_sink_delivery_due_idx` partial index (§9) that drives the outbound-webhook retry worker (`state='pending' AND next_retry_at <= now()`, `FOR UPDATE SKIP LOCKED`) — the ledger previously had no index for its retry poller. |
+| 3 | 2026-07-22 | swarm (API & SDKs) | **Depth pass, re-verified at `pkg/nats`/`pkg/bus`.** Added §2a "What the module gives vs. what the Event Bus service must build" — the module's NATS subs are **ephemeral `DeliverNew`** (no native replay) on a **`LimitsPolicy` FileStorage** stream (no native last-value/sticky), and `Payload` is `interface{}` (generic-JSON on receive). Made the durable-replay, sticky and at-least-once claims honest against those facts. Added `/v1/event-sinks` CRUD (now in `openapi.yaml`, closes evt-2). Cross-linked the machine contract `asyncapi.yaml`. |
 
 ## Table of Contents
 
 1. [Scope & grounding](#1-scope--grounding)
 2. [Transport & topology](#2-transport--topology)
+   - [2a. Module reality vs. Event Bus service work](#2a-module-reality-vs-event-bus-service-work)
 3. [The event envelope](#3-the-event-envelope)
 4. [Event catalog](#4-event-catalog)
 5. [Subscription patterns (WebSocket / SSE)](#5-subscription-patterns-websocket--sse)
@@ -42,10 +45,23 @@ fans them out to clients over WebSocket and SSE and serves sticky-event snapshot
 The module's shape used here is **verified at source**:
 
 - `event.Event{ ID, Type, Source, Payload, Timestamp, TraceID, Metadata }`; `Type` is a
-  dot-notation topic (e.g. `provider.registered`) `[VERIFIED: pkg/event/event.go]`.
-- NATS-backed `Bus` with `Publish(*event.Event)` / `Subscribe(...)`, a JetStream stream
-  (default name `EVENTBUS`) capturing every subject under a configured prefix; subjects are
-  `<SubjectPrefix>.<sanitized event.Type>` `[VERIFIED: pkg/nats]`.
+  dot-notation topic (e.g. `provider.registered`); `event.New(type, source, payload)`
+  auto-assigns `ID` and `TraceID` (both UUIDv4) and `Timestamp`
+  `[VERIFIED: pkg/event/event.go]`.
+- NATS-backed `Bus` with `Publish(*event.Event) error` and
+  `Subscribe(ctx, type) (<-chan *event.Event, func(), error)`; a JetStream stream (default
+  name **`EVENTBUS`**, default subject prefix **`eventbus`**, `FileStorage`) capturing every
+  subject under `<prefix>.>`; subjects are `<SubjectPrefix>.<sanitized event.Type>` (Thready
+  sets the prefix to `eventbus.thready`) `[VERIFIED: pkg/nats/nats.go]`.
+- Rich subscriber-side filtering: `filter.ByType/ByTypes/BySource/ByGlob/ByPrefix/ByMetadata/
+  HasMetadata/And/Or` `[VERIFIED: pkg/filter]` — this is what backs the WS glob
+  (`processing.*` → `ByGlob`) and the tenant filter (`metadata.account_id` → `ByMetadata`) in
+  §5/§10.
+
+The machine-readable channel/message contract for the whole event plane is
+[asyncapi.yaml](./asyncapi.yaml) (AsyncAPI 3.0 — one message per event type, with per-type
+payload schemas and `x-sticky`/`x-required-scope`/`x-sticky-key` annotations). This document
+is the behavioural spec; `asyncapi.yaml` is the wire contract, as `openapi.yaml` is for REST.
 
 ## 2. Transport & topology
 
@@ -71,17 +87,47 @@ the Herald thread readers, the processing/Skill-dispatch engine, the Asset Servi
 User Service and the metering service — emit `event.Event` values into
 `digital.vasic.eventbus`. The NATS JetStream adapter persists every event to the durable
 stream `EVENTBUS` under subjects of the form `eventbus.thready.<type>` (the sanitized
-event type appended to Thready's subject prefix). The Event Bus service attaches to that
-stream as a **durable consumer** and re-publishes to connected clients through three
-surfaces: a bidirectional **WebSocket** at `/v1/events/ws` (for clients that also send
-subscribe/ack frames), a one-way **Server-Sent Events** stream at `/v1/events/stream` (for
-browsers and simple consumers), and a **sticky snapshot** endpoint
+event type appended to Thready's subject prefix, verified `<SubjectPrefix>.<sanitized
+event.Type>`).
+
+The Event Bus service attaches to that stream as a **durable consumer** — which, as §2a
+records, the service must configure explicitly, because the bare `digital.vasic.eventbus`
+module opens *ephemeral* `DeliverNew` subscriptions — and re-publishes to connected clients
+through three surfaces: a bidirectional **WebSocket** at `/v1/events/ws` (for clients that
+also send subscribe/ack frames), a one-way **Server-Sent Events** stream at
+`/v1/events/stream` (for browsers and simple consumers), and a **sticky snapshot** endpoint
 `GET /v1/events/{entityType}/{entityId}/sticky` that returns the last retained value of a
-sticky event for one entity. When a client disconnects and reconnects, it can either replay
-missed events directly from the durable JetStream consumer (by last-acked sequence) or
-reconcile against a REST snapshot; both paths are shown as dashed edges. Crucially, the
-Event Bus service applies RBAC and tenant filtering at subscribe time, so a client only ever
-receives events for accounts it may see.
+sticky event for one entity (served from the last-value store the service maintains, §2a).
+
+When a client disconnects and reconnects, it can either replay missed events directly from
+the durable JetStream consumer (by last-acked sequence) or reconcile against a REST snapshot;
+both paths are shown as dashed edges. Crucially, the Event Bus service applies RBAC and
+tenant filtering at subscribe time — grounded in the module's verified `filter.ByMetadata`
+predicate on `metadata.account_id` — so a client only ever receives events for accounts it
+may see.
+
+### 2a. Module reality vs. Event Bus service work
+
+The diagram above is the **target**. Read at source, `digital.vasic.eventbus` provides a
+solid transport but **not** three of the guarantees this contract promises — so those
+guarantees are explicitly the new **Event Bus service**'s job, not something to claim the
+module already does. This is the anti-bluff record for the event plane
+(`[GAP: §12 anti-bluff]`).
+
+| Guarantee promised here | What the module does today `[VERIFIED: pkg/nats/nats.go]` | What the Event Bus service must add `[BUILD-NEW]` |
+|-------------------------|-----------------------------------------------------------|--------------------------------------------------|
+| **Durable replay on reconnect** (§7) | `Bus.Subscribe` opens an **ephemeral push** subscription with **`DeliverNew()`** (`nats.go:238,256`) — a reconnecting client only gets events published *after* it re-subscribes; missed events are **not** replayed. | Create a **named durable consumer** per subscriber (or per (account,client)) so JetStream redelivers from the last **acked** sequence. The stream retains history (below), so the data is there; the module just doesn't bind a durable consumer. |
+| **Sticky / last-value snapshots** (§6) | The stream is created with **`Retention: LimitsPolicy`, `Storage: FileStorage`** and subjects `<prefix>.>` (`nats.go:131`) — a normal history stream, **no per-subject last-value / compaction**. There is no sticky read in the module. | Maintain last-value per entity via a **JetStream KV bucket** (or a second stream with `MaxMsgsPerSubject: 1`) keyed by `<type>.<entity_id>`, written on publish and **invalidated** on terminal events (§6). `GET …/sticky` reads that store. |
+| **At-least-once delivery** (§8) | The **NATS** path uses `AckExplicit()` (`nats.go:257`) → at-least-once **once a durable consumer exists**. The **in-memory** `pkg/bus` path is at-**most**-once: it drops on a full buffer (`BufferSize 1000`, `PublishTimeout 10ms`, `EventsDropped` metric, `pkg/bus/bus.go:30,178`). | Use the **NATS/JetStream** backend (never the in-memory bus) for the client-facing plane, with durable consumers + explicit ack, so no non-sticky event is silently lost within the retention window. |
+| **Typed payloads** | `Event.Payload` is `interface{}`; after JSON round-trip it arrives as generic JSON (`map[string]interface{}`, `float64`, …) — the module documents this limitation in `pkg/nats` and it cannot preserve Go types. | Carry the concrete payload schema per `type` (the `asyncapi.yaml` message schemas); SDKs **re-marshal** the received `payload` into the typed struct for that `type` (this is why the `sdk-examples.md` R5 recipe reads `ev.payload["post_id"]` from a generic map before typing it). |
+
+None of these are blockers — the module gives durable JetStream storage, subject routing and
+rich filtering for free — but the contract only holds because the Event Bus service adds the
+durable-consumer binding, the last-value store and the JetStream-only delivery path on top.
+The RED-first proofs (reconnect replays a missed event; a sticky read returns the last value;
+back-pressure drops then reconnects) are in
+[contract-tests.md](./contract-tests.md) §chaos/§integration, and they will **fail against
+the bare module** — which is the point.
 
 ## 3. The event envelope
 
@@ -269,6 +315,13 @@ CREATE TABLE event_sink_delivery (
     UNIQUE (sink_id, event_id)                          -- one live delivery per (sink,event)
 );
 
+-- Drives the retry worker: it polls due, not-yet-terminal deliveries
+-- (SELECT ... WHERE state='pending' AND next_retry_at <= now() ORDER BY next_retry_at
+-- FOR UPDATE SKIP LOCKED). Partial index keeps it small — delivered/dead rows are excluded.
+CREATE INDEX event_sink_delivery_due_idx
+    ON event_sink_delivery (next_retry_at)
+    WHERE state = 'pending';
+
 -- Forward:  0011_event_sink.up.sql (statements above)
 -- Rollback: 0011_event_sink.down.sql: DROP TABLE event_sink_delivery; DROP TABLE event_sink;
 -- Run via database/pkg/migration.Runner (Q30).
@@ -313,14 +366,18 @@ cross-tenant leak through the event plane.
 - **TDD** — sticky reconnect-reconcile, at-least-once dedupe on `event.id`, HMAC callback
   bad-signature → 401, and back-pressure drop→reconnect are asserted RED-first in
   [contract-tests.md](./contract-tests.md) (§chaos, §security, §integration).
-- `[OPEN: evt-1]` The exact sticky implementation (compacted subject vs KV last-value store)
-  is chosen with the Event Bus service build; the **contract** (snapshot endpoint,
-  `replay_sticky`, invalidation semantics) is fixed here.
+- `[OPEN: evt-1]` The exact sticky implementation is now scoped to **two verified options**
+  (JetStream **KV bucket** keyed by `<type>.<entity_id>`, or a second stream with
+  `MaxMsgsPerSubject: 1`) — see §2a; the choice is made with the Event Bus service build. The
+  **contract** (snapshot endpoint, `replay_sticky`, invalidation semantics) is fixed here.
 - `[OPEN: sdk-1]` Go/Rust SDKs may consume events via Connect streaming instead of WS/SSE;
-  reconciled in [sdk-strategy.md](./sdk-strategy.md).
-- `[OPEN: evt-2]` Outbound-webhook sink registration endpoints (`/v1/event-sinks`) are
-  proposed but deferred to the User Service pack; the delivery **shape** is fixed by the
-  `eventDelivery` webhook here.
+  reconciled in [sdk-strategy.md](./sdk-strategy.md) and demonstrated in
+  [sdk-examples.md](./sdk-examples.md) R5.
+- `[RESOLVED: evt-2]` Outbound-webhook sink registration is now a **first-class REST group**
+  — `GET/POST /v1/event-sinks`, `GET/PATCH/DELETE /v1/event-sinks/{sinkId}` in
+  [openapi.yaml](./openapi.yaml) (`EventSink`/`EventSinkCreate`, HMAC secret returned once),
+  backed by the `event_sink` DDL in §9 and modelled as the `eventDelivery` channel in
+  [asyncapi.yaml](./asyncapi.yaml). The endpoints carry `x-thready-maturity: build_new`.
 
 ---
 

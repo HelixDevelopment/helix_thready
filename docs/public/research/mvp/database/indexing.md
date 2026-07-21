@@ -14,12 +14,14 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (database) | Initial index catalogue: btree/GIN/trigram/FTS/partial/ANN + SLO tuning |
+| 2 | 2026-07-22 | swarm (database, Pass 3) | Added the full per-index rationale matrix (§3.1: type, columns, predicate, query served, write-amplification, selectivity); a covering/`INCLUDE` example for thread assembly; source-confirmed that the pgvector adapter's `Search` emits no tenant filter (§5) |
 
 ## Table of Contents
 
 1. [Objectives & SLO budget](#1-objectives--slo-budget)
 2. [Query-path → index map](#2-query-path--index-map)
 3. [Relational index catalogue](#3-relational-index-catalogue)
+   - [3.1 Index rationale matrix](#31-index-rationale-matrix)
 4. [Full-text search (FTS)](#4-full-text-search-fts)
 5. [Vector ANN indexes (pgvector)](#5-vector-ann-indexes-pgvector)
 6. [The hot claim index (idempotent processing)](#6-the-hot-claim-index-idempotent-processing)
@@ -73,19 +75,28 @@ flowchart LR
 ```
 
 **Explanation (for readers/models that cannot see the diagram).** The diagram maps the nine
-dominant query paths to the index that serves them. `Q1` — the messenger poller asking "what
-posts arrived in this channel since timestamp T" — is served by a composite btree on
-`(channel_id, posted_at)` after partition pruning. `Q2` — assembling a complete post
-(root + organic reply chain) — is served by `(thread_id, posted_at)` on `replies`. `Q3` —
+dominant query paths (`Q1`–`Q9`, left) to the index that serves each (`I1`–`I9`, right). The
+point of drawing it is that every index in this document is *pulled* by a concrete query path
+rather than added speculatively — a discipline that matters on a firehose where each extra
+index taxes every insert.
+
+The two ingestion paths anchor the design. `Q1` — the messenger poller asking "what posts
+arrived in this channel since timestamp T" — is served by a composite btree on
+`(channel_id, posted_at)` after partition pruning, so the planner touches only the relevant
+month(s). `Q2` — assembling a complete post (root + organic reply chain) — is served by
+`(thread_id, posted_at)` on `replies`, returning the chain already in reading order. `Q3` —
 the processing engine claiming the next unit — is served by the **partial** index on
-`processing_state(visible_at) WHERE status='pending'`, which stays tiny because only
-unclaimed rows are indexed. `Q4` — semantic search — combines the HNSW ANN index on the
-embedding with a GIN index on `metadata` for the tenant filter. `Q5` — keyword/full-text
-search — uses a GIN index over a generated `tsvector`. `Q6` — "all posts tagged #x" — uses
-the reverse index on `post_hashtags(hashtag_id)`. `Q7` — account dashboards — use
-`(account_id, <time>)` composites. `Q8` — audit queries — use `(account_id, created_at)`
-plus an actor index. `Q9` — asset dedup — uses the `UNIQUE(account_id, content_hash)`
-already declared on `assets`. The remaining sections give the exact DDL.
+`processing_state(visible_at) WHERE status='pending'`, which stays tiny because only unclaimed
+rows are indexed even though the table grows one row per post forever.
+
+The discovery and reporting paths fan out from there. `Q4` — semantic search — combines the
+HNSW ANN index on the embedding with a GIN index on `metadata` for the tenant filter. `Q5` —
+keyword/full-text search — uses a GIN index over a generated `tsvector`. `Q6` — "all posts
+tagged #x" — uses the reverse index on `post_hashtags(hashtag_id)`. `Q7` — account dashboards —
+use `(account_id, <time>)` composites. `Q8` — audit queries — use `(account_id, created_at)`
+plus an actor index. `Q9` — asset dedup — uses the `UNIQUE(account_id, content_hash)` already
+declared on `assets`. The rationale matrix in §3.1 and the DDL in §3 give the exact shape of
+each of these indexes.
 
 ---
 
@@ -180,6 +191,72 @@ CREATE INDEX CONCURRENTLY idx_audit_actor
   ON audit_log (actor_user_id, created_at DESC);
 ```
 
+### 3.1 Index rationale matrix
+
+Every non-structural index, its physical shape, the exact query path it serves, and its cost.
+"Write-amp" is how many of these indexes a single insert into the base table must also write
+(the tax on the 10k+ posts/day hot path); "Selectivity" is why the index is worth that tax.
+Structural PK/UNIQUE indexes (declared inline in the schema) are listed at the bottom for
+completeness. All secondary indexes below ship in migration
+[`0007_secondary_indexes.sql`](./migrations/0007_secondary_indexes.sql) except the hot claim
+index (`0001`).
+
+| Index | Table | Type | Key / predicate | Serves | Selectivity / notes |
+|-------|-------|------|-----------------|--------|---------------------|
+| `idx_posts_channel_time` | posts | btree | `(channel_id, posted_at DESC)` | Q1 poller: new posts in a channel since T | After partition prune, ranges one channel's newest rows; DESC matches "latest first" |
+| `idx_posts_account_time` | posts | btree | `(account_id, posted_at DESC)` | Q7 tenant dashboards/exports | Tenant-leading; prune + range scan |
+| `idx_posts_fts` | posts | GIN | `body_fts` (generated tsvector) | Q5 keyword search | Complements semantic search for exact terms/code ids |
+| `idx_replies_thread_time` | replies | btree | `(thread_id, posted_at ASC)` | Q2 thread assembly (chronological reply chain) | ASC = natural reading order; one thread per scan |
+| `idx_replies_parent` | replies | btree | `(parent_post_id)` | reply → parent post (soft ref) | Resolves the denormalised soft FK |
+| `idx_threads_channel_activity` | threads | btree | `(channel_id, last_activity_at DESC)` | recent active threads per channel | Powers "most recently active" lists |
+| `idx_channels_due_poll` | channels | btree **partial** | `(last_polled_at) WHERE is_active` | poller: which channels are due | Partial → indexes only pollable channels; tiny |
+| `idx_post_hashtags_hashtag` | post_hashtags | btree | `(hashtag_id)` | Q6 "all posts tagged #x" (reverse) | Forward direction served by the `(post_id,hashtag_id)` PK |
+| `idx_reply_hashtags_hashtag` | reply_hashtags | btree | `(hashtag_id)` | reply-tag reverse lookup | — |
+| `idx_post_categories_category` | post_categories | btree | `(category_id)` | posts of a content type | — |
+| `idx_hashtags_trgm` | hashtags | GIN trigram | `(tag gin_trgm_ops)` | fuzzy/`ILIKE` tag autocomplete | pg_trgm; short-string fuzzy match |
+| `idx_threads_title_trgm` | threads | GIN trigram | `(title gin_trgm_ops)` | fuzzy title search | — |
+| `idx_processing_claimable` | processing_state | btree **partial** | `(visible_at) WHERE status='pending'` | Q3 the hot claim (`FOR UPDATE SKIP LOCKED`) | Partial → only the backlog is indexed; stays tiny forever (§6) |
+| `idx_processing_status` | processing_state | btree | `(status, updated_at)` | ops: stuck/failed rows, ret/backoff audit | Observability, not the hot path |
+| `idx_skill_runs_post` | skill_runs | btree | `(post_id, skill_id)` | runs of a post / a (post,skill) | — |
+| `idx_assets_parent` | assets | btree **partial** | `(parent_asset_id) WHERE … IS NOT NULL` | renditions of a raw asset | Partial → only renditions indexed |
+| `idx_asset_links_post` | asset_links | btree **partial** | `(post_id) WHERE … IS NOT NULL` | assets attached to a post | 3 partial indexes (one per subject) each stay small |
+| `idx_asset_links_reply` | asset_links | btree **partial** | `(reply_id) WHERE … IS NOT NULL` | assets attached to a reply | — |
+| `idx_asset_links_artifact` | asset_links | btree **partial** | `(generated_artifact_id) WHERE … IS NOT NULL` | assets attached to an artifact | — |
+| `idx_asset_links_asset` | asset_links | btree | `(asset_id)` | reverse: subjects of an asset | — |
+| `idx_memberships_account` | memberships | btree **partial** | `(account_id) WHERE status='active'` | RBAC: members of a tenant | Partial → active grants only; the auth hot path |
+| `idx_memberships_user` | memberships | btree **partial** | `(user_id) WHERE status='active'` | RBAC: a user's tenants | — |
+| `idx_usage_account_metric` | usage_records | btree | `(account_id, metric, window_start DESC)` | metered-usage rollups per tenant/metric | Billing period aggregation |
+| `idx_usage_unbilled` | usage_records | btree **partial** | `(account_id) WHERE NOT billed` | invoicing: open reconciliation set | Partial → shrinks as rows are billed |
+| `idx_subscriptions_account` | subscriptions | btree | `(account_id, status)` | active subscription of a tenant | — |
+| `idx_events_account_time` | events | btree | `(account_id, created_at DESC)` | event replay per tenant | Partitioned parent; prune + range |
+| `idx_events_sticky` | events | btree **partial** | `(entity_id, created_at DESC) WHERE scope='sticky' AND NOT invalidated` | sticky last-value lookup | Partial → only live sticky events (§3.4) |
+| `idx_audit_account_time` | audit_log | btree | `(account_id, created_at DESC)` | Q8 audit by tenant | Partitioned parent |
+| `idx_audit_actor` | audit_log | btree | `(actor_user_id, created_at DESC)` | Q8 audit by actor | — |
+| `idx_vec_*_hnsw` (×4) | vectordb_* | HNSW | `(embedding vector_cosine_ops)` | Q4 semantic ANN | `m=16, ef_construction=64`; op class matches `<=>` (§5) |
+| `idx_vec_*_meta` (×4) | vectordb_* | GIN | `(metadata jsonb_path_ops)` | tenant/kind `@>` filter on ANN results | Required because the adapter post-filters app-side (§5) |
+| **Structural** `uq_users_single_root` | users | UNIQUE **partial** | `((is_root)) WHERE is_root` | enforce "exactly one root" | Guarantees ≤1 root admin (§6.1) |
+| **Structural** `assets_account_content_hash_key` | assets | UNIQUE | `(account_id, content_hash)` | Q9 per-tenant dedup | Content-hash idempotency |
+| **Structural** `usage_records_*_key` | usage_records | UNIQUE | `(account_id, metric, window_start)` | idempotent metering | Upsert-on-conflict target |
+
+**Write-amplification budget.** `posts` carries 4 secondary indexes (`channel_time`,
+`account_time`, `fts`, plus the `(channel_id, external_message_id, posted_at)` UNIQUE and the
+PK) — every post insert writes all of them, which is the deliberate ceiling: no speculative
+index is added to the firehose. `replies` carries 2. `processing_state`'s only hot-path index
+is the tiny partial claim index. Everything heavier (GIN/trigram/HNSW) sits on lower-velocity
+or append-batched tables.
+
+**Covering / `INCLUDE` option for thread assembly.** Q2 reads a thread's replies and usually
+needs `author_ref`/`raw_text` alongside the ordering. An index-only scan avoids the heap
+fetch:
+
+```sql
+-- Optional: make thread assembly index-only (Postgres 11+ INCLUDE).
+CREATE INDEX CONCURRENTLY idx_replies_thread_time_cover
+  ON replies (thread_id, posted_at ASC) INCLUDE (author_ref, is_system_reply);
+-- Trade-off: wider index (more write cost + bloat on the firehose). Enable only if
+-- EXPLAIN shows the heap fetch dominates the thread-assembly path at scale.
+```
+
 ---
 
 ## 4. Full-text search (FTS)
@@ -215,6 +292,16 @@ creates the collection *table only* — it does **not** create an ANN index (sou
 `pkg/pgvector/client.go`). Without an index every `Search` is a sequential scan and the
 < 500 ms SLO is impossible at scale. The ANN indexes are therefore **owned by our
 migrations**, not the adapter. `[GAP: vectordb-3.1]`
+
+**Second VERIFIED finding (Pass 3, source-confirmed):** `Client.Search` emits
+`SELECT id, embedding::text, metadata::text, embedding <=> $1::vector AS distance FROM <t>
+ORDER BY distance LIMIT $2` — with **no `WHERE` clause**. `SearchQuery` has a `Filter` field
+and `SearchQuery.Validate()` accepts it, but the adapter's SQL never references it, and only
+`ID` + `Score = 1 - distance` are returned (metadata is selected then discarded). So the ANN
+index alone cannot enforce tenant isolation, and the GIN `metadata` index only helps a query
+we issue **ourselves** (bypassing `Client.Search`) or an over-fetch we filter in Go. This is
+`[OPEN: vector-tenant-isolation]` / `ATM-DB-013`, and it is now confirmed at source rather
+than assumed — see [schema-vector.sql](./schema-vector.sql) header "VERIFIED CAVEAT".
 
 ```sql
 -- HNSW (preferred): cosine op class MUST match the query operator <=>
