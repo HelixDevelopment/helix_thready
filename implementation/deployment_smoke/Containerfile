@@ -23,13 +23,20 @@ WORKDIR /src
 COPY rest_gateway/ ./rest_gateway/
 
 WORKDIR /src/rest_gateway
+# GOTOOLCHAIN=local + GOPROXY=off keep the build hermetic and offline: the module
+# is stdlib-only (no go.sum, no external deps), so it must never touch a proxy.
+# (Leaving the defaults lets `go` stall on proxy.golang.org egress.)
 ENV GOWORK=off \
     CGO_ENABLED=0 \
-    GOOS=linux
+    GOOS=linux \
+    GOTOOLCHAIN=local \
+    GOPROXY=off
 
 # -trimpath + -s -w keep the binary lean and reproducible. Static: no libc dep.
-RUN go build -trimpath -ldflags='-s -w' -o /out/gateway ./cmd/gateway \
-    && /out/gateway -h >/dev/null 2>&1 || true
+# NOTE: do NOT try to "smoke" the binary here — cmd/gateway ignores its args and
+# calls ListenAndServe(), which would block the build forever. The container is
+# exercised for real by podman_smoke.sh instead.
+RUN go build -trimpath -ldflags='-s -w' -o /out/gateway ./cmd/gateway
 
 # ---- Stage 2: runtime (distroless, non-root) --------------------------------
 FROM gcr.io/distroless/static-debian12:nonroot
