@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/screens/mobile/README.md
   Status          : Draft — v0.1
-  Revision        : 2 (2026-07-22)
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · screens)
   Related         : ../../wireframes.md, ../../design-system.md, ../../theming.md,
                     ../../ux-flows.md, ../../../CONVENTIONS.md
@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · screens) | Initial catalogue: 7 device-framed screen artifacts (390×844), Android/iOS chrome toggle, HarmonyOS/Aurora port notes, light+dark |
 | 2 | 2026-07-22 | swarm (design · screens) | +4 artifacts closing the §6 IA gaps: Channels tab root, Add-Channel bottom sheet, Assets grid, full-screen Media viewer; §6 coverage reconciled; minted `THREADY-DES-SCR-MOB-01/-02/-03` |
+| 3 | 2026-07-22 | swarm (design · decisions) | Operator ruling on `THREADY-DES-SCR-MOB-03`: the WhatsApp adapter is a **committed roadmap item**; the tile stays disabled until the adapter exists; item re-scoped to the `WA_*` source-contract design |
 
 ## 1. What this directory is
 
@@ -50,7 +51,7 @@ Every artifact:
 |------|--------|--------------|--------|
 | [home-feed.html](./home-feed.html) | Home tab — live activity + processing status + recent threads | wireframes §6 (Home), §3.3 (data), ux-flows §3 (events) | grounded |
 | [channels.html](./channels.html) | Channels tab root — subscribed-channels list, per-channel state chips (healthy / syncing / ⚠ auth / paused), M3 FAB vs. iOS nav-bar add action | wireframes §6 (`T2 → CHLIST`), §3.4 (row contract), §6.2 (gestures) | grounded; unread pills `[OPEN: THREADY-DES-SCR-MOB-01]` |
-| [add-channel.html](./add-channel.html) | Add-Channel bottom sheet — source picker, account/sign-in, link + Resolve with hint/error/processing states, step gating | wireframes §6 (`CHLIST → CHADD`), §3.4 (wizard + validation table), §1.3; ux-flows §2/§2.1 | grounded; Max `[GAP: 5.1]`; WhatsApp `[OPEN: THREADY-DES-SCR-MOB-03]` |
+| [add-channel.html](./add-channel.html) | Add-Channel bottom sheet — source picker, account/sign-in, link + Resolve with hint/error/processing states, step gating | wireframes §6 (`CHLIST → CHADD`), §3.4 (wizard + validation table), §1.3; ux-flows §2/§2.1 | grounded; Max `[GAP: 5.1]`; WhatsApp roadmap-committed (2026-07-22), tile disabled (`[OPEN: THREADY-DES-SCR-MOB-03]` — `WA_*` contract) |
 | [channel-threads.html](./channel-threads.html) | Channel detail — thread list (complete posts) | wireframes §3.5 + §6, §6.2 gestures | grounded |
 | [post-detail.html](./post-detail.html) | Post detail — tags, replies, pipeline, assets, Reprocess | wireframes §3.6 + §6; ux-flows §3/§3.1 | grounded |
 | [search.html](./search.html) | Search — semantic/keyword/hybrid, scope, scored results | wireframes §3.7 + §6; ux-flows §4 | grounded |
@@ -106,10 +107,15 @@ The one surface **beyond** §6 remains [notifications.html](./notifications.html
   "re-download" is a server-side re-fetch for broken links, and the desktop precedent
   (`[OPEN: THREADY-DES-16]`, [desktop README §3.4](../desktop/README.md)) already left local-media
   paths undecided. Both actions are specified disabled until product resolves the export path.
-- `[OPEN: THREADY-DES-SCR-MOB-03]` — **WhatsApp as a third Add-Channel source**
-  ([add-channel.html](./add-channel.html)): requested, but absent from the verified source set
-  (wireframes §3.4: Telegram/Max; ux-flows §2 env contract `TG_*`/`MAX_*`). Rendered as a disabled
-  tile until the decision matrix adds an adapter; never shown as selectable.
+- `[OPEN: THREADY-DES-SCR-MOB-03]` — **WhatsApp as a third Add-Channel source — decided:
+  roadmap-committed** (operator ruling 2026-07-22). The WhatsApp adapter is now a **committed
+  roadmap item**, no longer an open question of *whether*. The tile in
+  [add-channel.html](./add-channel.html) **stays disabled until the adapter exists** —
+  WhatsApp remains absent from the verified source set today (wireframes §3.4: Telegram/Max;
+  ux-flows §2 env contract `TG_*`/`MAX_*`) and is never shown as selectable. Remaining
+  tracked work under this ID: design the **`WA_*` source contract** (env-contract shape
+  mirroring `TG_*`/`MAX_*`, wizard states, auth flow) so the tile can light up when the
+  adapter lands.
 
 ---
 

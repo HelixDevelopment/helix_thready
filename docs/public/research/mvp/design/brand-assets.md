@@ -14,6 +14,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: icon concept, construction, detail tiers, light/dark, OS export matrix, org logo usage, footer slogan + heart |
 | 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: numeric icon geometry spec (grid/safe-zones/coil growth, §3.1); concrete per-platform manifests — `manifest.webmanifest`, favicon `<head>`, Android `ic_launcher.xml` + adaptive/monochrome, iOS `Contents.json`, HarmonyOS layered JSON (§5.1); per-surface **slogan-placement matrix** (§8.1); corrected heart-color provenance to the **verified** `--accent-ink` token + exact i18n keys (`footer.made`/`footer.by`/`a11y.love`) |
+| 3 | 2026-07-22 | swarm (design · decisions) | Operator ruling: `[CLOSED: THREADY-DES-03]` — heart stays `--ds-heart: var(--accent)` (accent green; AA-legible both modes; white-label-safe); love-red alternative dropped; §8 + §11 updated |
 
 ## Table of contents
 
@@ -360,11 +361,14 @@ html.no-svg .heart-svg { display:none; } html.no-svg .heart-glyph { display:inli
 accessible accent‑ink token — so it is AA‑legible in light and dark `[VERIFIED — `.heart { color:
 var(--accent-ink); }` in `reference.footer.component.ts`]`. Thready exposes this as a `--ds-heart`
 token that defaults to that accent‑ink (in the Thready theme, `--accent` already resolves to the
-AA‑pinned `#446E12` light / `#B6E376` dark). Whether the operator prefers a **classic love‑red**
-instead is `[OPEN: THREADY-DES-03]`; if red is chosen, keep it distinct from `--danger` (error) and
-ensure the mark is ≥ 3:1 as a meaningful non‑text graphic. The heart is decorative (its meaning is
-carried by the accessible name "love"), so a red does not need text‑contrast — but a legible mark is
-still required.
+AA‑pinned `#446E12` light / `#B6E376` dark).
+`[CLOSED: THREADY-DES-03]` — **operator ruling (2026-07-22): the heart color stays
+`--ds-heart: var(--accent)`** (accent green). Rationale: AA-legible in both modes as shipped,
+and white-label-safe — a rebranded Account's server-validated accent re-tints the heart
+automatically, where a hard-coded love-red would sit outside the override contract and risk
+reading as `--danger`. The classic love-red alternative is dropped. The heart remains
+decorative (its meaning is carried by the accessible name "love"), so text-contrast does not
+apply — but the accent pair keeps the mark legible in both modes regardless.
 
 **Surface variants of the slogan:**
 
@@ -436,7 +440,9 @@ assets/brand/
   (mint region mean **`#ABDDC9`**, n = 618,886; dark median `#B7EBD6`), replacing the `#7AA590`
   stand‑in; method in [design-system §3.2](./design-system.md#32-the-thready-brand-theme). Re‑confirm
   with the design‑system's own eyedrop tool at integration.
-- `[OPEN: THREADY-DES-03]` — heart color: brand accent (default) vs. love‑red.
+- `[CLOSED: THREADY-DES-03]` — heart color **decided** (operator ruling 2026-07-22): stays
+  `--ds-heart: var(--accent)` — accent green, AA-legible in both modes, white-label-safe;
+  the love-red alternative is dropped (§8).
 - `[OPEN: THREADY-DES-05]` — Aurora density buckets `[RESEARCH]` must be verified against current
   Aurora OS packaging docs at integration.
 

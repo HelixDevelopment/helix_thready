@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — HarmonyOS (ArkTS) Customization Spec</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — HarmonyOS (ArkTS) Customization
+Spec</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#position-sources-consolidated"
+id="toc-position-sources-consolidated">1. Position &amp; sources
+consolidated</a></li>
+<li><a href="#navigation-idiom-5-tab-ia-arkui"
+id="toc-navigation-idiom-5-tab-ia-arkui">2. Navigation idiom (5-tab IA →
+ArkUI)</a></li>
+<li><a href="#system-back-behavior" id="toc-system-back-behavior">3.
+System back behavior</a></li>
+<li><a href="#safe-areas-notch" id="toc-safe-areas-notch">4. Safe areas
+&amp; notch</a></li>
+<li><a href="#dark-mode-via-system" id="toc-dark-mode-via-system">5.
+Dark mode via system</a></li>
+<li><a href="#barrier-free-accessibility-mapping"
+id="toc-barrier-free-accessibility-mapping">6. Barrier-Free
+accessibility mapping</a></li>
+<li><a href="#arkui-component-substitutions"
+id="toc-arkui-component-substitutions">7. ArkUI component
+substitutions</a></li>
+<li><a href="#layered-icon-integration"
+id="toc-layered-icon-integration">8. Layered icon integration</a></li>
+<li><a href="#motion" id="toc-motion">9. Motion</a></li>
+<li><a href="#i18n" id="toc-i18n">10. i18n</a></li>
+<li><a href="#open-items" id="toc-open-items">11. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — HarmonyOS (ArkTS) Customization Spec
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/harmonyos.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./README.md, ./typography-substitution.md, ../library/platform-map.md,
+                    ../screens/mobile/README.md, ../wireframes.md (§6.1/§6.2),
+                    ../design-system.md (§6/§7), ../motion/motion.md (§5/§6),
+                    ../assets/icon-export-matrix.md (§3.7), ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>Initial consolidation of the scattered per-screen ArkTS one-liners
+into one design contract: navigation idiom, system back, safe areas,
+system dark mode, Barrier-Free mapping, ArkUI substitutions table
+(derived), layered icon, motion honesty, i18n; minted
+<code>THREADY-DES-PLAT-03/-04</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest status header.</strong> The HarmonyOS client is a
+<code>helix_shims</code> <strong>skeleton</strong>
+<code>[GAP: 8.5]</code> — verified as such in <a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2</a> (“Only reachable via native clients + <code>helix_shims</code>
+per ground truth; <code>helix_shims</code> interface not inspected —
+<strong>ASSUMED</strong> entire column”). <strong>Nothing in this file
+is build-ready or claimed to work.</strong> This spec is the
+<strong>design contract the client builds against</strong> when
+<code>[GAP: 8.5]</code> closes; every ArkUI API name below is
+<strong>ASSUMED</strong> until verified against real HarmonyOS SDK docs
+and the <code>helix_shims</code> contract — tracked as
+<code>[OPEN: THREADY-DES-PLAT-03]</code> (companion to the inherited
+<code>[OPEN: THREADY-DES-LIB-03]</code>).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-position--sources-consolidated">1. Position &amp;
+sources consolidated</a></li>
+<li><a href="#2-navigation-idiom-5-tab-ia--arkui">2. Navigation idiom
+(5-tab IA → ArkUI)</a></li>
+<li><a href="#3-system-back-behavior">3. System back behavior</a></li>
+<li><a href="#4-safe-areas--notch">4. Safe areas &amp; notch</a></li>
+<li><a href="#5-dark-mode-via-system">5. Dark mode via system</a></li>
+<li><a href="#6-barrier-free-accessibility-mapping">6. Barrier-Free
+accessibility mapping</a></li>
+<li><a href="#7-arkui-component-substitutions">7. ArkUI component
+substitutions</a></li>
+<li><a href="#8-layered-icon-integration">8. Layered icon
+integration</a></li>
+<li><a href="#9-motion">9. Motion</a></li>
+<li><a href="#10-i18n">10. i18n</a></li>
+<li><a href="#11-open-items">11. Open items</a></li>
+</ul>
+<h2 id="position-sources-consolidated">1. Position &amp; sources
+consolidated</h2>
+<p>Before this file, HarmonyOS guidance lived as one-liners across: the
+per-screen notes panels of all 11 mobile artifacts (mobile README §2
+catalogue), the wireframes §6.1 platform table (a11y / theme /
+font-scale row), platform-map §3 AR column + §4 notes (toast/tooltip
+rules), brand-assets §5.1 / icon-export-matrix §3.7 (layered icon), and
+design-system §7 (fan-out row). This file consolidates them and
+<strong>extends</strong> where the review found holes; the sources stay
+authoritative for their own scope (screens for per-screen chrome,
+platform-map for per-component cells).</p>
+<p>Typography for this platform is specified in <a
+href="./typography-substitution.md">typography-substitution.md</a>
+(bundling via the ArkTS font-registration API — ASSUMED; fallback
+HarmonyOS Sans; <code>fp</code> scale mapping) and is not repeated
+here.</p>
+<h2 id="navigation-idiom-5-tab-ia-arkui">2. Navigation idiom (5-tab IA →
+ArkUI)</h2>
+<p>The wireframes §6 IA <code>[VERIFIED structure]</code> — five bottom
+tabs (Home / Channels / Search / Assets / More) with per-tab stacks —
+realizes in ArkUI as (all mappings ASSUMED):</p>
+<ul>
+<li><strong>Root:</strong> ArkUI <code>Tabs</code> with a bottom
+<code>TabBar</code> mirroring the five-tab IA (the home-feed artifact’s
+note already fixes this: “bottom <code>Tabs</code> bar mirrors this
+five-tab IA”).</li>
+<li><strong>Per-tab stacks:</strong> ArkUI <code>Navigation</code> +
+<code>NavPathStack</code> per tab, so each tab keeps its own back stack
+(Channels → threads → post → media), matching the Android/iOS behavior
+in the chrome-toggle spec (mobile README §1).</li>
+<li><strong>Sheets:</strong> the Add-Channel wizard is a
+<code>bindSheet</code> panel (add-channel artifact note
+<code>[VERIFIED as the design intent, ASSUMED as API]</code>) — same
+step gating and data-preservation rules as the §3.4 wizard model.</li>
+</ul>
+<p>Per-screen realization, consolidated from the artifact notes panels
+(each cell ASSUMED, <code>[GAP: 8.5]</code>):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen (artifact)</th>
+<th>ArkUI realization (consolidated from the notes panels)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home feed</td>
+<td><code>Tabs</code>/<code>List</code>/<code>Column</code> declarative
+components; live region for processing events</td>
+</tr>
+<tr>
+<td>Channels</td>
+<td><code>List</code> with swipe-action items; Add-channel via bottom
+sheet; system back to Home</td>
+</tr>
+<tr>
+<td>Add-Channel</td>
+<td><code>bindSheet</code> panel; back dismisses, preserving entered
+data</td>
+</tr>
+<tr>
+<td>Channel threads</td>
+<td><code>List</code> + swipe-action items; system back returns to
+Channels list</td>
+</tr>
+<tr>
+<td>Post detail</td>
+<td>pipeline pane as ArkUI <code>Progress</code> rows; Barrier-Free
+announces per-step status</td>
+</tr>
+<tr>
+<td>Search</td>
+<td>ArkUI <code>Search</code> component + chips row</td>
+</tr>
+<tr>
+<td>Assets grid</td>
+<td><code>WaterFlow</code> realizes the masonry; Barrier-Free labels
+mirror tile semantics</td>
+</tr>
+<tr>
+<td>Media viewer</td>
+<td><code>Video</code> / <code>Image</code> components +
+<code>AVSession</code> for background audio; system back closes</td>
+</tr>
+<tr>
+<td>Account / Settings</td>
+<td>same card stack as Android/iOS; three-state theme choice (§5)</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td>system push via the platform notification kit
+(<code>[OPEN: THREADY-DES-15]</code> surface)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="system-back-behavior">3. System back behavior</h2>
+<p><code>[DEFAULT — adjustable]</code>, extending the verified
+one-liners (“system back gesture/key maps to the same back stack” —
+home-feed note):</p>
+<ol type="1">
+<li>Back pops the <strong>current tab’s</strong> stack first (media
+viewer → post → threads → channels).</li>
+<li>An open sheet/dialog consumes back as <em>dismiss</em> — and the
+Add-Channel sheet <strong>preserves entered data</strong> on dismissal
+(parity with the §3.4 wizard model: “Back / Esc never loses input”
+<code>[VERIFIED rule — add-channel artifact]</code>).</li>
+<li>At a non-Home tab root, back returns to the Home tab; at Home root,
+back follows the system default (background the app). This two-step rule
+mirrors Android predictive-back convention and is a
+<strong>proposal</strong> — confirm against HarmonyOS HIG at integration
+(<code>[OPEN: THREADY-DES-PLAT-03]</code>).</li>
+<li>Destructive flows never bind back as <em>confirm</em> — back always
+cancels.</li>
+</ol>
+<h2 id="safe-areas-notch">4. Safe areas &amp; notch</h2>
+<p><code>[DEFAULT — adjustable]</code>, ASSUMED APIs: content respects
+system avoid areas (status bar, punch-hole/notch, navigation/gesture
+area) via ArkUI safe-area handling (<code>expandSafeArea</code> only for
+full-bleed surfaces — the media viewer background — with controls inset
+to the safe area). The bottom tab bar sits above the gesture indicator
+area. The mobile artifacts’ bezel/status-bar cosmetics are illustrative
+chrome, not token-governed (mobile README §3
+<code>[VERIFIED convention]</code>); the HarmonyOS status-bar treatment
+follows the same rule.</p>
+<h2 id="dark-mode-via-system">5. Dark mode via system</h2>
+<p>Verified design intent (settings artifact note): “dark mode follows
+system + explicit override, same three-state choice”. Realization
+(ASSUMED APIs):</p>
+<ul>
+<li>The three-state Light/System/Dark control writes the app color-mode
+preference; <strong>System</strong> follows the OS dark mode, matching
+web mechanism semantics (theming §2) without reusing its CSS
+mechanics.</li>
+<li>Colors come <strong>only</strong> from the generated token binding
+(design-system §7 token bridge — the ArkTS output of the same codegen
+that emits <code>ThreadyColors</code>/Lipgloss; generator itself
+<code>[OPEN: THREADY-DES-LIB-04]</code>, does not exist yet). Dark
+values are the verified Thready dark theme tokens; no ArkUI default
+palette may leak into token-governed surfaces.</li>
+<li>Per-Account white-label re-tints via the same bridge from
+<code>GET /v1/accounts/{id}/branding</code> (theming §8 mechanism
+<code>[VERIFIED as stated mechanism]</code>); semantic colors are never
+overridden (<code>--danger</code> rule, design-system §6.2).</li>
+</ul>
+<h2 id="barrier-free-accessibility-mapping">6. Barrier-Free
+accessibility mapping</h2>
+<p>The a11y contract (design-system §6 <code>[VERIFIED]</code>) realized
+on the Barrier-Free kit (wireframes §6.1 row
+<code>[VERIFIED table]</code>; every ArkUI attribute name ASSUMED):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Contract point (design-system §6)</th>
+<th>HarmonyOS realization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WCAG 2.2 AA contrast</td>
+<td>Carried by the tokens themselves (AA-pinned values) — no platform
+work beyond <em>using</em> the bridge</td>
+</tr>
+<tr>
+<td>Brand ≠ text; danger ≠ brand</td>
+<td>Same token discipline; <code>Progress</code>/chip states use
+semantic tokens only</td>
+</tr>
+<tr>
+<td>Focus visible everywhere</td>
+<td>Focus-highlight on every interactive component (ArkUI focus states);
+keyboard/remote focus order follows reading order</td>
+</tr>
+<tr>
+<td>Keyboard + screen reader</td>
+<td>Barrier-Free screen reading:
+<code>accessibilityText</code>/<code>accessibilityDescription</code> on
+every interactive; groups via <code>accessibilityGroup</code>; per-step
+pipeline status <strong>announced</strong> on change (post-detail note
+<code>[VERIFIED intent]</code>)</td>
+</tr>
+<tr>
+<td>Reduced motion</td>
+<td>Honor the system animation-reduction setting; freeze to poster
+frames per motion §5 (see §9)</td>
+</tr>
+<tr>
+<td>Localized, direction-agnostic</td>
+<td>§10; string resources per locale</td>
+</tr>
+</tbody>
+</table>
+<p>Long-press tooltips replace hover hints (platform-map §4
+<code>[VERIFIED rule]</code>: “Compose/Flutter/ ArkTS show tooltips on
+long-press — hints that matter must also exist as visible helper
+text”).</p>
+<h2 id="arkui-component-substitutions">7. ArkUI component
+substitutions</h2>
+<p>Consolidated from platform-map §3 (AR column) + §4 notes; the three
+explicitly noted mappings first, then the derived component-group
+mappings. <strong>Every row is ASSUMED</strong>
+(<code>[GAP: 8.5]</code>, <code>[OPEN: THREADY-DES-PLAT-03]</code>) —
+the AR column has zero VERIFIED cells (platform-map §5).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component group</th>
+<th>ArkUI substitution</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Toast / alert</td>
+<td><code>promptAction.showToast</code>; never the only channel for a
+critical error (also inline)</td>
+<td>platform-map §4 (explicit)</td>
+</tr>
+<tr>
+<td>Progress bar</td>
+<td><code>Progress</code> (det./indet.); failed+retry keeps
+<code>--danger</code> + focusable retry</td>
+<td>platform-map §3/§4 (explicit)</td>
+</tr>
+<tr>
+<td>Tooltip</td>
+<td>long-press <code>Popup</code> hint + visible helper text for
+load-bearing hints</td>
+<td>platform-map §4 (explicit)</td>
+</tr>
+<tr>
+<td>Buttons (primary/secondary/ghost/destructive)</td>
+<td><code>Button</code> with token-bridge styles; destructive always
+<code>--danger</code></td>
+<td>derived from §3 AR column</td>
+</tr>
+<tr>
+<td>Input / textarea</td>
+<td><code>TextInput</code>/<code>TextArea</code> + form hint slot for
+label/hint/error triple (<code>isError</code>-equivalent semantics
+travel with the message text)</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Select</td>
+<td><code>Select</code></td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Checkbox / radio / switch</td>
+<td><code>Checkbox</code> / <code>Radio</code> /
+<code>Toggle(ToggleType.Switch)</code> — accent track from the token
+bridge (platform-map §4)</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Date</td>
+<td><code>DatePickerDialog</code> (native picker wins on mobile —
+platform-map §4 rule)</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Card / stat card</td>
+<td><code>Column</code> + border/tokens; composites assembled, not
+forked</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Table → cards</td>
+<td>On phones the table collapses to thread-row cards (platform-map §4
+rule); <code>List</code> + header where a table survives</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Badge / chips</td>
+<td><code>Badge</code>; hashtag <code>Chip</code> (direct = brand fill,
+indirect = outline + <code>--muted</code> + non-color marker);
+processing chip = chip + progress, five states +
+<code>[r]</code>-equivalent retry (component-library §7 parity
+contract)</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Dialog / modal</td>
+<td><code>CustomDialog</code>; destructive action never
+default-focused</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Spinner / helix motif</td>
+<td><code>LoadingProgress</code>; helix-motif spinner via
+<code>Canvas</code> drawing</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Tabs / sidebar / topbar</td>
+<td><code>Tabs</code> / <code>SideBarContainer</code> /
+<code>Navigation</code> title bar</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Skeleton</td>
+<td>opacity-pulse rows, only after ~150 ms (no flash — platform-map §4
+rule)</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Empty / error state</td>
+<td>centered composites; error page + idempotent retry</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Avatar / pagination / breadcrumbs / link</td>
+<td><code>Image</code>+circle text / button row / text row /
+<code>Span</code> + click</td>
+<td>derived</td>
+</tr>
+<tr>
+<td>Theme toggle / language picker</td>
+<td>dark-mode config three-state (§5) / locale select (§10)</td>
+<td>derived</td>
+</tr>
+</tbody>
+</table>
+<h2 id="layered-icon-integration">8. Layered icon integration</h2>
+<p>Grounded in <a
+href="../assets/icon-export-matrix.md#37-harmonyos">icon-export-matrix
+§3.7</a>
+<code>[VERIFIED — assets produced by the live</code>generate-raster.sh<code>run]</code>:</p>
+<ul>
+<li><code>harmonyos/foreground.png</code> (216) +
+<code>harmonyos/background.png</code> (216) referenced from
+<code>resources/base/media/layered_image.json</code>
+(<code>foreground</code>/<code>background</code>); the solid/branded
+background layer is supplied at integration (brand-assets §5.1).</li>
+<li><code>harmonyos/appgallery-1024.png</code> for the AppGallery
+listing.</li>
+<li>The <strong>assets exist now; no HarmonyOS launcher is
+claimed</strong> — wiring them into an actual <code>.hap</code> is
+<code>[GAP: 8.5]</code> work. The launcher icon carries the helix
+element, no letters <code>[VERIFIED — brand-assets]</code>.</li>
+</ul>
+<h2 id="motion">9. Motion</h2>
+<p>What ground truth actually says — checked, not assumed: <a
+href="../motion/motion.md#6-runtime-integration">motion.md §6</a> names
+<strong>exactly three</strong> Lottie runtimes (<code>lottie-web</code>,
+<code>lottie-compose</code>, <code>lottie-ios</code>); neither motion.md
+nor platform-map names <strong>any</strong> HarmonyOS Lottie runtime.
+Therefore:</p>
+<ul>
+<li>A community <code>@ohos/lottie</code> player is believed to exist in
+the OHOS ecosystem, but it is <strong>unverified here —
+ASSUMED</strong>, and adopting it (vs. reimplementing the small
+animation set in ArkUI <code>animateTo</code>) is
+<code>[OPEN: THREADY-DES-PLAT-04]</code>. <code>THREADY-MOT-01</code>’s
+verify-before-ship rule extends to any HarmonyOS runtime.</li>
+<li><strong>Guaranteed floor (no Lottie needed):</strong> the five
+static <code>reducedMotionFallback</code> SVGs/posters (motion §5
+<code>[VERIFIED delivered]</code>) render the
+loading/success/error/pulse/sync states; simple state transitions use
+ArkUI animation with the token durations
+<code>--motion-fast 150ms</code> / <code>--motion-base 200ms</code> on
+<code>--ease-standard cubic-bezier(0.2,0,0,1)</code>
+<code>[VERIFIED values]</code>.</li>
+<li>Reduced motion: the system animation-reduction setting gates all of
+it, freezing to the exact poster frames of motion §5 (equivalent-runtime
+rule: “both paths render the same state by construction”
+<code>[VERIFIED — motion §5]</code>).</li>
+</ul>
+<h2 id="i18n">10. i18n</h2>
+<ul>
+<li>Locales: <code>en</code> / <code>ru</code> / <code>sr-Cyrl</code>
+<code>[OPERATOR §12]</code>, following the <strong>system
+locale</strong> by default with the same in-app language picker
+semantics as every surface (component-library §4
+<code>I18nService</code> key parity — including <code>footer.made</code>
+/ <code>footer.by</code> / <code>a11y.love</code> for the locked
+attribution footer <code>[VERIFIED keys]</code>).</li>
+<li>String delivery via HarmonyOS resource qualifiers per locale
+(ASSUMED mechanism); the string <em>keys</em> stay the shared dictionary
+so translations are written once.</li>
+<li>Cyrillic rendering per <a
+href="./typography-substitution.md#5-cyrillic-coverage-ru--sr-cyrl">typography-substitution
+§5</a> — HarmonyOS Sans coverage is an unverified expectation
+<code>[OPEN: THREADY-DES-PLAT-02]</code>.</li>
+<li>The token layer is direction-agnostic (design-system §6.6); all
+three locales are LTR.</li>
+</ul>
+<h2 id="open-items">11. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-PLAT-03]</code> — <strong>verify every
+ArkUI mapping in this file</strong> (Navigation/Tabs/ NavPathStack,
+<code>bindSheet</code>, <code>WaterFlow</code>, <code>AVSession</code>,
+<code>promptAction</code>, <code>font.registerFont</code>, Barrier-Free
+attributes, safe-area APIs, back-at-tab-root rule) against the current
+HarmonyOS SDK/HIG <strong>and</strong> the <code>helix_shims</code>
+contract once it exists. Companion to the inherited
+<code>[OPEN: THREADY-DES-LIB-03]</code>.</li>
+<li><code>[OPEN: THREADY-DES-PLAT-04]</code> — <strong>HarmonyOS motion
+runtime</strong>: verify <code>@ohos/lottie</code> (or choose ArkUI
+reimplementation); until then only the §9 guaranteed floor may be
+claimed.</li>
+<li>Inherited: <code>[GAP: 8.5]</code> (client skeleton — release gate,
+wireframes §6.2), <code>[OPEN: THREADY-DES-LIB-03]</code>
+(<code>helix_shims</code> uninspected),
+<code>[OPEN: THREADY-DES-LIB-04]</code> (token-bridge codegen does not
+exist), <code>[OPEN: THREADY-DES-15]</code> (notifications surface),
+<code>[OPEN: THREADY-DES-PLAT-01/-02/-08]</code> (typography, via <a
+href="./typography-substitution.md">typography-substitution.md</a>).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

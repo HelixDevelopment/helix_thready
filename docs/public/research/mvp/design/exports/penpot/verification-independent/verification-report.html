@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready → PenPot import — independent verification</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready → PenPot import — independent
+verification</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#verdict-table" id="toc-verdict-table">1. Verdict
+table</a></li>
+<li><a href="#timestamped-snapshot-table-rpc-poll-90-s-cadence"
+id="toc-timestamped-snapshot-table-rpc-poll-90-s-cadence">2. Timestamped
+snapshot table (RPC poll, ~90 s cadence)</a></li>
+<li><a href="#final-per-file-state-111113-utc-vs-importer-claims"
+id="toc-final-per-file-state-111113-utc-vs-importer-claims">3. Final
+per-file state (11:11:13 UTC) vs importer claims</a></li>
+<li><a href="#rpc-evidence-trimmed" id="toc-rpc-evidence-trimmed">4. RPC
+evidence (trimmed)</a></li>
+<li><a
+href="#screenshot-index-cdp-disposable-chromedpheadless-shell-1440900-host-network-port-9333"
+id="toc-screenshot-index-cdp-disposable-chromedpheadless-shell-1440900-host-network-port-9333">5.
+Screenshot index (CDP, disposable <code>chromedp/headless-shell</code> @
+1440×900, host network, port 9333)</a></li>
+<li><a href="#instance-anomalies-observed"
+id="toc-instance-anomalies-observed">6. Instance anomalies
+observed</a></li>
+<li><a href="#provenance" id="toc-provenance">7. Provenance</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready → PenPot import — INDEPENDENT verification report
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/exports/penpot/verification-independent/verification-report.md
+  Status          : Final — v1.0
+  Revision        : 1 (2026-07-22)
+  Author          : Independent verifier (separate agent from the importer; RPC + CDP evidence only)
+  Related         : ../IMPORT.md, ../verification/ (importer's own evidence), snapshots.jsonl, *.png
+-->
+<p>Independent verification of the PenPot import performed against the
+live instance at <code>http://localhost:9001</code> (PenPot
+<strong>2.17.0</strong>), authenticated statelessly via
+<code>Authorization: Token &lt;token&gt;</code> against
+<code>/api/rpc/command/*</code>. All numbers below were read
+<strong>directly from the instance</strong> by this verifier — none are
+copied from the importer’s claims. [VERIFIED — RPC responses captured in
+<code>snapshots.jsonl</code>, 18 snapshots, 10:21–11:11 UTC]</p>
+<h2 id="verdict-table">1. Verdict table</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Import-plan item</th>
+<th>Verdict</th>
+<th>Independent evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Project structure</strong> (project “Helix Thready”, 7 files
+“01 Foundations” … “07 Prototypes”)</td>
+<td><strong>VERIFIED-PRESENT</strong></td>
+<td><code>get-projects</code> → project
+<code>6e660a50-7c2a-8049-8008-5d974fe499d1</code> with
+<code>count: 7</code>; <code>get-project-files</code> lists all 7
+expected names.</td>
+</tr>
+<tr>
+<td><strong>Design tokens</strong> (W3C DTCG sets/themes)</td>
+<td><strong>VERIFIED-PRESENT</strong></td>
+<td>Files 01 + 02 each carry <code>data.tokensLib</code>: sets
+<code>thready-light</code> (19), <code>thready-dark</code> (19),
+<code>thready-structure</code> (33) = <strong>71 tokens</strong>; themes
+<code>Thready/Light</code> (active) + <code>Thready/Dark</code>;
+<code>$metadata.activeSets = [thready-structure, thready-light]</code>.
+Source DTCG file has 74 → 71/74 imported (3 alias/unsupported dropped).
+Files 03–07 carry no tokensLib (by design).</td>
+</tr>
+<tr>
+<td><strong>SVG vectors</strong> (editable geometry)</td>
+<td><strong>VERIFIED-PRESENT</strong></td>
+<td>File 01: 325 objects incl. layer groups <code>token-fan-out</code>,
+<code>design-area-map</code>, 4 <code>launcher-icon-*</code>,
+<code>footer-slogan</code>, <code>logo-full</code>,
+<code>logo-mark</code> (screenshot
+<code>file-01-foundations.png</code>). File 02: 974 objects
+incl. <code>components-sheet</code>, <code>component-taxonomy</code>,
+<code>component-state-lifecycle</code>. File 06: 591 objects. Workspace
+screenshots show real vector layer trees, not flattened bitmaps.</td>
+</tr>
+<tr>
+<td><strong>PNG underlays</strong> (2× screen renders as boards)</td>
+<td><strong>VERIFIED-PRESENT</strong></td>
+<td>File 03: <strong>28 frames</strong>/65 objects; file 04: <strong>22
+frames</strong>/45 objects; file 05: 4 frames/9 objects. Viewer render
+<code>file-03-screens-web-viewer.png</code> shows the full-fidelity dark
+<code>web/thread-explorer</code> screen (1 of 28 boards).</td>
+</tr>
+<tr>
+<td><strong>Hydration</strong> (thumbnails rendered)</td>
+<td><strong>PARTIAL</strong></td>
+<td>Object thumbnails exist for <strong>6/7 files</strong>
+(<code>get-file-object-thumbnails</code>: 01→2, 02→2, 03→6, 04→2, 05→4,
+06→<strong>0</strong>, 07→2). File-level <code>thumbnailId</code> only
+on 07. Dashboard (<code>dashboard-recent-final.png</code>) shows
+rendered card thumbnails for 03+04 but placeholder glyphs for
+02+06.</td>
+</tr>
+<tr>
+<td><strong>Prototype interactions/flows</strong> (post-import
+wiring)</td>
+<td><strong>VERIFIED-PRESENT</strong> (placement differs from
+claim)</td>
+<td>15 interactions total: <strong>12 in file 03</strong>, <strong>3 in
+file 04</strong> (not in “07 Prototypes”, which has 0). 2 flows:
+<code>web-primary</code> (03, page-level <code>flows</code>) +
+<code>mobile-primary</code> (04).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="timestamped-snapshot-table-rpc-poll-90-s-cadence">2. Timestamped
+snapshot table (RPC poll, ~90 s cadence)</h2>
+<p>Total objects = sum over all 7 files, including 1 root frame per page
+(7 baseline).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>UTC time</th>
+<th>Total objects</th>
+<th>Tokens (Σ files)</th>
+<th>Notable state (file: revn)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10:21:25</td>
+<td>9</td>
+<td>0</td>
+<td>Baseline: 7 empty files; 03 revn 1 (2 objects)</td>
+</tr>
+<tr>
+<td>10:23:04 – 10:29:04</td>
+<td>9</td>
+<td>0</td>
+<td>Importer preparing; 01 revn 0→2</td>
+</tr>
+<tr>
+<td>10:30:35</td>
+<td>13</td>
+<td>0</td>
+<td>01 writing (revn 4)</td>
+</tr>
+<tr>
+<td>10:32:05</td>
+<td>21</td>
+<td>0</td>
+<td>01 revn 5</td>
+</tr>
+<tr>
+<td>10:36:36</td>
+<td>119</td>
+<td>0</td>
+<td>03 revn 3 (28 frames), 04 revn 1 (22 frames) — PNG underlays
+landed</td>
+</tr>
+<tr>
+<td>10:38:06</td>
+<td>127</td>
+<td>0</td>
+<td>02/05/07 first writes</td>
+</tr>
+<tr>
+<td>10:39:37</td>
+<td>1,100</td>
+<td>0</td>
+<td>01 revn 16 (325 obj) — SVG vector burst</td>
+</tr>
+<tr>
+<td>10:41:07</td>
+<td>2,006</td>
+<td>0</td>
+<td>02 revn 6 (974 obj), 06 revn 4 (591 obj)</td>
+</tr>
+<tr>
+<td>10:51:27</td>
+<td>2,006</td>
+<td>0*</td>
+<td>Post-completion check (*parser missed DTCG shape — fixed)</td>
+</tr>
+<tr>
+<td>10:52:27</td>
+<td>2,006</td>
+<td>142 (71×2)</td>
+<td>Corrected parser: tokensLib visible in 01+02</td>
+</tr>
+<tr>
+<td><strong>11:11:13 (final)</strong></td>
+<td><strong>2,014</strong></td>
+<td><strong>142 (71×2)</strong></td>
+<td>03 revn 6 (65 obj, interactions), 04 revn 2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="final-per-file-state-111113-utc-vs-importer-claims">3. Final
+per-file state (11:11:13 UTC) vs importer claims</h2>
+<p>Importer counts exclude the per-page root frame; mine include it
+(claimed = mine − 1). All match.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>id (suffix)</th>
+<th>revn</th>
+<th>Objects (mine / claimed)</th>
+<th>Frames</th>
+<th>Token sets / tokens / themes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01 Foundations</td>
+<td>…5d9757f5eba9</td>
+<td>16</td>
+<td>325 / 324 ✓</td>
+<td>2</td>
+<td>3 / 71 / 2 ✓</td>
+</tr>
+<tr>
+<td>02 Components</td>
+<td>…5d97583457f7</td>
+<td>6</td>
+<td>974 / 973 ✓</td>
+<td>2</td>
+<td>3 / 71 / 2 ✓</td>
+</tr>
+<tr>
+<td>03 Screens — Web</td>
+<td>…5d975850be0f</td>
+<td>6</td>
+<td>65 (was 57=56+1 at claim time) ✓</td>
+<td>28</td>
+<td>—</td>
+</tr>
+<tr>
+<td>04 Screens — Mobile</td>
+<td>…5d97587fa515</td>
+<td>2</td>
+<td>45 / 44 ✓</td>
+<td>22</td>
+<td>—</td>
+</tr>
+<tr>
+<td>05 Screens — Desktop + TUI</td>
+<td>…5d975891ead1</td>
+<td>1</td>
+<td>9 / 8 ✓</td>
+<td>4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>06 Platform Overrides</td>
+<td>…5d9758a3f0f7</td>
+<td>4</td>
+<td>591 / 590 ✓</td>
+<td>0</td>
+<td>—</td>
+</tr>
+<tr>
+<td>07 Prototypes</td>
+<td>…5d9758b7309a</td>
+<td>1</td>
+<td>5 / 4 ✓</td>
+<td>2</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No mismatches</strong> in object counts. One placement
+deviation: the claimed “15 interactions, 2 flows” are real but live in
+files 03 (12 interactions + flow <code>web-primary</code>) and 04 (3
+interactions + flow <code>mobile-primary</code>), not in file 07.</p>
+<h2 id="rpc-evidence-trimmed">4. RPC evidence (trimmed)</h2>
+<p><code>get-profile</code> → auth OK:
+<code>{"email":"…","fullname":"Milos Vasic","defaultTeamId":"15d3067e-…-5d91f2863c25"}</code></p>
+<p><code>get-projects?team-id=15d3067e-…</code> →</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="st">&quot;6e660a50-7c2a-8049-8008-5d974fe499d1&quot;</span><span class="fu">,</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Helix Thready&quot;</span><span class="fu">,</span><span class="dt">&quot;count&quot;</span><span class="fu">:</span><span class="dv">7</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="st">&quot;15d3067e-de6d-8170-8008-5d91f287c4e2&quot;</span><span class="fu">,</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Drafts&quot;</span><span class="fu">,</span><span class="dt">&quot;count&quot;</span><span class="fu">:</span><span class="dv">0</span><span class="fu">}</span><span class="ot">]</span></span></code></pre></div>
+<p><code>get-file?id=…eba9</code> (01 Foundations) →
+<code>data.tokensLib</code> (trimmed):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;thready-light&quot;</span><span class="fu">:{</span><span class="dt">&quot;color&quot;</span><span class="fu">:{</span><span class="dt">&quot;brand&quot;</span><span class="fu">:{</span><span class="er">…</span><span class="fu">},</span><span class="dt">&quot;accent&quot;</span><span class="fu">:{</span><span class="er">…</span><span class="fu">},</span> <span class="er">…19</span> <span class="er">tokens</span><span class="fu">}},</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;thready-dark&quot;</span><span class="fu">:{</span><span class="dt">&quot;color&quot;</span><span class="fu">:{</span><span class="er">…19</span> <span class="er">tokens</span><span class="fu">}},</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;thready-structure&quot;</span><span class="fu">:{</span><span class="dt">&quot;number&quot;</span><span class="fu">:{</span><span class="er">…</span><span class="fu">},</span><span class="dt">&quot;dimension&quot;</span><span class="fu">:{</span><span class="er">…</span><span class="fu">},</span><span class="dt">&quot;fontFamily&quot;</span><span class="fu">:{</span><span class="er">…</span><span class="fu">}</span> <span class="er">=</span> <span class="dv">33</span> <span class="er">tokens</span><span class="fu">},</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;$themes&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;group&quot;</span><span class="fu">:</span><span class="st">&quot;Thready&quot;</span><span class="fu">,</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Light&quot;</span><span class="fu">,</span><span class="dt">&quot;selectedTokenSets&quot;</span><span class="fu">:{</span><span class="dt">&quot;thready-structure&quot;</span><span class="fu">:</span><span class="st">&quot;enabled&quot;</span><span class="fu">,</span><span class="dt">&quot;thready-light&quot;</span><span class="fu">:</span><span class="st">&quot;enabled&quot;</span><span class="fu">}}</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">{</span><span class="dt">&quot;group&quot;</span><span class="fu">:</span><span class="st">&quot;Thready&quot;</span><span class="fu">,</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;Dark&quot;</span><span class="fu">,</span><span class="dt">&quot;selectedTokenSets&quot;</span><span class="fu">:{</span><span class="dt">&quot;thready-structure&quot;</span><span class="fu">:</span><span class="st">&quot;enabled&quot;</span><span class="fu">,</span><span class="dt">&quot;thready-dark&quot;</span><span class="fu">:</span><span class="st">&quot;enabled&quot;</span><span class="fu">}}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;$metadata&quot;</span><span class="fu">:{</span><span class="dt">&quot;tokenSetOrder&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;thready-light&quot;</span><span class="ot">,</span><span class="st">&quot;thready-dark&quot;</span><span class="ot">,</span><span class="st">&quot;thready-structure&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;activeThemes&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;Thready/Light&quot;</span><span class="ot">]</span><span class="fu">,</span><span class="dt">&quot;activeSets&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;thready-structure&quot;</span><span class="ot">,</span><span class="st">&quot;thready-light&quot;</span><span class="ot">]</span><span class="fu">}}</span></span></code></pre></div>
+<p><code>get-file?id=…be0f</code> (03) page-level <code>flows</code>
+→</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;f4c2d05f-…&quot;</span><span class="fu">:{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="st">&quot;f4c2d05f-…&quot;</span><span class="fu">,</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span><span class="st">&quot;web-primary&quot;</span><span class="fu">,</span><span class="dt">&quot;startingFrame&quot;</span><span class="fu">:</span><span class="st">&quot;70850c94-…&quot;</span><span class="fu">}}</span></span></code></pre></div>
+<p>Full raw snapshots: <code>snapshots.jsonl</code> (18 lines, one JSON
+snapshot each).</p>
+<h2
+id="screenshot-index-cdp-disposable-chromedpheadless-shell-1440900-host-network-port-9333">5.
+Screenshot index (CDP, disposable <code>chromedp/headless-shell</code> @
+1440×900, host network, port 9333)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Size</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dashboard.png</code></td>
+<td>156 KB</td>
+<td>First dashboard visit post-login; 07 Prototypes card with rendered
+thumbnail; PenPot onboarding modal partially obscures view (anomaly
+2)</td>
+</tr>
+<tr>
+<td><code>dashboard-recent-final.png</code></td>
+<td>210 KB</td>
+<td>Final dashboard: “Helix Thready — 7 files”; rendered thumbnails for
+03+04, placeholder glyphs for 02+06 (hydration = PARTIAL)</td>
+</tr>
+<tr>
+<td><code>dashboard-project-helix-thready.png</code></td>
+<td>25 KB</td>
+<td>Project files view, mid-import (10:41 UTC)</td>
+</tr>
+<tr>
+<td><code>dashboard-project-helix-thready-final.png</code></td>
+<td>6 KB</td>
+<td><strong>Failed render</strong> — project-files route came up nearly
+empty in headless capture (anomaly 3); superseded by
+<code>dashboard-recent-final.png</code></td>
+</tr>
+<tr>
+<td><code>file-01-foundations.png</code></td>
+<td>80 KB</td>
+<td>Workspace: vector layer tree (token-fan-out, design-area-map,
+launcher icons, logos, motion previews); Thready logo vectors on canvas;
+TOKENS tab present</td>
+</tr>
+<tr>
+<td><code>file-02-components.png</code></td>
+<td>145 KB</td>
+<td>Workspace: components-sheet + taxonomy + lifecycle vectors,
+light/dark library boards</td>
+</tr>
+<tr>
+<td><code>file-03-screens-web-viewer.png</code></td>
+<td>266 KB</td>
+<td>Viewer: full-fidelity dark <code>web/thread-explorer</code> board
+(1/28) — workspace capture crashed (anomaly 1)</td>
+</tr>
+<tr>
+<td><code>file-04-screens-mobile-viewer.png</code></td>
+<td>133 KB</td>
+<td>Viewer: mobile screen board — same workspace-capture fallback</td>
+</tr>
+<tr>
+<td><code>file-05-screens-desktop-tui.png</code></td>
+<td>176 KB</td>
+<td>Workspace: desktop + TUI boards rendered</td>
+</tr>
+<tr>
+<td><code>file-06-platform-overrides.png</code></td>
+<td>57 KB</td>
+<td>Workspace: platform-override vector content</td>
+</tr>
+<tr>
+<td><code>file-07-prototypes.png</code></td>
+<td>161 KB</td>
+<td>Workspace: prototype boards rendered</td>
+</tr>
+</tbody>
+</table>
+<p>Tooling kept alongside: <code>snapshot.py</code> (RPC poller),
+<code>cdp_shots.py</code> / <code>cdp_resume.py</code> (CDP driver),
+<code>files.json</code> (id map), <code>snapshots.jsonl</code> (raw
+evidence).</p>
+<h2 id="instance-anomalies-observed">6. Instance anomalies observed</h2>
+<ol type="1">
+<li><strong><code>Page.captureScreenshot</code> → “Internal
+error”</strong> on the workspace views of files 03 and 04 only (the two
+files with 28/22 large 2× PNG textures), reproducible across fresh tabs,
+clip capture, JPEG, and <code>fromSurface:false</code>; CDP also hit
+transient connection timeouts while those pages were rendering. Files
+05/06/07 captured fine. Workaround: PenPot <strong>view mode</strong>
+rendered and captured both files without issue. This is a
+headless-capture limitation under heavy texture load, not data
+corruption — the RPC data and viewer renders are complete.</li>
+<li><strong>Onboarding modal</strong> (“Help us get to know you”)
+blocked the first dashboard screenshot; removed from DOM (cosmetic only)
+for the final captures.</li>
+<li><strong>Project-files dashboard route</strong> rendered nearly empty
+twice in headless capture
+(<code>dashboard-project-helix-thready-final.png</code>, 6 KB); the
+Recent view was used as hydration evidence instead.</li>
+<li><strong>Hydration incomplete at verification close</strong>: file 06
+has zero object thumbnails; only file 07 has a file-level
+<code>thumbnailId</code>; dashboard cards for 02+06 show placeholder
+glyphs. Expected to self-heal as PenPot renders thumbnails lazily on
+access.</li>
+<li><strong>Token count 71 vs 74 source tokens</strong> — 3 source
+entries (alias/unsupported types, e.g.
+<code>--border-soft → var(--border)</code>) did not land as importable
+DTCG tokens. Matches the importer’s own “71/74” claim; not a regression
+found by this verifier.</li>
+<li>No RPC errors, no 5xx, no file-read failures across all 18 snapshots
+(<code>fileErrors=0</code> throughout).</li>
+</ol>
+<h2 id="provenance">7. Provenance</h2>
+<ul>
+<li>Verifier ran <strong>independently</strong> of the importer; no
+writes were made to any PenPot file — RPC reads
+(<code>get-profile</code>, <code>get-teams</code>,
+<code>get-projects</code>, <code>get-project-files</code>,
+<code>get-team-recent-files</code>, <code>get-file</code>,
+<code>get-file-object-thumbnails</code>) and UI screenshots only.
+[VERIFIED — command list]</li>
+<li>Disposable browser container <code>thready-verify-cdp</code> (image
+<code>chromedp/headless-shell</code>, host network, CDP on
+127.0.0.1:9333) — created for this verification and removed afterwards.
+Neither <code>helixcode-chromedp</code> nor <code>penpot-network</code>
+was touched.</li>
+<li>Credentials were read from the gitignored
+<code>.penpot-credentials</code>; no secret values appear in this report
+or in any evidence file.</li>
+</ul>
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

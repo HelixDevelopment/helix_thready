@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/platforms/typography-substitution.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · platforms)
   Related         : ./README.md, ../design-system.md (§4), ../opendesign/DESIGN.md (§3),
                     ../library/platform-map.md, ../screens/tui/lipgloss-theme.md,
@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · platforms) | Initial spec: brand-face bundling feasibility per platform, honest fallback stacks (`[DEFAULT — adjustable]`), TUI monospace-only reality, Cyrillic discipline (THREADY-DES-04 inherited), dynamic-type mapping of the token ramp; minted `THREADY-DES-PLAT-01/-02/-08` |
+| 2 | 2026-07-22 | swarm (design · decisions) | Operator ruling: bundle **all three brand faces on all platforms** (Android/iOS/HarmonyOS/Aurora); `THREADY-DES-PLAT-01` **narrowed** to per-face license/redistribution (OFL) verification; §3 fallback stacks re-labelled **runtime-failure fallbacks only** (no longer the shipping default) |
 
 ## Table of contents
 
@@ -46,9 +47,12 @@ already ship "with system fallbacks only — fonts are not embedded" (mobile REA
 
 This spec defines, per platform: (a) how the brand faces **would** be bundled, (b) what renders
 when they are **not** (the fallback stacks), and (c) how the token type ramp maps onto each
-platform's font-scaling system. Whether Thready actually bundles fonts on each platform is a
-product decision — `[OPEN: THREADY-DES-PLAT-01]` — with **fallback-first as the shipping default**
-(`[DEFAULT — adjustable]`, §3).
+platform's font-scaling system. **Decided** (operator ruling 2026-07-22): Thready **bundles all
+three brand faces on every platform** (Android / iOS / HarmonyOS / Aurora).
+`[OPEN: THREADY-DES-PLAT-01]` is **narrowed** to the remaining sub-task — per-face
+**license/redistribution verification (the OFL check)** before any bundle ships. The §3
+stacks are **runtime failure fallbacks only** (a bundled face failing to load/register),
+no longer the shipping default.
 
 ```mermaid
 flowchart TB
@@ -91,20 +95,24 @@ survive that constraint.
 
 **License note (do not skip).** All three faces are distributed under open licenses on the web
 path today, but **redistribution inside signed native app bundles (and store listings) must be
-re-verified per face before any bundling ships** — that verification is part of
-`[OPEN: THREADY-DES-PLAT-01]`. No claim of cleared redistribution is made here.
+re-verified per face before any bundling ships** — that verification (the OFL check) is now the
+**entire remaining scope** of `[OPEN: THREADY-DES-PLAT-01]` (narrowed 2026-07-22; the
+bundling decision itself is made). No claim of cleared redistribution is made here.
 
 **Variable-font caveat.** The web ships *variable* faces (one file, `wght` axis — design-system
 §4). Native text stacks differ in variable-font axis support; if a platform's renderer handles
 the axis poorly, the fallback is static instances at the used weights (400/500/600/700), at the
-cost of extra files. Decide per platform inside `THREADY-DES-PLAT-01`.
+cost of extra files. Decide per platform at integration — an implementation detail of the
+decided bundling, not part of the narrowed `THREADY-DES-PLAT-01`.
 
 ## 3. Fallback stacks per OS (when bundling is not done)
 
-**Shipping default:** fallback-first `[DEFAULT — adjustable]` — matching what the mobile screen
-artifacts already render ("system fallbacks only", mobile README §1). Every row below is a
-*proposed default pending the product decision* `[OPEN: THREADY-DES-PLAT-01]`; none is claimed to
-carry the brand voice, and none is claimed verified for Cyrillic (§5).
+**Role of these stacks — runtime failure fallbacks only.** Operator ruling 2026-07-22: the
+brand faces are bundled on all platforms, so fallback-first is **no longer the shipping
+default**. Each row below defines what renders when a bundled face fails to load/register at
+runtime — and what the mobile screen artifacts happen to render today ("system fallbacks
+only", mobile README §1) until the bundles land. None is claimed to carry the brand voice,
+and none is claimed verified for Cyrillic (§5).
 
 | Platform | Display + Body fallback | Mono fallback | Notes |
 |----------|------------------------|---------------|-------|
@@ -191,11 +199,14 @@ actually applies, and the test matrix proving the 200 % bar, are
 
 ## 7. Open items
 
-- `[OPEN: THREADY-DES-PLAT-01]` — **the bundling decision**: per platform (Android/iOS/
-  HarmonyOS/Aurora), decide bundle-the-brand-faces vs. ship the §3 fallback stacks; includes
-  per-face license/redistribution verification for app-bundle shipping and the
-  variable-vs-static-instances choice. Until decided, **fallback-first is the shipping default**
-  and no non-web surface may claim brand typography.
+- `[OPEN: THREADY-DES-PLAT-01]` — **narrowed 2026-07-22** (was: the per-platform bundling
+  decision). Operator ruling: **bundle all three brand faces on all platforms**
+  (Android/iOS/HarmonyOS/Aurora); the §3 stacks are **runtime failure fallbacks only**, no
+  longer the shipping default. Remaining scope: **per-face license/redistribution
+  verification (the OFL check)** for app-bundle/store shipping — no bundle ships, and no
+  non-web surface may claim brand typography, until that verification lands.
+  (Variable-vs-static instances stays a per-platform implementation detail at integration,
+  §2 caveat.)
 - `[OPEN: THREADY-DES-PLAT-02]` — verify **Cyrillic (ru / sr-Cyrl) coverage of each fallback
   face** (Roboto, SF Pro, HarmonyOS Sans, Aurora system default) on real devices/images;
   companion to the inherited `[OPEN: THREADY-DES-04]` (brand-face subsets — still open, still

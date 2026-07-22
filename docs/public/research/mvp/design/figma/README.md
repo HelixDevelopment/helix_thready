@@ -2,8 +2,8 @@
   Title           : Helix Thready — Figma Import Kit (catalogue)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/figma/README.md
-  Status          : Draft — v0.1 · blueprint proven in PenPot (2026-07-22); Figma materialization OPTIONAL
-  Revision        : 2 (2026-07-22)
+  Status          : Draft — v0.1 · blueprint proven in PenPot (2026-07-22); Figma path DROPPED (wontfix, 2026-07-22) — kit archived as blueprint proof
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · figma)
   Related         : ./figma-variables.json, ./figma-file-plan.md, ../opendesign/tokens.css,
                     ../opendesign/DESIGN.md, ../library/README.md, ../library/components-sheet.svg,
@@ -17,21 +17,25 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · figma) | Initial kit: complete token set as Figma Variables JSON (light+dark), 8-page file-plan blueprint for "Thready — Design Library", two materialization paths (MCP / manual); actual Figma file creation tracked as `[OPEN: THREADY-DES-FIG-01]` |
 | 2 | 2026-07-22 | swarm (design · figma) | Disposition after the platform pivot (Constitution §11.4.220): the kit's blueprint was executed against **PenPot** (7 files, tokens 71/74, screens light+dark — evidence `../exports/penpot/verification/`); `FIG-01` re-scoped to the *optional, operator-triggered* Figma-cloud import; `FIG-03` closed (`../screens/mobile/channels.html` now exists) |
+| 3 | 2026-07-22 | swarm (design · decisions) | Operator ruling supersedes the Rev 2 re-scope: `[CLOSED: THREADY-DES-FIG-01]` — **wontfix**, the Figma path is dropped entirely; PenPot is the sole design platform; the kit stays as **archived blueprint proof** (blueprint proven via PenPot). `[CLOSED: THREADY-DES-FIG-02]` closes with it (was conditioned on `FIG-01`) |
 
-The bridge that materializes the Thready design system as a Figma library file — now an
-**optional** one. Per [Constitution §11.4.220] the primary materialization lives in **PenPot**
-and is **done** (see [Disposition](#disposition-2026-07-22)); this kit remains the executable
-path for the optional Figma import/export target. It packs the canonical tokens
+The bridge that was designed to materialize the Thready design system as a Figma library
+file — now **archived**. Per [Constitution §11.4.220] the primary materialization lives in
+**PenPot** and is **done** (see [Disposition](#disposition-2026-07-22)); by operator ruling
+(2026-07-22) the Figma path is **dropped entirely** (`[CLOSED: THREADY-DES-FIG-01]` —
+wontfix) and this kit stays on disk as the **archived blueprint proof** — the blueprint it
+specifies was proven via the PenPot execution. It packs the canonical tokens
 ([`../opendesign/tokens.css`](../opendesign/tokens.css)) into Figma's Variables format and
-specifies, page by page, the Figma file an agent (or a designer) builds from the existing
+specifies, page by page, the Figma file that would have been built from the existing
 library and screen artifacts.
 
-**Honest status:** **no Figma file exists — and per Constitution §11.4.220 none is required.**
-The kit's blueprint **has been executed, against PenPot** (evidence:
-[`../exports/penpot/verification/`](../exports/penpot/verification/)); the Figma materialization
-is now the *optional* remainder of `[OPEN: THREADY-DES-FIG-01]` (re-scoped — see
-[Open items](#open-items)), operator-triggered. Nothing in this directory claims a Figma
-artifact exists. (The hi-fi-frames intent of `[OPEN: THREADY-DES-09]` is now carried by the
+**Honest status:** **no Figma file exists — and none will be created.** By operator ruling
+(2026-07-22) the Figma path is **dropped entirely** (`[CLOSED: THREADY-DES-FIG-01]` —
+wontfix, superseding the same-day re-scope; see [Open items](#open-items)); **PenPot is the
+sole design platform**. The kit's blueprint **has been executed, against PenPot** (evidence:
+[`../exports/penpot/verification/`](../exports/penpot/verification/)), so this directory
+remains as the **archived blueprint proof**. Nothing in this directory claims a Figma
+artifact exists. (The hi-fi-frames intent of `[OPEN: THREADY-DES-09]` is carried by the
 PenPot materialization; its disposition is owned by the design index.)
 
 ## Disposition (2026-07-22)
@@ -66,8 +70,9 @@ in [`../exports/penpot/verification/`](../exports/penpot/verification/).
 
 Consequences for this kit:
 
-- **`FIG-01` re-scoped** (see [Open items](#open-items)): the Figma materialization is an
-  optional, operator-triggered import — the blueprint itself is already proven.
+- **`FIG-01` re-scoped** *(superseded the same day — closed **wontfix** by operator ruling;
+  see [Open items](#open-items))*: the blueprint itself is already proven; the optional
+  import is dropped, and the kit is retained as archived blueprint proof.
 - **[`figma-variables.json`](./figma-variables.json) remains valid, unchanged, for that optional
   Figma path** — it is Figma-specific by design and unaffected by the pivot.
 - **`FIG-03` closed**: `mobile/channels-list` gained its mid-fi HTML source.
@@ -85,7 +90,8 @@ Consequences for this kit:
 
 ## Materialization path A — Figma MCP (`use_figma` Plugin API)
 
-*(Optional — operator-triggered; see Disposition.)* Requires **OAuth** to Figma (the Figma MCP
+*(Archived — dropped by operator ruling 2026-07-22, `[CLOSED: THREADY-DES-FIG-01]` wontfix;
+retained as blueprint documentation only.)* Requires **OAuth** to Figma (the Figma MCP
 server's `authenticate` flow) and a seat that can run plugin code.
 
 1. Authenticate the Figma MCP server (OAuth) and create the empty file
@@ -97,11 +103,13 @@ server's `authenticate` flow) and a seat that can run plugin code.
    `createVariableAlias`) → text+effect styles → components → screens → overrides → prototype
    reactions. **One page per `use_figma` call.**
 3. Run the acceptance checklist (file-plan §12), record the build in the revision tables, and
-   close `[OPEN: THREADY-DES-FIG-01]`.
+   note that `THREADY-DES-FIG-01` is closed (wontfix) — executing this archived path would
+   be a new operator decision, not a reopening recorded here.
 
 ## Materialization path B — manual import
 
-*(Optional — operator-triggered; see Disposition.)* No plugin execution; a designer with any
+*(Archived — dropped by operator ruling 2026-07-22, `[CLOSED: THREADY-DES-FIG-01]` wontfix;
+retained as blueprint documentation only.)* No plugin execution; a designer with any
 Figma plan.
 
 1. Create the file `Thready — Design Library` with the 8 pages named in the file plan.
@@ -113,7 +121,8 @@ Figma plan.
    bulk endpoint (`POST /v1/files/{key}/variables`, Enterprise token) with the stripped JSON, or
    a variables-import plugin that accepts the collection/mode/variable structure, or enter the
    41 variables by hand from the JSON (the `description` fields carry the verbatim hex values —
-   no hex ever needs to be re-derived). Path decision tracked as `[OPEN: THREADY-DES-FIG-02]`.
+   no hex ever needs to be re-derived). That path decision was `THREADY-DES-FIG-02` —
+   closed with `FIG-01`, wontfix.
 4. Continue with screens/overrides/wiring per the file plan; the same acceptance checklist
    applies.
 
@@ -139,17 +148,19 @@ Figma plan.
 
 ## Open items
 
-- `[OPEN: THREADY-DES-FIG-01]` — **re-scoped 2026-07-22** (was: *"create the actual Figma
-  file… until then no Figma artifact exists"* — i.e. "no Figma file exists yet — this kit is
-  the executable plan"). Current scope: **the Figma file is an optional import target.** The
-  blueprint was proven by the PenPot materialization
-  ([`../exports/penpot/verification/`](../exports/penpot/verification/)); `FIG-01` stays open
-  **only** as the optional Figma-cloud import (path A or B above), **operator-triggered**, and
-  is a dependency of nothing. Figma is an import/export target, never source of truth
-  `[CONSTITUTION §11.4.220]`. [`figma-variables.json`](./figma-variables.json) remains valid,
-  unchanged, for this path.
-- `[OPEN: THREADY-DES-FIG-02]` — variables import mechanism (Enterprise REST vs Plugin-API
-  replay vs plugin) — only relevant if `FIG-01`'s optional import is exercised.
+- `[CLOSED: THREADY-DES-FIG-01]` — **closed wontfix by operator ruling, 2026-07-22**,
+  superseding the same-day re-scope (Rev 2; the re-scope history is preserved in the
+  revision table): the **Figma path is dropped entirely** — **PenPot is the sole design
+  platform** `[CONSTITUTION §11.4.220]`. Rationale: the kit's blueprint was already
+  **proven via the PenPot materialization**
+  ([`../exports/penpot/verification/`](../exports/penpot/verification/)), so a Figma-cloud
+  import adds nothing and would re-introduce a proprietary dependency. The `figma/` kit
+  remains on disk as the **archived blueprint proof**; nothing claims a Figma artifact
+  exists or will be created.
+- `[CLOSED: THREADY-DES-FIG-02]` — **closed with `FIG-01`** (2026-07-22): the
+  variables-import mechanism question was conditioned on `FIG-01`'s optional import being
+  exercised, which is now wontfix — moot.
+  [`figma-variables.json`](./figma-variables.json) stays archived with the kit.
 - `[CLOSED: THREADY-DES-FIG-03]` — mid-fi HTML source for `mobile/channels-list` now exists:
   [`../screens/mobile/channels.html`](../screens/mobile/channels.html) (artifact Rev 1, added
   in the mobile catalogue Rev 2, 2026-07-22; re-verified present on disk for this revision).

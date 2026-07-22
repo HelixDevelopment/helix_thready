@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Platform Customization Specs</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Platform Customization Specs</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#what-this-directory-is" id="toc-what-this-directory-is">1.
+What this directory is</a></li>
+<li><a href="#catalogue" id="toc-catalogue">2. Catalogue</a></li>
+<li><a href="#reading-order-rules" id="toc-reading-order-rules">3.
+Reading order &amp; rules</a></li>
+<li><a href="#open-items-family-index"
+id="toc-open-items-family-index">4. Open items (family index)</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Platform Customization Specs (Catalogue)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/README.md
+  Status          : Draft — v0.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./typography-substitution.md, ./harmonyos.md, ./aurora.md,
+                    ./react-token-rebind.md, ../library/platform-map.md,
+                    ../screens/mobile/README.md, ../screens/desktop/README.md,
+                    ../screens/tui/lipgloss-theme.md, ../design-system.md,
+                    ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>Initial catalogue: per-platform DEVIATION specs closing the
+adversarial-review finding (“adequate-but-scattered for Android/iOS,
+THIN for HarmonyOS/Aurora, MISSING typography substitution everywhere”)
+— typography-substitution, dedicated HarmonyOS + Aurora specs, React
+token-rebind remediation contract; minted the
+<code>THREADY-DES-PLAT-*</code> open-item family</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · decisions)</td>
+<td><code>THREADY-DES-PLAT-01</code> narrowed per operator ruling
+(bundling decided — all three faces, all platforms; remaining scope =
+per-face license/redistribution (OFL) verification); catalogue + family
+table updated</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-this-directory-is">1. What this directory is</h2>
+<p>Per-platform <strong>customization/deviation specs</strong>: the
+places where a target platform must legitimately diverge from the
+canonical web realization of the design system, specified once and
+cross-linked, instead of living as scattered one-liners.</p>
+<p>The division of labor with the neighbouring areas is deliberate:</p>
+<ul>
+<li><strong><a
+href="../library/platform-map.md">library/platform-map.md</a></strong>
+<em>maps components</em> — every library component × 8 platform
+realizations, with per-cell VERIFIED / PROPOSED / ASSUMED markers (§3)
+and per-component customization notes (§4). It answers “<em>what</em>
+realizes this component on platform X”.</li>
+<li><strong>This directory</strong> specifies <strong>per-platform
+deviations</strong> — the platform-wide contracts that cut
+<em>across</em> components: typography substitution, navigation idiom,
+system-back behavior, safe areas, platform theming interactions
+(ambience, system dark mode), accessibility API mapping, motion runtime
+availability, i18n. It answers “<em>how</em> platform X as a whole
+departs from the web baseline, and what must never depart”.</li>
+<li><strong><a
+href="../screens/mobile/README.md">screens/*/README.md</a></strong>
+carry <strong>per-screen chrome</strong> — the Android/iOS chrome toggle
+(status bar, app bar/back pattern, navigation bar, gesture area: mobile
+README §1), the Tauri per-OS title bar/menus/tray (desktop README §3),
+the TUI terminal theme (<a
+href="../screens/tui/lipgloss-theme.md">lipgloss-theme.md</a>). Those
+stay authoritative for screen-level rendering; this directory never
+duplicates a screen.</li>
+</ul>
+<p><strong>Android/iOS status.</strong> The adversarial review rated
+Android/iOS coverage <em>adequate-but-scattered</em> (mobile README §1
+chrome toggle, wireframes §6.1 a11y/theming table, platform-map §4
+notes) — so no dedicated Android/iOS file is authored here; the one
+Android/iOS hole (typography) is closed by <a
+href="./typography-substitution.md">typography-substitution.md</a>,
+which covers <strong>all</strong> platforms. HarmonyOS and Aurora were
+rated <em>THIN</em> and get dedicated consolidating specs.</p>
+<h2 id="catalogue">2. Catalogue</h2>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 39%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Content</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a
+href="./typography-substitution.md">typography-substitution.md</a></td>
+<td><strong>The missing spec</strong>: per-platform font strategy for
+the three brand faces (Space Grotesk / Hanken Grotesk / JetBrains Mono)
+— bundling feasibility per platform, honest fallback stacks
+(<code>[DEFAULT — adjustable]</code>), Cyrillic coverage discipline
+(THREADY-DES-04 inherited), dynamic-type / font-scale mapping of the
+token type ramp</td>
+<td>new spec; bundling <strong>decided 2026-07-22</strong> — bundle all
+three faces on all platforms; <code>[OPEN: THREADY-DES-PLAT-01]</code>
+narrowed to per-face license/redistribution (OFL) verification</td>
+</tr>
+<tr>
+<td><a href="./harmonyos.md">harmonyos.md</a></td>
+<td>Dedicated <strong>ArkTS / HarmonyOS</strong> customization spec:
+ArkUI navigation of the 5-tab IA, system back, safe areas, system dark
+mode, Barrier-Free a11y mapping, consolidated ArkUI
+component-substitutions table, layered icon integration, motion runtime
+honesty, i18n</td>
+<td>design contract; client is a skeleton <code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td><a href="./aurora.md">aurora.md</a></td>
+<td>Dedicated <strong>Aurora OS / Qt / Silica</strong> customization
+spec: Silica page-stack navigation, remorse-timer pattern for
+destructive actions, ambience-vs-token tension (documented honestly), Qt
+Accessibility mapping, component substitutions, density buckets
+(<code>THREADY-DES-05</code> inherited), motion honesty,
+keyboard/hardware back</td>
+<td>design contract; client is a skeleton <code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td><a href="./react-token-rebind.md">react-token-rebind.md</a></td>
+<td><strong>Remediation contract</strong> (not a full React spec) for
+<code>THREADY-DES-LIB-01</code> / <code>[GAP: 8.6]</code>: the verified
+finding (<code>Button.tsx</code> hard-codes a Tailwind palette, zero
+token references), the required re-bind approach (CSS custom properties
+from <code>tokens.css</code>), and the acceptance criteria that close
+the gap</td>
+<td>remediation contract</td>
+</tr>
+</tbody>
+</table>
+<h2 id="reading-order-rules">3. Reading order &amp; rules</h2>
+<ol type="1">
+<li>Read <a
+href="../design-system.md#7-per-platform-fan-out">design-system.md
+§7</a> first — the fan-out table and the token-bridge mechanism are the
+frame every file here hangs on.</li>
+<li>Then <a href="../library/platform-map.md">platform-map.md</a> §2
+(what is actually verified per repo) — the honesty baseline these specs
+must never overstate.</li>
+<li>Then the file for your platform. Cross-cutting typography applies to
+<strong>every</strong> platform.</li>
+</ol>
+<p>Non-negotiables that no per-platform deviation may touch (restated
+from <a
+href="../design-system.md#6-accessibility-contract">design-system §6</a>
+and <a href="../opendesign/DESIGN.md">opendesign/DESIGN.md</a>):</p>
+<ul>
+<li><strong>Semantic colors are state, never decoration</strong> —
+destructive UI is always <code>--danger</code>; no platform theme,
+ambience, or white-label may mask it
+<code>[VERIFIED — THEMES.md rule]</code>.</li>
+<li><strong>Parity contract</strong> — identical interaction states +
+a11y semantics on every platform, enforced by the
+<code>ScreenDiff</code>/<code>VisualRegression</code> bank once CI lands
+<code>[GAP: 9.3]</code> (wireframes §6.1).</li>
+<li><strong>Tokens are the single upstream</strong> — every platform
+consumes a <em>generated</em> binding, never a hand-kept copy
+(design-system §7).</li>
+</ul>
+<h2 id="open-items-family-index">4. Open items (family index)</h2>
+<p>The <code>THREADY-DES-PLAT-*</code> family minted by this directory;
+each is owned by the file that mints it and registered in the canonical
+<a href="../index.md#open-items">../index.md</a> registry:</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 34%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Owning file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>THREADY-DES-PLAT-01</code></td>
+<td><strong>Narrowed 2026-07-22</strong> — bundling decided (bundle all
+three faces on all platforms; fallbacks are runtime-failure only);
+remaining: per-face <strong>license/redistribution (OFL)
+verification</strong></td>
+<td><a
+href="./typography-substitution.md#7-open-items">typography-substitution.md
+§7</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-02</code></td>
+<td><strong>Fallback-stack Cyrillic</strong> (ru / sr-Cyrl) coverage
+verification per OS face</td>
+<td><a
+href="./typography-substitution.md#7-open-items">typography-substitution.md
+§7</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-03</code></td>
+<td><strong>ArkUI API verification</strong> of every derived HarmonyOS
+mapping (navigation, components, font registration, Barrier-Free)</td>
+<td><a href="./harmonyos.md#11-open-items">harmonyos.md §11</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-04</code></td>
+<td><strong>HarmonyOS motion runtime</strong> — no verified Lottie
+player; <code>@ohos/lottie</code> is ASSUMED</td>
+<td><a href="./harmonyos.md#11-open-items">harmonyos.md §11</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-05</code></td>
+<td><strong>Silica/Qt API verification</strong> of every derived Aurora
+mapping (remorse timer, Silica components, Qt Multimedia)</td>
+<td><a href="./aurora.md#10-open-items">aurora.md §10</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-06</code></td>
+<td><strong>Aurora motion runtime</strong> — no verified Lottie player;
+Qt-native animation fallback decision</td>
+<td><a href="./aurora.md#10-open-items">aurora.md §10</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-07</code></td>
+<td><strong>Ambience-vs-token policy</strong> — final rule for what (if
+anything) Silica ambience may tint</td>
+<td><a href="./aurora.md#10-open-items">aurora.md §10</a></td>
+</tr>
+<tr>
+<td><code>THREADY-DES-PLAT-08</code></td>
+<td><strong>Dynamic-type clamp matrix</strong> — max font-scale each
+platform must survive against the token ramp</td>
+<td><a
+href="./typography-substitution.md#7-open-items">typography-substitution.md
+§7</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

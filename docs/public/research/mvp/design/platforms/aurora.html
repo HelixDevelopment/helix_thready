@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Aurora OS (Qt / Silica) Customization Spec</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Aurora OS (Qt / Silica) Customization
+Spec</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#position-sources-consolidated"
+id="toc-position-sources-consolidated">1. Position &amp; sources
+consolidated</a></li>
+<li><a href="#navigation-idiom-5-tab-ia-silica-page-stack"
+id="toc-navigation-idiom-5-tab-ia-silica-page-stack">2. Navigation idiom
+(5-tab IA → Silica page stack)</a></li>
+<li><a href="#remorse-timer-pattern-for-destructive-actions"
+id="toc-remorse-timer-pattern-for-destructive-actions">3. Remorse-timer
+pattern for destructive actions</a></li>
+<li><a href="#ambience-aware-theming-vs.-the-thready-tokens"
+id="toc-ambience-aware-theming-vs.-the-thready-tokens">4. Ambience-aware
+theming vs. the Thready tokens</a></li>
+<li><a href="#qt-accessibility-mapping"
+id="toc-qt-accessibility-mapping">5. Qt Accessibility mapping</a></li>
+<li><a href="#component-substitutions-qtsilica"
+id="toc-component-substitutions-qtsilica">6. Component substitutions
+(Qt/Silica)</a></li>
+<li><a href="#density-buckets" id="toc-density-buckets">7. Density
+buckets</a></li>
+<li><a href="#motion" id="toc-motion">8. Motion</a></li>
+<li><a href="#keyboard-hardware-back" id="toc-keyboard-hardware-back">9.
+Keyboard &amp; hardware back</a></li>
+<li><a href="#open-items" id="toc-open-items">10. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Aurora OS (Qt / Silica) Customization Spec
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/aurora.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./README.md, ./typography-substitution.md, ../library/platform-map.md,
+                    ../screens/mobile/README.md, ../wireframes.md (§6.1/§6.2),
+                    ../design-system.md (§6/§7), ../theming.md, ../motion/motion.md (§5/§6),
+                    ../brand-assets.md (§5.1), ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>Initial consolidation of the scattered per-screen Aurora one-liners
+into one design contract: Silica page-stack navigation, remorse-timer
+pattern, ambience-vs-token tension (honest), Qt Accessibility mapping,
+component substitutions, density buckets (THREADY-DES-05 inherited),
+motion honesty, keyboard/hardware back; minted
+<code>THREADY-DES-PLAT-05/-06/-07</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Honest status header.</strong> The Aurora client is a
+<code>helix_shims</code> <strong>skeleton</strong>
+<code>[GAP: 8.5]</code>, and its would-be token package
+(<code>helix_design</code> Qt arm) is a <strong>verified empty
+scaffold</strong> <code>[GAP: 8.2/8.3]</code> (<a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2</a>). The QT column of the platform matrix has <strong>zero VERIFIED
+cells</strong> (platform-map §5). Nothing in this file is build-ready or
+claimed to work; it is the <strong>design contract the client builds
+against</strong>, and every Silica/Qt API name is
+<strong>ASSUMED</strong> until verified against current Aurora OS SDK
+docs and the <code>helix_shims</code> contract —
+<code>[OPEN: THREADY-DES-PLAT-05]</code> (companion to the inherited
+<code>[OPEN: THREADY-DES-LIB-03]</code>).</p>
+</blockquote>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-position--sources-consolidated">1. Position &amp;
+sources consolidated</a></li>
+<li><a href="#2-navigation-idiom-5-tab-ia--silica-page-stack">2.
+Navigation idiom (5-tab IA → Silica page stack)</a></li>
+<li><a href="#3-remorse-timer-pattern-for-destructive-actions">3.
+Remorse-timer pattern for destructive actions</a></li>
+<li><a href="#4-ambience-aware-theming-vs-the-thready-tokens">4.
+Ambience-aware theming vs. the Thready tokens</a></li>
+<li><a href="#5-qt-accessibility-mapping">5. Qt Accessibility
+mapping</a></li>
+<li><a href="#6-component-substitutions-qtsilica">6. Component
+substitutions (Qt/Silica)</a></li>
+<li><a href="#7-density-buckets">7. Density buckets</a></li>
+<li><a href="#8-motion">8. Motion</a></li>
+<li><a href="#9-keyboard--hardware-back">9. Keyboard &amp; hardware
+back</a></li>
+<li><a href="#10-open-items">10. Open items</a></li>
+</ul>
+<h2 id="position-sources-consolidated">1. Position &amp; sources
+consolidated</h2>
+<p>Aurora guidance previously lived as one-liners in: the 11 mobile
+artifacts’ notes panels (SilicaListView/pulley/remorse/ambience
+mentions), wireframes §6.1 (Qt Accessibility / ambience / Qt font
+scaling row), platform-map §3 QT column + §4, brand-assets §5.1 +
+icon-export-matrix §3.8 (density-bucket PNGs), and design-system §7.
+This file consolidates and extends them; the sources stay authoritative
+for their own scope. Typography (Qt font database bundling — ASSUMED;
+system-default fallback; scale mapping) is in <a
+href="./typography-substitution.md">typography-substitution.md</a>.</p>
+<h2 id="navigation-idiom-5-tab-ia-silica-page-stack">2. Navigation idiom
+(5-tab IA → Silica page stack)</h2>
+<p>Silica’s native idiom is a <strong>page stack</strong> (push/pop,
+edge-swipe back) plus <strong>pulley menus</strong> — not a bottom tab
+bar. The wireframes §6 IA <code>[VERIFIED structure]</code> is five
+bottom tabs. The resolution, already sketched by the home-feed artifact
+note (“page stack + bottom tab strip”) and kept honest here:</p>
+<ul>
+<li><strong>Tab layer</strong> <code>[DEFAULT — adjustable]</code>: a
+custom bottom tab strip renders the five-tab IA for cross-platform
+parity (same IA everywhere — wireframes §6). This deliberately
+<em>deviates from pure Silica idiom</em>; the alternative (replatforming
+tabs onto pulley/attached pages) would fragment the parity contract. The
+trade-off is recorded, not hidden — revisit inside
+<code>[OPEN: THREADY-DES-PLAT-05]</code> with Aurora HIG evidence.</li>
+<li><strong>Stack layer</strong> (ASSUMED APIs): within a tab, Silica
+<code>PageStack</code> push/pop; edge-swipe back pops (the shared back
+pattern — home-feed note <code>[VERIFIED intent]</code>).</li>
+<li><strong>Pulley menus</strong> host per-screen secondary actions,
+consolidated from the artifact notes: Channels — Add-channel + filters
+in the pulley; threads — Re-sync/Pause/Recipes; Search — scope switches.
+Primary actions stay on-surface (parity rule: a pulley may
+<em>duplicate</em>, never <em>hide</em>, a load-bearing action
+<code>[DEFAULT — adjustable]</code>).</li>
+<li><strong>Sheets:</strong> Add-Channel is a Silica <code>Dialog</code>
+page pushed from the pulley (add-channel note), with the §3.4 wizard
+data-preservation rule intact (dismiss never loses input).</li>
+</ul>
+<p>Per-screen consolidation (each cell ASSUMED,
+<code>[GAP: 8.5]</code>):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Qt/Silica realization (from the notes panels)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home feed</td>
+<td>Qt Quick/Silica page stack + bottom tab strip; ambience-tint policy
+per §4</td>
+</tr>
+<tr>
+<td>Channels</td>
+<td><code>SilicaListView</code>; Add-channel + filters via pulley;
+edge-swipe back</td>
+</tr>
+<tr>
+<td>Add-Channel</td>
+<td>Silica <code>Dialog</code> page pushed from the pulley menu</td>
+</tr>
+<tr>
+<td>Channel threads</td>
+<td><code>SilicaListView</code> + pulley (Re-sync/Pause/Recipes);
+edge-swipe back</td>
+</tr>
+<tr>
+<td>Post detail</td>
+<td>pipeline rows with Qt Accessibility; <strong>remorse timer</strong>
+on Reprocess (§3)</td>
+</tr>
+<tr>
+<td>Search</td>
+<td>Silica <code>SearchField</code> header item over the list</td>
+</tr>
+<tr>
+<td>Assets grid</td>
+<td><code>SilicaGridView</code>; filters via pulley; Qt font scaling per
+wireframes §6.1</td>
+</tr>
+<tr>
+<td>Media viewer</td>
+<td>Qt Multimedia (<code>MediaPlayer</code>/<code>VideoOutput</code>)
+under Silica chrome; edge-swipe back</td>
+</tr>
+<tr>
+<td>Account / Settings</td>
+<td>identical card stack; ambience-aware theme row (§4); role-gated
+Admin card</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td>Aurora events-view integration (<code>[OPEN: THREADY-DES-15]</code>
+surface)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="remorse-timer-pattern-for-destructive-actions">3. Remorse-timer
+pattern for destructive actions</h2>
+<p><strong>Verified precedent:</strong> the post-detail artifact’s
+Aurora note specifies a “remorse-timer pattern for Reprocess confirm”
+<code>[VERIFIED — screens/mobile/post-detail.html notes panel]</code>.
+This file promotes it from a one-liner to the platform rule
+<code>[DEFAULT — adjustable]</code>:</p>
+<ul>
+<li>On Aurora, destructive or hard-to-undo actions use the
+Sailfish/Aurora <strong>remorse</strong> pattern — an inline countdown
+(“Reprocessing in 5s — tap to cancel”) that executes on expiry —
+<em>instead of</em> the modal confirm dialog other platforms use. Same
+decision semantics, platform-native delivery; an allowed deviation under
+the parity contract because states and outcomes are identical.</li>
+<li>Scope: Reprocess (verified precedent), Remove channel, Pause channel
+bulk actions, Sign out. <strong>Not</strong> used where the web contract
+mandates stronger friction (typed confirmation), if any such flow lands
+— remorse never <em>weakens</em> a confirm contract.</li>
+<li>Semantics: the countdown row is announced via Qt Accessibility
+(state + remaining action); cancel is a full-row tap target (≥ 44px);
+the destructive label uses <code>--danger</code> — remorse styling never
+masks the semantic color (design-system §6.2 rule).</li>
+<li>Timer length ~5 s <code>[DEFAULT — adjustable]</code>; the
+<code>RemorsePopup</code>/remorse-item API availability in current
+Aurora Silica is <strong>ASSUMED</strong> —
+<code>[OPEN: THREADY-DES-PLAT-05]</code>. Fallback if absent: the
+standard confirm dialog (platform-map §3 <code>Dialog</code> row).</li>
+<li>Idempotency guard: expiry fires the same idempotent action the other
+platforms use (e.g. Reprocess 409 “already running” handling — mobile
+README §3), so a double-fire is harmless.</li>
+</ul>
+<h2 id="ambience-aware-theming-vs.-the-thready-tokens">4. Ambience-aware
+theming vs. the Thready tokens</h2>
+<p><strong>The tension, documented honestly.</strong> Silica
+<strong>ambiences</strong> derive an accent/tint from the user-chosen
+ambience (wallpaper), i.e. <em>the OS wants to color your app</em>.
+Thready mandates the opposite: every surface is colored by the
+<strong>token palette</strong> (design-system §3) plus per-Account
+white-label (theming §8), with semantic colors untouchable. Both cannot
+fully win. Ground truth already contains the arbitration seed:
+wireframes §6.1 pins the Aurora theme source as “bridge + Silica
+ambience”, and the settings artifact note says “ambience-aware;
+<strong>explicit choice still wins</strong> (parity contract)”
+<code>[VERIFIED intents]</code>.</p>
+<p>Resolution <code>[DEFAULT — adjustable]</code>, final policy
+<code>[OPEN: THREADY-DES-PLAT-07]</code>:</p>
+<ol type="1">
+<li><strong>Tokens always win for load-bearing UI:</strong> text,
+controls, focus, chips, progress, and every <strong>semantic</strong>
+color (<code>--danger</code>/<code>--warn</code>/<code>--success</code>)
+come from the token bridge. A white-label Account brand must survive any
+ambience; an error must survive both (theming §10.2 rule).</li>
+<li><strong>Ambience may tint decorative background layers only</strong>
+— the page background wash behind token-colored surfaces — so the app
+still feels ambience-native without breaking AA or brand. If contrast of
+any token pairing over an ambience-tinted layer cannot be guaranteed,
+the layer falls back to token <code>--bg</code> (AA is non-negotiable,
+design-system §6.1).</li>
+<li><strong>Explicit theme choice wins over ambience-implied
+lightness:</strong> the Light/System/Dark three-state behaves as on
+every platform; “System” maps to the ambience’s light/dark character
+(ASSUMED API for reading it).</li>
+</ol>
+<h2 id="qt-accessibility-mapping">5. Qt Accessibility mapping</h2>
+<p>The design-system §6 contract on Qt Accessibility (wireframes §6.1
+row <code>[VERIFIED table]</code>; all attribute names ASSUMED):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Contract point</th>
+<th>Qt/Aurora realization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WCAG 2.2 AA contrast</td>
+<td>Carried by tokens; §4.2 guards ambience layers</td>
+</tr>
+<tr>
+<td>Brand ≠ text; danger ≠ brand</td>
+<td>Token discipline; remorse rows keep <code>--danger</code> (§3)</td>
+</tr>
+<tr>
+<td>Focus visible everywhere</td>
+<td><code>Accessible.focused</code>/focus highlight on every
+interactive; visible focus for hardware-keyboard use (§9)</td>
+</tr>
+<tr>
+<td>Keyboard + screen reader</td>
+<td><code>Accessible.role</code>/<code>.name</code>/<code>.description</code>
+on every interactive; pipeline rows expose per-step status (“Qt
+Accessibility on pipeline rows” — post-detail note
+<code>[VERIFIED intent]</code>); state changes announced</td>
+</tr>
+<tr>
+<td>Reduced motion</td>
+<td>System animation-reduction (ASSUMED availability) gates §8;
+poster-frame freeze</td>
+</tr>
+<tr>
+<td>Localized, direction-agnostic</td>
+<td>ru / sr-Cyrl / en; string keys shared with the fleet
+(<code>I18nService</code> dictionary,
+incl. <code>footer.made</code>/<code>footer.by</code>/<code>a11y.love</code>
+<code>[VERIFIED keys]</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Screen-reader maturity on Aurora is <strong>not asserted</strong> —
+actual capability on target devices is part of
+<code>[OPEN: THREADY-DES-PLAT-05]</code> verification; the design
+contract stands regardless.</p>
+<h2 id="component-substitutions-qtsilica">6. Component substitutions
+(Qt/Silica)</h2>
+<p>Derived from platform-map §3 (QT column) + §4, upgraded with the
+Silica-specific counterparts the mobile artifact notes verified as
+design intent. <strong>Every row ASSUMED</strong>
+(<code>[GAP: 8.5]</code>):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component group</th>
+<th>Qt/Silica substitution</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Buttons</td>
+<td><code>Button</code> + QML token styles; danger palette for
+destructive; loading = <code>enabled:false</code> +
+<code>BusyIndicator</code></td>
+<td>platform-map §3</td>
+</tr>
+<tr>
+<td>Input / field</td>
+<td><code>TextField</code> + label/error <code>Text</code> triple
+(border tint, message, accessible state)</td>
+<td>platform-map §3/§4</td>
+</tr>
+<tr>
+<td>Select / date</td>
+<td><code>ComboBox</code> / <code>Calendar</code> popup — native pickers
+win on mobile (platform-map §4 rule)</td>
+<td>platform-map §3</td>
+</tr>
+<tr>
+<td>Checkbox / radio / switch</td>
+<td><code>CheckBox</code> / <code>RadioButton</code> /
+<code>Switch</code>, accent track via token bridge</td>
+<td>platform-map §3/§4</td>
+</tr>
+<tr>
+<td>Card / stat</td>
+<td><code>Frame</code>/QML rect composites</td>
+<td>platform-map §3</td>
+</tr>
+<tr>
+<td>List / table</td>
+<td><strong><code>SilicaListView</code></strong> (upgraded from generic
+<code>TableView</code> for phone surfaces — table collapses to
+thread-row cards per platform-map §4); <code>TableView</code> only on
+genuinely tabular admin surfaces</td>
+<td>notes panels + §4</td>
+</tr>
+<tr>
+<td>Grid</td>
+<td><strong><code>SilicaGridView</code></strong> (assets masonry
+approximation)</td>
+<td>assets-grid note</td>
+</tr>
+<tr>
+<td>Search</td>
+<td><strong>Silica <code>SearchField</code></strong> header item</td>
+<td>search note</td>
+</tr>
+<tr>
+<td>Badge / chips</td>
+<td>pill <code>Rectangle</code>; hashtag pill + outline (indirect =
+dimmed + non-color marker); processing chip = pill +
+<code>BusyIndicator</code>, five states + focusable retry</td>
+<td>platform-map §3 + component-library §7</td>
+</tr>
+<tr>
+<td>Dialog</td>
+<td><code>Dialog</code> (Silica page-style) — but destructive confirms
+prefer the remorse pattern (§3)</td>
+<td>platform-map §3 + §3 above</td>
+</tr>
+<tr>
+<td>Toast</td>
+<td>overlay <code>Popup</code>; never the only channel for a critical
+error</td>
+<td>platform-map §3/§4</td>
+</tr>
+<tr>
+<td>Progress / spinner</td>
+<td><code>ProgressBar</code> / <code>BusyIndicator</code>; helix-motif
+via QML <code>Canvas</code>/<code>Shape</code>, frozen under reduced
+motion</td>
+<td>platform-map §3/§4</td>
+</tr>
+<tr>
+<td>Tooltip</td>
+<td><code>ToolTip</code> on long-press; load-bearing hints also visible
+helper text</td>
+<td>platform-map §4</td>
+</tr>
+<tr>
+<td>Skeleton</td>
+<td>animated rects, ≥150 ms delay before showing</td>
+<td>platform-map §3/§4</td>
+</tr>
+<tr>
+<td>Empty / error</td>
+<td>centered composites + retry</td>
+<td>platform-map §3</td>
+</tr>
+<tr>
+<td>Media</td>
+<td>Qt Multimedia <code>MediaPlayer</code>/<code>VideoOutput</code>
+under Silica chrome</td>
+<td>media-viewer note</td>
+</tr>
+<tr>
+<td>Theme toggle / language</td>
+<td>palette swap three-state (§4) / <code>ComboBox</code> locale</td>
+<td>platform-map §3</td>
+</tr>
+</tbody>
+</table>
+<h2 id="density-buckets">7. Density buckets</h2>
+<p>Inherited, unresolved: Aurora icon PNGs are produced at <strong>86 /
+108 / 128 / 172 / 250 px</strong>
+(<code>[VERIFIED — generate-raster.sh run; icon-export-matrix §3.8]</code>),
+but the bucket set itself is <code>[RESEARCH]</code> and must be
+re-verified against current Aurora packaging docs —
+<code>[OPEN: THREADY-DES-05]</code> <strong>inherited, not re-litigated
+here</strong>. Layout consequence <code>[DEFAULT — adjustable]</code>:
+express paddings/targets via Silica <code>Theme</code> units (ASSUMED:
+<code>Theme.paddingSmall/Medium/Large</code>,
+<code>Theme.itemSizeSmall/…</code>) mapped from the nearest token
+spacing steps, rather than raw px, so density scaling is the OS’s job;
+the mapping table is produced with the token bridge
+(<code>[OPEN: THREADY-DES-LIB-04]</code>).</p>
+<h2 id="motion">8. Motion</h2>
+<p>Checked against ground truth: <a
+href="../motion/motion.md#6-runtime-integration">motion.md §6</a> names
+<code>lottie-web</code> / <code>lottie-compose</code> /
+<code>lottie-ios</code> — <strong>no Qt or Aurora Lottie runtime is
+named anywhere</strong> in motion.md or platform-map. Honest
+consequence:</p>
+<ul>
+<li><strong>Lottie on Aurora is unverified and not designed-in.</strong>
+Candidate routes (rlottie-based QML players, Qt add-ons) are
+<strong>ASSUMED to exist at best</strong> — evaluation is
+<code>[OPEN: THREADY-DES-PLAT-06]</code>; <code>THREADY-MOT-01</code>’s
+verify-before-ship rule applies.</li>
+<li><strong>Guaranteed floor:</strong> Qt Quick animations
+(<code>NumberAnimation</code>, <code>Behavior</code>,
+states/transitions) with the token durations
+<code>--motion-fast 150ms</code> / <code>--motion-base 200ms</code> on
+<code>--ease-standard cubic-bezier(0.2,0,0,1)</code>
+<code>[VERIFIED values — design-system §5]</code>, plus the five
+delivered static poster SVGs (motion §5 <code>[VERIFIED]</code>) for
+loading/success/error/pulse/sync states. The helix spinner may
+alternatively be a QML <code>Canvas</code> rotation of the static
+mark.</li>
+<li>Reduced motion freezes to the exact §5 poster frames
+(equivalent-runtime rule); remorse countdowns (§3) remain
+<strong>textual</strong> under reduced motion (the timer is meaning, not
+decoration — it keeps counting, only decorative easing is dropped).</li>
+</ul>
+<h2 id="keyboard-hardware-back">9. Keyboard &amp; hardware back</h2>
+<ul>
+<li><strong>Edge-swipe back is the primary back gesture</strong> (= the
+shared back pattern, home-feed note <code>[VERIFIED intent]</code>); the
+back-stack rules of <a
+href="./harmonyos.md#3-system-back-behavior">harmonyos.md §3</a> apply
+identically (sheet-dismiss preserves input; back never confirms a
+destructive action). Aurora devices with a hardware back key (ASSUMED to
+exist on some targets) map it to the same pop.</li>
+<li><strong>Hardware keyboard</strong> (attached/BT)
+<code>[DEFAULT — adjustable]</code>: adopt the verified web keyboard
+model (wireframes §1.2) additively — <code>/</code> or
+<code>Ctrl+K</code> focus search, <code>Esc</code> = pop/dismiss
+(equivalent of edge-swipe),
+<code>Tab</code>/<code>Enter</code>/<code>Space</code> focus + activate.
+Same rule as desktop (desktop README §3.1): <strong>never rebind a
+verified web binding</strong>; platform accelerators are additive. No
+global system-wide shortcut is claimed.</li>
+</ul>
+<h2 id="open-items">10. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-PLAT-05]</code> — <strong>verify every
+Silica/Qt mapping in this file</strong> (PageStack, pulley API,
+<code>RemorsePopup</code>/remorse item,
+<code>SilicaListView</code>/<code>SilicaGridView</code>/<code>SearchField</code>,
+Qt Multimedia on Aurora, ambience-read API, <code>Theme</code> units,
+screen-reader maturity, hardware back-key existence) against the current
+Aurora OS SDK/HIG and the <code>helix_shims</code> contract. Companion
+to the inherited <code>[OPEN: THREADY-DES-LIB-03]</code>.</li>
+<li><code>[OPEN: THREADY-DES-PLAT-06]</code> — <strong>Aurora motion
+runtime</strong>: evaluate/verify any Lottie-capable QML player
+vs. committing to the §8 Qt-native floor; until then only the floor may
+be claimed.</li>
+<li><code>[OPEN: THREADY-DES-PLAT-07]</code> — <strong>ambience-vs-token
+policy</strong>: ratify (or amend) the §4 arbitration — tokens win for
+load-bearing UI, ambience tints decorative layers only, explicit choice
+wins — with AA evidence over real ambiences.</li>
+<li>Inherited: <code>[OPEN: THREADY-DES-05]</code> (density buckets
+<code>[RESEARCH]</code>), <code>[GAP: 8.2/8.3/8.5]</code> (empty
+<code>helix_design</code> Qt arm; client skeleton — release gate,
+wireframes §6.2), <code>[OPEN: THREADY-DES-LIB-03/-04]</code>,
+<code>[OPEN: THREADY-DES-15]</code> (notifications surface),
+<code>[OPEN: THREADY-DES-PLAT-01/-02/-08]</code> (typography, via <a
+href="./typography-substitution.md">typography-substitution.md</a>).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

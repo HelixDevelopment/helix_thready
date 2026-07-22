@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Per-Platform Typography Substitution</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Per-Platform Typography
+Substitution</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#position-ground-truth" id="toc-position-ground-truth">1.
+Position &amp; ground truth</a></li>
+<li><a href="#bundling-feasibility-per-platform"
+id="toc-bundling-feasibility-per-platform">2. Bundling feasibility per
+platform</a></li>
+<li><a href="#fallback-stacks-per-os-when-bundling-is-not-done"
+id="toc-fallback-stacks-per-os-when-bundling-is-not-done">3. Fallback
+stacks per OS (when bundling is not done)</a></li>
+<li><a href="#tui-the-monospace-only-reality"
+id="toc-tui-the-monospace-only-reality">4. TUI: the monospace-only
+reality</a></li>
+<li><a href="#cyrillic-coverage-ru-sr-cyrl"
+id="toc-cyrillic-coverage-ru-sr-cyrl">5. Cyrillic coverage (ru /
+sr-Cyrl)</a></li>
+<li><a href="#dynamic-type-font-scale-mapping"
+id="toc-dynamic-type-font-scale-mapping">6. Dynamic type / font-scale
+mapping</a></li>
+<li><a href="#open-items" id="toc-open-items">7. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Per-Platform Typography Substitution
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/typography-substitution.md
+  Status          : Draft — v0.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./README.md, ../design-system.md (§4), ../opendesign/DESIGN.md (§3),
+                    ../library/platform-map.md, ../screens/tui/lipgloss-theme.md,
+                    ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>Initial spec: brand-face bundling feasibility per platform, honest
+fallback stacks (<code>[DEFAULT — adjustable]</code>), TUI
+monospace-only reality, Cyrillic discipline (THREADY-DES-04 inherited),
+dynamic-type mapping of the token ramp; minted
+<code>THREADY-DES-PLAT-01/-02/-08</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · decisions)</td>
+<td>Operator ruling: bundle <strong>all three brand faces on all
+platforms</strong> (Android/iOS/HarmonyOS/Aurora);
+<code>THREADY-DES-PLAT-01</code> <strong>narrowed</strong> to per-face
+license/redistribution (OFL) verification; §3 fallback stacks
+re-labelled <strong>runtime-failure fallbacks only</strong> (no longer
+the shipping default)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-position--ground-truth">1. Position &amp; ground
+truth</a></li>
+<li><a href="#2-bundling-feasibility-per-platform">2. Bundling
+feasibility per platform</a></li>
+<li><a href="#3-fallback-stacks-per-os-when-bundling-is-not-done">3.
+Fallback stacks per OS (when bundling is not done)</a></li>
+<li><a href="#4-tui-the-monospace-only-reality">4. TUI: the
+monospace-only reality</a></li>
+<li><a href="#5-cyrillic-coverage-ru--sr-cyrl">5. Cyrillic coverage (ru
+/ sr-Cyrl)</a></li>
+<li><a href="#6-dynamic-type--font-scale-mapping">6. Dynamic type /
+font-scale mapping</a></li>
+<li><a href="#7-open-items">7. Open items</a></li>
+</ul>
+<h2 id="position-ground-truth">1. Position &amp; ground truth</h2>
+<p>The design system ships <strong>three variable brand faces</strong>,
+self-hosted via <code>@fontsource</code> — no external CDN (offline/CSP
+posture)
+<code>[VERIFIED — design-system.md §4 / fonts/fonts.css]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 9%" />
+<col style="width: 8%" />
+<col style="width: 74%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Token</th>
+<th>Face</th>
+<th>Canonical stack (verbatim from <code>core.css</code>
+<code>[VERIFIED]</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Display</td>
+<td><code>--font-display</code></td>
+<td>Space Grotesk Variable</td>
+<td><code>"Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif</code></td>
+</tr>
+<tr>
+<td>Body / UI</td>
+<td><code>--font-body</code></td>
+<td>Hanken Grotesk Variable</td>
+<td><code>"Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif</code></td>
+</tr>
+<tr>
+<td>Mono</td>
+<td><code>--font-mono</code></td>
+<td>JetBrains Mono</td>
+<td><code>"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace</code></td>
+</tr>
+</tbody>
+</table>
+<p>That statement is <strong>web truth only</strong>.
+<code>@fontsource</code> packages are npm/CSS artifacts: they solve
+Angular 19/22 and, by inheritance, Tauri desktop (“wraps the Angular web
+UI — no separate token work”, design-system §7 <code>[VERIFIED]</code>).
+No other platform can consume <code>@fontsource</code>, and until this
+spec, no document said what non-web platforms render text with. The
+mobile screen artifacts already ship “with system fallbacks only — fonts
+are not embedded” (mobile README §1 <code>[VERIFIED]</code>), which is
+the honest current state of the entire non-web fleet.</p>
+<p>This spec defines, per platform: (a) how the brand faces
+<strong>would</strong> be bundled, (b) what renders when they are
+<strong>not</strong> (the fallback stacks), and (c) how the token type
+ramp maps onto each platform’s font-scaling system.
+<strong>Decided</strong> (operator ruling 2026-07-22): Thready
+<strong>bundles all three brand faces on every platform</strong>
+(Android / iOS / HarmonyOS / Aurora).
+<code>[OPEN: THREADY-DES-PLAT-01]</code> is <strong>narrowed</strong> to
+the remaining sub-task — per-face <strong>license/redistribution
+verification (the OFL check)</strong> before any bundle ships. The §3
+stacks are <strong>runtime failure fallbacks only</strong> (a bundled
+face failing to load/register), no longer the shipping default.</p>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1546.5px; background-color: white;" viewBox="0 0 1546.5 401.20001220703125" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M626.25,77.645L542.625,91.521C459,105.397,291.75,133.148,208.125,155.208C124.5,177.267,124.5,193.633,124.5,201.817L124.5,210" id="my-svg-L_FACES_WEB_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_WEB_0" data-points="W3sieCI6NjI2LjI1LCJ5Ijo3Ny42NDU0NzA3MTYzNzQyOH0seyJ4IjoxMjQuNSwieSI6MTYwLjkwMDAwMTUyNTg3ODl9LHsieCI6MTI0LjUsInkiOjIxNH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M124.5,278.6L124.5,282.767C124.5,286.933,124.5,295.267,124.5,302.933C124.5,310.6,124.5,317.6,124.5,321.1L124.5,324.6" id="my-svg-L_WEB_TAURI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_WEB_TAURI_0" data-points="W3sieCI6MTI0LjUsInkiOjI3OC41OTk5OTg0NzQxMjExfSx7IngiOjEyNC41LCJ5IjozMDMuNTk5OTk4NDc0MTIxMX0seyJ4IjoxMjQuNSwieSI6MzI4LjU5OTk5ODQ3NDEyMTF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M626.25,91.366L585.042,102.955C543.833,114.544,461.417,137.722,420.208,157.494C379,177.267,379,193.633,379,201.817L379,210" id="my-svg-L_FACES_AND_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_AND_0" data-points="W3sieCI6NjI2LjI1LCJ5Ijo5MS4zNjYyMTMxMjk5NzQ0N30seyJ4IjozNzksInkiOjE2MC45MDAwMDE1MjU4Nzg5fSx7IngiOjM3OSwieSI6MjE0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M681.664,107.8L670.387,116.65C659.109,125.5,636.555,143.2,625.277,160.233C614,177.267,614,193.633,614,201.817L614,210" id="my-svg-L_FACES_IOS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_IOS_0" data-points="W3sieCI6NjgxLjY2MzgzMzAwNzA3MTcsInkiOjEwNy44MDAwMDMwNTE3NTc4MX0seyJ4Ijo2MTQsInkiOjE2MC45MDAwMDE1MjU4Nzg5fSx7IngiOjYxNCwieSI6MjE0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M808.836,107.8L820.113,116.65C831.391,125.5,853.945,143.2,865.223,160.233C876.5,177.267,876.5,193.633,876.5,201.817L876.5,210" id="my-svg-L_FACES_HAOS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_HAOS_0" data-points="W3sieCI6ODA4LjgzNjE2Njk5MjkyODMsInkiOjEwNy44MDAwMDMwNTE3NTc4MX0seyJ4Ijo4NzYuNSwieSI6MTYwLjkwMDAwMTUyNTg3ODl9LHsieCI6ODc2LjUsInkiOjIxNH1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M864.25,87.066L914.458,99.372C964.667,111.677,1065.083,136.289,1115.292,156.778C1165.5,177.267,1165.5,193.633,1165.5,201.817L1165.5,210" id="my-svg-L_FACES_AUR_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_AUR_0" data-points="W3sieCI6ODY0LjI1LCJ5Ijo4Ny4wNjU5NzQxNjEyMTUwMn0seyJ4IjoxMTY1LjUsInkiOjE2MC45MDAwMDE1MjU4Nzg5fSx7IngiOjExNjUuNSwieSI6MjE0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M864.25,75.709L959.125,89.907C1054,104.106,1243.75,132.503,1338.625,154.885C1433.5,177.267,1433.5,193.633,1433.5,201.817L1433.5,210" id="my-svg-L_FACES_TUI_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_FACES_TUI_0" data-points="W3sieCI6ODY0LjI1LCJ5Ijo3NS43MDg5MzcyMzIzODA5fSx7IngiOjE0MzMuNSwieSI6MTYwLjkwMDAwMTUyNTg3ODl9LHsieCI6MTQzMy41LCJ5IjoyMTR9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(124.5, 160.9000015258789)"><g class="label" data-id="L_FACES_WEB_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-66" y="0" width="132" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">@fontsource</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CSS</tspan></tspan></text></g></g></g><g class="edgeLabel"><g class="label" data-id="L_WEB_TAURI_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel" transform="translate(379, 160.9000015258789)"><g class="label" data-id="L_FACES_AND_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-82.5" y="0" width="165" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">bundle:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> KMP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> compose</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">resources</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ASSUMED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [GAP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8.4]</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(614, 160.9000015258789)"><g class="label" data-id="L_FACES_IOS_0" transform="translate(0, -28.099998474121094)"><g><rect class="background" style="" x="-77" y="0" width="154" height="56.19999694824219"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">bundle:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> app</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bundle</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UIAppFonts</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registration</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(876.5, 160.9000015258789)"><g class="label" data-id="L_FACES_HAOS_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-99.5" y="0" width="199" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">bundle:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> font</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> registration</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> API</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ASSUMED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [GAP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8.5]</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1165.5, 160.9000015258789)"><g class="label" data-id="L_FACES_AUR_0" transform="translate(0, -19.299999237060547)"><g><rect class="background" style="" x="-88.5" y="0" width="177" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">bundle:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Qt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> font</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> database</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ASSUMED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [GAP</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 8.5]</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(1433.5, 160.9000015258789)"><g class="label" data-id="L_FACES_TUI_0" transform="translate(-0.5, -19.299999237060547)"><g><rect class="background" style="" x="-70.5" y="0" width="142" height="38.599998474121094"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">N/A</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> —</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> terminal</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> font</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">is</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> user</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> property</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-FACES-0" data-look="classic" transform="translate(745.25, 57.900001525878906)"><rect class="basic label-container" style="" x="-119" y="-49.900001525878906" width="238" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Brand</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> faces</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (VERIFIED)</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Space</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Grotesk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Hanken</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Grotesk</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> JetBrains</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Mono</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">variable,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> self-hosted</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-WEB-2" data-look="classic" transform="translate(124.5, 246.29999923706055)"><rect class="basic label-container" style="" x="-106" y="-32.29999923706055" width="212" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Angular</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 19/22</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SOLVED</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [VERIFIED]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TAURI-4" data-look="classic" transform="translate(124.5, 360.89999771118164)"><rect class="basic label-container" style="" x="-116.5" y="-32.29999923706055" width="233" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Desktop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Tauri</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">inherits</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> [VERIFIED]</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AND-6" data-look="classic" transform="translate(379, 246.29999923706055)"><rect class="basic label-container" style="" x="-98.5" y="-32.29999923706055" width="197" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Android</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Compose</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fallback:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Roboto</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-IOS-8" data-look="classic" transform="translate(614, 246.29999923706055)"><rect class="basic label-container" style="" x="-86.5" y="-32.29999923706055" width="173" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">iOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SwiftUI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fallback:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> SF</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Pro</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-HAOS-10" data-look="classic" transform="translate(876.5, 246.29999923706055)"><rect class="basic label-container" style="" x="-126" y="-32.29999923706055" width="252" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">HarmonyOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ArkTS</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fallback:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HarmonyOS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Sans</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-AUR-12" data-look="classic" transform="translate(1165.5, 246.29999923706055)"><rect class="basic label-container" style="" x="-113" y="-32.29999923706055" width="226" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Aurora</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Qt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Quick</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fallback:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> system</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> default</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TUI-14" data-look="classic" transform="translate(1433.5, 246.29999923706055)"><rect class="basic label-container" style="" x="-105" y="-32.29999923706055" width="210" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TUI</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">monospace-only</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> (§4)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/typography-fanout.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A single top node holds the three verified brand
+faces. One solid arrow leads to the <strong>web</strong> node labelled
+SOLVED — the <code>@fontsource</code> self-hosting path is verified
+shipped truth — and the <strong>Tauri desktop</strong> node hangs off
+web because the desktop client wraps the same Angular UI. Four more
+solid arrows lead to the native platforms, each labelled with its
+bundling mechanism and its honesty marker: <strong>Android</strong> via
+KMP compose resources (ASSUMED — the KMP package is a scaffold,
+<code>[GAP: 8.4]</code>), <strong>iOS</strong> via app-bundle fonts plus
+<code>UIAppFonts</code> registration, <strong>HarmonyOS</strong> via the
+ArkTS font-registration API and <strong>Aurora</strong> via the Qt
+application font database (both ASSUMED — the clients are skeletons,
+<code>[GAP: 8.5]</code>). Each native node also names the fallback face
+that renders when bundling is not done. A single dashed arrow leads to
+the <strong>TUI</strong> node: no font can be delivered to a terminal at
+all — the terminal font is the user’s property, and §4 documents which
+typographic semantics survive that constraint.</p>
+<h2 id="bundling-feasibility-per-platform">2. Bundling feasibility per
+platform</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 36%" />
+<col style="width: 23%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Bundling mechanism</th>
+<th>Feasibility</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Web (Angular 19/22)</strong></td>
+<td><code>@fontsource</code> packages, self-hosted;
+<code>fonts/fonts.css</code></td>
+<td><strong>Already solved</strong></td>
+<td><code>[VERIFIED — design-system §4]</code></td>
+</tr>
+<tr>
+<td><strong>Desktop (Tauri 2)</strong></td>
+<td>Inherits the web bundle (webview loads the same CSS/woff2)</td>
+<td>Already solved by inheritance</td>
+<td><code>[VERIFIED — design-system §7]</code></td>
+</tr>
+<tr>
+<td><strong>Android (Compose / KMP)</strong></td>
+<td>Ship the variable <code>.ttf</code>s as compose-multiplatform font
+resources (<code>composeResources/font/</code>, <code>Font()</code> →
+<code>FontFamily</code>); expose as <code>ThreadyType</code> alongside
+the generated <code>ThreadyColors</code> token bridge</td>
+<td>Feasible; <strong>mechanism ASSUMED</strong> —
+<code>UI-Components-KMP</code> is a utilities-only scaffold with no type
+bridge <code>[GAP: 8.4]</code>; the codegen is part of
+<code>THREADY-DES-KMP-01</code></td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td><strong>iOS (SwiftUI, KMP host)</strong></td>
+<td>Bundle <code>.ttf</code>s in the app bundle + register under the
+<code>UIAppFonts</code> (“Fonts provided by application”)
+<code>Info.plist</code> key; reference by PostScript name via
+<code>Font.custom(_:size:)</code></td>
+<td>Feasible; standard platform mechanism <code>[RESEARCH]</code>;
+untested for Thready — no iOS target builds today
+<code>[GAP: 8.4]</code></td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td><strong>HarmonyOS (ArkTS)</strong></td>
+<td>Ship <code>.ttf</code>s in <code>resources/rawfile/fonts/</code> +
+register at app start via the ArkTS font-registration API
+(<code>@ohos.font</code> →
+<code>font.registerFont({familyName, familySrc})</code>), then use the
+family name in text styles</td>
+<td>Plausible; <strong>API name and behavior ASSUMED</strong> — nothing
+HarmonyOS-side is verified <code>[GAP: 8.5]</code>
+<code>[OPEN: THREADY-DES-PLAT-03]</code></td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td><strong>Aurora (Qt Quick / Silica)</strong></td>
+<td>Ship <code>.ttf</code>s as app resources + register via the Qt font
+database (<code>QFontDatabase::addApplicationFont</code> / QML
+<code>FontLoader</code>), then set <code>font.family</code></td>
+<td>Plausible; Qt mechanism is standard <code>[RESEARCH]</code>, but
+Aurora packaging/licensing constraints unverified
+<code>[GAP: 8.5]</code> <code>[OPEN: THREADY-DES-PLAT-05]</code></td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td><strong>TUI</strong></td>
+<td><strong>N/A</strong> — a terminal application cannot deliver a font;
+the glyph repertoire and face are properties of the user’s terminal
+emulator</td>
+<td>Not applicable by construction — see §4</td>
+<td><code>[VERIFIED — nature of the medium]</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>License note (do not skip).</strong> All three faces are
+distributed under open licenses on the web path today, but
+<strong>redistribution inside signed native app bundles (and store
+listings) must be re-verified per face before any bundling
+ships</strong> — that verification (the OFL check) is now the
+<strong>entire remaining scope</strong> of
+<code>[OPEN: THREADY-DES-PLAT-01]</code> (narrowed 2026-07-22; the
+bundling decision itself is made). No claim of cleared redistribution is
+made here.</p>
+<p><strong>Variable-font caveat.</strong> The web ships
+<em>variable</em> faces (one file, <code>wght</code> axis —
+design-system §4). Native text stacks differ in variable-font axis
+support; if a platform’s renderer handles the axis poorly, the fallback
+is static instances at the used weights (400/500/600/700), at the cost
+of extra files. Decide per platform at integration — an implementation
+detail of the decided bundling, not part of the narrowed
+<code>THREADY-DES-PLAT-01</code>.</p>
+<h2 id="fallback-stacks-per-os-when-bundling-is-not-done">3. Fallback
+stacks per OS (when bundling is not done)</h2>
+<p><strong>Role of these stacks — runtime failure fallbacks
+only.</strong> Operator ruling 2026-07-22: the brand faces are bundled
+on all platforms, so fallback-first is <strong>no longer the shipping
+default</strong>. Each row below defines what renders when a bundled
+face fails to load/register at runtime — and what the mobile screen
+artifacts happen to render today (“system fallbacks only”, mobile README
+§1) until the bundles land. None is claimed to carry the brand voice,
+and none is claimed verified for Cyrillic (§5).</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 42%" />
+<col style="width: 26%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Display + Body fallback</th>
+<th>Mono fallback</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android</td>
+<td><strong>Roboto</strong> (system <code>sans-serif</code> family)</td>
+<td><code>monospace</code> (Droid Sans Mono lineage)</td>
+<td>Compose’s default
+<code>FontFamily.Default</code>/<code>Monospace</code>; OEM overrides
+possible — accept them</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td><strong>SF Pro</strong> (system
+<code>.body</code>/<code>.title</code> fonts)</td>
+<td><strong>SF Mono</strong> / Menlo (<code>.monospaced</code>
+design)</td>
+<td>Matches the web stack’s own <code>ui-sans-serif</code> /
+<code>"SF Mono", Menlo</code> tail
+<code>[VERIFIED — core.css stack]</code></td>
+</tr>
+<tr>
+<td>HarmonyOS</td>
+<td><strong>HarmonyOS Sans</strong> (system default)</td>
+<td>system mono</td>
+<td>Face name per platform branding <code>[RESEARCH]</code>; unverified
+on device <code>[GAP: 8.5]</code></td>
+</tr>
+<tr>
+<td>Aurora</td>
+<td><strong>Sailfish/Aurora system default</strong></td>
+<td>system mono</td>
+<td>The default UI face of current Aurora OS is <strong>not verified
+here</strong> — do not hard-code a face name; use the Silica
+<code>Theme</code> font handles and let the OS resolve
+<code>[OPEN: THREADY-DES-PLAT-02]</code> <code>[RESEARCH]</code></td>
+</tr>
+<tr>
+<td>Web / Desktop</td>
+<td>(already solved — never falls back except per-glyph, §5)</td>
+<td>—</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Rules that hold <strong>regardless</strong> of which face
+renders:</p>
+<ul>
+<li>The <strong>role separation survives substitution</strong>: display
+vs. body may collapse to one family on fallback (Roboto for both), but
+the <em>weight and size</em> differentiation (headings 600–700 at
+display sizes, body 400–500 — design-system §4) must still render, and
+mono content (code, IDs, hashtags, CLI transcripts) must always get a
+genuinely monospaced face.</li>
+<li><strong>Tabular figures</strong> for numeric columns: request
+tabular numerals where the platform API allows (<code>FontFeature</code>
+/ <code>fontFeatureSettings</code>); where the fallback face lacks them,
+right-align numeric columns so misalignment does not break scanning
+<code>[DEFAULT — adjustable]</code>.</li>
+<li>Fallback rendering is a <strong>known brand deviation, not a
+bug</strong>: visual-regression banks must compare fallback builds
+against fallback references, not against web renders
+<code>[GAP: 9.3]</code>.</li>
+</ul>
+<h2 id="tui-the-monospace-only-reality">4. TUI: the monospace-only
+reality</h2>
+<p>The TUI cannot ship, choose, or detect fonts: the terminal renders
+everything in the <strong>user’s one monospaced face</strong>. Document
+what survives, so the TUI never fakes what it cannot have:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 27%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Web typographic semantic</th>
+<th>TUI survival</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Face distinction (display / body / mono)</td>
+<td><strong>Lost</strong> — all text is the terminal mono face</td>
+<td>— (accepted)</td>
+</tr>
+<tr>
+<td>Type scale (12–64px ramp)</td>
+<td><strong>Lost</strong> — one cell size</td>
+<td>Hierarchy re-carried by layout: box borders, spacing, position
+(lipgloss-theme §4 role styles)</td>
+</tr>
+<tr>
+<td>Weight 500/600/700</td>
+<td><strong>Degraded</strong> — single terminal bold bit</td>
+<td><code>lipgloss.Bold(true)</code> on
+<code>Title</code>/<code>Header</code>/<code>Button</code> roles
+<code>[VERIFIED pattern — lipgloss-theme §4]</code></td>
+</tr>
+<tr>
+<td>Color-carried hierarchy</td>
+<td><strong>Survives</strong></td>
+<td><code>Accent</code>/<code>Brand2</code>/<code>Muted</code> role
+styles from the generated palette <code>[VERIFIED values]</code></td>
+</tr>
+<tr>
+<td>Tabular figures</td>
+<td><strong>Survives inherently</strong> — the mono grid aligns all
+figures</td>
+<td>free</td>
+</tr>
+<tr>
+<td>Mono-face signalling of hashtags/IDs</td>
+<td><strong>Replaced</strong> — everything is mono, so face no longer
+signals</td>
+<td><code>#</code> prefix + accent tint; indirect tags dimmed
+<strong>and</strong> suffixed <code>~</code> (platform-map §4
+<code>[VERIFIED rule]</code>)</td>
+</tr>
+<tr>
+<td>Glyph coverage (♥, ⚠, ✓, box drawing)</td>
+<td><strong>User-dependent</strong></td>
+<td>Ordered fallbacks — e.g. heart: <code>♥</code> → the word “love”
+(brand-assets §8 pattern); never assume Nerd-Font glyphs</td>
+</tr>
+<tr>
+<td>Cyrillic rendering</td>
+<td><strong>User-dependent</strong></td>
+<td>Cannot be guaranteed by the app; §5 note</td>
+</tr>
+</tbody>
+</table>
+<p>The italic bit, where a style needs emphasis, is also
+terminal-dependent — prefer color/bold over italics in TUI styles
+<code>[DEFAULT — adjustable]</code>.</p>
+<h2 id="cyrillic-coverage-ru-sr-cyrl">5. Cyrillic coverage (ru /
+sr-Cyrl)</h2>
+<p>Cyrillic coverage is mandatory <code>[OPERATOR §12]</code>, and the
+verification is <strong>inherited, still open</strong>:
+<code>[OPEN: THREADY-DES-04]</code> — the Cyrillic subsets of the three
+brand faces have <strong>not</strong> been claimed verified anywhere in
+this area (design-system §4), and this spec does not change that. This
+file adds the per-platform half of the same discipline:</p>
+<ul>
+<li><strong>Per brand face</strong> — verify at integration that the
+shipped variable file (or its <code>@fontsource</code> subset build)
+contains full ru + sr-Cyrl repertoires, <em>including sr-Cyrl-specific
+italic forms where italics are used</em>. Until verified, the web
+stack’s per-glyph fallback (<code>system-ui</code> tail) is the safety
+net
+<code>[VERIFIED — the stack exists; its adequacy is the open item]</code>.</li>
+<li><strong>Per fallback face</strong> — the §3 stacks are only
+acceptable if the OS face covers ru + sr-Cyrl. Roboto and SF Pro are
+<em>expected</em> to; HarmonyOS Sans and the Aurora default are
+<strong>unverified expectations</strong> — for a Russian-market OS
+Cyrillic coverage is highly likely, but likelihood is not verification.
+Tracked as <code>[OPEN: THREADY-DES-PLAT-02]</code>; <strong>no subset
+is claimed verified here, for any face, on any platform.</strong></li>
+<li><strong>TUI</strong> — coverage belongs to the user’s terminal font;
+the TUI must render ru/sr-Cyrl strings <em>as data</em> and never
+substitute ASCII transliteration. If tofu appears it is the terminal’s,
+not Thready’s — but docs should say so (a line in the TUI README at
+integration).</li>
+</ul>
+<h2 id="dynamic-type-font-scale-mapping">6. Dynamic type / font-scale
+mapping</h2>
+<p>The <strong>token type ramp is the reference</strong>:
+<code>--text-xs 12 · --text-sm 14 · --text-base 16 · --text-lg 20 · --text-xl 24 · --text-2xl 32 · --text-3xl 48 · --text-4xl 64</code>
+(px), line-height 1.5 body / 1.2 display
+<code>[VERIFIED — design-system §3.1]</code>. Each platform maps the
+<em>same nominal sizes</em> into its own user-scalable unit, so a user’s
+system font-size preference scales Thready text everywhere (the
+per-platform column of wireframes §6.1
+<code>[VERIFIED table]</code>):</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 23%" />
+<col style="width: 29%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Unit / API</th>
+<th>Mapping rule</th>
+<th>Provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web / Desktop</td>
+<td>CSS px + browser zoom / page zoom</td>
+<td>Tokens ship as px <code>[VERIFIED]</code>; user scaling via zoom. If
+OS-level font-size preference must be honored beyond zoom, migrating the
+ramp to <code>rem</code> is a design-system-wide change — out of scope
+here</td>
+<td><code>[VERIFIED]</code></td>
+</tr>
+<tr>
+<td>Android (Compose)</td>
+<td><code>sp</code> (scale-independent pixels)</td>
+<td><strong>1 token px → 1 sp</strong> (<code>--text-base 16</code> →
+<code>16.sp</code>); the OS font-scale multiplier then applies
+automatically</td>
+<td><code>[DEFAULT — adjustable]</code> (wireframes §6.1:
+“<code>sp</code> + font scale”)</td>
+</tr>
+<tr>
+<td>iOS (SwiftUI)</td>
+<td>Dynamic Type via <code>UIFontMetrics</code></td>
+<td>Do <strong>not</strong> force-fit the ramp onto the fixed text-style
+sizes; scale each token size relative to <code>.body</code>:
+<code>UIFontMetrics(forTextStyle: .body).scaledValue(for: tokenPx)</code>
+(SwiftUI: <code>@ScaledMetric(relativeTo: .body)</code>), so token sizes
+are exact at the default content size and track Dynamic Type above/below
+it</td>
+<td><code>[DEFAULT — adjustable]</code> (wireframes §6.1: “Dynamic
+Type”)</td>
+</tr>
+<tr>
+<td>HarmonyOS (ArkTS)</td>
+<td><code>fp</code> (font pixels)</td>
+<td><strong>1 token px → 1 fp</strong> (<code>fontSize: 16</code> fp);
+system font scale applies</td>
+<td><code>[DEFAULT — adjustable]</code>, API behavior ASSUMED
+<code>[OPEN: THREADY-DES-PLAT-03]</code></td>
+</tr>
+<tr>
+<td>Aurora (Qt Quick)</td>
+<td>Qt font scaling / Silica <code>Theme</code></td>
+<td>Set point sizes from the token ramp at reference density and let
+Qt/Silica scaling multiply; where Silica exposes
+<code>Theme.fontSize*</code> handles, map the <em>nearest</em> token
+step onto each handle rather than fighting the platform</td>
+<td><code>[DEFAULT — adjustable]</code>, ASSUMED
+<code>[OPEN: THREADY-DES-PLAT-05]</code> (wireframes §6.1: “Qt font
+scaling”)</td>
+</tr>
+<tr>
+<td>TUI</td>
+<td>none</td>
+<td>No type scale exists (§4)</td>
+<td><code>[VERIFIED — medium]</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Clamp / reflow contract</strong>
+<code>[DEFAULT — adjustable]</code>: every mobile screen must survive
+<strong>200 %</strong> font scale without truncating load-bearing text
+(ellipsis on decorative text is acceptable); layouts reflow (chips wrap,
+rows grow) rather than clip. The per-platform maximum each OS actually
+applies, and the test matrix proving the 200 % bar, are
+<code>[OPEN: THREADY-DES-PLAT-08]</code> — no platform’s behavior at max
+scale is claimed verified today.</p>
+<h2 id="open-items">7. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-PLAT-01]</code> — <strong>narrowed
+2026-07-22</strong> (was: the per-platform bundling decision). Operator
+ruling: <strong>bundle all three brand faces on all platforms</strong>
+(Android/iOS/HarmonyOS/Aurora); the §3 stacks are <strong>runtime
+failure fallbacks only</strong>, no longer the shipping default.
+Remaining scope: <strong>per-face license/redistribution verification
+(the OFL check)</strong> for app-bundle/store shipping — no bundle
+ships, and no non-web surface may claim brand typography, until that
+verification lands. (Variable-vs-static instances stays a per-platform
+implementation detail at integration, §2 caveat.)</li>
+<li><code>[OPEN: THREADY-DES-PLAT-02]</code> — verify <strong>Cyrillic
+(ru / sr-Cyrl) coverage of each fallback face</strong> (Roboto, SF Pro,
+HarmonyOS Sans, Aurora system default) on real devices/images; companion
+to the inherited <code>[OPEN: THREADY-DES-04]</code> (brand-face subsets
+— still open, still unclaimed).</li>
+<li><code>[OPEN: THREADY-DES-PLAT-08]</code> — <strong>dynamic-type
+clamp matrix</strong>: per platform, the maximum font scale the OS
+applies and evidence every screen survives 200 % per the §6
+contract.</li>
+<li>Inherited: <code>[OPEN: THREADY-DES-04]</code> (brand-face Cyrillic
+subsets), <code>[GAP: 8.4]</code> / <code>[GAP: 8.5]</code> (the native
+packages that would carry any of this do not build today).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

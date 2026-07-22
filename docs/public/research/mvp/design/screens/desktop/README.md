@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/screens/desktop/README.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · screens)
   Related         : ./desktop-shell.html, ../../wireframes.md, ../../design-system.md,
                     ../../theming.md, ../../../CONVENTIONS.md
@@ -14,6 +14,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · screens) | Initial: Tauri shell artifact + desktop-differences catalogue (shortcuts, offline cache, notifications, file-drop, tray, menus) |
+| 2 | 2026-07-22 | swarm (design · decisions) | Operator ruling (`[CLOSED: THREADY-DES-08]`): desktop v1 ships the wrapped web UI only; tray / native notifications / file-drop deferred — §1/§3 designs re-labelled as the **v2 contract**; `THREADY-DES-16` unaffected |
 
 ## Table of contents
 
@@ -30,15 +31,16 @@ wireframes.md §1]`. There are therefore **no separate desktop screen designs**:
 responsive web portal ([wireframes.md §3](../../wireframes.md#3-web-portal--screen-wireframes),
 realized in `screens/web/`). What *is* desktop-specific is the shell around it — title bar, menus,
 tray, native notifications, shortcuts-as-accelerators, offline behavior, drag-and-drop — and that
-is what this directory designs. Whether desktop needs **anything** beyond the wrapped web UI
-(tray, native notifications) is explicitly `[OPEN: THREADY-DES-08]`; everything in that scope
-below is a proposal (`[DEFAULT — adjustable]`), never presented as decided.
+is what this directory designs. **Decided** (operator ruling 2026-07-22,
+`[CLOSED: THREADY-DES-08]`): **desktop v1 ships the wrapped web UI only** — tray, native
+notifications and file-drop are **designed-but-deferred**, and the mocks below are the
+**v2 contract** (their details stay `[DEFAULT — adjustable]`), not v1 scope.
 
 ## 2. Catalogue
 
 | File | Content | Ground truth | Status |
 |------|---------|--------------|--------|
-| [desktop-shell.html](./desktop-shell.html) | Self-contained artifact: Tauri window with per-OS custom title bar (macOS traffic lights + global menu bar / Windows caption buttons / Linux CSD), native menu map, wrapped app shell + Dashboard, tray popover mock, native notification mock, file-drop overlay; light+dark via `[data-theme="dark"]` | design-system §7, wireframes §3.1/§3.3/§1.2, theming §2 | shell grounded; tray/notifications `[OPEN: THREADY-DES-08]` |
+| [desktop-shell.html](./desktop-shell.html) | Self-contained artifact: Tauri window with per-OS custom title bar (macOS traffic lights + global menu bar / Windows caption buttons / Linux CSD), native menu map, wrapped app shell + Dashboard, tray popover mock, native notification mock, file-drop overlay; light+dark via `[data-theme="dark"]` | design-system §7, wireframes §3.1/§3.3/§1.2, theming §2 | shell grounded (v1); tray/notifications/file-drop deferred — v2 contract (`[CLOSED: THREADY-DES-08]`) |
 
 ## 3. Desktop-differences catalogue
 
@@ -56,7 +58,7 @@ webview chrome:
 | `g` then `d/c/s/a/k` | go to Dashboard/Channels/Search/Assets/Skills | wireframes §1.2 |
 | `Esc`, `?`, `[`/`]`, `Tab`, `Enter`/`Space` | overlays / help / nav collapse / focus / activate | wireframes §1.2 |
 | `Ctrl/⌘+N` | New Channel (Add-Channel wizard) | `[DEFAULT — adjustable]` desktop accelerator |
-| `Ctrl/⌘+W` | close window → hide to tray | `[DEFAULT — adjustable]`, tray under `[OPEN: THREADY-DES-08]` |
+| `Ctrl/⌘+W` | close window (v1) — hide-to-tray is the v2 behavior | `[DEFAULT — adjustable]`, tray deferred to v2 (`[CLOSED: THREADY-DES-08]`) |
 | `Ctrl/⌘+ +/−/0` | zoom in/out/reset (webview zoom) | `[DEFAULT — adjustable]` |
 | Global (system-wide) show/hide shortcut | none by default | deliberately omitted — not grounded |
 
@@ -79,12 +81,14 @@ wireframes §6.2). Desktop adopts the **same contract** `[DEFAULT — adjustable
 - In-focus: the standard in-app toast (`thready-toast`) — identical to web.
 - Hidden/unfocused: native OS notification on `processing.completed` / `processing.failed`
   (the verified Event Bus contract, ux-flows §3); click focuses the window on the Post detail.
-  Never both at once. **Scope is `[OPEN: THREADY-DES-08]`** — the wireframes explicitly leave
-  "native tray/notifications for processing completion" undecided.
+  Never both at once. **Deferred to v2** (`[CLOSED: THREADY-DES-08]`, operator ruling
+  2026-07-22): v1 ships the in-app toast only; this native-notification design is the
+  v2 contract.
 
 ### 3.4 File-drop
 
-Two distinct cases, deliberately separated for honesty:
+File-drop ships **nothing in v1** (`[CLOSED: THREADY-DES-08]` — deferred; the designs below
+are the v2 contract). Two distinct cases, deliberately separated for honesty:
 
 1. **Text/URL drop** (grounded): a dropped string matching `t.me/…` or `max.ru/join/…` opens the
    **Add-Channel wizard at step 3 with the link pre-filled** — exactly the paste+Resolve step that
@@ -95,7 +99,7 @@ Two distinct cases, deliberately separated for honesty:
    no upload flow in the wireframes. Until product decides whether local-file ingest exists at
    all, the drop overlay names the gap and does nothing else. Never fake an upload UI.
 
-### 3.5 Tray `[OPEN: THREADY-DES-08]` `[DEFAULT — adjustable]`
+### 3.5 Tray — deferred to v2 (`[CLOSED: THREADY-DES-08]`) `[DEFAULT — adjustable]`
 
 Close hides to tray; background WS/SSE subscriptions continue; tray badge = active processing
 count (danger tint on failure); popover: live queue summary, Open, Pause polling, Quit. See the
@@ -117,8 +121,10 @@ the webview (theming §2).
 
 ## 4. Open items
 
-- `[OPEN: THREADY-DES-08]` — confirm desktop scope beyond the wrapped web UI: tray, native
-  notifications, close-to-tray. All such designs above are proposals pending this decision.
+- `[CLOSED: THREADY-DES-08]` — **decided** (operator ruling 2026-07-22): desktop v1 ships the
+  wrapped web UI only; tray, native notifications, close-to-tray and file-drop are
+  **designed-but-deferred** — the §3 designs and the [desktop-shell.html](./desktop-shell.html)
+  mocks are the **v2 contract** (details stay `[DEFAULT — adjustable]` until v2 lands).
 - `[OPEN: THREADY-DES-16]` — local media-file ingest (file-drop case 2): decide whether a local
   upload path into the Asset Service exists at all; no UI is designed until it does.
 

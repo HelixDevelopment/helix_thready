@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — helix_shims Interface Findings (+ SwiftUI Decision Memo)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — helix_shims Interface Findings (+
+SwiftUI Decision Memo)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#what-was-inspected" id="toc-what-was-inspected">1. What
+was inspected</a></li>
+<li><a href="#what-exists-verified-interface-inventory"
+id="toc-what-exists-verified-interface-inventory">2. What exists —
+verified interface inventory</a>
+<ul>
+<li><a
+href="#rust-ffi-core-crateshelix-ffi-the-dartflutter_rust_bridge-boundary"
+id="toc-rust-ffi-core-crateshelix-ffi-the-dartflutter_rust_bridge-boundary">2.1
+Rust FFI core — <code>crates/helix-ffi</code> (the
+Dart/flutter_rust_bridge boundary)</a></li>
+<li><a href="#android-android-kotlin-vpnservice-jni"
+id="toc-android-android-kotlin-vpnservice-jni">2.2 Android —
+<code>android/</code> (Kotlin <code>VpnService</code> + JNI)</a></li>
+<li><a href="#apple-apple-rust-c-abi-swift-spike"
+id="toc-apple-apple-rust-c-abi-swift-spike">2.3 Apple —
+<code>apple/</code> (Rust C-ABI + Swift spike)</a></li>
+</ul></li>
+<li><a href="#what-does-not-exist-verified-absences"
+id="toc-what-does-not-exist-verified-absences">3. What does not exist —
+verified absences</a></li>
+<li><a
+href="#consequence-for-design-token-consumption-and-the-arqt-columns"
+id="toc-consequence-for-design-token-consumption-and-the-arqt-columns">4.
+Consequence for design-token consumption and the AR/QT columns</a></li>
+<li><a href="#status-of-the-workable-items-thready-des-lib-02--03"
+id="toc-status-of-the-workable-items-thready-des-lib-02--03">5. Status
+of the workable items (THREADY-DES-LIB-02 / -03)</a>
+<ul>
+<li><a href="#thready-des-lib-02-closed-decided"
+id="toc-thready-des-lib-02-closed-decided">THREADY-DES-LIB-02 — CLOSED
+(decided)</a></li>
+<li><a href="#thready-des-lib-03-narrowed"
+id="toc-thready-des-lib-03-narrowed">THREADY-DES-LIB-03 —
+NARROWED</a></li>
+</ul></li>
+<li><a href="#swiftui-decision-memo-thready-des-lib-02"
+id="toc-swiftui-decision-memo-thready-des-lib-02">6. SwiftUI decision
+memo (THREADY-DES-LIB-02)</a>
+<ul>
+<li><a href="#option-a-dedicated-swiftui-component-package-build-new"
+id="toc-option-a-dedicated-swiftui-component-package-build-new">Option A
+— dedicated SwiftUI component package
+(<code>[BUILD-NEW]</code>)</a></li>
+<li><a
+href="#option-b-compose-multiplatform-only-with-a-thin-swiftui-host-shell"
+id="toc-option-b-compose-multiplatform-only-with-a-thin-swiftui-host-shell">Option
+B — Compose-Multiplatform-only, with a thin SwiftUI host shell</a></li>
+<li><a href="#recommendation-non-binding"
+id="toc-recommendation-non-binding">Recommendation
+(non-binding)</a></li>
+</ul></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — helix_shims Interface Findings (+ SwiftUI Decision Memo)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/helix-shims-findings.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./react-token-rebind.md, ../library/platform-map.md (§2/§6),
+                    ../tokens-bridge/README.md, ../index.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>First actual inspection of <code>vasic-digital/helix_shims</code>
+(local checkout at remote HEAD): full interface inventory, verified
+absence of ArkTS/Qt shims and of any design-token surface — closes the
+<em>inspection</em> half of <code>[OPEN: THREADY-DES-LIB-03]</code> /
+<code>[GAP: 8.5]</code>; adds the <code>THREADY-DES-LIB-02</code>
+SwiftUI decision memo (§6, decision pending)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · decisions)</td>
+<td>§6 operator ruling recorded: <strong>Option B adopted</strong>
+(Compose-Multiplatform-only + thin SwiftUI host shell) —
+<code>THREADY-DES-LIB-02</code> <strong>CLOSED (decided)</strong>; §5
+restated as the items-status section: <code>THREADY-DES-LIB-03</code>
+noted <strong>narrowed</strong> (inspection half delivered here;
+remainder = the actual ArkTS/Aurora client platform decision)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scope guard.</strong> This file records what
+<code>helix_shims</code> <em>actually contains</em> as of the inspected
+commit, strictly read-only — no shim code was modified. It closes the
+<strong>inspection</strong> half of
+<code>[OPEN: THREADY-DES-LIB-03]</code> (“the <code>helix_shims</code>
+interface for ArkTS/Qt was not inspected <code>[GAP: 8.5]</code>”). The
+<em>re-verification of the AR/QT matrix cells once shim contracts
+exist</em> remains open — those contracts do not exist yet (§4). Section
+6 is the decision memo for <code>THREADY-DES-LIB-02</code> (iOS host
+decision); as of rev 2 it carries the recorded operator ruling
+(<strong>Option B adopted</strong>) and the item is closed.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-what-was-inspected">What was inspected</a></li>
+<li><a href="#2-what-exists--verified-interface-inventory">What exists —
+verified interface inventory</a></li>
+<li><a href="#3-what-does-not-exist--verified-absences">What does not
+exist — verified absences</a></li>
+<li><a
+href="#4-consequence-for-design-token-consumption-and-the-arqt-columns">Consequence
+for design-token consumption and the AR/QT columns</a></li>
+<li><a
+href="#5-status-of-the-workable-items-thready-des-lib-02---03">Status of
+the workable items (THREADY-DES-LIB-02 / -03)</a></li>
+<li><a href="#6-swiftui-decision-memo-thready-des-lib-02">SwiftUI
+decision memo (THREADY-DES-LIB-02)</a></li>
+</ol>
+<h2 id="what-was-inspected">1. What was inspected</h2>
+<ul>
+<li>Repository: <code>vasic-digital/helix_shims</code> (private; GitHub
+default branch <code>main</code>)
+<code>[VERIFIED — gh api repos/vasic-digital/helix_shims, 2026-07-22]</code>.</li>
+<li>Local working copy:
+<code>/home/milos/Factory/projects/tools_and_research/helix_vpn/submodules/helix_shims</code>
+(a <code>helix_vpn</code> submodule), clean tree, at commit
+<code>a33e902f6c2ae544832fb0cfa815c45a242e7b33</code> (2026-07-07) —
+<strong>identical to the remote <code>main</code> HEAD</strong> at
+inspection time, so the findings below describe the repo’s current
+published state
+<code>[VERIFIED — git log/status vs gh api …/commits/main]</code>.</li>
+<li>Method: full file-tree walk (build artifacts under
+<code>target/</code> excluded) + source read of every interface-bearing
+file; grep sweep for any design-token/theming/ArkTS/QML content.</li>
+</ul>
+<h2 id="what-exists-verified-interface-inventory">2. What exists —
+verified interface inventory</h2>
+<p><code>helix_shims</code> self-describes as “Per-platform tunnel
+shims: Apple <code>NEPacketTunnelProvider</code>, Android
+<code>VpnService</code>, Windows <code>wireguard-nt</code>, Linux
+<code>tun</code>, HarmonyOS Network Kit, Aurora OS Qt/tun”, with MVP
+status “<strong>Scaffolding only</strong>”
+<code>[VERIFIED — README.md]</code>. What is actually implemented at
+HEAD:</p>
+<h3
+id="rust-ffi-core-crateshelix-ffi-the-dartflutter_rust_bridge-boundary">2.1
+Rust FFI core — <code>crates/helix-ffi</code> (the
+Dart/flutter_rust_bridge boundary)</h3>
+<p><code>[VERIFIED — crates/helix-ffi/src/api.rs, 202 lines; Cargo.toml]</code></p>
+<ul>
+<li>flutter_rust_bridge <strong>v2, pinned 2.12.0</strong>;
+<code>api.rs</code> is “the single hand-authored FFI surface” (its own
+words), Phase-0 <strong>G5</strong> minimal surface:
+<ul>
+<li><code>pub struct ClientConfig { map_path: String, transport: String, … }</code></li>
+<li><code>pub async fn start(cfg: ClientConfig) -&gt; anyhow::Result&lt;()&gt;</code>
+(api.rs:90)</li>
+<li><code>pub async fn stop() -&gt; anyhow::Result&lt;()&gt;</code>
+(api.rs:161)</li>
+<li><code>pub fn status_stream(sink: StreamSink&lt;TunnelStatus&gt;)</code>
+(api.rs:189)</li>
+<li><code>pub enum TunnelStatus { Connecting, Handshaking, Connected { transport, rtt_ms }, Reconnecting, Down { reason } }</code>
+(api.rs:67–73)</li>
+</ul></li>
+<li>Supporting modules: <code>fanout.rs</code> (465 ln, status fan-out),
+<code>project.rs</code> (298 ln), <code>frb_stub.rs</code> (96 ln),
+<code>runtime.rs</code>, <code>state.rs</code>; integration tests
+<code>tests/g5_ffi_boundary.rs</code>,
+<code>tests/g5_ui_contract.rs</code>
+<code>[VERIFIED — file tree + wc -l]</code>.</li>
+</ul>
+<h3 id="android-android-kotlin-vpnservice-jni">2.2 Android —
+<code>android/</code> (Kotlin <code>VpnService</code> + JNI)</h3>
+<p><code>[VERIFIED — android/app/src/main/kotlin/dev/helixvpn/android/**, android/rust-jni/src/lib.rs]</code></p>
+<ul>
+<li>Kotlin app: <code>HelixVpnService.kt</code>,
+<code>HelixTunnelConfig.kt</code>, <code>PlatformTunnelEvent.kt</code>,
+<code>MainActivity.kt</code>, unit + instrumented tests.</li>
+<li>JNI boundary <code>core/HelixNative.kt</code> (87 ln), backed by
+<code>android/rust-jni</code> (<code>libhelix_jni.so</code>):
+<ul>
+<li><code>external fun nativeStart(mapPath: String, transport: String): Int</code></li>
+<li><code>external fun nativeStop(): Int</code></li>
+<li><code>external fun nativeSubscribeStatus(sink: TunnelStatusSink): Long</code></li>
+<li><code>external fun nativeUnsubscribeStatus(handle: Long)</code></li>
+<li>callback
+<code>TunnelStatusSink.onStatus(kind, transport, rttMs, reason)</code></li>
+</ul></li>
+<li>Cross-compile + JNI-signature-verification scripts under
+<code>android/scripts/</code>.</li>
+</ul>
+<h3 id="apple-apple-rust-c-abi-swift-spike">2.3 Apple —
+<code>apple/</code> (Rust C-ABI + Swift spike)</h3>
+<p><code>[VERIFIED — apple/helix-ios-ffi/src/ffi.rs, 260 ln; apple/ios-spike/HelixTunnel/PacketTunnelProvider.swift, 311 ln]</code></p>
+<ul>
+<li><code>helix-ios-ffi</code>: plain C ABI
+(<code>#[no_mangle] extern "C"</code>), cbindgen-generated header
+(<code>apple/ios-spike/helix_core.h</code>):
+<code>helix_core_start(config)</code>, <code>helix_core_stop()</code>,
+<code>helix_core_tun_out(data, len)</code>,
+<code>helix_core_set_inbound_callback(cb, user_data)</code>,
+<code>helix_core_poll_status(buf, len)</code>,
+<code>helix_core_last_error(buf, len)</code>.</li>
+<li><code>ios-spike/HelixTunnel/PacketTunnelProvider.swift</code>: a
+NetworkExtension <code>NEPacketTunnelProvider</code> host shell driving
+that C ABI — the in-house precedent for “thin Swift host over shared
+core” (relevant to §6).</li>
+</ul>
+<h2 id="what-does-not-exist-verified-absences">3. What does not exist —
+verified absences</h2>
+<p>All of the following are <strong>absent at HEAD</strong> — verified
+by full directory walk (top-level dirs are exactly:
+<code>android/</code>, <code>apple/</code>, <code>crates/</code>,
+<code>upstreams/</code> + docs/config files):</p>
+<ul>
+<li><strong>No <code>harmonyos/</code> directory, no ArkTS code</strong>
+— zero <code>.ets</code> files anywhere. The only HarmonyOS/ArkTS
+references are prose: the README’s <em>planned</em> shim structure
+(<code>harmonyos/  # Network Kit ability</code>) and
+<code>CLAUDE.md:59</code> naming “ArkTS/C++ for HarmonyOS” as a planned
+language <code>[VERIFIED — grep sweep]</code>.</li>
+<li><strong>No <code>aurora/</code> directory, no Qt/QML/C++ shim
+code</strong> — zero <code>.qml</code>/Qt files; “C++/QML for Aurora”
+appears only as the same planned-language prose
+<code>[VERIFIED — grep sweep]</code>.</li>
+<li><strong>No <code>windows/</code>, no <code>linux/</code> shim
+directories</strong> — README: “Platform shims for other operating
+systems are future work”
+<code>[VERIFIED — README.md + tree]</code>.</li>
+<li><strong>No design-token, theming, or color surface of any
+kind</strong> — a repo-wide grep for
+<code>design token | --accent | theme | color</code> over
+<code>*.rs</code>, <code>*.kt</code>, <code>*.swift</code>,
+<code>*.md</code> (build output excluded) returns only the CLAUDE.md
+planned-language line. The FFI vocabulary is exclusively tunnel
+lifecycle (<code>start/stop/status</code>), never UI
+<code>[VERIFIED — grep sweep, 2026-07-22]</code>.</li>
+</ul>
+<h2
+id="consequence-for-design-token-consumption-and-the-arqt-columns">4.
+Consequence for design-token consumption and the AR/QT columns</h2>
+<ol type="1">
+<li><strong><code>helix_shims</code> is a tunnel-lifecycle FFI layer,
+not a UI layer.</strong> Nothing in its existing or planned interface
+carries visual state; design tokens will never flow <em>through</em> it.
+The platform-map’s ground-truth note that ArkTS/Qt are “only reachable
+via native clients + <code>helix_shims</code>” (<a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2</a>) should be read as: <code>helix_shims</code> supplies the
+<em>network</em> half of those native clients; the <em>UI</em> half —
+where tokens are consumed — is separate client code that does not exist
+yet anywhere in this repo <code>[VERIFIED — §2/§3 above]</code>.</li>
+<li><strong>The token path for ArkTS/Qt is therefore independent of the
+shim contracts.</strong> The machine-generated ArkTS binding already
+shipped by Thready (<a
+href="../tokens-bridge/generated/arkts/thready_tokens.ets">tokens-bridge/generated/arkts/thready_tokens.ets</a>,
+<a href="../tokens-bridge/README.md">tokens-bridge/README.md</a>)
+remains a <em>contract-only</em> artifact awaiting a native ArkTS
+client, exactly as labeled there — this inspection confirms no such
+client (or shim half) exists to consume it yet.</li>
+<li><strong>The AR/QT matrix columns stay plan-only.</strong> <a
+href="../library/platform-map.md#3-the-matrix">platform-map §3</a> marks
+every AR/QT cell ASSUMED/ground-truth; nothing found here upgrades any
+cell. The re-verification half of <code>THREADY-DES-LIB-03</code> stays
+open until <code>harmonyos/</code>/<code>aurora/</code> shim contracts
+and their client scaffolds exist.</li>
+</ol>
+<h2 id="status-of-the-workable-items-thready-des-lib-02--03">5. Status
+of the workable items (THREADY-DES-LIB-02 / -03)</h2>
+<h3 id="thready-des-lib-02-closed-decided">THREADY-DES-LIB-02 — CLOSED
+(decided)</h3>
+<ul>
+<li><strong>CLOSED (decided) by operator ruling, 2026-07-22</strong> —
+<strong>Option B adopted</strong> (§6): the iOS host is
+Compose-Multiplatform-only with a thin SwiftUI host shell, per the
+memo’s recommendation and the <a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2.1</a> sanctioned path. iOS idiom deviations are accepted as
+documented (§6, Option B risks). No dedicated SwiftUI component package
+will be built; the generated <a
+href="../tokens-bridge/generated/swiftui/ThreadyTokens.swift"><code>ThreadyTokens.swift</code></a>
+contract stays on the shelf as labeled.</li>
+<li><strong>Remaining engineering dependency (not part of this
+item):</strong> the <code>UI-Components-KMP</code> Yole→Thready retheme,
+which consumes the committed tokens-bridge <a
+href="../tokens-bridge/generated/compose/ThreadyColors.kt"><code>ThreadyColors.kt</code></a>
+contract — the Compose analogue of the executed React re-bind (<a
+href="./react-token-rebind.md">react-token-rebind.md</a>).</li>
+</ul>
+<h3 id="thready-des-lib-03-narrowed">THREADY-DES-LIB-03 — NARROWED</h3>
+<ul>
+<li><strong>Inspection half: delivered by this file</strong> — the
+interface <em>was</em> inspected (2026-07-22, commit
+<code>a33e902f…</code>), with the concrete inventory in §2 and verified
+absences in §3. <code>[GAP: 8.5]</code>’s “uninspected” qualifier no
+longer holds.</li>
+<li><strong>What remains is narrower than the original wording:</strong>
+since <code>helix_shims</code> was proven to contain <strong>no
+ArkTS/Aurora surface at all</strong> (§3) — and by design never will
+carry UI/token state (§4.1) — the remaining substance of the item is the
+<strong>actual ArkTS/Aurora client platform decision</strong>
+(whether/when native HarmonyOS and Aurora OS clients exist to consume
+the contract-only token bindings). The AR/QT shim halves are
+<code>[BUILD-NEW]</code> in <code>helix_shims</code> (or a sibling),
+owned by the VPN/client program, not by the design library.</li>
+<li>Registry updates in <a
+href="../index.md#workable-items-registry">index.md</a> are
+intentionally <strong>not</strong> made by this file (atomic scope: this
+file records its own findings and the §6 ruling; the registry pass
+mirrors them).</li>
+</ul>
+<h2 id="swiftui-decision-memo-thready-des-lib-02">6. SwiftUI decision
+memo (THREADY-DES-LIB-02)</h2>
+<p><strong><code>[OPERATOR — RULING RECORDED, 2026-07-22]</code> —
+Option B adopted.</strong> The operator ruling adopts <strong>Option B:
+Compose-Multiplatform-only with a thin SwiftUI host shell</strong>, per
+this memo’s recommendation and the platform-map §2.1 sanctioned path
+(“SwiftUI / iOS via Compose Multiplatform (thin shims ASSUMED)”). iOS
+idiom deviations are accepted as documented in Option B’s risks below
+(e.g. Compose shimmer instead of <code>.redacted</code> skeletons). The
+remaining engineering dependency is the <code>UI-Components-KMP</code>
+Yole→Thready retheme, which consumes the committed tokens-bridge <a
+href="../tokens-bridge/generated/compose/ThreadyColors.kt"><code>ThreadyColors.kt</code></a>
+contract. <code>THREADY-DES-LIB-02</code> is <strong>CLOSED
+(decided)</strong> — see §5. The memo below is preserved as the decision
+record.</p>
+<p>Context: <a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2.1</a> shows the sanctioned iOS path as “SwiftUI / iOS via Compose
+Multiplatform (thin shims ASSUMED)” — “the sanctioned iOS path is
+Compose Multiplatform (or thin SwiftUI shims), not a” dedicated SwiftUI
+component package, and <code>THREADY-DES-LIB-02</code> records that
+<strong>no in-house SwiftUI package exists or is named in the decision
+matrix</strong>
+<code>[VERIFIED — platform-map §2.1/§6; index.md registry]</code>.</p>
+<h3 id="option-a-dedicated-swiftui-component-package-build-new">Option A
+— dedicated SwiftUI component package (<code>[BUILD-NEW]</code>)</h3>
+<p>Evidence-based assessment:</p>
+<ul>
+<li><strong>Nothing to start from.</strong> No in-house SwiftUI
+component code exists in any inspected repo (<code>design_system</code>
+= Angular + tokens; <code>UI-Components-React</code> = React;
+<code>UI-Components-KMP</code> = Compose; <code>helix_shims</code>
+apple/ = a NetworkExtension spike with zero UI)
+<code>[VERIFIED — this file §2–§3; platform-map §2]</code>. The entire
+~20-component × variant × state matrix would be new code, plus a new
+visual-regression surface.</li>
+<li><strong>Token bridge is ready, so the <em>styling</em> half is
+cheap:</strong> the generated <a
+href="../tokens-bridge/generated/swiftui/ThreadyTokens.swift"><code>ThreadyTokens.swift</code></a>
+contract (Light/Dark colors, spacing, radius, type scale) already exists
+— but it is explicitly “contract only, in case SwiftUI shims
+materialize” <code>[VERIFIED — tokens-bridge/README.md]</code>.</li>
+<li><strong>Upside:</strong> fully native look/feel and idioms
+(e.g. <code>.redacted(reason: .placeholder)</code> skeletons the matrix
+already assigns to SwiftUI, platform-map §3 notes); no Compose-on-iOS
+runtime.</li>
+<li><strong>Cost:</strong> duplicates the component library on a
+platform with no current product surface; contradicts the standing
+decision matrix without an operator override.</li>
+</ul>
+<h3
+id="option-b-compose-multiplatform-only-with-a-thin-swiftui-host-shell">Option
+B — Compose-Multiplatform-only, with a thin SwiftUI host shell</h3>
+<p>Evidence-based assessment:</p>
+<ul>
+<li><strong>Reuses code that exists:</strong>
+<code>UI-Components-KMP</code> ships real Compose components at HEAD;
+its known defect is branding, not structure — <code>Theme.kt</code> is
+“branded for another product (Yole, Material-red)”
+<code>[VERIFIED — platform-map §2 rev 2]</code>. The remediation is a
+token retheme, the direct analogue of the React re-bind executed under
+<a href="./react-token-rebind.md">react-token-rebind.md</a> — a bounded,
+contract-driven fix rather than a new library.</li>
+<li><strong>In-house precedent for the host-shell pattern:</strong>
+<code>helix_shims</code>
+<code>apple/ios-spike/PacketTunnelProvider.swift</code> already
+demonstrates a thin Swift host over a shared non-Swift core (§2.3) — the
+same shape a SwiftUI app shell hosting Compose UI takes
+<code>[VERIFIED — this file §2.3]</code>.</li>
+<li><strong>Single implementation</strong> of every
+component/state/theme; the theme×state audit and visual-regression bank
+stay one-platform-per-component instead of forking.</li>
+<li><strong>Risks (honest):</strong> Compose Multiplatform iOS runtime
+maturity/binary size; deviations from iOS idioms where the matrix
+expects native behavior (e.g. <code>.redacted</code> skeletons would be
+Compose shimmer instead); a thin SwiftUI shell is still needed for app
+chrome, so “zero Swift UI code” is not on the table either way.</li>
+</ul>
+<h3 id="recommendation-non-binding">Recommendation (non-binding)</h3>
+<p>On the evidence, <strong>Option B</strong> is the lower-cost,
+decision-matrix-consistent path: the only verified in-house mobile
+component asset is Compose (<code>UI-Components-KMP</code>), its
+blocking defect is a retheme with a proven remediation pattern, and the
+SwiftUI token contract stays on the shelf ready if a genuine
+native-SwiftUI surface requirement ever materializes. Option A should
+only be taken with an explicit operator override of the decision matrix
+and a named product surface that demands native SwiftUI.</p>
+<p><strong>Decision owner: operator. Status: DECIDED — Option B adopted
+(operator ruling, 2026-07-22).</strong></p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

@@ -30,6 +30,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · opendesign) | Initial brand contract in the verified OpenDesign 9-section `DESIGN.md` schema; every value derived from `../design-system.md` / `../theming.md` / `../brand-assets.md` — nothing invented |
 | 2 | 2026-07-22 | swarm (design · opendesign · verify) | Lens A/B compliance per the contributor authoring guide `[VERIFIED — open-design/docs/design-systems.md]`: added the **Font labels for catalog extraction** block (§3 — daemon parser regexes), an in-file `:root {}` + `[data-theme="dark"]` token block (§2), and real component CSS with a targeted `prefers-reduced-motion` gate (§4). Values unchanged |
+| 3 | 2026-07-22 | swarm (design · decisions) | `THREADY-DES-03` closed by operator ruling — heart stays `--ds-heart: var(--accent)`; §2 heart line states the decision (love-red dropped). Values unchanged |
 
 **Machine-readable twin:** [`tokens.css`](./tokens.css) — the compiled CSS custom properties for
 this contract, following the OpenDesign token schema
@@ -155,9 +156,11 @@ never mask an error signal `[VERIFIED — ../design-system.md §6.2]`.
 
 ### Heart glyph
 
-`--ds-heart` defaults to `var(--accent)` (AA-legible in both modes)
-`[VERIFIED precedent — ../brand-assets.md §8]`; classic love-red alternative is
-`[OPEN: THREADY-DES-03]`.
+`--ds-heart` stays `var(--accent)` (AA-legible in both modes)
+`[VERIFIED precedent — ../brand-assets.md §8]` — **decided**: operator ruling 2026-07-22
+(`[CLOSED: THREADY-DES-03]`, owned by [../brand-assets.md §8](../brand-assets.md)) keeps the
+accent-green heart (white-label-safe; AA in both modes); the classic love-red alternative is
+dropped.
 
 ### White-label override points
 

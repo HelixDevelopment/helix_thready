@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — React Token Re-bind (Remediation Contract)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — React Token Re-bind (Remediation
+Contract)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#what-was-found-verified-2026-07-22"
+id="toc-what-was-found-verified-2026-07-22">1. What was found (verified,
+2026-07-22)</a></li>
+<li><a href="#required-re-bind-approach"
+id="toc-required-re-bind-approach">2. Required re-bind approach</a>
+<ul>
+<li><a href="#variant-token-map-normative"
+id="toc-variant-token-map-normative">Variant → token map
+(normative)</a></li>
+</ul></li>
+<li><a href="#acceptance-criteria-closes-the-styling-half-of-the-gap"
+id="toc-acceptance-criteria-closes-the-styling-half-of-the-gap">3.
+Acceptance criteria (closes the styling half of the gap)</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — React Token Re-bind (Remediation Contract)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/platforms/react-token-rebind.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · platforms)
+  Related         : ./README.md, ../library/platform-map.md (§2), ../design-system.md (§3/§7),
+                    ../opendesign/tokens.css, ../theming.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · platforms)</td>
+<td>Initial remediation contract for <code>THREADY-DES-LIB-01</code> /
+<code>[GAP: 8.6]</code>: verified finding restated, required re-bind
+approach (CSS custom properties, no Tailwind hex literals),
+variant→token map, acceptance criteria</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scope guard.</strong> This is <strong>not</strong> a React
+component spec — the component contracts live in <a
+href="../component-library.md">component-library.md</a> and the per-cell
+realizations in <a
+href="../library/platform-map.md#3-the-matrix">platform-map.md §3</a>.
+This file is the <strong>remediation contract</strong> that turns the
+flagged <code>UI-Components-React</code> package from “files exist” into
+“token-bound”, i.e. the <em>definition of done</em> for the styling half
+of <code>[OPEN: THREADY-DES-LIB-01]</code> /
+<code>THREADY-DES-REACT-01</code>. Whether React is adopted at all
+remains “only if a React surface is needed”
+<code>[VERIFIED — design-system §7]</code> — this contract does not
+create a React surface.</p>
+<h2 id="what-was-found-verified-2026-07-22">1. What was found (verified,
+2026-07-22)</h2>
+<p>From <a
+href="../library/platform-map.md#2-per-repo-verification-results">platform-map
+§2</a>, second verification pass (<code>gh</code>, file contents)
+<code>[VERIFIED]</code>:</p>
+<ul>
+<li><code>vasic-digital/UI-Components-React</code> ships 13 component
+files at HEAD (<code>Avatar</code>, <code>Badge</code>,
+<code>Button</code>, <code>Card</code>, <code>EmptyState</code>,
+<code>ErrorBoundary</code>, <code>Input</code>,
+<code>LoadingSpinner</code>, <code>Progress</code>, <code>Select</code>,
+<code>Switch</code>, <code>Tabs</code>, <code>Textarea</code>), each
+with a test — <strong>file existence verified</strong>.</li>
+<li><code>Button.tsx</code> <strong>content</strong> inspected: variants
+<code>primary|secondary|outline|ghost|destructive</code>, sizes
+<code>sm|md|lg</code>, a <code>loading</code> spinner prop — <strong>but
+<code>variantClasses</code> hard-codes a Tailwind palette</strong>
+(<code>bg-blue-600</code>, gray neutrals,
+<code>focus-visible:ring-blue-500</code>); <strong>no design-system
+token is referenced anywhere</strong>.</li>
+<li>Consequence recorded there: the package is
+<code>SCAFFOLD/FLAGGED</code> <code>[GAP: 8.6]</code>; “the blocking
+work is the token bridge …, then re-audit.”</li>
+</ul>
+<p>So the failure mode is precise: the components are structurally fine
+but <strong>paint the wrong product</strong> — a blue Tailwind default
+instead of the Thready token palette — and are deaf to theming
+(light/dark re-binds, per-Account white-label) by construction, since
+Tailwind literal classes resolve to fixed hex at build time.</p>
+<h2 id="required-re-bind-approach">2. Required re-bind approach</h2>
+<p><strong>Single rule: every color the package emits must resolve
+through a CSS custom property from the canonical token set — zero
+Tailwind palette literals, zero hex literals, in
+<code>src/components/</code>.</strong></p>
+<ul>
+<li><strong>Token source:</strong> the canonical custom properties —
+<code>tokens/core.css</code> + <code>tokens/themes/ thready.css</code>
+(design-system §3), machine-readable twin in <a
+href="../opendesign/tokens.css">opendesign/tokens.css</a>. The React
+package <strong>consumes</strong> these vars; it never redeclares values
+(the “generated binding, never a hand-kept copy” rule, design-system §7
+— for React the “binding” is trivial: CSS vars are native to the
+platform).</li>
+<li><strong>Mechanism</strong> (either satisfies this contract; pick one
+package-wide):
+<ol type="1">
+<li><strong>Plain CSS vars in class styles</strong> — component classes
+styled with
+<code>background: var(--accent); color: var(--accent-on); box-shadow: var(--focus-ring)</code>
+etc., mirroring the shipped <code>.ds-btn</code> contract verbatim
+(opendesign/DESIGN.md §4 reference CSS).</li>
+<li><strong>Tailwind v4 <code>@theme</code> bridge</strong> — Tailwind
+v4 theme colors declared <em>as</em> the token vars (the
+<code>tailwind-v4.css</code> route platform-map §2 names), so utilities
+like <code>bg-accent</code> compile to <code>var(--accent)</code>.
+Allowed <strong>only</strong> if the emitted CSS references the vars —
+re-baking hex defeats the purpose.</li>
+</ol></li>
+<li><strong>Dark mode &amp; white-label come for free and must not be
+reimplemented:</strong> because values live in the vars, the three
+sanctioned theme mechanisms (<code>prefers-color-scheme</code>,
+<code>:root[data-theme="dark"]</code>, <code>.dark</code> — theming §2
+<code>[VERIFIED]</code>) and the per-Account
+<code>:root[data-account=…]</code> injection (theming §6) re-tint the
+package with <strong>no</strong> <code>dark:</code> color utilities and
+no React theme context for colors.</li>
+</ul>
+<h3 id="variant-token-map-normative">Variant → token map
+(normative)</h3>
+<p>Derived 1:1 from the shipped <code>.ds-btn</code> contract +
+design-system §5/§6
+<code>[VERIFIED sources; the mapping to React variant names is the contract this file adds]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th><code>Button.tsx</code> variant</th>
+<th>Replace (found)</th>
+<th>With (token binding)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>primary</code></td>
+<td><code>bg-blue-600</code> + white</td>
+<td>fill <code>var(--accent)</code>, ink <code>var(--accent-on)</code>,
+hover <code>var(--accent-hover)</code>, active
+<code>var(--accent-active)</code></td>
+</tr>
+<tr>
+<td><code>secondary</code></td>
+<td>gray neutrals</td>
+<td>fill <code>var(--surface-warm)</code>, ink <code>var(--fg)</code>,
+border <code>var(--border)</code></td>
+</tr>
+<tr>
+<td><code>outline</code></td>
+<td>gray border/ink</td>
+<td>transparent fill, border <code>var(--border-strong)</code>, ink
+<code>var(--fg)</code></td>
+</tr>
+<tr>
+<td><code>ghost</code></td>
+<td>gray ink</td>
+<td>transparent fill, ink <code>var(--accent)</code></td>
+</tr>
+<tr>
+<td><code>destructive</code></td>
+<td>(red literal)</td>
+<td><strong><code>var(--danger)</code></strong> fill + AA-checked ink —
+never the brand family
+<code>[VERIFIED rule — design-system §6.2]</code></td>
+</tr>
+<tr>
+<td>focus (all)</td>
+<td><code>focus-visible:ring-blue-500</code></td>
+<td><code>box-shadow: var(--focus-ring)</code> on
+<code>:focus-visible</code></td>
+</tr>
+<tr>
+<td>disabled (all)</td>
+<td>gray literals</td>
+<td><code>var(--muted)</code> ink, reduced-opacity token surface; no
+pointer events</td>
+</tr>
+</tbody>
+</table>
+<p>Structure tokens ride along: radius <code>var(--radius-sm)</code>,
+body face weight 500, spacing <code>var(--space-*)</code>, motion
+<code>var(--motion-fast)</code>/<code>var(--ease-standard)</code> with
+the component-level <code>prefers-reduced-motion</code> gate (never a
+global <code>*</code> — the shipped <code>.ds-btn</code> pattern
+<code>[VERIFIED]</code>). The same substitution discipline applies to
+the other 12 components (<code>Badge</code> → semantic badge tokens;
+<code>Progress</code>/<code>LoadingSpinner</code> →
+<code>--accent</code> track / <code>--danger</code> failed;
+<code>Input</code>/<code>Textarea</code>/ <code>Select</code> →
+<code>--border</code>, focus ring, <code>--danger</code> error; etc.)
+using their <code>.ds-*</code>/composite contracts in <a
+href="../component-library.md">component-library.md</a> as the
+source.</p>
+<h2 id="acceptance-criteria-closes-the-styling-half-of-the-gap">3.
+Acceptance criteria (closes the styling half of the gap)</h2>
+<p><code>[GAP: 8.6]</code> / <code>THREADY-DES-LIB-01</code> is closable
+for styling when <strong>all</strong> of the following hold:</p>
+<ol type="1">
+<li><strong>Zero literals:</strong> no Tailwind palette classes
+(<code>bg-blue-*</code>, <code>text-gray-*</code>,
+<code>ring-blue-*</code>, …) and no raw hex/rgb/hsl color literals under
+<code>src/components/</code> — enforced by a lint/grep gate in the
+package CI, not by review memory.</li>
+<li><strong>Var resolution proven:</strong> rendered output (computed
+styles) for every variant×state references the token vars; toggling
+<code>data-theme="dark"</code> and injecting a <code>data-account</code>
+white-label re-tints components <strong>without rebuild</strong>.</li>
+<li><strong>Variant map conformance:</strong> the §2 table verified per
+component against the living library (<a
+href="../library/components.html">library/components.html</a>) in light
+<strong>and</strong> dark.</li>
+<li><strong>Semantic safety:</strong> <code>destructive</code>/error
+styling resolves to <code>--danger</code> under every theme and
+white-label (the never-masked rule, theming §10.2).</li>
+<li><strong>State completeness re-audit:</strong> the remainder of
+<code>THREADY-DES-LIB-01</code> — each of the 13 files actually
+implements hover/focus/disabled/loading/error as the library specifies —
+executed component-by-component (this contract fixes <em>paint</em>; the
+state audit is its sibling).</li>
+<li><strong>A11y unchanged or better:</strong> focus ring visible via
+<code>--focus-ring</code>; AA contrast re-checked with the existing
+meter for every new pairing.</li>
+<li><strong>Visual-regression hook:</strong> the re-bound components
+enter the theme×state
+<code>ScreenDiff</code>/<code>VisualRegression</code> bank once CI
+exists <code>[GAP: 9.3]</code> — until then, criteria 1–6 are the
+(manually evidenced) gate.</li>
+</ol>
+<p>Ownership: the build work is <code>THREADY-DES-REACT-01</code> (index
+<a href="../index.md#workable-items-registry">workable-items
+registry</a>); upstreaming the re-bind to
+<code>vasic-digital/UI-Components-React</code> follows the same
+upstream-contribution path as the other proposed extensions
+(<code>[OPEN: THREADY-DES-12]</code>). No new open item is minted here —
+this file <em>narrows</em> existing ones to an executable definition of
+done.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

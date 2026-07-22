@@ -17,6 +17,7 @@
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: fixed Add‑Channel flow anchor (`#2-add-channel`) |
 | 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: global interaction-state + keyboard model (§1.1–1.3); per-screen validation/state tables for Login, Dashboard, Add‑Channel, Post detail, Search, Branding; CLI global flags + exit-code + `--json`/`--output` contract (§4.1–4.3); **verified** TUI keybinding map + Lipgloss style bindings + channel/post/search TUI layouts (grounded in `helix_track/llms_verifier/.../tui`); per-platform mobile realization map (Compose/SwiftUI/ArkTS/Qt), gestures, offline/sync states; two new diagrams (mobile fan-out) |
 | 4 | 2026-07-22 | swarm (design · package critic) | Wired each wireframe surface to its **rendered high‑fidelity screen set** now on disk (new §0 map + Upstream/Downstream note): web → [`screens/web/`](./screens/web/README.md), TUI → [`screens/tui/`](./screens/tui/README.md), mobile → [`screens/mobile/`](./screens/mobile/README.md), desktop → [`screens/desktop/`](./screens/desktop/README.md). Wireframes remain the **structural contract**; the rendered screens are the fidelity realization. Sign‑off in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md). |
+| 5 | 2026-07-22 | swarm (design · decisions) | Operator ruling: `[CLOSED: THREADY-DES-08]` — desktop v1 = wrapped web UI only; tray / native notifications / file-drop designed-but-deferred (the [screens/desktop/](./screens/desktop/README.md) mocks are the v2 contract); §7 updated |
 
 ## Table of contents
 
@@ -899,8 +900,10 @@ rather than resetting. Secrets (session tokens) **must** live in Keychain/KeySto
 - `[GAP: 4.1 helix_skills]` — the Skills/Recipes screen manages a dispatch mapping that needs the
   BUILD‑NEW Thready dispatch engine; the screen does not imply the engine exists.
 - `[GAP: 7.3 Security-KMP]`, `[GAP: 8.5 HarmonyOS/Aurora]` — mobile release gates (above).
-- `[OPEN: THREADY-DES-08]` — confirm whether Desktop (Tauri) needs any screen beyond the wrapped web
-  UI (e.g. native tray/notifications for processing completion).
+- `[CLOSED: THREADY-DES-08]` — **decided** (operator ruling 2026-07-22): desktop (Tauri) v1
+  ships the **wrapped web UI only**; tray, native notifications and file-drop are
+  designed-but-deferred — the mocks in [screens/desktop/](./screens/desktop/README.md) are the
+  **v2 contract**, not v1 scope.
 - `[OPEN: THREADY-DES-09]` — high‑fidelity Figma frames for every screen above are produced in
   [prototypes.md](./prototypes.md); these low‑fi wireframes are the structural contract they refine.
 

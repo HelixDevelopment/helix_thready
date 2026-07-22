@@ -2,12 +2,12 @@
   Title           : Helix Thready — Marketing Site Screen Designs (Angular 22 public site)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/screens/marketing/README.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
-  Author          : Helix Thready documentation swarm (design)
+  Status          : Draft — v0.2
+  Revision        : 3 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · marketing)
   Related         : ../web/README.md, ../../design-system.md, ../../brand-assets.md,
                     ../../theming.md, ../../opendesign/DESIGN.md, ../../opendesign/tokens.css,
-                    ../../library/platform-map.md, ../../../CONVENTIONS.md
+                    ../../library/platform-map.md, ../../../CONVENTIONS.md, ./seo.md
 -->
 
 # Helix Thready — Marketing Site Screen Designs
@@ -15,6 +15,8 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design) | Initial minimal viable marketing design: 3 pages (`landing` / `features` / `download`), self-contained OpenDesign-style HTML matching the `../web/` construction pattern; scope decision recorded honestly; mints `[OPEN: THREADY-DES-MKT-01]` and `[OPEN: THREADY-DES-MKT-02]`; full claims-traceability register (§5) |
+| 2 | 2026-07-22 | swarm (design · decisions) | Operator ruling: `[CLOSED: THREADY-DES-MKT-01]` — the 3-page baseline approved as the MVP marketing design (no self-host claim); `THREADY-DES-MKT-02` stays open — legal/SEO expansion referenced as in-flight, not delivered |
+| 3 | 2026-07-22 | swarm (design · marketing) | The rev-2 in-flight legal + SEO expansion of `THREADY-DES-MKT-02` (operator decision, 2026-07-22) is now **delivered**: adds `privacy.html` / `terms.html` / `imprint.html` **structural page designs** — all legal copy is `[OPERATOR — legal counsel text required]` placeholders, no legal fact invented — and [`seo.md`](./seo.md) (per-page meta/OG/Twitter, doc-backed JSON-LD `SoftwareApplication`, sitemap/robots templates, en/ru/sr-Cyrl canonical+hreflang notes); §4 catalogue + §5 register extended (rows 27–28); §7 records `THREADY-DES-MKT-02` as **ACTIVELY-SCOPED** — the design is delivered, the text remains counsel's |
 
 ## Table of contents
 
@@ -47,17 +49,27 @@ But **no marketing screen was ever designed**: [wireframes.md](../../wireframes.
 `web/`, `desktop/`, `mobile/`, `tui/`. The design-coverage audit therefore found **zero design
 artifacts** for the marketing app.
 
-**Decision taken here `[DEFAULT — adjustable]`:** this directory establishes the **minimal viable
-marketing design** — three pages (home, features, download) that a public site cannot exist
-without — using only claims traceable to existing design/product docs. It deliberately does
-**not** invent pricing pages, blog, docs portal, legal pages, SEO metadata or analytics: those are
-minted as open items below rather than papered over `[CONVENTIONS §7 — no bluff]`:
+**Decision taken here — approved (operator ruling 2026-07-22):** this directory establishes
+the **minimal viable marketing design** — three pages (home, features, download) that a
+public site cannot exist without — using only claims traceable to existing design/product
+docs. The 3-page baseline is now the **approved MVP marketing design**
+(`[CLOSED: THREADY-DES-MKT-01]`, §7). Rev 1 deliberately did **not** invent pricing pages,
+blog, docs portal, legal pages, SEO metadata or analytics: those were minted as open items
+rather than papered over `[CONVENTIONS §7 — no bluff]`. As of rev 3, the **legal-page designs
+and the SEO spec exist** under the active scoping of `THREADY-DES-MKT-02`; pricing pages, blog,
+docs portal and the analytics decision remain deliberately un-invented:
 
-- `[OPEN: THREADY-DES-MKT-01]` — **final marketing IA / copy sign-off** (page set, information
-  architecture, all headlines/body copy, and whether any self-host claim is ever made).
-- `[OPEN: THREADY-DES-MKT-02]` — **SEO / analytics / legal pages scope** (meta/OG/sitemap,
-  analytics or its deliberate absence, privacy policy, terms, imprint, store-listing legal
-  footprint).
+- `[CLOSED: THREADY-DES-MKT-01]` — **marketing IA / copy sign-off**: approved — the 3-page
+  baseline with its IA and copy is the MVP marketing design (and it makes no self-host
+  claim).
+- `[OPEN: THREADY-DES-MKT-02]` — **SEO / analytics / legal pages scope** — **actively scoped;
+  design delivered, text is counsel's** (rev 3): [`privacy.html`](./privacy.html) /
+  [`terms.html`](./terms.html) / [`imprint.html`](./imprint.html) structural page designs plus
+  the [`seo.md`](./seo.md) meta spec landed 2026-07-22. All legal copy remains
+  `[OPERATOR — legal counsel text required]` and all entity details remain
+  `[OPERATOR — legal entity detail required]`; still open: counsel text, entity details, final
+  locale URLs, the analytics decision (adoption or deliberate absence), and the store-listing
+  legal footprint. See §7 for the full remaining-scope wording.
 
 **Brand scope note.** The marketing site always renders the **system-default Thready / Helix
 Development brand — it is never white-labeled**. Per-Account white-labeling is a product-portal
@@ -70,7 +82,7 @@ attribution footer renders here exactly as everywhere else.
 | Class | Items |
 |-------|-------|
 | **[VERIFIED]** (carried verbatim, never invented) | Every color/typography/spacing/radius/motion token (from [`tokens.css`](../../opendesign/tokens.css) / design-system.md §3.1–3.2 — no new hex anywhere); the tagline **"read your threads, smarter"** (brand-assets.md §8.1, login/splash); logo-usage rules (full lockup = headers/marketing only; launcher icon letter-free; clear-space ≥ ⅛ box — brand-assets.md §3/§10); the locked footer *"Made with ♥ by Helix Development"* with heart accessible-name "love" (brand-assets.md §8); accent AA ratios (6.03:1 light / 13.56:1 dark); the three dark-mode mechanisms (theming.md §2); every platform status in the availability matrix (design-system.md §7 + platform-map.md §2/§5); every product-capability claim (register in §5) |
-| **[DEFAULT — adjustable]** (proposed by this directory, pending `THREADY-DES-MKT-01`) | The three-page set itself; all marketing copy (headlines, card text, section order); the screenshot-slot placeholder treatment (links to live artifacts until Docs Chain captures exist); the `go install` command shape on `download.html`; the "planned" store-channel chips; the decision to render store badges as neutral text chips until listings are real |
+| **[DEFAULT — adjustable]** (proposed by this directory; **approved 2026-07-22** as the MVP baseline — `[CLOSED: THREADY-DES-MKT-01]`) | The three-page set itself; all marketing copy (headlines, card text, section order); the screenshot-slot placeholder treatment (links to live artifacts until Docs Chain captures exist); the `go install` command shape on `download.html`; the "planned" store-channel chips; the decision to render store badges as neutral text chips until listings are real |
 
 ## 3. How the artifacts are built
 
@@ -99,19 +111,31 @@ Grotesk / JetBrains Mono):
 - **Marketing copy contract**: warm, human, understated; calm reading-oriented microcopy; **no
   exclamation marks** (DESIGN.md §1 voice & tone). Honesty banners (`.honesty`) render product
   status plainly — scaffolds are "in development", never shipping.
+- **Legal-page construction (rev 3)**: the same skeleton plus a sticky TOC sidebar (with a
+  Privacy/Terms/Imprint switcher), anchored sections (`scroll-margin-top` under the sticky
+  nav), dashed `[OPERATOR — legal counsel text required]` placeholder blocks for every
+  paragraph of legal substance, and accent-edged *"what is real today"* fact panels whose every
+  line cites a §5 register row. No brand-gradient focal element on any legal page; the pages
+  must not deploy while any placeholder remains (each page's design contract strip says so).
 
 ## 4. Page catalogue
 
 | File | Purpose | Contents | Honesty devices |
 |------|---------|----------|-----------------|
 | [`landing.html`](./landing.html) | Home | Hero lockup (mark + wordmark + tagline "read your threads, smarter") — **the** gradient focal element; 4 feature cards (reading / pipeline / search / surfaces), each linking the real screen artifact; 4 screenshot **slots** (dashboard, search, post-detail, TUI) that link to the living designs pending Docs Chain captures; get-it CTA row (Web / Desktop / Android / iOS / HarmonyOS / Aurora / TUI) with status badges; locked footer | MVP status banner; "in development" badges; slot placeholders never fake screenshots |
-| [`features.html`](./features.html) | Deeper feature grid | 8 in-depth cards (channels+backfill, threads, direct/derived tags, skills/recipes, research docs, assets, live events/CLI, teams/RBAC/white-label); **per-platform availability matrix** (8 rows, statuses verbatim from design-system.md §7 / platform-map.md); AI pipeline explainer (Ingest → Process → Skills → Search, with the real precedence line and event names); "How it is run" (no CDNs, operated infra, backups) | Gap tags inline (`[GAP: 5.1/4.1/2.6/8.x]`); honesty banner under the matrix; the self-host claim explicitly **not** made — routed to `[OPEN: THREADY-DES-MKT-01]` |
+| [`features.html`](./features.html) | Deeper feature grid | 8 in-depth cards (channels+backfill, threads, direct/derived tags, skills/recipes, research docs, assets, live events/CLI, teams/RBAC/white-label); **per-platform availability matrix** (8 rows, statuses verbatim from design-system.md §7 / platform-map.md); AI pipeline explainer (Ingest → Process → Skills → Search, with the real precedence line and event names); "How it is run" (no CDNs, operated infra, backups) | Gap tags inline (`[GAP: 5.1/4.1/2.6/8.x]`); honesty banner under the matrix; the self-host claim explicitly **not** made — resolved by `[CLOSED: THREADY-DES-MKT-01]` (baseline approved without it) |
 | [`download.html`](./download.html) | Get-the-app | 7 platform cards with real launcher-icon SVG variants (theme-swapped, relative refs); per-card install-channel chips (real vs **planned**); desktop (Tauri 2, per-OS format status) and TUI (`go install` / binary, `[DEFAULT — adjustable]`) rows; links into `../desktop/`, `../mobile/`, `../tui/` designs | Top honesty banner ("no store listing is live, no installer published"); neutral text chips instead of trademarked store badges; every scaffold labelled with its gap ID |
+| [`privacy.html`](./privacy.html) | Privacy policy **page design** | TOC sidebar (sticky, with Privacy/Terms/Imprint switcher) + anchored sections: who it covers, data inventories (account data / channel content / processing artifacts / marketing site), processing location, retention+backups, rights, self-hosted-instance note, contact, changes; accent-edged "what is real today" fact panels citing §5 rows; effective-date slot | Every legal paragraph is a dashed `[OPERATOR — legal counsel text required]` block; honesty banner states it is not a published policy; design contract forbids shipping with placeholders |
+| [`terms.html`](./terms.html) | Terms of service **page design** | Same TOC-sidebar construction; 12 anchored sections: acceptance, the service, accounts/roles, user content+connected sources, AI-produced output, acceptable use, availability/support, fees, warranties/liability, termination, governing law, changes; fact panels for the doc-backed service description, RBAC, no-public-pricing and ops facts | Every clause is an `[OPERATOR — legal counsel text required]` block; no obligation, warranty, jurisdiction or fee invented; fees section states plainly that no public pricing is documented |
+| [`imprint.html`](./imprint.html) | Imprint / impressum **page design** | Same TOC-sidebar construction; key–value slot rows (legal entity, form, registered address, country, representatives, contact, registers/VAT, content responsibility) + dispute-resolution placeholder + jurisdictional scope note | Every entity detail is a visibly empty `[OPERATOR — legal entity detail required]` slot; **no address, register number or contact detail invented**; whether an imprint is required at all is routed to counsel |
+| [`seo.md`](./seo.md) | SEO / meta specification | Canonical origin + URL model (`thready.hxd3v.com` per deployment §1; `{ORIGIN}` confirm slot); per-page title/description table derived from real copy; OG/Twitter template with real raster-pipeline image slots (`icon-512.png`; no 1200×630 card exists — Twitter card stays `summary`); doc-backed JSON-LD `SoftwareApplication` (offers/ratings/download deliberately omitted); sitemap.xml + robots.txt templates; en/ru/sr-Cyrl canonical+hreflang notes | `[OPERATOR]` slots for origin, final locale URLs, og:locale mapping, social handles, JSON-LD category/org URL; deployment gate: legal URLs enter the sitemap only after counsel text lands |
 
 ## 5. Claims-traceability register (no bluff)
 
-Every product claim made on the three pages, with its source. Marketing artifacts are **not**
-exempt from the documentation bar `[CONVENTIONS §7]`.
+Every product claim made on the marketing pages, with its source. Marketing artifacts are
+**not** exempt from the documentation bar `[CONVENTIONS §7]`. The legal pages (rev 3) mint
+**no new product claims** — their fact panels cite the rows below; the two facts they and
+`seo.md` add beyond rev 1 are registered as rows 27–28.
 
 | # | Claim (as marketed) | Source |
 |---|--------------------|--------|
@@ -140,7 +164,9 @@ exempt from the documentation bar `[CONVENTIONS §7]`.
 | 23 | Operated infrastructure: single Hetzner dedicated host, three fully-separated envs (dev/sta/prod), rootless Podman; secrets runtime-load-only, never logged | [../../../deployment/index.md](../../../deployment/index.md) §1 `[OPERATOR]` |
 | 24 | Backups: daily full + hourly DB incrementals; RPO ≈ 1 h, RTO ≈ 4 h, documented restore runbook | [../../../deployment/index.md](../../../deployment/index.md) §1 (Q41/Q45) |
 | 25 | Search backed by a pgvector semantic index | [../../../deployment/index.md](../../../deployment/index.md) §2 (database area: "PostgreSQL + pgvector schema"); service inventory names (Herald, Processing Engine, Semantic Search, Event Bus) ibid. |
-| 26 | **Negative claim, deliberately made**: no store listing live, no installer published, self-host offering not documented → not claimed | This directory's scope decision (§1); absence verified against the deployment + design ground truth; routed to `[OPEN: THREADY-DES-MKT-01/-02]` |
+| 26 | **Negative claim, deliberately made**: no store listing live, no installer published, self-host offering not documented → not claimed | This directory's scope decision (§1); absence verified against the deployment + design ground truth; routed to `THREADY-DES-MKT-01` (closed 2026-07-22 — baseline approved as-is) and `[OPEN: THREADY-DES-MKT-02]` (legal/SEO design delivered rev 3; counsel text outstanding) |
+| 27 | Raster pipeline outputs referenced by `seo.md` image slots: `raster/web/` favicon set + `icon-192/512.png` + `maskable-192/512.png` (deployed as `/icons/…` per the manifest block), `raster/brand/logo-mark-…` / `logo-full-…` conveniences; **no 1200×630 social card exists** — stated, not papered over | [`../../assets/generate-raster.sh`](../../assets/generate-raster.sh) (honest-output contract — never writes placeholder PNGs); [icon-export-matrix.md](../../assets/icon-export-matrix.md); [brand-assets.md](../../brand-assets.md) §5/§5.1 |
+| 28 | Environment domains used by `seo.md` (canonical origin + robots notes): `dev.thready.hxd3v.com` / `sta.thready.hxd3v.com` / `thready.hxd3v.com` (production) | [../../../deployment/index.md](../../../deployment/index.md) §1, subdomain table (§8.2) — marketing-site origin itself still `[OPERATOR]` (seo.md §2) |
 
 ## 6. Accessibility & theming contract
 
@@ -161,17 +187,31 @@ Same bar as the [web set](../web/README.md) §5:
 
 ## 7. Open items
 
-- `[OPEN: THREADY-DES-MKT-01]` **Final marketing IA / copy sign-off** — page set, information
-  architecture and every headline/body string on the three pages are `[DEFAULT — adjustable]`
-  until the operator signs them off; explicitly includes the decision on whether any
-  **self-host** claim is ever made (not documented today, therefore not claimed anywhere).
-- `[OPEN: THREADY-DES-MKT-02]` **SEO / analytics / legal pages scope** — meta/OG/sitemap/robots
-  strategy for the SSG/prerendered Angular 22 site, analytics (or its deliberate absence),
-  privacy policy, terms, imprint, and the legal footprint store listings will require. None of
-  these pages are designed yet; nothing here pretends they are.
+- `[CLOSED: THREADY-DES-MKT-01]` **Final marketing IA / copy sign-off — approved** (operator
+  ruling 2026-07-22): the 3-page baseline (`landing` / `features` / `download`), its
+  information architecture and its copy are the **approved MVP marketing design**. The
+  self-host question resolves with it: the approved baseline makes **no self-host claim**
+  (not documented today, therefore not claimed anywhere). Ordinary copy iteration stays
+  possible, but the baseline is signed off — no longer pending.
+- `[OPEN: THREADY-DES-MKT-02]` **SEO / analytics / legal pages scope — ACTIVELY-SCOPED
+  (design delivered 2026-07-22, rev 3; the text remains counsel's).** Delivered: the
+  **privacy / terms / imprint page designs** ([`privacy.html`](./privacy.html),
+  [`terms.html`](./terms.html), [`imprint.html`](./imprint.html) — layout, TOC sidebar,
+  section anchors, doc-backed fact panels) and the **SEO/meta spec** ([`seo.md`](./seo.md) —
+  per-page title/description/OG/Twitter, doc-backed JSON-LD `SoftwareApplication`,
+  sitemap.xml + robots.txt templates, en/ru/sr-Cyrl canonical+hreflang notes). Remaining
+  open before any of it ships: **(a)** the legal TEXT itself — every
+  `[OPERATOR — legal counsel text required]` placeholder on the three pages; **(b)** the
+  imprint entity details — every `[OPERATOR — legal entity detail required]` slot (no
+  address, register number or contact detail is invented); **(c)** the operator slots in
+  seo.md §9 (marketing-site origin, final locale URLs, og:locale mapping, social handles,
+  JSON-LD category/org URL, a real 1200×630 social-card render); **(d)** the **analytics
+  decision** — adoption or its deliberate stated absence; **(e)** the **store-listing legal
+  footprint** once any store listing becomes real. The legal pages must not deploy, and the
+  legal URLs must not enter the sitemap, until (a)/(b) are replaced by counsel.
 - Inherited, referenced in-page where relevant: `[GAP: 2.1]` HashEmbedder, `[GAP: 2.6]` OCR,
   `[GAP: 4.1]` dispatch engine, `[GAP: 5.1]` Max adapter, `[GAP: 8.1–8.6]` platform packages,
-  `[OPEN: THREADY-DES-03]` heart color, `[OPEN: THREADY-DES-05]` Aurora buckets,
+  `[CLOSED: THREADY-DES-03]` heart color (decided 2026-07-22: accent green), `[OPEN: THREADY-DES-05]` Aurora buckets,
   `[OPEN: THREADY-DES-LIB-02]` iOS host path.
 - Screenshot slots on `landing.html` await Docs Chain captures of the web/TUI artifacts
   (§11.4.65); until then they link to the living designs and are labelled as slots.

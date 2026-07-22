@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/platforms/README.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · platforms)
   Related         : ./typography-substitution.md, ./harmonyos.md, ./aurora.md,
                     ./react-token-rebind.md, ../library/platform-map.md,
@@ -17,6 +17,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · platforms) | Initial catalogue: per-platform DEVIATION specs closing the adversarial-review finding ("adequate-but-scattered for Android/iOS, THIN for HarmonyOS/Aurora, MISSING typography substitution everywhere") — typography-substitution, dedicated HarmonyOS + Aurora specs, React token-rebind remediation contract; minted the `THREADY-DES-PLAT-*` open-item family |
+| 2 | 2026-07-22 | swarm (design · decisions) | `THREADY-DES-PLAT-01` narrowed per operator ruling (bundling decided — all three faces, all platforms; remaining scope = per-face license/redistribution (OFL) verification); catalogue + family table updated |
 
 ## 1. What this directory is
 
@@ -51,7 +52,7 @@ HarmonyOS and Aurora were rated *THIN* and get dedicated consolidating specs.
 
 | File | Content | Status |
 |------|---------|--------|
-| [typography-substitution.md](./typography-substitution.md) | **The missing spec**: per-platform font strategy for the three brand faces (Space Grotesk / Hanken Grotesk / JetBrains Mono) — bundling feasibility per platform, honest fallback stacks (`[DEFAULT — adjustable]`), Cyrillic coverage discipline (THREADY-DES-04 inherited), dynamic-type / font-scale mapping of the token type ramp | new spec; bundling decision `[OPEN: THREADY-DES-PLAT-01]` |
+| [typography-substitution.md](./typography-substitution.md) | **The missing spec**: per-platform font strategy for the three brand faces (Space Grotesk / Hanken Grotesk / JetBrains Mono) — bundling feasibility per platform, honest fallback stacks (`[DEFAULT — adjustable]`), Cyrillic coverage discipline (THREADY-DES-04 inherited), dynamic-type / font-scale mapping of the token type ramp | new spec; bundling **decided 2026-07-22** — bundle all three faces on all platforms; `[OPEN: THREADY-DES-PLAT-01]` narrowed to per-face license/redistribution (OFL) verification |
 | [harmonyos.md](./harmonyos.md) | Dedicated **ArkTS / HarmonyOS** customization spec: ArkUI navigation of the 5-tab IA, system back, safe areas, system dark mode, Barrier-Free a11y mapping, consolidated ArkUI component-substitutions table, layered icon integration, motion runtime honesty, i18n | design contract; client is a skeleton `[GAP: 8.5]` |
 | [aurora.md](./aurora.md) | Dedicated **Aurora OS / Qt / Silica** customization spec: Silica page-stack navigation, remorse-timer pattern for destructive actions, ambience-vs-token tension (documented honestly), Qt Accessibility mapping, component substitutions, density buckets (`THREADY-DES-05` inherited), motion honesty, keyboard/hardware back | design contract; client is a skeleton `[GAP: 8.5]` |
 | [react-token-rebind.md](./react-token-rebind.md) | **Remediation contract** (not a full React spec) for `THREADY-DES-LIB-01` / `[GAP: 8.6]`: the verified finding (`Button.tsx` hard-codes a Tailwind palette, zero token references), the required re-bind approach (CSS custom properties from `tokens.css`), and the acceptance criteria that close the gap | remediation contract |
@@ -82,7 +83,7 @@ and registered in the canonical [../index.md](../index.md#open-items) registry:
 
 | ID | Summary | Owning file |
 |----|---------|-------------|
-| `THREADY-DES-PLAT-01` | Per-platform font **bundling decision** + license/redistribution verification for the three brand faces | [typography-substitution.md §7](./typography-substitution.md#7-open-items) |
+| `THREADY-DES-PLAT-01` | **Narrowed 2026-07-22** — bundling decided (bundle all three faces on all platforms; fallbacks are runtime-failure only); remaining: per-face **license/redistribution (OFL) verification** | [typography-substitution.md §7](./typography-substitution.md#7-open-items) |
 | `THREADY-DES-PLAT-02` | **Fallback-stack Cyrillic** (ru / sr-Cyrl) coverage verification per OS face | [typography-substitution.md §7](./typography-substitution.md#7-open-items) |
 | `THREADY-DES-PLAT-03` | **ArkUI API verification** of every derived HarmonyOS mapping (navigation, components, font registration, Barrier-Free) | [harmonyos.md §11](./harmonyos.md#11-open-items) |
 | `THREADY-DES-PLAT-04` | **HarmonyOS motion runtime** — no verified Lottie player; `@ohos/lottie` is ASSUMED | [harmonyos.md §11](./harmonyos.md#11-open-items) |

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Token-Bridge Codegen</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Token-Bridge Codegen</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#what-this-is-and-the-single-source-rule"
+id="toc-what-this-is-and-the-single-source-rule">1. What this is (and
+the single-source rule)</a></li>
+<li><a href="#generated-targets-honest-consumer-status"
+id="toc-generated-targets-honest-consumer-status">2. Generated targets
+&amp; honest consumer status</a></li>
+<li><a href="#how-to-run" id="toc-how-to-run">3. How to run</a></li>
+<li><a href="#the---check-drift-gate" id="toc-the---check-drift-gate">4.
+The <code>--check</code> drift gate</a></li>
+<li><a href="#validation-record-2026-07-22-this-machine"
+id="toc-validation-record-2026-07-22-this-machine">5. Validation record
+(2026-07-22, this machine)</a></li>
+<li><a href="#closure-state-of-thready-des-lib-04"
+id="toc-closure-state-of-thready-des-lib-04">6. Closure state of
+THREADY-DES-LIB-04</a></li>
+<li><a href="#what-is-deliberately-not-exported"
+id="toc-what-is-deliberately-not-exported">7. What is deliberately NOT
+exported</a></li>
+<li><a href="#open-items" id="toc-open-items">8. Open items</a></li>
+<li><a href="#verified-consumer-quirks-penpot-2.17"
+id="toc-verified-consumer-quirks-penpot-2.17">9. Verified consumer
+quirks (PenPot 2.17)</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Token-Bridge Codegen (CSS tokens → per-platform bindings)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/tokens-bridge/README.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · tokens-bridge)
+  Related         : ../opendesign/tokens.css, ../design-system.md (§3/§7),
+                    ../screens/tui/lipgloss-theme.md, ../library/platform-map.md (§2),
+                    ../figma/figma-variables.json, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · tokens-bridge)</td>
+<td>Initial: <code>generate.mjs</code> (no-deps Node parser/emitter for
+<code>opendesign/tokens.css</code>), seven generated per-platform
+bindings, <code>--check</code> drift gate, honest validation record.
+Materializes the generator that <code>design-system.md §7</code>,
+<code>lipgloss-theme.md §8</code> and <code>platform-map.md §6</code>
+reference but until now did not exist
+(<code>[OPEN: THREADY-DES-LIB-04]</code> — see §6)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · tokens-bridge)</td>
+<td>PenPot defect closure (§9): the real PenPot 2.17 import proved a
+top-level <code>$description</code> flips the importer into single-set
+mode, so <code>web/tokens.json</code> is demoted to the <strong>pure W3C
+DTCG canonical</strong> artifact (PenPot-import claim removed) and a new
+eighth target <code>generated/penpot/tokens.penpot-import.json</code> is
+emitted natively (multi-set + <code>$themes</code>, no root
+<code>$description</code>, byte-identical to the operator-derived file
+that actually imported). <code>--check</code> extended with quirk guards
++ structural diff vs that reference; all target writes now atomic
+(<code>.tmp</code> + rename). PenPot’s silent 71/74 drop of
+<code>duration</code>/<code>cubicBezier</code> recorded</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-what-this-is-and-the-single-source-rule">1. What this is
+(and the single-source rule)</a></li>
+<li><a href="#2-generated-targets--honest-consumer-status">2. Generated
+targets &amp; honest consumer status</a></li>
+<li><a href="#3-how-to-run">3. How to run</a></li>
+<li><a href="#4-the---check-drift-gate">4. The <code>--check</code>
+drift gate</a></li>
+<li><a href="#5-validation-record-2026-07-22-this-machine">5. Validation
+record (2026-07-22, this machine)</a></li>
+<li><a href="#6-closure-state-of-thready-des-lib-04">6. Closure state of
+THREADY-DES-LIB-04</a></li>
+<li><a href="#7-what-is-deliberately-not-exported">7. What is
+deliberately NOT exported</a></li>
+<li><a href="#8-open-items">8. Open items</a></li>
+<li><a href="#9-verified-consumer-quirks-penpot-217">9. Verified
+consumer quirks (PenPot 2.17)</a></li>
+</ul>
+<h2 id="what-this-is-and-the-single-source-rule">1. What this is (and
+the single-source rule)</h2>
+<p><code>generate.mjs</code> is the <strong>token-bridge
+codegen</strong> mandated by <a
+href="../design-system.md#7-per-platform-fan-out">design-system.md
+§7</a>: <em>“each non-web platform consumes a <strong>generated</strong>
+binding, not a hand-kept copy, so a token change propagates.”</em> It
+aligns with the constitution design mandate
+(<code>[CONSTITUTION §11.4.162]</code> one design system for every
+surface; <code>§11.4.6</code> no invented values — every emitted value
+is parsed, never restated).</p>
+<p><strong>The single source of truth is <a
+href="../opendesign/tokens.css"><code>../opendesign/tokens.css</code></a>.</strong>
+The generator parses its <code>:root</code> block (light + structural
+tokens), its <code>@media (prefers-color-scheme: dark)</code> block and
+its <code>[data-theme="dark"], .dark</code> block into one internal
+model, verifies the two dark blocks agree, and emits every target from
+that model. Nothing in <code>generated/</code> may be edited by hand —
+every file carries a <code>GENERATED — DO NOT EDIT</code> header with
+the sha256 of the <code>tokens.css</code> revision that produced it:</p>
+<pre><code>sha256(tokens.css) = f0f788d1ee73dc624b2006b597d6fb9ab618190b68bf2425c72edc36f0ca4eaf</code></pre>
+<p>The Lipgloss (Go) target additionally reads the
+<strong>normative</strong> mapping tables of <a
+href="../screens/tui/lipgloss-theme.md#2-token--color-map"><code>../screens/tui/lipgloss-theme.md §2</code></a>
+(truecolor → ANSI-256 → ANSI-16) and the generator
+<strong>fails</strong> if that document’s truecolor column ever drifts
+from <code>tokens.css</code> — the doc and the CSS are cross-locked.</p>
+<p>Determinism: output ordering follows <code>tokens.css</code>
+declaration order; no timestamps are embedded — regenerating from the
+same source is byte-identical (that is what makes <code>--check</code> a
+CI gate).</p>
+<h2 id="generated-targets-honest-consumer-status">2. Generated targets
+&amp; honest consumer status</h2>
+<p>Consumer statuses are carried verbatim from <a
+href="../library/platform-map.md#2-per-repo-verification-results"><code>platform-map.md §2</code></a>
+(verified 2026-07-22 against repo HEADs). <strong>A generated binding is
+a delivery-ready contract — it is NOT a claim that the consumer app
+exists or consumes it today.</strong></p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Target</th>
+<th>File</th>
+<th>Format</th>
+<th>Intended consumer</th>
+<th>Honest consumer status (platform-map §2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web / interchange</td>
+<td><a
+href="./generated/web/tokens.json"><code>generated/web/tokens.json</code></a></td>
+<td><strong>W3C DTCG</strong> design tokens — the <strong>pure DTCG
+canonical</strong> interchange artifact; color modes as token groups
+<code>thready-light</code> / <code>thready-dark</code>;
+<code>dimension</code>/<code>number</code>/<code>duration</code>/<code>cubicBezier</code>/<code>fontFamily</code>
+<code>$type</code>s; aliases as DTCG <code>{references}</code>.
+<strong>NOT the PenPot import file</strong> — its top-level
+<code>$description</code> flips PenPot 2.17 into single-set mode
+<code>[VERIFIED 2026-07-22]</code> (§9); PenPot consumers use the
+<code>penpot/</code> target below</td>
+<td>Style-Dictionary-class pipelines; generic DTCG tooling</td>
+<td>Web layer itself is PRODUCTION-usable (<code>design_system</code>
+<code>.ds-*</code>) and consumes the CSS directly — this JSON is for
+tools, not the Angular app. A direct PenPot 2.17 import of this file
+<strong>was exercised 2026-07-22 and misbehaved</strong> (single set
+“tokens”, 38 colors, no themes — §9), which is why the claim moved to
+the dedicated target</td>
+</tr>
+<tr>
+<td>PenPot import</td>
+<td><a
+href="./generated/penpot/tokens.penpot-import.json"><code>generated/penpot/tokens.penpot-import.json</code></a></td>
+<td><strong>PenPot 2.17 design-tokens import projection</strong> of the
+same model: token sets <code>thready-light</code> /
+<code>thready-dark</code> / <code>thready-structure</code>,
+<code>$themes</code> (<code>Thready/Light</code>,
+<code>Thready/Dark</code> — UUIDs pinned to the proven import for
+determinism), <code>$metadata.tokenSetOrder</code>; <strong>no root
+<code>$description</code> and no sha256 header</strong> (§9 explains
+why). ASCII-escaped JSON, byte-identical to the operator-derived file
+that actually imported
+(<code>../exports/penpot/tokens.penpot-import.json</code>)</td>
+<td>PenPot 2.17 tokens importer</td>
+<td>Import <strong>exercised 2026-07-22 in PenPot 2.17</strong>: sets +
+both themes land; <strong>71/74 tokens land</strong> — PenPot silently
+drops <code>duration</code> (×2) and <code>cubicBezier</code> (×1), all
+three still included (§9)</td>
+</tr>
+<tr>
+<td>Compose / KMP</td>
+<td><a
+href="./generated/compose/ThreadyColors.kt"><code>generated/compose/ThreadyColors.kt</code></a></td>
+<td>Kotlin objects
+<code>ThreadyColors.LightColors</code>/<code>.DarkColors</code>
+(<code>Color(0xFF…)</code>),
+<code>ThreadySpacing</code>/<code>ThreadyRadius</code>
+(<code>Dp</code>), <code>ThreadyTypeScale</code>
+(<code>sp</code>/<code>em</code>), <code>ThreadyMotion</code>. Package
+<code>digital.vasic.thready.design</code> — the design-system §7 sample
+declares no package, so this is <code>[DEFAULT — adjustable]</code></td>
+<td><code>UI-Components-KMP</code></td>
+<td><strong>Utilities-only scaffold, foreign-branded</strong>
+(<code>Theme.kt</code> ships a Yole Material-red palette, zero widgets,
+no CI/publish) <code>[GAP: 8.4]</code>. This file is the contract that
+replaces the hand-kept palette when THREADY-DES-KMP-01 lands</td>
+</tr>
+<tr>
+<td>SwiftUI</td>
+<td><a
+href="./generated/swiftui/ThreadyTokens.swift"><code>generated/swiftui/ThreadyTokens.swift</code></a></td>
+<td><code>ThreadyTokens.LightColors</code>/<code>.DarkColors</code>
+(<code>Color(red:green:blue:)</code>, 6-decimal floats that round-trip
+to the source hex),
+<code>Spacing</code>/<code>Radius</code>/<code>TypeScale</code>
+(<code>CGFloat</code>)</td>
+<td>(none today)</td>
+<td><strong>No in-house SwiftUI package exists</strong>
+<code>[OPEN: THREADY-DES-LIB-02]</code>; the sanctioned iOS path is
+KMP/Compose. Contract only, in case SwiftUI shims materialize</td>
+</tr>
+<tr>
+<td>ArkTS / HarmonyOS</td>
+<td><a
+href="./generated/arkts/thready_tokens.ets"><code>generated/arkts/thready_tokens.ets</code></a></td>
+<td><code>ThreadyColorLight</code>/<code>ThreadyColorDark</code> classes
+(ResourceColor-compatible hex strings),
+<code>ThreadySpacing</code>/<code>ThreadyRadius</code> (vp),
+<code>ThreadyTypeScale</code> (fp), <code>ThreadyMotion</code> (ms)</td>
+<td>native ArkTS client via <code>helix_shims</code></td>
+<td><code>helix_shims</code> interface <strong>uninspected</strong>
+<code>[GAP: 8.5]</code> <code>[OPEN: THREADY-DES-LIB-03]</code> —
+contract only</td>
+</tr>
+<tr>
+<td>Qt / QML (Aurora)</td>
+<td><a
+href="./generated/qml/ThreadyTokens.qml"><code>generated/qml/ThreadyTokens.qml</code></a></td>
+<td><code>pragma Singleton</code> <code>QtObject</code> with
+<code>light</code>/<code>dark</code> sub-objects (<code>color</code>
+properties) + <code>int</code>/<code>real</code> structure
+properties</td>
+<td><code>helix_design</code> Qt arm</td>
+<td><strong>Verified empty scaffold</strong>
+<code>[GAP: 8.2/8.3]</code>; Aurora path is native via
+<code>helix_shims</code> <code>[GAP: 8.5]</code> — contract only</td>
+</tr>
+<tr>
+<td>TUI / Lipgloss</td>
+<td><a
+href="./generated/lipgloss/thready_palette.go"><code>generated/lipgloss/thready_palette.go</code></a></td>
+<td><code>package theme</code>: dark truecolor vars (§3 names:
+<code>Accent</code>, <code>AccentOn</code>, <code>Fg</code>,
+<code>Muted</code>, <code>BorderColor</code>, <code>BorderHard</code>,
+<code>Success</code>, <code>Warn</code>, <code>DangerColor</code>,
+<code>Brand2</code>, +
+<code>Brand</code>/<code>Bg</code>/<code>SurfaceWarm</code>), pinned
+<code>CompleteColor</code> degradation set (§5 option 2) and
+<code>AdaptiveColor</code> light/dark set (§6) — matching
+<code>lipgloss-theme.md</code> <strong>exactly</strong>, with the doc’s
+ASSUMED markers on every ANSI-256/16 pick carried through into the code
+comments</td>
+<td>Thready TUI (Bubble Tea)</td>
+<td>Bubble Tea + Lipgloss <strong>pattern VERIFIED</strong> in-house
+(<code>helix_track/llms_verifier/…/tui</code>); the Thready TUI itself
+is not built yet — styles are PROPOSED on the verified pattern
+(THREADY-DES-TUI-01)</td>
+</tr>
+<tr>
+<td>Flutter</td>
+<td><a
+href="./generated/flutter/thready_tokens.dart"><code>generated/flutter/thready_tokens.dart</code></a></td>
+<td><code>ThreadyColorsLight</code>/<code>ThreadyColorsDark</code>
+(<code>Color(0xFF…)</code> via <code>dart:ui</code>),
+<code>ThreadySpacing</code>/<code>ThreadyRadius</code>/<code>ThreadyTypeScale</code>
+(<code>double</code>), <code>ThreadyMotion</code> (<code>int</code>
+ms)</td>
+<td><code>helix_design</code> Flutter arm</td>
+<td><strong>Verified empty scaffold</strong> <code>[GAP: 8.2/8.3]</code>
+— contract only</td>
+</tr>
+</tbody>
+</table>
+<p>Token counts per target (colors count both modes; aliases included):
+<code>tokens.json</code> <strong>74</strong> tokens ·
+<code>tokens.penpot-import.json</code> <strong>74</strong> tokens
+(<strong>71</strong> land in PenPot 2.17 — §9) ·
+<code>ThreadyColors.kt</code> <strong>71</strong> declarations ·
+<code>ThreadyTokens.swift</code> <strong>71</strong> ·
+<code>thready_tokens.ets</code> <strong>70</strong>
+<code>static readonly</code> + 1 exported const = <strong>71</strong> ·
+<code>ThreadyTokens.qml</code> <strong>73</strong> properties ·
+<code>thready_palette.go</code> <strong>39</strong> vars (13 roles ×
+truecolor/Complete/Adaptive) · <code>thready_tokens.dart</code>
+<strong>70</strong> <code>static const</code> + 1 top-level const =
+<strong>71</strong>.</p>
+<h2 id="how-to-run">3. How to run</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From this directory (no npm install — zero dependencies, Node ≥ 18; node 24 verified):</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> generate.mjs          <span class="co"># (re)generates ./generated/** and runs the self-check suite</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> generate.mjs <span class="at">--check</span>  <span class="co"># CI drift gate — see §4</span></span></code></pre></div>
+<p>After any change to <code>../opendesign/tokens.css</code> (or to the
+<code>lipgloss-theme.md §2</code> mapping tables), re-run
+<code>node generate.mjs</code> and commit the regenerated outputs
+together with the source change.</p>
+<h2 id="the---check-drift-gate">4. The <code>--check</code> drift
+gate</h2>
+<p><code>node generate.mjs --check</code> re-generates every target into
+a temp directory and:</p>
+<ol type="1">
+<li><strong>Drift:</strong> byte-diffs each fresh output against the
+committed <code>generated/**</code> file (missing or differing file →
+FAIL, exit ≠ 0).</li>
+<li><strong>Hex round-trip:</strong> extracts every color literal from
+every output (including reconstructing hex from the SwiftUI float
+triplets) and asserts set-equality with the colors parsed from
+<code>tokens.css</code> — no invented, dropped, or mistyped color can
+survive.</li>
+<li><strong>Structural self-checks:</strong> balanced
+<code>{} () []</code> and exact expected symbol counts per target (the
+stand-in validation for toolchains not present on the machine — see
+§5).</li>
+<li><strong>Source consistency:</strong> the <code>@media</code> dark
+block and the <code>[data-theme="dark"], .dark</code> block of
+<code>tokens.css</code> must bind identical values;
+<code>lipgloss-theme.md §2</code>’s truecolor column must equal the
+parsed dark values; both JSON outputs must <code>JSON.parse</code>.</li>
+<li><strong>PenPot quirk guards (§9):</strong> the <code>penpot/</code>
+target must have <strong>no top-level <code>$description</code></strong>
+(the single-set trigger), must carry <code>$themes</code> (2) +
+<code>$metadata.tokenSetOrder</code> (3), and — while the
+operator-derived reference
+<code>../exports/penpot/tokens.penpot-import.json</code> exists — must
+be structurally (parsed-JSON) equal to it; the check reports
+<code>byte-identical</code> when the bytes match too.</li>
+</ol>
+<p>Exercised both ways on 2026-07-22 (rev 2): pristine tree → 40/40
+PASS, exit 0 (the penpot reference check reporting
+<code>byte-identical</code>); a deliberately tampered hex in
+<code>penpot/tokens.penpot-import.json</code> → <code>FAIL drift</code>,
+exit 1; regenerate → 40/40 PASS again. (Rev 1 exercised the same gate at
+32/32 with a tampered <code>ThreadyColors.kt</code>.)</p>
+<h2 id="validation-record-2026-07-22-this-machine">5. Validation record
+(2026-07-22, this machine)</h2>
+<p>Per the no-bluff bar (<code>CONVENTIONS.md §7</code>) — what each
+output was <strong>actually</strong> validated with. Toolchain
+availability was probed first: <code>node</code> v24.18.0 ✓,
+<code>go</code> 1.26.4 + <code>gofmt</code> ✓; <code>kotlinc</code>,
+<code>swiftc</code>, <code>qmllint</code>,
+<code>dart</code>/<code>flutter</code>, <code>tsc</code>
+<strong>MISSING</strong> on this machine.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Target</th>
+<th>Validation method</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>web/tokens.json</code></td>
+<td><code>JSON.parse</code> (node 24) + hex round-trip + DTCG
+<code>$type</code>/alias-reference structure emitted per spec</td>
+<td><strong>PASS</strong> as DTCG. Direct PenPot 2.17 import exercised
+2026-07-22 → <strong>single-set misbehavior</strong> (the
+<code>$description</code> quirk, §9) — this file is deliberately NOT the
+PenPot import file anymore</td>
+</tr>
+<tr>
+<td><code>penpot/tokens.penpot-import.json</code></td>
+<td><code>JSON.parse</code> + hex round-trip +
+no-root-<code>$description</code> guard +
+<code>$themes</code>/<code>$metadata</code> guard + structural diff
+against the operator-derived file that <strong>actually imported into
+PenPot 2.17</strong> (2026-07-22)</td>
+<td><strong>PASS — byte-identical</strong> to the proven import file
+(<code>sha256 eae6bca3…</code>); the import itself landed sets + 2
+themes, 71/74 tokens (§9)</td>
+</tr>
+<tr>
+<td><code>compose/ThreadyColors.kt</code></td>
+<td><code>kotlinc</code> <strong>MISSING</strong> → structural
+self-checks: balanced delimiters, 71/71 <code>val</code> declarations,
+hex round-trip</td>
+<td>PASS (structural only — <strong>not compiler-verified</strong>)</td>
+</tr>
+<tr>
+<td><code>swiftui/ThreadyTokens.swift</code></td>
+<td><code>swiftc</code> <strong>MISSING</strong> → structural
+self-checks incl. float→hex round-trip (6-decimal channels reconstruct
+the exact source hex)</td>
+<td>PASS (structural only — <strong>not compiler-verified</strong>)</td>
+</tr>
+<tr>
+<td><code>arkts/thready_tokens.ets</code></td>
+<td>No ArkTS toolchain (and no <code>tsc</code>) → structural
+self-checks: balanced delimiters, 70/70 <code>static readonly</code>,
+hex round-trip</td>
+<td>PASS (structural only — <strong>not compiler-verified</strong>)</td>
+</tr>
+<tr>
+<td><code>qml/ThreadyTokens.qml</code></td>
+<td><code>qmllint</code> <strong>MISSING</strong> (also probed qt6
+paths) → structural self-checks: balanced delimiters, 73/73
+<code>readonly property</code>, hex round-trip</td>
+<td>PASS (structural only — <strong>not linter-verified</strong>)</td>
+</tr>
+<tr>
+<td><code>lipgloss/thready_palette.go</code></td>
+<td><code>gofmt -e</code> (parse) + <code>gofmt -l</code> (formatting) +
+<strong><code>go vet</code></strong> +
+<strong><code>go build</code></strong> in a temp module against real
+<code>github.com/charmbracelet/lipgloss v0.13.0</code></td>
+<td><strong>PASS</strong> (compiles)</td>
+</tr>
+<tr>
+<td><code>flutter/thready_tokens.dart</code></td>
+<td><code>dart</code> <strong>MISSING</strong> → structural self-checks:
+balanced delimiters, 70/70 <code>static const</code>, hex
+round-trip</td>
+<td>PASS (structural only — <strong>not compiler-verified</strong>)</td>
+</tr>
+<tr>
+<td>generator-level</td>
+<td>dark-block consistency; <code>lipgloss-theme.md §2</code> truecolor
+↔︎ <code>tokens.css</code> dark equality; drift gate positive + negative
+test</td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The structural-only rows MUST be compiler-verified in the consumer
+repos’ CI when the bindings are wired in (§6) — that is part of the open
+half of THREADY-DES-LIB-04, not a formality.</p>
+<h2 id="closure-state-of-thready-des-lib-04">6. Closure state of
+THREADY-DES-LIB-04</h2>
+<p><a
+href="../library/platform-map.md#6-open-items"><code>platform-map.md §6</code></a>
+recorded: <em>“the token-bridge codegen (CSS → Lipgloss /
+<code>ThreadyColors</code> / Flutter theme) referenced by every non-web
+cell does not exist yet.”</em> Honest state after this change:</p>
+<ul>
+<li><strong>CLOSED half:</strong> the generator now <strong>exists
+in-repo</strong> (this directory), parses the canonical
+<code>tokens.css</code>, emits all seven bindings deterministically, and
+ships a CI-able <code>--check</code> drift gate.
+<code>lipgloss-theme.md §8</code>’s “this file specifies its TUI output,
+it does not claim the generator exists” is superseded for the
+<em>generator-existence</em> part.</li>
+<li><strong>OPEN half:</strong> <strong>wiring into the consumer repos
+remains open.</strong> Nothing consumes these files yet:
+<code>UI-Components-KMP</code> still carries the foreign Yole palette
+<code>[GAP: 8.4]</code>, <code>helix_design</code> is an empty scaffold
+<code>[GAP: 8.2/8.3]</code>, the Thready TUI is unbuilt, ArkTS/Qt shims
+are uninspected <code>[GAP: 8.5]</code>. Tracked as THREADY-DES-KMP-01 /
+-FLUT-01 / -QT-01 / -TUI-01 in <a
+href="../component-library.md#10-build-backlog--gaps">component-library.md
+§10</a>; compiler verification of the structural-only targets (§5) lands
+with that wiring.</li>
+</ul>
+<h2 id="what-is-deliberately-not-exported">7. What is deliberately NOT
+exported</h2>
+<p>Mirrors the precedent set by <a
+href="../figma/figma-variables.json"><code>../figma/figma-variables.json</code></a>
+<code>_meta.consumption_notes</code>:</p>
+<ul>
+<li><code>--accent-hover</code>, <code>--accent-active</code>,
+<code>--elev-raised</code>, <code>--focus-ring</code> — CSS
+<code>color-mix()</code> formulas over <code>var()</code>; they have no
+static value. Native platforms derive hover/active/focus treatments from
+their own state systems over the exported base colors.</li>
+<li><code>--elev-flat</code> (<code>none</code>) and
+<code>--elev-ring</code> (a shadow composite over
+<code>var(--border)</code>) — shadow composites, platform-specific by
+nature.</li>
+<li>Web-only <code>--font-*</code> stacks are exported
+<strong>only</strong> to the DTCG-shaped targets
+(<code>web/tokens.json</code>,
+<code>penpot/tokens.penpot-import.json</code> —
+<code>fontFamily</code>); native targets load fonts through their own
+asset pipelines (<code>design-system.md §4</code>).</li>
+<li>B-slot aliases (<code>--fg-2</code>, <code>--meta</code>,
+<code>--border-soft</code>) and <code>--ds-heart</code>
+<strong>are</strong> exported — as real DTCG <code>{references}</code> /
+language-level aliases, preserving the alias semantics of
+<code>tokens.css</code>.</li>
+</ul>
+<h2 id="open-items">8. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-LIB-04]</code> — narrowed per §6: generator
+DONE, consumer wiring OPEN.</li>
+<li><code>[OPEN: THREADY-DES-17]</code> — all ANSI-256/16 indices in the
+Go palette are ASSUMED nearest-color picks (carried verbatim, with
+markers, from <code>lipgloss-theme.md §2</code>); verify on real
+terminals.</li>
+<li><code>[OPEN: THREADY-DES-02]</code> — PenPot bridge: <strong>import
+exercised 2026-07-22 in PenPot 2.17</strong> with the multi-set shape
+now emitted natively as <code>penpot/tokens.penpot-import.json</code>;
+71/74 tokens land (§9). Remaining: re-validate on future PenPot versions
+(the <code>duration</code>/<code>cubicBezier</code> drop and the
+<code>$description</code> quirk are 2.17 observations) and retire the
+operator-derived
+<code>../exports/penpot/tokens.penpot-import.json</code> in favour of
+the generated target.</li>
+<li>Compiler verification of the Kotlin / Swift / ArkTS / QML / Dart
+outputs in consumer-repo CI (kotlinc/swiftc/qmllint/dart were MISSING
+here — §5).</li>
+</ul>
+<h2 id="verified-consumer-quirks-penpot-2.17">9. Verified consumer
+quirks (PenPot 2.17)</h2>
+<p>Both quirks were found during the <strong>real PenPot 2.17 import on
+2026-07-22</strong> — not speculation.</p>
+<ol type="1">
+<li><strong>A top-level <code>$description</code> flips the tokens
+importer into single-set mode</strong>
+<code>[VERIFIED 2026-07-22]</code>. Importing the
+then-<code>web/tokens.json</code> (which carried a root
+<code>$description</code> provenance header) made PenPot 2.17 ingest the
+file as <strong>one set named “tokens” with 38 colors and no
+themes</strong>, instead of the intended 3 sets + 2 themes. The importer
+evidently treats a root that contains any <code>$</code>-doc member as a
+single token group. The operator worked around it by hand-deriving <a
+href="../exports/penpot/tokens.penpot-import.json"><code>../exports/penpot/tokens.penpot-import.json</code></a>
+(sets + <code>$themes</code> + <code>$metadata</code>, no root
+<code>$description</code>) — which imported correctly.
+<strong>Consequences baked into the generator:</strong>
+<ul>
+<li><code>web/tokens.json</code> stays the pure W3C DTCG canonical
+artifact (root <code>$description</code> header kept — harmless to DTCG
+tooling) and no longer claims to be the PenPot import file;</li>
+<li><code>generated/penpot/tokens.penpot-import.json</code> is emitted
+natively in the proven multi-set shape and is
+<strong>byte-identical</strong> to the operator-derived file (verified
+by <code>--check</code>, §4 item 5);</li>
+<li>the penpot target is the <strong>one generated file without a sha256
+provenance header</strong>: the only root members proven safe in 2.17
+are the set names, <code>$themes</code> and <code>$metadata</code> — a
+<code>$comment</code>/<code>$description</code> root member is exactly
+the quirk-triggering shape, and <code>$metadata</code> extensions are
+unproven. Provenance is carried here and enforced by the
+<code>--check</code> byte-lock instead. The <code>$themes</code> UUIDs
+are pinned to the proven import’s ids so regeneration never mints new
+ones (determinism, §1).</li>
+</ul></li>
+<li><strong><code>duration</code> and <code>cubicBezier</code> token
+types are silently dropped on import — 71/74 land</strong>
+<code>[VERIFIED 2026-07-22]</code>. Affected: <code>--motion-fast</code>
+(duration), <code>--motion-base</code> (duration),
+<code>--ease-standard</code> (cubicBezier). <strong>Choice: they are
+still INCLUDED</strong> in <code>thready-structure</code> — mirroring
+the operator-derived file that proved the import, keeping the file
+lossless on the DTCG side and forward-compatible with a PenPot that
+learns these types. The generator prints a
+<code>penpot-unsupported:</code> note listing all three on every run so
+the 71/74 delta is never silent.</li>
+</ol>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>
