@@ -37,7 +37,7 @@ authoritative research documents. All authors follow **[CONVENTIONS.md](./CONVEN
 | Deployment | [deployment/](./deployment/index.md) | Rootless Podman Compose, 3 envs, Let's Encrypt, deploy/rollback, backup/DR | 1,4 |
 | Development | [development/](./development/index.md) | Workable-items (ATM-NNN), agent orchestration, contribution, standards | all |
 | Testing | [testing/](./testing/index.md) | 15 test types, TDD reproduce-first skeletons, HelixQA/Challenges, SonarQube/Snyk | 4 |
-| Design | [design/](./design/index.md) | OpenDesign/Figma wireframes, prototypes, UX flows, component library, brand assets | 3 |
+| Design | [design/](./design/index.md) | OpenDesign brand contract + tokens, wireframes, UX flows, component library, brand assets/launcher icon, theming/white-label, **plus the rendered package** — 30 screens (web/mobile/desktop/TUI/marketing), interactive prototype, Lottie motion, and PNG/PDF/PenPot/Figma-IR exports ([sign-off](./design/DESIGN_PACKAGE_REPORT.md)) | 3 |
 | User Guides | [user-guides/](./user-guides/index.md) | Install, config, admin/user manuals, CLI/TUI ref, FAQ per consumer group & surface | 3 |
 
 ## Development phase mapping (from the final request §5.1.2)

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download — Thready</title>
+<!-- Helix Thready MARKETING SITE screen design (OpenDesign-style, self-contained).
+     Surface: the Angular 22 public/marketing site (design-system.md §7 note [Q17]).
+     Ground truth: ../../opendesign/DESIGN.md · ../../design-system.md · ../../brand-assets.md
+                   · ../../library/platform-map.md · ../web/README.md
+     Tokens INLINED below; ../../opendesign/tokens.css is a reference, not a dependency.
+     Assets: launcher-icon SVG variants referenced RELATIVELY from ../../assets/
+     (launcher-icon-light.svg / launcher-icon-dark.svg / launcher-icon-mono.svg) — the light
+     variant renders in light theme, the dark variant in dark theme (brand-assets.md §4).
+     Install-channel honesty: NO store listing is live today. Store rows are labelled
+     "planned"; scaffold clients are "in development" per design-system.md §7 /
+     platform-map.md §5 [CONVENTIONS §7 — no bluff]. No third-party store badge artwork is
+     reproduced — neutral text chips only.
+     No brand-gradient focal element on this page; header spiral + launcher icons are marks. -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#020817" media="(prefers-color-scheme: dark)">
+<script>
+(function () { /* apply persisted theme before first paint (thready-theme) — theming.md §2 */
+  try { var t = localStorage.getItem('thready-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<style>
+/* ============================================================================
+   Helix Thready — OpenDesign token layer (INLINED; mirrors ../../opendesign/tokens.css,
+   reference only — this artifact is self-contained by design).
+   Source of truth: design-system.md §3.1 (core, verbatim) + §3.2 (thready theme).
+   ========================================================================== */
+:root {
+  --font-display: "Space Grotesk", "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Hanken Grotesk", "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-xs: 12px; --text-sm: 14px; --text-base: 16px; --text-lg: 20px;
+  --text-xl: 24px; --text-2xl: 32px; --text-3xl: 48px; --text-4xl: 64px;
+  --leading-body: 1.5; --leading-tight: 1.2; --tracking-display: -0.01em;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  --section-y-desktop: 80px; --section-y-tablet: 48px; --section-y-phone: 32px;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 9999px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
+  --accent-hover:  color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --focus-ring:    0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+  --motion-fast: 150ms; --motion-base: 200ms; --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --container-max: 1200px; --container-gutter-desktop: 24px;
+  --container-gutter-tablet: 16px; --container-gutter-phone: 12px;
+}
+:root {
+  --theme-id: "thready";
+  --brand:    #b6e376;  /* decorative only — 1.47:1 on white, never body text */
+  --brand-2:  #abddc9;
+  --brand-ink:#0a0f04;
+  --bg: #ffffff; --surface: #ffffff; --surface-warm: #f1f5f9;
+  --fg: #020817; --muted: #475569; --border: #e2e8f0; --border-strong: #64748b;
+  --fg-2: var(--fg); --meta: var(--muted); --border-soft: var(--border);
+  --accent: #446e12; --accent-on: #ffffff;      /* 6.03:1 on white — AA */
+  --success: #166534; --warn: #854d0e; --danger: #dc2626;
+  --ds-heart: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;
+    --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
+    --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
+    --accent: #b6e376; --accent-on: #0a0f04;   /* 13.56:1 on #020817 — AA */
+    --success: #16a34a; --warn: #eab308; --danger: #ef4444;
+    --ds-heart: var(--accent);
+  }
+}
+:root[data-theme="dark"] {
+  --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;
+  --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
+  --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
+  --accent: #b6e376; --accent-on: #0a0f04;
+  --success: #16a34a; --warn: #eab308; --danger: #ef4444;
+  --ds-heart: var(--accent);
+}
+
+/* ============================== base ==================================== */
+* { box-sizing: border-box; }
+html { height: 100%; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--fg);
+  font: 400 var(--text-base)/var(--leading-body) var(--font-body);
+  -webkit-font-smoothing: antialiased; }
+h1,h2,h3 { font-family: var(--font-display); line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display); margin: 0 0 var(--space-3); }
+h1 { font-size: var(--text-2xl); font-weight: 700; }
+h2 { font-size: var(--text-xl); font-weight: 600; }
+h3 { font-size: var(--text-lg); font-weight: 600; }
+p { margin: 0 0 var(--space-3); }
+code, kbd, .mono { font-family: var(--font-mono); font-size: 0.9em; font-variant-numeric: tabular-nums; }
+a.ds-link { color: var(--accent); text-decoration: none; }
+a.ds-link:hover { text-decoration: underline; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+.skip-link { position: absolute; left: -9999px; top: 0; background: var(--accent); color: var(--accent-on);
+  padding: var(--space-2) var(--space-4); border-radius: 0 0 var(--radius-sm) 0; z-index: 100; }
+.skip-link:focus-visible { left: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* ============================== top bar ================================= */
+.ds-nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--container-gutter-desktop);
+  border-bottom: 1px solid var(--border); background: var(--surface);
+  position: sticky; top: 0; z-index: 40; }
+.brand-lockup { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--fg); }
+.brand-lockup .name { font: 700 var(--text-lg)/1 var(--font-display); letter-spacing: var(--tracking-display); }
+.mk-links { display: flex; gap: var(--space-1); margin-inline-start: var(--space-4); }
+.mk-links a { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  color: var(--fg); text-decoration: none; font-size: var(--text-sm); }
+.mk-links a:hover { background: var(--surface-warm); }
+.mk-links a[aria-current="page"] { background: color-mix(in oklab, var(--accent), transparent 88%);
+  color: var(--accent); font-weight: 600; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); }
+.theme-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-pill); overflow: hidden; }
+.theme-toggle button { border: 0; background: var(--surface); color: var(--muted); cursor: pointer;
+  padding: var(--space-1) var(--space-3); font: 500 var(--text-xs)/1.6 var(--font-body); }
+.theme-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--accent-on); }
+.lang-picker select { padding: var(--space-1) var(--space-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface); color: var(--fg); font: inherit; }
+
+/* ============================== layout / primitives ===================== */
+main.content { flex: 1 1 auto; width: 100%; max-width: var(--container-max);
+  margin-inline: auto; padding: var(--space-8) var(--container-gutter-desktop) var(--space-12); }
+section.band { padding-top: var(--space-12); }
+section.band:first-of-type { padding-top: 0; }
+.ds-btn { display: inline-flex; align-items: center; gap: var(--space-2);
+  font: 500 var(--text-sm)/1 var(--font-body); padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; text-decoration: none;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard); }
+.ds-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-btn--primary   { background: var(--accent); color: var(--accent-on); }
+.ds-btn--primary:hover  { background: var(--accent-hover); }
+.ds-btn--primary:active { background: var(--accent-active); }
+.ds-btn--secondary { background: transparent; color: var(--fg); border-color: var(--border-strong); }
+.ds-btn--secondary:hover { background: var(--surface-warm); }
+.badge { display: inline-flex; align-items: center; gap: 4px; border-radius: var(--radius-pill);
+  font: 600 var(--text-xs)/1.6 var(--font-body); padding: 1px 10px; white-space: nowrap; }
+.badge--ok  { color: var(--success); background: color-mix(in oklab, var(--success), transparent 90%); }
+.badge--dev { color: var(--muted); border: 1px solid var(--border-strong); background: transparent; }
+.honesty { display: flex; align-items: baseline; gap: var(--space-3); border: 1px solid var(--border);
+  background: var(--surface-warm); border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4); font-size: var(--text-sm); margin-top: var(--space-4); }
+.honesty .tag { font: 600 var(--text-xs)/1.6 var(--font-mono); color: var(--warn); white-space: nowrap; }
+.meta-line { font-size: var(--text-xs); color: var(--muted); }
+
+/* ============================== platform cards ========================== */
+.plats { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
+.plat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
+.plat .head { display: flex; align-items: center; gap: var(--space-3); }
+.plat .head img { width: 44px; height: 44px; flex: 0 0 auto; }
+.plat .head h3 { margin: 0; }
+.plat .head .badge { margin-inline-start: auto; }
+.plat p { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+.plat .chan { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chan .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill); padding: 2px 12px; font-size: var(--text-xs); color: var(--fg); }
+.chan .chip .st { color: var(--muted); }
+.plat .foot { margin-top: auto; font-size: var(--text-xs); }
+.plat .foot .gap { font-family: var(--font-mono); color: var(--muted); }
+pre.install { margin: 0; padding: var(--space-3) var(--space-4); background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font: 400 var(--text-xs)/1.7 var(--font-mono); color: var(--fg); overflow-x: auto; }
+/* Theme-aware launcher-icon swap (brand-assets.md §4: light variant for light UIs,
+   dark variant for dark UIs; selection mirrors the theme mechanisms) */
+img.icon-dark { display: none; }
+/* Mono icon tier as an accent-tinted mask (brand-assets.md §3.1: mono flat tone =
+   #446E12 light / #B6E376 dark — i.e. exactly var(--accent); an <img> cannot be
+   tinted, a mask can, and the asset stays referenced relatively) */
+.mono-icon { display: inline-block; width: 44px; height: 44px; flex: 0 0 auto;
+  background: var(--accent);
+  -webkit-mask: url("../../assets/launcher-icon-mono.svg") center / contain no-repeat;
+  mask: url("../../assets/launcher-icon-mono.svg") center / contain no-repeat; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) img.icon-light { display: none; }
+  :root:not([data-theme="light"]) img.icon-dark { display: inline-block; }
+}
+:root[data-theme="dark"] img.icon-light { display: none; }
+:root[data-theme="dark"] img.icon-dark { display: inline-block; }
+:root[data-theme="light"] img.icon-light { display: inline-block; }
+:root[data-theme="light"] img.icon-dark { display: none; }
+
+/* ============================== footer / contract ======================= */
+.ds-footer { border-top: 1px solid var(--border); background: var(--surface);
+  padding: var(--space-4) var(--container-gutter-desktop);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
+  font-size: var(--text-sm); color: var(--muted); }
+.ds-footer .slogan { display: inline-flex; align-items: center; gap: .35em; color: var(--fg); }
+.ds-footer .heart { color: var(--ds-heart); font-size: 1.05em; }
+.ds-footer .right { margin-left: auto; font-family: var(--font-mono); font-size: var(--text-xs); }
+.contract { margin-top: var(--space-12); border-top: 1px dashed var(--border-strong);
+  padding-top: var(--space-4); font-size: var(--text-xs); color: var(--muted); }
+.contract h2 { font-size: var(--text-sm); color: var(--fg); }
+
+@media (max-width: 860px) {
+  .ds-nav, .ds-footer { padding-inline: var(--container-gutter-phone); }
+  main.content { padding-inline: var(--container-gutter-phone); }
+  section.band { padding-top: var(--space-8); }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="ds-nav">
+  <a class="brand-lockup" href="landing.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="152 152 720 720" width="28" height="28" role="img" aria-label="Helix Thready mark"><defs><linearGradient id="gradTop" x1="200" y1="220" x2="820" y2="800" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B6E376"/><stop offset="1" stop-color="#ABDDC9"/></linearGradient></defs><path fill="url(#gradTop)" fill-rule="nonzero" d="M279.7,661.2L272.3,634.3L267.9,609.7L265.8,585.3L266.0,561.3L268.2,538.1L272.5,515.7L278.7,494.2L286.6,473.9L296.1,454.9L307.1,437.2L319.3,421.0L332.6,406.3L346.9,393.2L361.9,381.7L377.6,371.9L393.7,363.7L410.1,357.2L426.7,352.3L443.2,349.0L459.6,347.3L475.7,347.1L491.4,348.3L506.5,350.9L521.0,354.7L534.8,359.7L547.8,365.9L559.8,373.0L571.0,381.0L581.1,389.8L590.1,399.2L598.1,409.2L605.0,419.6L610.7,430.3L615.4,441.3L619.0,452.4L621.5,463.6L622.9,474.6L623.3,485.5L622.8,496.2L621.3,506.5L618.9,516.4L615.7,525.8L611.8,534.8L607.2,543.1L601.9,550.8L595.3,558.7A25.0,25.0 0 0 1 632.2,592.5L641.1,583.5L650.0,572.6L658.0,560.7L665.0,547.9L671.0,534.1L675.7,519.6L679.2,504.4L681.2,488.6L681.8,472.3L680.9,455.7L678.5,439.0L674.4,422.2L668.6,405.5L661.2,389.0L652.1,373.0L641.4,357.6L629.0,342.9L615.0,329.2L599.6,316.6L582.7,305.2L564.4,295.2L544.9,286.8L524.3,280.1L502.8,275.2L480.4,272.2L457.4,271.3L433.9,272.6L410.2,276.0L386.5,281.8L362.9,289.9L339.6,300.3L317.0,313.1L295.2,328.2L274.5,345.6L255.1,365.3L237.2,387.0L221.1,410.8L207.0,436.5L195.0,463.9L185.5,492.9L178.5,523.2L174.2,554.7L172.8,587.0L174.5,620.1L179.2,653.5L186.6,684.8A48.0,48.0 0 0 1 279.7,661.2Z M744.3,362.8L751.7,389.7L756.1,414.3L758.2,438.7L758.0,462.7L755.8,485.9L751.5,508.3L745.3,529.8L737.4,550.1L727.9,569.1L716.9,586.8L704.7,603.0L691.4,617.7L677.1,630.8L662.1,642.3L646.4,652.1L630.3,660.3L613.9,666.8L597.3,671.7L580.8,675.0L564.4,676.7L548.3,676.9L532.6,675.7L517.5,673.1L503.0,669.3L489.2,664.3L476.2,658.1L464.2,651.0L453.0,643.0L442.9,634.2L433.9,624.8L425.9,614.8L419.0,604.4L413.3,593.7L408.6,582.7L405.0,571.6L402.5,560.4L401.1,549.4L400.7,538.5L401.2,527.8L402.7,517.5L405.1,507.6L408.3,498.2L412.2,489.2L416.8,480.9L422.1,473.2L428.7,465.3A25.0,25.0 0 0 1 391.8,431.5L382.9,440.5L374.0,451.4L366.0,463.3L359.0,476.1L353.0,489.9L348.3,504.4L344.8,519.6L342.8,535.4L342.2,551.7L343.1,568.3L345.5,585.0L349.6,601.8L355.4,618.5L362.8,635.0L371.9,651.0L382.6,666.4L395.0,681.1L409.0,694.8L424.4,707.4L441.3,718.8L459.6,728.8L479.1,737.2L499.7,743.9L521.2,748.8L543.6,751.8L566.6,752.7L590.1,751.4L613.8,748.0L637.5,742.2L661.1,734.1L684.4,723.7L707.0,710.9L728.8,695.8L749.5,678.4L768.9,658.7L786.8,637.0L802.9,613.2L817.0,587.5L829.0,560.1L838.5,531.1L845.5,500.8L849.8,469.3L851.2,437.0L849.5,403.9L844.8,370.5L837.4,339.2A48.0,48.0 0 0 1 744.3,362.8Z"/></svg><span class="name">Thready</span></a>
+  <nav class="mk-links" aria-label="Marketing site">
+    <a href="landing.html">Overview</a>
+    <a href="features.html">Features</a>
+    <a href="download.html" aria-current="page">Download</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="theme-toggle" role="group" aria-label="Theme">
+      <button type="button" data-mode="light" aria-pressed="false">Light</button>
+      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+      <button type="button" data-mode="system" aria-pressed="true">System</button>
+    </div>
+    <span class="lang-picker"><label class="visually-hidden" for="lang">Language</label>
+      <select id="lang" aria-label="Language">
+        <option value="en" selected>EN</option><option value="ru">RU</option><option value="sr-Cyrl">SR</option>
+      </select></span>
+  </div>
+</header>
+
+<main class="content" id="main">
+
+<section class="band" aria-labelledby="page-title">
+  <h1 id="page-title">Get Thready</h1>
+  <p style="max-width:680px;color:var(--muted);">One product, many surfaces — each card states
+    exactly where its client stands today. The launcher icons below are the real brand assets
+    (light and dark variants swap with your theme).</p>
+  <div class="honesty" role="note">
+    <span class="tag">honesty</span>
+    <span>No app-store listing is live today, and no installer is published yet — Thready is an MVP
+      in active design and development. "Planned" marks a distribution channel the design has
+      prepared assets for; "in development" marks a client whose code is a scaffold. Statuses come
+      from the <a class="ds-link" href="../../library/platform-map.md">platform map</a> and
+      <a class="ds-link" href="../../design-system.md">design-system.md §7</a>.</span>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="plat-title">
+  <h2 id="plat-title">Platforms</h2>
+  <div class="plats">
+
+    <article class="plat" id="web" aria-labelledby="web-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="web-h">Web portal</h3>
+        <span class="badge badge--ok">primary surface</span>
+      </div>
+      <p>The full product in any modern browser — Angular 19 on the shared design system, installable
+        as a PWA (manifest + maskable icons are part of the asset pipeline). Web and CLI ship first.</p>
+      <div class="chan">
+        <span class="chip">Browser <span class="st">— open directly</span></span>
+        <span class="chip">PWA install <span class="st">— manifest prepared</span></span>
+      </div>
+      <a class="ds-btn ds-btn--primary" href="../web/login.html" style="align-self:flex-start;">Open the web portal design</a>
+      <p class="foot"><span class="gap">design system: production-usable web foundation [GAP: 8.1]</span></p>
+    </article>
+
+    <article class="plat" id="desktop" aria-labelledby="desktop-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="desktop-h">Desktop</h3>
+        <span class="badge badge--ok">inherits web</span>
+      </div>
+      <p>Tauri 2 wraps the same Angular UI in a native shell — no separate interface to learn. The
+        icon pipeline already targets every desktop format; installers are not published yet.</p>
+      <div class="chan">
+        <span class="chip">macOS <span class="st">— .icns prepared · build pending</span></span>
+        <span class="chip">Windows <span class="st">— .ico prepared · build pending</span></span>
+        <span class="chip">Linux <span class="st">— hicolor PNG + SVG · build pending</span></span>
+      </div>
+      <p class="foot"><a class="ds-link" href="../desktop/desktop-shell.html">See the desktop shell design →</a></p>
+    </article>
+
+    <article class="plat" id="android" aria-labelledby="android-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="android-h">Android</h3>
+        <span class="badge badge--dev">in development</span>
+      </div>
+      <p>KMP / Compose client. The mobile screens are designed and the adaptive launcher icon
+        (including the Android 13+ monochrome layer) is ready — but the shared component package is
+        a scaffold with no widgets, no CI and no publish, so this card does not pretend otherwise.</p>
+      <div class="chan">
+        <span class="chip">Google Play <span class="st">— planned (512 px store icon prepared)</span></span>
+        <span class="chip">APK sideload <span class="st">— planned</span></span>
+      </div>
+      <p class="foot"><a class="ds-link" href="../mobile/home-feed.html">See the mobile designs →</a>
+        <span class="gap">[GAP: 8.4]</span></p>
+    </article>
+
+    <article class="plat" id="ios" aria-labelledby="ios-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="ios-h">iOS</h3>
+        <span class="badge badge--dev">in development</span>
+      </div>
+      <p>Shares the KMP / Compose Multiplatform core with Android; the iOS host approach is still an
+        open decision. The AppIcon asset set — single-size 1024 with iOS 18 dark and tinted
+        variants — is already specified.</p>
+      <div class="chan">
+        <span class="chip">App Store <span class="st">— planned</span></span>
+        <span class="chip">TestFlight <span class="st">— planned</span></span>
+      </div>
+      <p class="foot"><span class="gap">[GAP: 8.4] [OPEN: THREADY-DES-LIB-02]</span></p>
+    </article>
+
+    <article class="plat" id="harmonyos" aria-labelledby="hos-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="hos-h">HarmonyOS</h3>
+        <span class="badge badge--dev">in development</span>
+      </div>
+      <p>Native ArkTS client via <span class="mono">helix_shims</span>. The layered launcher image
+        (foreground + background JSON) is prepared; the client itself is a scaffold, and the
+        distribution channel is not yet decided.</p>
+      <div class="chan">
+        <span class="chip">Distribution <span class="st">— to be confirmed</span></span>
+      </div>
+      <p class="foot"><span class="gap">[GAP: 8.5]</span></p>
+    </article>
+
+    <article class="plat" id="aurora" aria-labelledby="aur-h">
+      <div class="head">
+        <img class="icon-light" src="../../assets/launcher-icon-light.svg" alt="" width="44" height="44">
+        <img class="icon-dark" src="../../assets/launcher-icon-dark.svg" alt="" width="44" height="44">
+        <h3 id="aur-h">Aurora OS</h3>
+        <span class="badge badge--dev">in development</span>
+      </div>
+      <p>Native Qt client via <span class="mono">helix_shims</span>. Icon exports target the Aurora
+        density buckets (86–250 px), still to be verified against current packaging docs; the
+        Qt design package is an empty scaffold today.</p>
+      <div class="chan">
+        <span class="chip">Distribution <span class="st">— to be confirmed</span></span>
+      </div>
+      <p class="foot"><span class="gap">[GAP: 8.2/8.3/8.5] [OPEN: THREADY-DES-05]</span></p>
+    </article>
+
+    <article class="plat" id="tui" aria-labelledby="tui-h">
+      <div class="head">
+        <span class="mono-icon" role="img" aria-label="Helix Thready mark (monochrome)"></span>
+        <h3 id="tui-h">Terminal (TUI / CLI)</h3>
+        <span class="badge badge--ok">pattern verified</span>
+      </div>
+      <p>A Go client on Bubble Tea + Lipgloss, styled from the same design tokens — the pattern is
+        already proven in-house. Web and CLI are the first-ship surfaces. The install commands
+        below are the proposed channel; release binaries are not published yet.</p>
+      <pre class="install" aria-label="Proposed install commands"><code># proposed channel [DEFAULT — adjustable] — binaries not yet published
+go install github.com/vasic-digital/thready/cmd/thready@latest
+# or: download a release binary, then
+thready events tail   # live NDJSON event stream</code></pre>
+      <p class="foot"><a class="ds-link" href="../tui/tui-screens.html">See the TUI designs →</a> ·
+        <a class="ds-link" href="../tui/lipgloss-theme.md">Lipgloss theme →</a></p>
+    </article>
+
+  </div>
+
+  <div class="honesty" role="note">
+    <span class="tag">note</span>
+    <span>Third-party store badges (App Store, Google Play) are trademarked artwork and are added
+      only when the listings are real; until then this page uses neutral text chips. The monochrome
+      spiral on the terminal card is the mono icon tier used for tinted contexts, rendered as an
+      accent-tinted mask so it keeps its specified flat tone in both modes
+      (<a class="ds-link" href="../../brand-assets.md">brand-assets.md §3.1/§4</a>).</span>
+  </div>
+</section>
+
+<!-- ═══════════════ Design contract strip ═════════════════════════════════ -->
+<section class="contract" aria-label="Design contract">
+  <h2>Page states — design contract</h2>
+  <p>Static marketing page: default · dark (three sanctioned mechanisms, theming.md §2; launcher
+    icons swap light/dark variants with the theme per brand-assets.md §4) · responsive tiers
+    ≥1024 / 640–1023 / &lt;640 (DESIGN.md §8) · reduced-motion. No brand-gradient focal element —
+    the header spiral and the launcher icons are brand marks. Icon files are referenced relatively
+    from <span class="mono">../../assets/</span> (not inlined) so a master regeneration through
+    Docs Chain propagates here without editing this page. Copy contract: calm, no exclamation
+    marks (DESIGN.md §1). Never white-labeled (theming.md §3). Marketing IA/copy sign-off:
+    [OPEN: THREADY-DES-MKT-01]; store/legal footprint: [OPEN: THREADY-DES-MKT-02].</p>
+</section>
+</main>
+
+<footer class="ds-footer">
+  <span class="slogan">Made with <span class="heart" role="img" aria-label="love">♥</span> by Helix Development</span>
+  <span class="meta-line">Helix Development attribution is locked — it persists under any white-label.</span>
+  <span class="right">Thready MVP · marketing design v0.1 · © 2026</span>
+</footer>
+
+<script>
+/* ---- theme toggle (ds-theme-toggle: light | dark | system, aria-pressed) ---- */
+(function () {
+  var root = document.documentElement;
+  var btns = document.querySelectorAll('.theme-toggle button');
+  function apply(choice) {
+    if (choice === 'system') { root.removeAttribute('data-theme'); }
+    else { root.setAttribute('data-theme', choice); }
+    try { choice === 'system' ? localStorage.removeItem('thready-theme')
+                              : localStorage.setItem('thready-theme', choice); } catch (e) {}
+    btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === choice)); });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.mode); }); });
+  var saved = 'system';
+  try { saved = localStorage.getItem('thready-theme') || 'system'; } catch (e) {}
+  btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === saved)); });
+})();
+</script>
+</body>
+</html>

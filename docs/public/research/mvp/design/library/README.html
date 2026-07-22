@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Design Library</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Design Library</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#catalogue" id="toc-catalogue">Catalogue</a></li>
+<li><a href="#coverage" id="toc-coverage">Coverage</a></li>
+<li><a href="#provenance-no-bluff"
+id="toc-provenance-no-bluff">Provenance (no bluff)</a></li>
+<li><a href="#open-items" id="toc-open-items">Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Design Library (catalogue)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/library/README.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./components.html, ./components-sheet.svg, ./platform-map.md,
+                    ../component-library.md, ../design-system.md, ../theming.md,
+                    ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design)</td>
+<td>Initial library: living component page (all states, light+dark),
+overview SVG sheet, 8-platform reusability matrix</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>reusable design-library artifact</strong> for Helix
+Thready: a self-contained, living rendering of every component in every
+state on the Thready theme, plus an importable overview sheet and the
+cross-platform reusability matrix. It <em>instantiates</em> the specs in
+<a href="../component-library.md">component-library.md</a>, <a
+href="../design-system.md">design-system.md</a> and <a
+href="../theming.md">theming.md</a> — it never contradicts them.</p>
+<h2 id="catalogue">Catalogue</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>What it is</th>
+<th>How to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./components.html"><code>components.html</code></a></td>
+<td>The <strong>living component library</strong> — every component ×
+state × light/dark, realistic Thready content, zero external requests
+(no CDNs; fonts fall back to the system stack unless the design-system
+faces are installed)</td>
+<td>Open in any browser. Toggle <strong>Theme: system → light →
+dark</strong> (top right; stamps <code>data-theme</code>, persists to
+<code>localStorage['thready-theme']</code>). Anchor per group:
+<code>#buttons #inputs #cards #tables #badges-chips #navigation #dialogs #toasts-alerts #progress #avatars #empty-states #skeletons #pagination #tooltips</code></td>
+</tr>
+<tr>
+<td><a
+href="./components-sheet.svg"><code>components-sheet.svg</code></a></td>
+<td><strong>One-sheet overview</strong> of the core set, light panel +
+dark panel, hard-coded theme literals</td>
+<td>Valid standalone SVG — import into PenPot / Figma (grouped, named
+layers) or view in a browser</td>
+</tr>
+<tr>
+<td><a href="./platform-map.md"><code>platform-map.md</code></a></td>
+<td><strong>Reusability matrix</strong>: 36 components × 8 platforms
+(Angular <code>.ds-*</code> → React → Compose → Flutter → SwiftUI →
+ArkTS → Qt → TUI/Lipgloss) with per-cell VERIFIED / PROPOSED / ASSUMED
+markers and per-component customization notes</td>
+<td>Read before implementing any component on any platform</td>
+</tr>
+</tbody>
+</table>
+<h2 id="coverage">Coverage</h2>
+<ul>
+<li><strong>14 component groups</strong>, ~38 distinct components,
+<strong>75 rendered exhibits</strong>, ≈ <strong>118 component-state
+cells</strong> — each auditable in <strong>both</strong> themes via the
+toggle (≈ 236 rendered states total).</li>
+<li>Buttons: 4 variants (primary / secondary / ghost / destructive) × 5
+states (default / hover / focus-visible / disabled / loading) = 20
+cells.</li>
+<li>Inputs: 6 controls (text / select / checkbox / radio / switch /
+date) × 4 states (default+hint / focus / error+hint / disabled) = 24
+cells.</li>
+<li>Plus: cards (incl. <code>thready-stat</code> KPI + thread-row), a
+<strong>live</strong> sortable + paginated table, semantic badges,
+hashtag chips (direct vs. AI-indirect), processing-state chips (pending
+/ processing / done / failed+retry / retrying), topbar / sidebar / tabs
+/ breadcrumbs, static + live <code>&lt;dialog&gt;</code> modals, alerts
++ live toasts, determinate / indeterminate / failed progress, ring
+spinners + the <strong>helix-motif spinner</strong>, avatars (sizes /
+presence / group), empty + error states, skeleton loaders, pagination,
+and CSS-only tooltips (hover <strong>and</strong> focus).</li>
+<li>Interactive behaviors are real, not mocked: theme cycling, column
+sorting (<code>aria-sort</code>), table paging, <code>showModal()</code>
+dialog, auto-dismissing toast (pauses on hover). All motion honors
+<code>prefers-reduced-motion</code>.</li>
+</ul>
+<h2 id="provenance-no-bluff">Provenance (no bluff)</h2>
+<ul>
+<li><strong>VERIFIED</strong> (reproduced verbatim; re-checked at source
+via <code>gh</code> on 2026-07-22): the token architecture and the
+shipped <code>.ds-*</code> set — <code>.ds-container/.ds-section</code>,
+<code>.ds-btn</code> (<code>--primary/--secondary/--ghost</code>),
+<code>.ds-card</code>(<code>--raised</code>), <code>.ds-input</code>,
+<code>.ds-link</code>,
+<code>.ds-nav</code>(<code>__links/__link</code>),
+<code>.ds-footer</code>,
+<code>.ds-badge</code>(<code>--success/--warn/--danger</code>),
+<code>.ds-brand-mark</code> — from
+<code>vasic-digital/design_system</code>
+<code>components/css/components.css</code>.</li>
+<li><strong>PROPOSED</strong> <code>[DEFAULT — adjustable]</code>:
+everything else (<code>.ds-btn--danger</code>, <code>.ds-select</code>,
+<code>.ds-check/.ds-radio/.ds-switch</code>, <code>.ds-table</code>,
+<code>.ds-tabs</code>, <code>.ds-breadcrumbs</code>,
+<code>.ds-sidebar</code>, <code>.ds-dialog</code>,
+<code>.ds-alert/.ds-toast</code>, <code>.ds-progress</code>,
+<code>.ds-spinner</code>, <code>.ds-avatar</code>,
+<code>.ds-empty</code>, <code>.ds-skeleton</code>,
+<code>.ds-pagination</code>, <code>.ds-tip</code>, and the
+<code>thready-*</code> composites). Upstream-candidate names pending
+<code>[OPEN: THREADY-DES-11/12]</code>.</li>
+<li>Theme values are the ground-truth Thready theme: brand
+<code>#B6E376</code>, teal secondary <code>#ABDDC9</code> (light) /
+<code>#B7EBD6</code> (dark), accent <code>#446E12</code> light /
+<code>#B6E376</code> dark, fg <code>#020817</code> /
+<code>#F8FAFC</code>, neutrals <code>#475569</code> /
+<code>#94A3B8</code>; faces Space Grotesk / Hanken Grotesk / JetBrains
+Mono.</li>
+<li>Platform verification detail (what is real vs. scaffold per repo)
+lives in <a
+href="./platform-map.md#2-per-repo-verification-results">platform-map.md
+§2</a>.</li>
+</ul>
+<h2 id="open-items">Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-11]</code> /
+<code>[OPEN: THREADY-DES-12]</code> — inherited: final API/class names
+and the upstream-vs-Thready split for all PROPOSED components.</li>
+<li><code>[OPEN: THREADY-DES-LIB-01..04]</code> — React re-audit,
+SwiftUI package decision, <code>helix_shims</code> inspection,
+token-bridge codegen — see <a
+href="./platform-map.md#6-open-items">platform-map.md §6</a>.</li>
+<li><code>[OPEN: THREADY-DES-04]</code> — inherited: Cyrillic subsets of
+the three variable faces; this library’s font stacks fall back to system
+faces until verified.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

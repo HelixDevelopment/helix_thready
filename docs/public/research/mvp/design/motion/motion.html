@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Motion Spec &amp; Lottie Set</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Motion Spec &amp; Lottie Set</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#scope-sources-of-truth" id="toc-scope-sources-of-truth">1.
+Scope &amp; sources of truth</a></li>
+<li><a href="#duration-easing-tokens" id="toc-duration-easing-tokens">2.
+Duration &amp; easing tokens</a></li>
+<li><a href="#the-lottie-asset-set" id="toc-the-lottie-asset-set">3. The
+Lottie asset set</a></li>
+<li><a href="#interaction-animation-map"
+id="toc-interaction-animation-map">4. Interaction → animation
+map</a></li>
+<li><a href="#reduced-motion-contract-prefers-reduced-motion"
+id="toc-reduced-motion-contract-prefers-reduced-motion">5.
+Reduced-motion contract (<code>prefers-reduced-motion</code>)</a></li>
+<li><a href="#runtime-integration" id="toc-runtime-integration">6.
+Runtime integration</a></li>
+<li><a href="#validation-record-honest"
+id="toc-validation-record-honest">7. Validation record (honest)</a></li>
+<li><a href="#gaps-open-items" id="toc-gaps-open-items">8. Gaps &amp;
+open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Motion Spec & Lottie Set
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/motion/motion.md
+  Status          : Active — v1.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design/motion)
+  Related         : ./README.md, ./preview.html, ../design-system.md,
+                    ../prototypes.md, ../ux-flows.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design/motion)</td>
+<td>Initial motion package: duration/easing tokens, six hand-authored
+Lottie assets, interaction→animation map, reduced-motion contract,
+runtime integration, honest validation record</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · motion)</td>
+<td>Delivered the five static <code>reducedMotionFallback</code> SVGs
+(geometry derived from the Lottie keyframes at the contract frames);
+manifest v2 names them; asset half of <code>THREADY-MOT-03</code>
+closed, remainder narrowed (§8); preview.html fallback toggle;
+validation record extended (§7.7)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--sources-of-truth">1. Scope &amp; sources of
+truth</a></li>
+<li><a href="#2-duration--easing-tokens">2. Duration &amp; easing
+tokens</a></li>
+<li><a href="#3-the-lottie-asset-set">3. The Lottie asset set</a></li>
+<li><a href="#4-interaction--animation-map">4. Interaction → animation
+map</a></li>
+<li><a href="#5-reduced-motion-contract-prefers-reduced-motion">5.
+Reduced-motion contract (<code>prefers-reduced-motion</code>)</a></li>
+<li><a href="#6-runtime-integration">6. Runtime integration</a></li>
+<li><a href="#7-validation-record-honest">7. Validation record
+(honest)</a></li>
+<li><a href="#8-gaps--open-items">8. Gaps &amp; open items</a></li>
+</ul>
+<h2 id="scope-sources-of-truth">1. Scope &amp; sources of truth</h2>
+<p>This package is the concrete motion layer the design area mandates.
+It does <strong>not</strong> re-decide anything; it implements:</p>
+<ul>
+<li><strong><a
+href="../design-system.md#5-spacing-radius-elevation-motion">design-system.md
+§5</a></strong> — the two shipped motion tokens
+(<code>--motion-fast 150ms</code>, <code>--motion-base 200ms</code>) on
+<code>--ease-standard cubic-bezier(0.2, 0, 0, 1)</code>, and the rule
+that <strong>all motion honors
+<code>prefers-reduced-motion: reduce</code></strong>
+<code>[VERIFIED — IN-HOUSE: design_system]</code>.</li>
+<li><strong><a
+href="../prototypes.md#6-motion--transition-spec">prototypes.md
+§6</a></strong> — the extended choreography table (route transitions
+250–300 ms, skeleton→content cross-fade, looped processing pulse, toast
+timing) and the “lots of Lottie animations” requirement with static
+fallbacks <code>[OPERATOR]</code>.</li>
+<li><strong><a href="../ux-flows.md">ux-flows.md</a></strong> — the four
+journeys each animation binds to (§4).</li>
+<li>Brand color values are the Thready theme tokens (<a
+href="../design-system.md#32-the-thready-brand-theme">design-system.md
+§3.2</a>); the error color is the shared <code>--danger</code> semantic
+token — <strong>never</strong> <code>--accent</code> — per the a11y
+contract (<a
+href="../design-system.md#6-accessibility-contract">design-system.md
+§6</a>) <code>[VERIFIED]</code>.</li>
+</ul>
+<p>Everything under <code>motion/</code> is hand-authored vector Lottie
+(v5.x schema, <code>ty: 4</code> shape layers only, zero raster assets).
+The files partially realize the <strong>Lottie half of
+<code>[OPEN: THREADY-DES-02]</code></strong> (Lottie is not a native
+OpenDesign/Figma export — see §8).</p>
+<h2 id="duration-easing-tokens">2. Duration &amp; easing tokens</h2>
+<p>Verified tokens come from <code>tokens/core.css</code>; extended
+tokens follow <a
+href="../prototypes.md#6-motion--transition-spec">prototypes.md §6</a>
+and are <code>[DEFAULT — adjustable]</code>.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 38%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Token</th>
+<th>Value</th>
+<th>Provenance</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--motion-fast</code></td>
+<td>150 ms</td>
+<td><code>[VERIFIED — core.css]</code></td>
+<td>control state (hover/press), toast exit, theme crossfade</td>
+</tr>
+<tr>
+<td><code>--motion-base</code></td>
+<td>200 ms</td>
+<td><code>[VERIFIED — core.css]</code></td>
+<td>enter/exit, disclosure, drawer/sheet slide, toast enter,
+skeleton→content</td>
+</tr>
+<tr>
+<td><code>--ease-standard</code></td>
+<td><code>cubic-bezier(0.2, 0, 0, 1)</code></td>
+<td><code>[VERIFIED — core.css]</code></td>
+<td>the only easing curve; every eased Lottie keyframe uses it</td>
+</tr>
+<tr>
+<td><code>--motion-route</code></td>
+<td>300 ms</td>
+<td><code>[DEFAULT]</code> (250–300 ms band, prototypes §6)</td>
+<td>route/page shared-axis transition;
+<code>transition-fade-slide.json</code> runs each card move at exactly
+18 f @ 60 fps = 300 ms</td>
+</tr>
+<tr>
+<td><code>--motion-confirm</code></td>
+<td>1 500 ms</td>
+<td><code>[DEFAULT]</code></td>
+<td>one-shot confirmation choreography (<code>success-check</code>,
+<code>error-cross</code>: 90 f @ 60 fps)</td>
+</tr>
+<tr>
+<td><code>--motion-loop-period</code></td>
+<td>2 000 ms</td>
+<td><code>[DEFAULT]</code></td>
+<td>loop period of the ambient loops (<code>helix-spinner</code>,
+<code>processing-pulse</code>, <code>thread-sync</code>: 120 f @ 60
+fps)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Easing in the Lottie files.</strong> Every eased keyframe
+carries the token curve encoded as Lottie handles — outgoing
+<code>{"x": [0.2], "y": [0]}</code>, incoming
+<code>{"x": [0], "y": [1]}</code> — so the assets and the CSS
+transitions share one acceleration profile. Constant-rate movement
+(ripple expansion, dot travel across the thread, the spinner’s phase
+advance between dense samples) is deliberately linear: a ripple or
+carrier dot that eases reads as stalling.</p>
+<h2 id="the-lottie-asset-set">3. The Lottie asset set</h2>
+<p>All files: schema <code>v: "5.7.4"</code>, <code>fr: 60</code>
+declared, <code>ip: 0</code>, shape layers only, <code>assets: []</code>
+(no rasters). Colors are the Thready token values in Lottie’s 0–1 RGBA
+form: lime <code>#B6E376</code> = <code>[0.714, 0.890, 0.463]</code>,
+accent <code>#446E12</code> = <code>[0.267, 0.431, 0.071]</code>, teal
+<code>#ABDDC9</code> = <code>[0.671, 0.867, 0.788]</code>, teal-dark
+<code>#B7EBD6</code> = <code>[0.718, 0.922, 0.839]</code>, brand-ink
+<code>#0A0F04</code> = <code>[0.039, 0.059, 0.016]</code>, ink
+<code>#020817</code> = <code>[0.008, 0.031, 0.090]</code>, snow
+<code>#F8FAFC</code> = <code>[0.973, 0.980, 0.988]</code>, danger
+<code>#DC2626</code> = <code>[0.863, 0.149, 0.149]</code>.</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 15%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Canvas</th>
+<th>Frames</th>
+<th>Loop</th>
+<th>Structure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-spinner.json</code></td>
+<td>512×512</td>
+<td>120 (2 s)</td>
+<td><strong>loops</strong>, seam-exact</td>
+<td>Two sine strands (the double helix seen side-on) as animated bezier
+paths — 21 phase-sampled shape keyframes per strand advance the phase a
+full 2π per cycle, which <strong>is</strong> the helix’s rotation;
+strand opacities counter-pulse (100↔︎70) so front/back dominance
+alternates as they weave. Lime strand + teal strand, 30 px round-cap
+strokes.</td>
+</tr>
+<tr>
+<td><code>success-check.json</code></td>
+<td>512×512</td>
+<td>90 (1.5 s)</td>
+<td>one-shot</td>
+<td>Lime disc pops in (scale 0→108→100, token ease), check draws via
+trim-path (f22–48), accent ring pings outward (f18–56). Check layer is
+parented to the disc. Check stroke is <code>--brand-ink #0A0F04</code>
+on the lime fill — 13.15:1, the documented brand-ink pairing
+<code>[VERIFIED — design-system §3.2]</code>.</td>
+</tr>
+<tr>
+<td><code>error-cross.json</code></td>
+<td>512×512</td>
+<td>90 (1.5 s)</td>
+<td>one-shot</td>
+<td>Danger disc pops in, two snow cross arms draw sequentially via
+trim-paths (f24–38, f36–52), disc shakes on X (f54–78), danger ring
+pings. Arms parented to the disc so pop and shake carry them. Error uses
+<code>--danger</code>, never brand <code>[design-system §6]</code>.</td>
+</tr>
+<tr>
+<td><code>processing-pulse.json</code></td>
+<td>512×512</td>
+<td>120 (2 s)</td>
+<td><strong>loops</strong>, seam-exact</td>
+<td>Lime core breathes (scale 100→114, twice per cycle, token ease); two
+teal ripple rings expand 100→260 % and fade, staggered 60 f apart. Ring
+B is ring A phase-shifted with hold-jump keyframes so the loop boundary
+matches exactly.</td>
+</tr>
+<tr>
+<td><code>thread-sync.json</code></td>
+<td>512×256</td>
+<td>120 (2 s)</td>
+<td><strong>loops</strong>, seam-exact</td>
+<td>Messenger node (teal, left) and Thready node (lime, right) joined by
+a 45 %-opacity teal thread; a lime dot travels → (f0–55) and a teal-dark
+dot travels ← (f60–115), each fading in/out at the ends; the receiving
+node bumps 112 % on arrival.</td>
+</tr>
+<tr>
+<td><code>transition-fade-slide.json</code></td>
+<td>512×320</td>
+<td>90 (1.5 s)</td>
+<td>one-shot, <strong>markers</strong></td>
+<td>Shared-axis X: outgoing teal card slides −80 px and fades (f15–33),
+incoming lime card slides in from +80 px (f24–42). Each move is 18 f @
+60 fps = <strong>300 ms — real product timing</strong>, not a slowed
+demo. Lottie markers <code>transition-start</code> (f15, dur 27) and
+<code>transition-end</code> (f42) delimit the playable segment.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="interaction-animation-map">4. Interaction → animation map</h2>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 770px; background-color: white;" viewBox="0 0 770 820.8499755859375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"><g class="cluster" id="my-svg-ASSETS" data-look="classic"><rect style="" x="478" y="8" width="284" height="804.8499927520752"/><g class="cluster-label" transform="translate(547.5, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">motion/</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Lottie</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> assets</tspan></tspan></text></g></g></g><g class="cluster" id="my-svg-JOURNEYS" data-look="classic"><rect style="" x="8" y="8" width="250" height="797.2999935150146"/><g class="cluster-label" transform="translate(58, 8)"><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ux-flows.md</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> journeys</tspan></tspan></text></g></g></g></g><g class="edgePaths"><path d="M145.328,356.85L164.107,307.65C182.885,258.45,220.443,160.05,257.555,110.85C294.667,61.65,331.333,61.65,368,61.65C404.667,61.65,441.333,61.65,467.257,62.746C493.18,63.842,508.361,66.033,515.951,67.129L523.541,68.225" id="my-svg-L_ADD_SPIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADD_SPIN_0" data-points="W3sieCI6MTQ1LjMyODI0NDEyNzIwOTQyLCJ5IjozNTYuODQ5OTk2NTY2NzcyNDZ9LHsieCI6MjU4LCJ5Ijo2MS42NDk5OTk2MTg1MzAyN30seyJ4IjozNjgsInkiOjYxLjY0OTk5OTYxODUzMDI3fSx7IngiOjQ3OCwieSI6NjEuNjQ5OTk5NjE4NTMwMjd9LHsieCI6NTI3LjUsInkiOjY4Ljc5NjEyNjM3OTA5MzY1fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M153.985,356.85L171.321,330.167C188.657,303.483,223.328,250.117,258.997,223.433C294.667,196.75,331.333,196.75,368,196.75C404.667,196.75,441.333,196.75,467.917,196.75C494.5,196.75,511,196.75,519.25,196.75L527.5,196.75" id="my-svg-L_ADD_SYNC_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADD_SYNC_0" data-points="W3sieCI6MTUzLjk4NDkyNjk4ODg5NDI0LCJ5IjozNTYuODQ5OTk2NTY2NzcyNDZ9LHsieCI6MjU4LCJ5IjoxOTYuNzQ5OTk4MDkyNjUxMzd9LHsieCI6MzY4LCJ5IjoxOTYuNzQ5OTk4MDkyNjUxMzd9LHsieCI6NDc4LCJ5IjoxOTYuNzQ5OTk4MDkyNjUxMzd9LHsieCI6NTMxLjUsInkiOjE5Ni43NDk5OTgwOTI2NTEzN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M219,389.15L225.5,389.15C232,389.15,245,389.15,269.833,389.15C294.667,389.15,331.333,389.15,368,389.15C404.667,389.15,441.333,389.15,472.923,396.413C504.513,403.676,531.026,418.202,544.282,425.465L557.538,432.728" id="my-svg-L_ADD_CHECK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADD_CHECK_0" data-points="W3sieCI6MjE5LCJ5IjozODkuMTQ5OTk1ODAzODMzfSx7IngiOjI1OCwieSI6Mzg5LjE0OTk5NTgwMzgzM30seyJ4IjozNjgsInkiOjM4OS4xNDk5OTU4MDM4MzN9LHsieCI6NDc4LCJ5IjozODkuMTQ5OTk1ODAzODMzfSx7IngiOjU2MS4wNDYyNzMzMDc5NTk4LCJ5Ijo0MzQuNjQ5OTk1ODAzODMzfV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M154.499,421.45L171.749,447.367C188.999,473.283,223.5,525.117,259.083,551.033C294.667,576.95,331.333,576.95,368,576.95C404.667,576.95,441.333,576.95,468.538,580.061C495.742,583.172,513.484,589.394,522.354,592.505L531.225,595.616" id="my-svg-L_ADD_CROSS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADD_CROSS_0" data-points="W3sieCI6MTU0LjQ5ODkzNDYxNjc5OTU0LCJ5Ijo0MjEuNDQ5OTk1MDQwODkzNTV9LHsieCI6MjU4LCJ5Ijo1NzYuOTQ5OTk1MDQwODkzNn0seyJ4IjozNjgsInkiOjU3Ni45NDk5OTUwNDA4OTM2fSx7IngiOjQ3OCwieSI6NTc2Ljk0OTk5NTA0MDg5MzZ9LHsieCI6NTM1LCJ5Ijo1OTYuOTQwMTM1NTc5NzEzN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M145.633,421.45L164.361,469.333C183.089,517.217,220.544,612.983,257.605,660.867C294.667,708.75,331.333,708.75,368,708.75C404.667,708.75,441.333,708.75,463.188,709.663C485.043,710.575,492.085,712.4,495.607,713.313L499.128,714.225" id="my-svg-L_ADD_FADE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ADD_FADE_0" data-points="W3sieCI6MTQ1LjYzMjk3ODQ4NTMyMjE2LCJ5Ijo0MjEuNDQ5OTk1MDQwODkzNTV9LHsieCI6MjU4LCJ5Ijo3MDguNzQ5OTk0Mjc3OTU0MX0seyJ4IjozNjgsInkiOjcwOC43NDk5OTQyNzc5NTQxfSx7IngiOjQ3OCwieSI6NzA4Ljc0OTk5NDI3Nzk1NDF9LHsieCI6NTAzLCJ5Ijo3MTUuMjI4ODY3MzgzMDcwM31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M153.985,471.45L171.321,444.767C188.657,418.083,223.328,364.717,258.997,338.033C294.667,311.35,331.333,311.35,368,311.35C404.667,311.35,441.333,311.35,464.667,311.35C488,311.35,498,311.35,503,311.35L508,311.35" id="my-svg-L_PROC_PULSE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_PULSE_0" data-points="W3sieCI6MTUzLjk4NDkyNjk4ODg5NDI0LCJ5Ijo0NzEuNDQ5OTk1MDQwODkzNTV9LHsieCI6MjU4LCJ5IjozMTEuMzQ5OTk2NTY2NzcyNDZ9LHsieCI6MzY4LCJ5IjozMTEuMzQ5OTk2NTY2NzcyNDZ9LHsieCI6NDc4LCJ5IjozMTEuMzQ5OTk2NTY2NzcyNDZ9LHsieCI6NTEyLCJ5IjozMTEuMzQ5OTk2NTY2NzcyNDZ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M222,497.484L228,497.062C234,496.64,246,495.795,270.333,495.372C294.667,494.95,331.333,494.95,368,494.95C404.667,494.95,441.333,494.95,466.096,493.682C490.859,492.415,503.717,489.879,510.146,488.611L516.576,487.344" id="my-svg-L_PROC_CHECK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_CHECK_0" data-points="W3sieCI6MjIyLCJ5Ijo0OTcuNDg0Mzk0ODIxMTY3fSx7IngiOjI1OCwieSI6NDk0Ljk0OTk5NTA0MDg5MzU1fSx7IngiOjM2OCwieSI6NDk0Ljk0OTk5NTA0MDg5MzU1fSx7IngiOjQ3OCwieSI6NDk0Ljk0OTk5NTA0MDg5MzU1fSx7IngiOjUyMC41LCJ5Ijo0ODYuNTY5NzEzMzUwNzUyN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M168.355,536.05L183.296,549.7C198.236,563.35,228.118,590.65,261.392,604.3C294.667,617.95,331.333,617.95,368,617.95C404.667,617.95,441.333,617.95,468.501,618.497C495.669,619.045,513.338,620.14,522.173,620.687L531.008,621.235" id="my-svg-L_PROC_CROSS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROC_CROSS_0" data-points="W3sieCI6MTY4LjM1NDYzOTkwOTQ0OTM2LCJ5Ijo1MzYuMDQ5OTkzNTE1MDE0Nn0seyJ4IjoyNTgsInkiOjYxNy45NDk5OTUwNDA4OTM2fSx7IngiOjM2OCwieSI6NjE3Ljk0OTk5NTA0MDg5MzZ9LHsieCI6NDc4LCJ5Ijo2MTcuOTQ5OTk1MDQwODkzNn0seyJ4Ijo1MzUsInkiOjYyMS40ODIzODkxMDA4NDA0fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M199.5,99.668L209.25,102.882C219,106.096,238.5,112.523,266.583,115.736C294.667,118.95,331.333,118.95,368,118.95C404.667,118.95,441.333,118.95,467.271,116.979C493.209,115.008,508.419,111.067,516.023,109.096L523.628,107.125" id="my-svg-L_SRCH_SPIN_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_SRCH_SPIN_0" data-points="W3sieCI6MTk5LjUsInkiOjk5LjY2ODM5OTM5MTE3NDMyfSx7IngiOjI1OCwieSI6MTE4Ljk0OTk5ODg1NTU5MDgyfSx7IngiOjM2OCwieSI6MTE4Ljk0OTk5ODg1NTU5MDgyfSx7IngiOjQ3OCwieSI6MTE4Ljk0OTk5ODg1NTU5MDgyfSx7IngiOjUyNy41LCJ5IjoxMDYuMTIxODMwMTA3NDYwNTd9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M155.288,644.25L172.406,626.2C189.525,608.15,223.763,572.05,259.215,554C294.667,535.95,331.333,535.95,368,535.95C404.667,535.95,441.333,535.95,471.655,530.125C501.977,524.299,525.953,512.649,537.941,506.823L549.93,500.998" id="my-svg-L_ACCT_CHECK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACCT_CHECK_0" data-points="W3sieCI6MTU1LjI4NzU1NzAzMzQxNDY5LCJ5Ijo2NDQuMjQ5OTk0Mjc3OTU0MX0seyJ4IjoyNTgsInkiOjUzNS45NDk5OTUwNDA4OTM2fSx7IngiOjM2OCwieSI6NTM1Ljk0OTk5NTA0MDg5MzZ9LHsieCI6NDc4LCJ5Ijo1MzUuOTQ5OTk1MDQwODkzNn0seyJ4Ijo1NTMuNTI3NTM3ODAxOTkxMywieSI6NDk5LjI0OTk5NDI3Nzk1NDF9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M233,667.75L237.167,667.75C241.333,667.75,249.667,667.75,272.167,667.75C294.667,667.75,331.333,667.75,368,667.75C404.667,667.75,441.333,667.75,468.526,665.192C495.719,662.634,513.438,657.518,522.297,654.96L531.157,652.402" id="my-svg-L_ACCT_CROSS_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACCT_CROSS_0" data-points="W3sieCI6MjMzLCJ5Ijo2NjcuNzQ5OTk0Mjc3OTU0MX0seyJ4IjoyNTgsInkiOjY2Ny43NDk5OTQyNzc5NTQxfSx7IngiOjM2OCwieSI6NjY3Ljc0OTk5NDI3Nzk1NDF9LHsieCI6NDc4LCJ5Ijo2NjcuNzQ5OTk0Mjc3OTU0MX0seyJ4Ijo1MzUsInkiOjY1MS4yOTIyNDc3OTkwODA5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M162.883,691.25L178.736,703.717C194.589,716.183,226.294,741.117,260.481,753.583C294.667,766.05,331.333,766.05,368,766.05C404.667,766.05,441.333,766.05,463.174,765.544C485.014,765.037,492.027,764.025,495.534,763.519L499.041,763.012" id="my-svg-L_ACCT_FADE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ACCT_FADE_0" data-points="W3sieCI6MTYyLjg4MzAxMTQyMjE2NjEsInkiOjY5MS4yNDk5OTQyNzc5NTQxfSx7IngiOjI1OCwieSI6NzY2LjA0OTk5MzUxNTAxNDZ9LHsieCI6MzY4LCJ5Ijo3NjYuMDQ5OTkzNTE1MDE0Nn0seyJ4Ijo0NzgsInkiOjc2Ni4wNDk5OTM1MTUwMTQ2fSx7IngiOjUwMywieSI6NzYyLjQ0MDgzODU4NTQzNzJ9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(368, 61.64999961853027)"><g class="label" data-id="L_ADD_SPIN_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-81.5" y="0" width="164" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">resolve</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> wait</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> app</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> boot</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 196.74999809265137)"><g class="label" data-id="L_ADD_SYNC_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-66.5" y="0" width="133" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">backfill</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> live</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sync</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 389.149995803833)"><g class="label" data-id="L_ADD_CHECK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-44" y="0" width="88" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">201</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> created</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 576.9499950408936)"><g class="label" data-id="L_ADD_CROSS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-75.5" y="0" width="151" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">422</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 403</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> resolve</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> fail</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 708.7499942779541)"><g class="label" data-id="L_ADD_FADE_0" transform="translate(0.5, -10.5)"><g><rect class="background" style="" x="-76" y="0" width="151" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">wizard</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> step</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> advance</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 311.34999656677246)"><g class="label" data-id="L_PROC_PULSE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-79" y="0" width="158" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">step</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> running</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> queued</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 494.94999504089355)"><g class="label" data-id="L_PROC_CHECK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-80" y="0" width="160" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">processing.completed</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 617.9499950408936)"><g class="label" data-id="L_PROC_CROSS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-85" y="0" width="170" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">processing.failed</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> DLQ</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 118.94999885559082)"><g class="label" data-id="L_SRCH_SPIN_0" transform="translate(-0.5, -10.5)"><g><rect class="background" style="" x="-73" y="0" width="147" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">slow</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> embedder</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> wait</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 535.9499950408936)"><g class="label" data-id="L_ACCT_CHECK_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-72.5" y="0" width="145" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">branding</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> saved</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 200</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 667.7499942779541)"><g class="label" data-id="L_ACCT_CROSS_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-59" y="0" width="118" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">AA-validate</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 422</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(368, 766.0499935150146)"><g class="label" data-id="L_ACCT_FADE_0" transform="translate(0, -10.5)"><g><rect class="background" style="" x="-85" y="0" width="170" height="21"/><text y="-10.1" text-anchor="middle" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">route</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> drawer</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> transition</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-ADD-0" data-look="classic" transform="translate(133, 389.149995803833)"><rect class="basic label-container" style="" x="-86" y="-32.29999923706055" width="172" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Add</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> channel</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §2</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> sign-in</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §2.1</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PROC-1" data-look="classic" transform="translate(133, 503.7499942779541)"><rect class="basic label-container" style="" x="-89" y="-32.29999923706055" width="178" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Process</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> post</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §3</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> reprocess</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §3.1</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SRCH-2" data-look="classic" transform="translate(133, 77.75)"><rect class="basic label-container" style="" x="-66.5" y="-23.5" width="133" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Search</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §4</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ACCT-3" data-look="classic" transform="translate(133, 667.7499942779541)"><rect class="basic label-container" style="" x="-100" y="-23.5" width="200" height="47"/><g class="label" style="" transform="translate(0, -8.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Manage</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> account</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> §5</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SPIN-4" data-look="classic" transform="translate(620, 82.14999961853027)"><rect class="basic label-container" style="" x="-92.5" y="-32.29999923706055" width="185" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">helix-spinner.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 120f</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SYNC-5" data-look="classic" transform="translate(620, 196.74999809265137)"><rect class="basic label-container" style="" x="-88.5" y="-32.29999923706055" width="177" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">thread-sync.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 120f</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-PULSE-6" data-look="classic" transform="translate(620, 311.34999656677246)"><rect class="basic label-container" style="" x="-108" y="-32.29999923706055" width="216" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">processing-pulse.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">loop</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 120f</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CHECK-7" data-look="classic" transform="translate(620, 466.94999504089355)"><rect class="basic label-container" style="" x="-99.5" y="-32.29999923706055" width="199" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">success-check.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">one-shot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 90f</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-CROSS-8" data-look="classic" transform="translate(620, 626.7499942779541)"><rect class="basic label-container" style="" x="-85" y="-32.29999923706055" width="170" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">error-cross.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">one-shot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 90f</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FADE-9" data-look="classic" transform="translate(620, 745.5499935150146)"><rect class="basic label-container" style="" x="-117" y="-32.29999923706055" width="234" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">transition-fade-slide.json</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">one-shot</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 90f</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> markers</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/motion-asset-map.mmd</code>.</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> The diagram has two groups. On the left are the four
+key journeys from <a href="../ux-flows.md">ux-flows.md</a>: Add channel
+(with its messenger sign-in sub-flow), Process post (with reprocess),
+Search, and Manage account. On the right are the six Lottie assets in
+this directory, each annotated with its loop behavior and frame count.
+Twelve edges connect journeys to assets. Add channel uses four: the
+helix spinner while a link resolve or app boot is pending, the
+thread-sync loop while the new channel backfills and streams live posts,
+the success check when the API returns <code>201 channel</code>, and the
+error cross when a resolve fails with <code>422</code>/<code>403</code>;
+its wizard step advance uses the fade-slide transition. Process post
+drives three: the processing pulse for a queued or running pipeline step
+(including a reprocess in flight), the success check on
+<code>processing.completed</code>, and the error cross on
+<code>processing.failed</code> or a dead-letter surfaced in the UI.
+Search uses the spinner only for the degraded slow-embedder wait (its
+normal loading state is a skeleton, not a spinner). Manage account uses
+the success check on a <code>200</code> branding save, the error cross
+on a <code>422</code> AA-validation failure, and the fade-slide
+transition for route/drawer navigation.</p>
+<p>The full interaction table, including the non-Lottie motion the
+tokens already cover:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 20%" />
+<col style="width: 15%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr>
+<th>Interaction (journey ref)</th>
+<th>Animation</th>
+<th>Timing</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>App boot / route-level load</td>
+<td><code>helix-spinner</code> loop</td>
+<td>2 s loop</td>
+<td>the “launcher-spiral loader” of prototypes §6; centered, ≤ 128
+px</td>
+</tr>
+<tr>
+<td>Add channel: <code>channels:resolve</code> pending (<a
+href="../ux-flows.md#2-add-channel">ux §2</a>)</td>
+<td><code>helix-spinner</code> small (48 px)</td>
+<td>loop</td>
+<td>inline next to the Resolve button</td>
+</tr>
+<tr>
+<td>Add channel: <code>201</code> created (<a
+href="../ux-flows.md#2-add-channel">ux §2</a>)</td>
+<td><code>success-check</code></td>
+<td>1.5 s one-shot</td>
+<td>in the wizard’s final step, then auto-advance to the channel
+row</td>
+</tr>
+<tr>
+<td>Add channel: <code>422</code>/<code>403</code> resolve fail</td>
+<td><code>error-cross</code> at 48 px</td>
+<td>one-shot, plays once</td>
+<td>beside the inline <code>--danger</code> field message; never
+replaces the text reason</td>
+</tr>
+<tr>
+<td>Channel backfill / live sync (<a
+href="../ux-flows.md#2-add-channel">ux §2</a> “sync begins (live)”)</td>
+<td><code>thread-sync</code> loop</td>
+<td>2 s loop</td>
+<td>in the channel row / sync banner while <code>post.received</code>
+events stream</td>
+</tr>
+<tr>
+<td>Messenger session established (<a
+href="../ux-flows.md#21-messenger-sign-in-sub-flow">ux §2.1</a>)</td>
+<td><code>success-check</code></td>
+<td>one-shot</td>
+<td>on <code>SessionReady → Persisted</code></td>
+</tr>
+<tr>
+<td>Sign-in bad code / bad password (<a
+href="../ux-flows.md#21-messenger-sign-in-sub-flow">ux §2.1</a>)</td>
+<td>none — field-level <code>--danger</code> text only</td>
+<td><code>--motion-fast</code> color</td>
+<td>a retry loop is not an event; reserving <code>error-cross</code> for
+terminal failures keeps it meaningful</td>
+</tr>
+<tr>
+<td>Pipeline step queued/running (<a
+href="../ux-flows.md#3-process-post">ux §3</a>)</td>
+<td><code>processing-pulse</code> loop</td>
+<td>2 s loop</td>
+<td>per-step in Post detail §3.6 + Dashboard queue rows</td>
+</tr>
+<tr>
+<td>Reprocess in flight (<a
+href="../ux-flows.md#31-reprocess-sub-flow">ux §3.1</a>)</td>
+<td><code>processing-pulse</code> loop</td>
+<td>loop</td>
+<td><code>409 already processing</code> shows a toast (slide,
+<code>--motion-base</code>) — <strong>no</strong> error-cross; it is a
+benign race</td>
+</tr>
+<tr>
+<td><code>processing.completed</code> (<a
+href="../ux-flows.md#3-process-post">ux §3</a>)</td>
+<td><code>success-check</code> in the completion toast</td>
+<td>one-shot</td>
+<td>assets appear with skeleton→content cross-fade (200 ms)</td>
+</tr>
+<tr>
+<td><code>processing.failed</code> / dead-letter (<a
+href="../ux-flows.md#3-process-post">ux §3</a>)</td>
+<td><code>error-cross</code></td>
+<td>one-shot</td>
+<td>next to the surfaced retry-step affordance</td>
+</tr>
+<tr>
+<td>Search wait (<a href="../ux-flows.md#4-search">ux §4</a>)</td>
+<td>skeleton (CSS), <strong>not</strong> a spinner</td>
+<td>200 ms cross-fade</td>
+<td><code>helix-spinner</code> only appears in the degraded
+slow-embedder timeout state</td>
+</tr>
+<tr>
+<td>Branding save <code>200</code> (<a
+href="../ux-flows.md#5-manage-account">ux §5</a>)</td>
+<td><code>success-check</code></td>
+<td>one-shot</td>
+<td>with the audit-logged toast</td>
+</tr>
+<tr>
+<td>Branding save <code>422</code> AA-fail (<a
+href="../ux-flows.md#5-manage-account">ux §5</a>)</td>
+<td><code>error-cross</code> at 48 px</td>
+<td>one-shot</td>
+<td>beside the contrast-ratio message + suggestion</td>
+</tr>
+<tr>
+<td>Route/page navigation, wizard steps</td>
+<td><code>transition-fade-slide</code> pattern</td>
+<td>300 ms</td>
+<td>implement natively (CSS/Angular animations) per surface; the Lottie
+file is the canonical reference rendering of the curve/choreography and
+doubles as an onboarding/demo asset</td>
+</tr>
+<tr>
+<td>Button/control state, disclosure, toasts, theme toggle</td>
+<td>CSS tokens only</td>
+<td>150/200 ms</td>
+<td>no Lottie — <a
+href="../design-system.md#5-spacing-radius-elevation-motion">design-system
+§5</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Motion-with-meaning rules</strong> (from <a
+href="../ux-flows.md#6-cross-flow-ux-principles">ux-flows §6</a>): one
+ambient loop per view maximum; <code>error-cross</code> is reserved for
+terminal failures (retries and benign <code>409</code> races get
+text/toast only); confirmations play once and are never required to
+understand state — the text/status always carries the meaning.</p>
+<h2 id="reduced-motion-contract-prefers-reduced-motion">5.
+Reduced-motion contract (<code>prefers-reduced-motion</code>)</h2>
+<p>Non-negotiable (<a
+href="../design-system.md#5-spacing-radius-elevation-motion">design-system
+§5</a> <code>[VERIFIED]</code>, <a
+href="../prototypes.md#6-motion--transition-spec">prototypes §6</a>):
+motion is enhancement, never required for meaning. Under
+<code>prefers-reduced-motion: reduce</code>:</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 50%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Animation</th>
+<th>Reduced-motion behavior</th>
+<th>Poster frame</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-spinner</code></td>
+<td>do <strong>not</strong> play; render frozen at the poster frame (a
+static double-helix mark); the wait state is conveyed by text
+(“Loading…”)</td>
+<td>15</td>
+</tr>
+<tr>
+<td><code>success-check</code></td>
+<td>jump straight to the final frame (check fully drawn) — state is
+shown, nothing moves; an optional 150 ms opacity-only fade is
+permitted</td>
+<td>89</td>
+</tr>
+<tr>
+<td><code>error-cross</code></td>
+<td>jump to the final frame (cross drawn, no shake)</td>
+<td>89</td>
+</tr>
+<tr>
+<td><code>processing-pulse</code></td>
+<td>freeze at poster (core mid-breath at 114 %, ring A distinct + ring B
+faint — the true frame-30 render); progress conveyed by the step label /
+percentage text</td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>thread-sync</code></td>
+<td>freeze at poster; sync progress conveyed by the counter text (“n
+posts synced”)</td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>transition-fade-slide</code></td>
+<td>route/step changes become an instant cut (or ≤ 100 ms opacity-only
+fade); no translation</td>
+<td>89</td>
+</tr>
+</tbody>
+</table>
+<p>Reference implementation (web, the same gate
+<code>preview.html</code> uses):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> reduced <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="fu">matchMedia</span>(<span class="st">&#39;(prefers-reduced-motion: reduce)&#39;</span>)<span class="op">.</span><span class="at">matches</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> anim <span class="op">=</span> lottie<span class="op">.</span><span class="fu">loadAnimation</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  container<span class="op">,</span> renderer<span class="op">:</span> <span class="st">&#39;svg&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  loop<span class="op">:</span> meta<span class="op">.</span><span class="at">loop</span><span class="op">,</span> autoplay<span class="op">:</span> <span class="op">!</span>reduced<span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  animationData<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (reduced) anim<span class="op">.</span><span class="fu">goToAndStop</span>(meta<span class="op">.</span><span class="at">posterFrame</span><span class="op">,</span> <span class="co">/* isFrame */</span> <span class="kw">true</span>)<span class="op">;</span></span></code></pre></div>
+<p><strong>Static fallback SVGs (delivered 2026-07-22).</strong> Each
+playable animation now ships a dedicated
+<code>reducedMotionFallback</code> SVG, named per animation in
+<code>motion-manifest.json</code> (v2) — this closes the asset half of
+<code>THREADY-MOT-03</code> (§8 keeps the narrowed remainder):</p>
+<table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 42%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Animation</th>
+<th>Fallback file</th>
+<th>Renders</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-spinner</code></td>
+<td><code>spiral-static.svg</code></td>
+<td>the frame-15 poster: strand paths are the exact 50/50 interpolation
+of the t = 12/18 shape keyframes (their easing is linear); strand
+opacities 73.7 %/96.3 % are the token ease evaluated at the same
+frame</td>
+</tr>
+<tr>
+<td><code>success-check</code></td>
+<td><code>check.svg</code></td>
+<td>final frame 89: disc at rest, check fully drawn; the accent ring
+ping has opacity 0 there and is omitted</td>
+</tr>
+<tr>
+<td><code>error-cross</code></td>
+<td><code>cross-static.svg</code></td>
+<td>final frame 89: disc back at 256,256 after the shake, both arms
+fully drawn; invisible ring ping omitted</td>
+</tr>
+<tr>
+<td><code>processing-pulse</code></td>
+<td><code>pulse-static.svg</code></td>
+<td>the frame-30 poster <strong>as actually rendered</strong>: core at
+its keyframed 114 %, ring A at 140 %/45.8 % opacity <strong>and</strong>
+ring B faint at 220 %/15.5 % (the “one faint ring” wording above is
+prose shorthand; the file matches the renderer)</td>
+</tr>
+<tr>
+<td><code>thread-sync</code></td>
+<td><code>sync-static.svg</code></td>
+<td>the frame-30 poster: nodes + thread at rest, carrier dot at x 365.78
+— the token ease <code>cubic-bezier(0.2, 0, 0, 1)</code> evaluated at
+frame 30 of its 0–55 f travel</td>
+</tr>
+<tr>
+<td><code>transition-fade-slide</code></td>
+<td><em>none</em> (<code>null</code>)</td>
+<td>reduced motion is an <code>instant-cut</code> — no fallback artwork
+exists <strong>by contract</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Geometry is <strong>not redrawn</strong> — every path/radius/opacity
+is computed from the Lottie’s own keyframe data at the contract frame
+(derivations in each SVG’s header comment). Coloring
+<code>[DEFAULT — adjustable]</code>:
+<code>style="fill: var(--brand, #B6E376)"</code>-form — literal
+fallbacks are the Lottie’s baked colors so standalone loads match the
+animations; token-bearing pages theme the inlined SVG via the CSS
+variables (the SVG analogue of the §6 load-time remap).
+<code>currentColor</code> was rejected: multi-color assets.</p>
+<p>Poster-frame freezing remains the <strong>equivalent runtime
+alternative</strong> where an image swap is inconvenient (Compose:
+<code>LottieAnimation(progress = posterProgress)</code>; iOS:
+<code>currentFrame = poster</code>) — both paths render the same state
+by construction.</p>
+<h2 id="runtime-integration">6. Runtime integration</h2>
+<p>Runtimes per <a
+href="../prototypes.md#6-motion--transition-spec">prototypes.md §6</a>:
+<code>lottie-web</code> (web + Tauri 2 desktop wrapping the Angular UI),
+<code>lottie-compose</code> (KMP/Android), <code>lottie-ios</code>. The
+TUI does <strong>not</strong> consume Lottie — its equivalents are
+Lipgloss spinner/progress primitives themed by the token bridge (<a
+href="../design-system.md#7-per-platform-fan-out">design-system
+§7</a>).</p>
+<ul>
+<li><strong>Loop config:</strong> <code>helix-spinner</code>,
+<code>processing-pulse</code>, <code>thread-sync</code> →
+<code>loop: true</code> (all three are seam-exact: the frame-120 state
+equals frame 0, verified in §7). <code>success-check</code>,
+<code>error-cross</code> → <code>loop: false</code>, play once per
+event.</li>
+<li><strong>Segment playback:</strong>
+<code>transition-fade-slide</code> carries markers; play
+<code>[15, 42]</code> (<code>transition-start</code> →
+<code>transition-end</code>) when using it as a real overlay, or full
+range as a demo/onboarding asset.</li>
+<li><strong>Sizing:</strong> vector — render at any size; intended
+in-product sizes: spinner 48–128 px, pulse 24–48 px (inline step
+indicator), check/cross 48–96 px, thread-sync banner height 48–64
+px.</li>
+<li><strong>Theming (honest limitation).</strong> The JSONs carry
+literal Thready colors — Lottie has no CSS-variable binding. The
+lime/teal set is tuned for <strong>dark surfaces</strong> (lime
+<em>is</em> the dark accent, 13.56:1 on <code>#020817</code>
+<code>[VERIFIED — design-system §3.4]</code>); on light surfaces lime is
+decorative (1.47:1) and load-bearing loading states should either sit on
+<code>--surface-warm</code>/a dark stage, or remap
+lime→<code>#446E12</code> at load time. Because every color is a plain
+<code>[r, g, b, 1]</code> array, a load-time remap is trivial and
+lossless:</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Light-theme remap: lime -&gt; AA accent, before loadAnimation. [DEFAULT — adjustable]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> LIME <span class="op">=</span> [<span class="fl">0.714</span><span class="op">,</span> <span class="fl">0.890</span><span class="op">,</span> <span class="fl">0.463</span>]<span class="op">,</span> ACCENT_LIGHT <span class="op">=</span> [<span class="fl">0.267</span><span class="op">,</span> <span class="fl">0.431</span><span class="op">,</span> <span class="fl">0.071</span>]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">retint</span>(node<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(node)) { node<span class="op">.</span><span class="fu">forEach</span>(retint)<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> }</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (node <span class="op">&amp;&amp;</span> <span class="kw">typeof</span> node <span class="op">===</span> <span class="st">&#39;object&#39;</span>) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> p <span class="op">=</span> node <span class="im">as</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> k <span class="op">=</span> (p[<span class="st">&#39;c&#39;</span>] <span class="im">as</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> <span class="op">|</span> <span class="dt">undefined</span>)<span class="op">?.</span>[<span class="st">&#39;k&#39;</span>]<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ((p[<span class="st">&#39;ty&#39;</span>] <span class="op">===</span> <span class="st">&#39;fl&#39;</span> <span class="op">||</span> p[<span class="st">&#39;ty&#39;</span>] <span class="op">===</span> <span class="st">&#39;st&#39;</span>) <span class="op">&amp;&amp;</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(k)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;&amp;</span> LIME<span class="op">.</span><span class="fu">every</span>((v<span class="op">,</span> i) <span class="kw">=&gt;</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>((k[i] <span class="im">as</span> <span class="dt">number</span>) <span class="op">-</span> v) <span class="op">&lt;</span> <span class="fl">1e-3</span>)) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      (k <span class="im">as</span> <span class="dt">number</span>[])<span class="op">.</span><span class="fu">splice</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="op">...</span>ACCENT_LIGHT)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Object</span><span class="op">.</span><span class="fu">values</span>(p)<span class="op">.</span><span class="fu">forEach</span>(retint)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong>White-label:</strong> the same remap is the per-Account
+brand hook (<a href="../theming.md">theming</a>) — replace lime/teal
+with the Account’s <code>--brand</code>/<code>--brand-2</code> at load;
+the error cross always keeps <code>--danger</code> (semantic, never
+white-labeled).</li>
+</ul>
+<h2 id="validation-record-honest">7. Validation record (honest)</h2>
+<p>Executed on 2026-07-22 on the authoring host (scripts in the session
+scratchpad; deterministic generator, re-runnable):</p>
+<ol type="1">
+<li><p><strong>JSON parse</strong> — <code>python3 json.load</code> over
+all six files: <strong>PASS</strong> (all parse).</p></li>
+<li><p><strong>Structural lint</strong> (custom validator): required
+top-level keys (<code>v fr ip op w h layers</code>) present;
+<code>v</code> is 5.x; <code>fr</code> = 60 declared; frame counts
+90–120 (within the 60–180 requirement); every layer is
+<code>ty: 4</code> with a non-empty <code>shapes</code> array and a full
+<code>ks</code> transform; keyframe times strictly monotonic; every
+color component within [0, 1]; <code>assets</code> empty (no rasters);
+and for the three loopers a <strong>loop-seam check</strong> — the
+rendered state at <code>ip</code> equals the state at <code>op</code>
+(properties may differ only where the owning layer has opacity 0 at both
+edges): <strong>PASS, all six</strong>. Two genuine defects were caught
+and fixed by this gate during authoring (a 1-ulp floating-point seam
+mismatch in the spinner’s phase wrap; an over-strict seam rule
+superseded by the visibility-aware one).</p></li>
+<li><p><strong>Real renderer</strong> — <strong>lottie-web
+5.13.0</strong> (SVG renderer) headless under jsdom (with a
+canvas-context stub; the SVG renderer does not draw to canvas): every
+file loads, seeks frames 0 / ¼ / ½ / end without exceptions and produces
+real SVG path geometry: <strong>PASS, all six</strong>.</p></li>
+<li><p><strong>Animation-progression assertions</strong> under the same
+renderer: the spinner strand path <strong>morphs</strong> between
+frames; the check and cross trim-paths <strong>grow</strong> while
+drawing; the pulse ring transform <strong>expands</strong> (scale 1.13 →
+2.33 between f10 and f100); the fade-slide card <strong>translates and
+fades</strong> (x 277 → 256, opacity 0.73 → 1 between f30 and f42);
+thread-sync node bump <strong>scales</strong> on arrival:
+<strong>PASS</strong>.</p></li>
+<li><p><strong><code>preview.html</code> smoke test</strong> — the
+assembled page booted under jsdom (matchMedia polyfilled — a jsdom gap,
+present in all real browsers): 6 cards, 6 live SVG stages, 27 rendered
+paths: <strong>PASS</strong>.</p></li>
+<li><p><strong>Real-browser render (headless Chromium, Blink/Skia
+compositor)</strong> — a contact sheet of all six files at six frame
+positions on light <strong>and</strong> dark stages, plus the assembled
+<code>preview.html</code> in light, explicit-dark
+(<code>data-theme="dark"</code>), and forced
+<code>prefers-reduced-motion</code> modes, was screenshot-rendered and
+reviewed: the strands weave and swap depth, the check/cross trim-paths
+draw, rings expand, sync dots shuttle both directions, cards cross-fade
+on axis; under reduced motion every asset loads frozen on its poster
+frame with the explanatory note shown; no console errors:
+<strong>PASS</strong>.</p></li>
+<li><p><strong>Static fallback SVGs (rev 2, 2026-07-22)</strong> — the
+five <code>reducedMotionFallback</code> files: values (interpolated
+strand paths, eased opacities, dot position, ring scales) computed from
+the Lottie keyframe data with the file’s own easing (token curve /
+linear as encoded), <strong>not</strong> eyeballed; all five pass
+<code>xmllint --noout</code>; <code>preview.html</code> re-smoke-tested
+under jsdom after the fallback-toggle addition in both normal and
+forced-reduced-motion modes: 6 cards, 6 live SVG stages, 27 rendered
+paths (unchanged from item 5), 5 inline fallback SVGs + the instant-cut
+note card, fallback view auto-engaged under reduced motion, toggle flips
+both ways, no errors: <strong>PASS</strong>.</p></li>
+</ol>
+<p><strong>Not done</strong> (stated plainly): no review on a
+<strong>physical display</strong> (headless Chromium screenshots only);
+no verification in <code>lottie-compose</code> / <code>lottie-ios</code>
+/ skottie (renderer-conformance differences are possible, though only
+widely-supported features are used: shape layers, trim paths, hold
+keyframes, parenting, markers); no visual-regression baseline captured
+yet (<code>ScreenDiff</code> bank, <code>[GAP: 9.3]</code>); the five
+fallback SVGs have <strong>not</strong> had an independent design review
+or a pixel-level A/B against the frozen Lottie frames (they match by
+construction, not by screenshot diff) — kept open in
+<code>THREADY-MOT-03</code> (§8); the rev-1 Chromium screenshot pass
+predates the preview’s fallback toggle.</p>
+<h2 id="gaps-open-items">8. Gaps &amp; open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-02]</code> (Lottie half) —
+<strong>partially delivered</strong>: this set proves hand-authored
+token-true Lottie without the AE/<code>bodymovin</code> path and covers
+the functional states. Still open for
+<strong>illustration-grade</strong> assets (empty-state illustrations,
+onboarding accents per prototypes §6), which need the design-tool
+bridge. The <code>spiral-loader</code> / <code>processing-pulse</code> /
+<code>success-check</code> ids of the prototypes §6 manifest map to
+<code>helix-spinner</code> / <code>processing-pulse</code> /
+<code>success-check</code> here (see
+<code>motion-manifest.json</code>).</li>
+<li><code>[OPEN: THREADY-MOT-01]</code> — verify all six files in
+<code>lottie-compose</code> and <code>lottie-ios</code> before mobile
+ships them.</li>
+<li><code>[OPEN: THREADY-MOT-02]</code> — decide light-theme strategy:
+load-time remap (§6) vs. shipping generated <code>-light</code>
+variants; wire the white-label remap into the branding editor
+preview.</li>
+<li><code>[OPEN: THREADY-MOT-03 — narrowed 2026-07-22]</code> — the
+<strong>asset half is closed</strong>: the five static
+<code>reducedMotionFallback</code> SVGs are delivered, named in the
+manifest (v2), keyframe-derived and xmllint-validated (§5, §7.7). Still
+open, narrowed to:
+<ol type="a">
+<li>independent design review / pixel A-B of the five statics against
+the frozen Lottie frames on a physical display; (b) the
+<code>empty-channels.svg</code> fallback from the prototypes §6 excerpt
+— blocked on the illustration-grade assets of
+<code>[OPEN: THREADY-DES-02]</code>, delivered together with them.</li>
+</ol></li>
+<li><code>[GAP: 9.3]</code> — add these animations (poster frames per
+theme) to the <code>ScreenDiff</code> visual-regression bank once its CI
+exists.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

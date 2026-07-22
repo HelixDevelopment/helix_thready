@@ -1,0 +1,535 @@
+<!--
+  Title           : Helix Thready — TUI Screen Mockups (Bubble Tea + Lipgloss)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/tui/tui-screens.html
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./README.md, ./lipgloss-theme.md, ../../wireframes.md (§5),
+                    ../../design-system.md (§7), ../../theming.md (§8), ../../brand-assets.md (§8.1)
+  Ground truth    : wireframes.md §5/§5.1/§5.2/§5.3 (verified TUI pattern:
+                    helix_track/llms_verifier/llm-verifier/tui); design-system.md §7 Lipgloss palette;
+                    ux-flows.md §2/§2.1/§4 (add-channel, messenger sign-in, search degradation);
+                    wireframes.md §3.2/§3.4/§3.5/§3.8/§3.9 (web counterparts re-laid for 80 columns)
+-->
+<title>Thready TUI — Terminal Screen Mockups</title>
+<style>
+  /* == Thready tokens — inlined verbatim from design-system.md §3.1/§3.2 (self-contained, no CDN) == */
+  :root{
+    --font-display:"Space Grotesk","Space Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Hanken Grotesk","Hanken Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:9999px;
+    --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);
+    --brand:#b6e376;--brand-2:#abddc9;--brand-ink:#0a0f04;
+    --bg:#ffffff;--surface:#ffffff;--surface-warm:#f1f5f9;
+    --fg:#020817;--muted:#475569;--border:#e2e8f0;--border-strong:#64748b;
+    --accent:#446e12;--accent-on:#ffffff;
+    --success:#166534;--warn:#854d0e;--danger:#dc2626;
+    --elev-ring:0 0 0 1px var(--border);
+    --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+      --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+      --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+      --accent:#b6e376;--accent-on:#0a0f04;
+      --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+    }
+  }
+  :root[data-theme="dark"]{
+    --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+    --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+    --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+    --accent:#b6e376;--accent-on:#0a0f04;
+    --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:light dark}
+  body{font-family:var(--font-body);background:var(--surface-warm);color:var(--fg);min-height:100vh;
+       padding:var(--space-6);transition:background var(--motion-base) var(--ease-standard)}
+  main,header.page-head{max-width:860px;margin:0 auto}
+  header.page-head{margin-bottom:var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-3);
+       align-items:center;justify-content:space-between}
+  .page-head h1{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:-.01em}
+  .page-head .sub{color:var(--muted);font-size:var(--text-sm);flex-basis:100%}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+  .seg button{border:0;background:transparent;color:var(--muted);font:500 var(--text-sm) var(--font-body);
+              padding:6px 14px;cursor:pointer;transition:background var(--motion-fast) var(--ease-standard)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+  .seg button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  section{margin:0 0 var(--space-8)}
+  section>h2{font-family:var(--font-display);font-size:var(--text-base);margin:0 0 var(--space-2)}
+  section>h2 .tag{font:500 var(--text-xs) var(--font-mono);color:var(--muted);margin-left:var(--space-2)}
+  /* ---- terminal window ---- */
+  .termwin{margin:0 0 var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);
+       overflow:hidden;background:var(--bg);box-shadow:0 12px 40px color-mix(in oklab,#020817,transparent 78%)}
+  .termbar{display:flex;align-items:center;gap:7px;padding:8px 14px;background:var(--surface-warm);
+       border-bottom:1px solid var(--border);font:500 var(--text-xs) var(--font-mono);color:var(--muted)}
+  .termbar i{width:11px;height:11px;border-radius:50%;display:inline-block;opacity:.9}
+  .termbar span{margin-left:var(--space-2)}
+  pre.term{margin:0;padding:14px 16px;font:13px/1.5 var(--font-mono);overflow-x:auto;color:var(--fg);
+       font-variant-ligatures:none}
+  .bd{color:var(--border-strong)}
+  .acc{color:var(--accent)} b.acc{font-weight:700}
+  .mut{color:var(--muted)}
+  .dgr{color:var(--danger)}
+  .suc{color:var(--success)}
+  .wrn{color:var(--warn)}
+  .b2{color:var(--brand-2)}
+  .sel{background:var(--surface-warm)}
+  .inv{background:var(--accent);color:var(--accent-on)}
+  .hrt{color:var(--accent)}
+  /* ---- notes + tables ---- */
+  ul.notes{margin:0 0 var(--space-2) var(--space-5);font-size:var(--text-sm);color:var(--muted);
+       display:flex;flex-direction:column;gap:6px}
+  ul.notes b{color:var(--fg);font-weight:600}
+  ul.notes code{font:12px var(--font-mono);background:var(--surface);border:1px solid var(--border);
+       border-radius:4px;padding:1px 5px;color:var(--fg)}
+  .gap{color:var(--warn);font-weight:600}
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:var(--text-sm)}
+  th,td{padding:var(--space-2) var(--space-3);text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{font:600 var(--text-xs) var(--font-display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  td code,th code{font:12px var(--font-mono)}
+  .sw{display:inline-block;width:13px;height:13px;border-radius:4px;border:1px solid var(--border-strong);
+       vertical-align:-2px;margin-right:6px}
+  .foot{max-width:860px;margin:var(--space-8) auto 0;color:var(--muted);font-size:var(--text-sm);text-align:center}
+  .foot .hrt{color:var(--accent)}
+  nav.idx{max-width:860px;margin:0 auto var(--space-6);display:flex;flex-wrap:wrap;gap:6px;
+       font:500 var(--text-xs) var(--font-mono)}
+  nav.idx a{color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-pill);
+       padding:3px 10px;text-decoration:none;background:var(--surface);
+       transition:color var(--motion-fast) var(--ease-standard)}
+  nav.idx a:hover{color:var(--accent);border-color:var(--border-strong)}
+</style>
+
+<header class="page-head">
+  <h1>Thready TUI — Terminal Screen Mockups</h1>
+  <div class="seg" role="group" aria-label="Theme">
+    <button data-theme-btn="light" onclick="setTheme('light')">Light</button>
+    <button data-theme-btn="system" onclick="setTheme('system')">System</button>
+    <button data-theme-btn="dark" onclick="setTheme('dark')">Dark</button>
+  </div>
+  <p class="sub">Bubble&nbsp;Tea + Cobra + Lipgloss, 80-column layouts from
+  <b>wireframes.md §5</b> (pattern verified against <code>helix_track/llms_verifier/llm-verifier/tui</code>).
+  ANSI roles map to the Thready tokens per <a href="./lipgloss-theme.md" style="color:var(--accent)">lipgloss-theme.md</a>.
+  The TUI defaults to the terminal's <b>dark</b> surface (design-system §7); the light palette serves
+  light terminals via <code>lipgloss.AdaptiveColor</code>. Self-contained — no CDNs, fonts fall back to system mono.</p>
+</header>
+
+<nav class="idx" aria-label="Screen index">
+  <a href="#dashboard">1 Dashboard</a>
+  <a href="#channels">2 Channels</a>
+  <a href="#thread">3 Thread view</a>
+  <a href="#search">4 Search</a>
+  <a href="#queue">5 Queue</a>
+  <a href="#login">6 Login</a>
+  <a href="#channel-detail">7 Channel detail</a>
+  <a href="#add-channel">8 Add-Channel</a>
+  <a href="#assets">9 Assets</a>
+  <a href="#skills">10 Skills</a>
+  <a href="#palette">11 Palette</a>
+  <a href="#keys">12 Keys</a>
+</nav>
+
+<main>
+<section id="dashboard">
+<h2>1 · Dashboard <span class="tag">wireframes §5</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · Bubble Tea · 80×24 · acct: Acme</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Thready</b> · acct: Acme · ☾ dark <span class="bd">────────────────────────────</span> <span class="mut">[q]uit  [?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span> Channels <b>128</b> <span class="bd">│</span> <span class="bd">──</span> Live · WS/SSE <span class="bd">────────────────────────────────────────────</span> <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">c</span> channels  <span class="bd">│</span>  <span class="suc">✓</span> #Research processed                                    <span class="mut">2s</span>  <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">/</span> search    <span class="bd">│</span>  <span class="acc">⭮</span> #Video download 63%  <span class="acc">▓▓▓▓▓▓</span><span class="mut">░░░░</span>                        <span class="mut">9s</span>  <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">a</span> assets    <span class="bd">│</span>  <span class="dgr">⚠ #Movie failed</span> → [<span class="acc">r</span>] retry                             <span class="mut">34s</span>  <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">k</span> skills    <span class="bd">│</span> <span class="bd">──</span> recent threads <span class="bd">───────────────────────────────────────────</span> <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">n</span> new chan  <span class="bd">│</span>  #ml-papers  “Diffusion models for…” <span class="mut">↩12</span>  <span class="acc">#Research</span>  <span class="suc">✓</span>        <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">q</span> quit      <span class="bd">│</span>  #films      magnet:?xt=urn:btih:…   <span class="mut">↩3</span>   <span class="acc">#Movie</span>     <span class="acc">⭮ 63%</span>    <span class="bd">│</span>
+<span class="bd">│</span>              <span class="bd">│</span>  #films      “https://youtu.be/dQw…” <span class="mut">↩0</span>   <span class="mut">#Video ○</span>   <span class="mut">◷</span>        <span class="bd">│</span>
+<span class="bd">│</span> Posts <b>1,204</b>  <span class="bd">│</span>                                                               <span class="bd">│</span>
+<span class="bd">│</span> Proc  <b>17</b>     <span class="bd">│</span>  <span class="mut">press ? for the full key map · tab cycles panes</span>              <span class="bd">│</span>
+<span class="bd">│</span> Assets <b>42.1T</b> <span class="bd">│</span>                                                               <span class="bd">│</span>
+<span class="bd">│</span>              <span class="bd">│</span>                                                               <span class="bd">│</span>
+<span class="bd">└──────────────┴───────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<ul class="notes">
+  <li>Layout is the wireframes §5 dashboard verbatim: left key-hint rail + live pane (WS/SSE) + recent-threads table; the same information as the web Dashboard (§3.3) re-laid for 80 columns.</li>
+  <li>Live rows are <code>processing.progress / completed / failed</code> events; the failed row exposes <b>[r] retry</b> — the idempotent single-claim retry (pressing <code>r</code> twice never double-processes).</li>
+  <li>Domain keys <code>c a k n</code> are layered on the <b>verified</b> key model (§5.1) and chosen not to collide with it; every key is echoed on-screen so the TUI is discoverable without docs.</li>
+  <li>The footer heart is the <code>U+2665</code> glyph tinted with the Lipgloss <code>Accent</code> style — the locked slogan contract (brand-assets §8.1); attribution is plain text (a terminal renders no logo).</li>
+</ul>
+</section>
+
+<section id="channels">
+<h2>2 · Channels <span class="tag">wireframes §3.4 → TUI</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · channels · j/k · enter</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Channels</b> · 128 total · filter: all <span class="bd">────────────────────────</span> <span class="mut">[n]ew  [?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel">▸ #ml-papers      Telegram  auto: Research   128 posts  <span class="suc">✓ healthy</span>           </span> <span class="bd">│</span>
+<span class="bd">│</span>   #films          Telegram  auto: Movies      94 posts  <span class="acc">⭮ syncing</span>            <span class="bd">│</span>
+<span class="bd">│</span>   Max: dev-notes  Max       auto: Notes        — posts  <span class="wrn">⚠ auth needed</span>        <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="wrn">⚠</span> <span class="mut">Max adapter is BUILD-NEW [GAP: 5.1] — its row shows the auth state only</span>    <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">j/k move · enter open · n new · p pause · f filter · r resync · esc back</span>     <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>Rows mirror the web Channels list (§3.4): messenger, auto-detected content type, post count, health. The selected row uses the <code>--surface-warm</code> selection background, not color alone.</li>
+  <li><b>Max: dev-notes</b> shows the honest <span class="gap">⚠ auth</span> state — the Max adapter is BUILD-NEW <span class="gap">[GAP: 5.1 herald]</span>; the row never pretends a session exists.</li>
+  <li><code>n</code> opens the Add-Channel form (five steps as a prompt sequence, §3.4 wizard → TUI <code>messenger-signin</code> prompt realization, component-library §7.1); <code>esc</code> walks back without losing entered data.</li>
+  <li>Empty state (zero channels) renders the <code>thready-empty</code> contract: one-line reason + the <code>n new</code> primary action — never a blank pane (wireframes §1.1).</li>
+</ul>
+</section>
+
+<section id="thread">
+<h2>3 · Thread view <span class="tag">wireframes §5.3 — channel detail → post detail</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · #ml-papers · threads</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> ‹ <b class="acc">#ml-papers</b> · Telegram · Research · poll 5m + on-event <span class="bd">─────────</span> <span class="mut">[r]esync</span> <span class="bd">─┐</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel">▸ “Diffusion models for…”       <span class="mut">↩12</span>  <span class="acc">#Research #TODO</span>        <span class="suc">✓ processed</span>     </span> <span class="bd">│</span>
+<span class="bd">│</span>   “magnet:?xt=urn:btih:…”       <span class="mut">↩3</span>   <span class="acc">#Movie #ToDownload</span>     <span class="acc">⭮</span> <span class="acc">▓▓▓▓▓▓</span><span class="mut">░░░░</span> 63% <span class="bd">│</span>
+<span class="bd">│</span>   “https://youtu.be/dQw…”       <span class="mut">↩0</span>   <span class="mut">#Video ○indirect</span>       <span class="mut">◷ queued</span>         <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">enter open · n new · p pause · f filter · esc back</span>                           <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · post p_9f2 · live pipeline</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> ‹ <b class="acc">#ml-papers</b> · @author · 2026-07-20 14:02 <span class="bd">────────────────────</span> <span class="mut">[r]eprocess</span> <span class="bd">─┐</span>
+<span class="bd">│</span> “New paper on diffusion… https://github.com/x/y  https://youtu.be/z”         <span class="bd">│</span>
+<span class="bd">│</span> tags: <span class="acc">●#Research ●#TODO ●#ToDownload</span> <span class="mut">○#Video (indirect · AI-derived)</span>         <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> pipeline <span class="bd">───────────────────────</span>    <span class="bd">──</span> replies ↩12 <span class="bd">─────────────────────</span>  <span class="bd">│</span>
+<span class="bd">│</span> classify   <span class="suc">✓ done</span>                      ↳ @b  “see also …”                    <span class="bd">│</span>
+<span class="bd">│</span> download   <span class="acc">▓▓▓▓▓▓</span><span class="mut">░░░░</span> 63% <span class="mut">MeTube</span>       ↳ @c  “#ToDownload”                   <span class="bd">│</span>
+<span class="bd">│</span> convert    <span class="mut">◷ queued (…-web)</span>            <span class="mut">(system replies hidden ▾)</span>             <span class="bd">│</span>
+<span class="bd">│</span> research   <span class="mut">◷ queued (deep)</span>             <span class="bd">──</span> generated assets <span class="bd">────────────────</span>  <span class="bd">│</span>
+<span class="bd">│</span> reply      <span class="mut">◷ queued</span>                    <span class="b2">⬒</span> video.mp4   <span class="b2">⬒</span> video-web.mp4         <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">precedence: download &gt; convert &gt;</span>       <span class="b2">⬒</span> research.md <span class="mut">(semantic-indexed)</span>      <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">analyze &gt; research &gt; reply</span>                                                   <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="dgr">⚠ failed step</span> → [<span class="acc">r</span>]etry <span class="mut">(idempotent single-claim — r twice never double-runs)</span><span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<ul class="notes">
+  <li><b>Channel detail</b> lists complete posts (root + organic reply count <code>↩N</code>) with detected tags and status glyphs <code>✓ ⭮ ◷ ⚠</code> — §5.3 verbatim.</li>
+  <li><b>Post detail</b> splits into the live pipeline pane (ordered steps + the documented precedence, updating on <code>processing.progress</code>) and the replies pane; <b>system replies are hidden</b> and excluded from processing (§3.5/§3.6).</li>
+  <li>Tags distinguish <b>● direct</b> (accent) from <b>○ indirect</b> (muted + “AI-derived”) — the distinction is text + glyph, not color-only (a11y contract §6).</li>
+  <li>Generated assets are listed and <b>link out</b> — a terminal cannot show inline video; this is the documented, tested non-parity cell of the component matrix (component-library §7.1).</li>
+  <li><code>r</code> reprocess / retry-step is the same idempotent single-claim action as every other surface (§3.6).</li>
+</ul>
+</section>
+
+<section id="search">
+<h2>4 · Search <span class="tag">wireframes §5.3 + §3.7 states</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · search · semantic</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Search</b> <span class="bd">────────────────────────────────────────────────────────</span> <span class="mut">[esc] back</span> <span class="bd">─┐</span>
+<span class="bd">│</span> query: <b>retrieval augmented generation</b><span class="inv"> </span>                                       <span class="bd">│</span>
+<span class="bd">│</span> mode: <span class="acc">●semantic</span> <span class="mut">○keyword ○hybrid</span>   scope: <span class="acc">[x]posts [x]docs</span> <span class="mut">[ ]assets</span>         <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> results · semantic &lt; 500ms · ids hydrated from the relational store <span class="bd">─────</span> <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel">▸ <b>0.94</b>  #ml-papers   “RAG survey…”              <span class="acc">#Research</span>    ↗ post         </span> <span class="bd">│</span>
+<span class="bd">│</span>   0.91  research.md  “…retrieval augmented…”    <span class="mut">(generated)</span>  ↗ doc           <span class="bd">│</span>
+<span class="bd">│</span>   0.88  #nlp         “dense retrieval…”         <span class="acc">#Research</span>    ↗ post          <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">↑/↓ or j/k move · enter open · tab scope · m mode · esc back</span>                 <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · search · degraded (HashEmbedder stub)</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Search</b> — degraded state <span class="bd">───────────────────────────────────────</span> <span class="wrn">[GAP: 2.1]</span> <span class="bd">─┐</span>
+<span class="bd">│</span> <span class="wrn">⚠ degraded: HashEmbedder stub — results are NOT semantic; scores hidden</span>      <span class="bd">│</span>
+<span class="bd">│</span>   #ml-papers   “RAG survey…”              <span class="acc">#Research</span>    ↗ post                <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>Query line + mode radio (<b>semantic</b>/keyword/hybrid) + scope checkboxes (≥ 1 enforced on submit) + a scored, keyboard-navigable result list; <code>enter</code> opens Post/Asset detail (§3.7).</li>
+  <li>Scores route through the relational store — vectors are reference-only (§2.1.1); SLO: semantic &lt; 500&nbsp;ms <b>[OPERATOR §Q14]</b>.</li>
+  <li>The second frame is the mandated <b>degraded state</b>: on a HashEmbedder-stub deployment the <code>--warn</code> banner states results are NOT semantic and the score column is hidden <span class="gap">[GAP: 2.1]</span> — shown as a separate frame so the default and degraded states are never mixed.</li>
+  <li>Empty state: “No matches — broaden your query” + a clear-filters affordance; a slow embedder yields the graceful “narrow your query” nudge, never a hanging spinner (§3.7).</li>
+</ul>
+</section>
+
+<section id="queue">
+<h2>5 · Processing queue <span class="tag">wireframes §3.3 queue + §3.6 precedence · CLI §4.3 events</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · queue · events tail</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Processing queue</b> · 17 active <span class="bd">─────────────────────────────────────</span> <span class="mut">[?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span> <span class="mut">precedence: download &gt; convert &gt; analyze &gt; research &gt; reply</span>                  <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel">▸ #films      magnet:?xt=…      download  <span class="acc">▓▓▓▓▓▓</span><span class="mut">░░░░</span> 63%   ETA 04:12        </span> <span class="bd">│</span>
+<span class="bd">│</span>   #ml-papers  “Diffusion…”      research  <span class="acc">▓▓▓</span><span class="mut">░░░░░░░</span> 31%   <span class="mut">deep pass 2/4</span>     <span class="bd">│</span>
+<span class="bd">│</span>   #comics     scan-0042.cbz     ocr       <span class="acc">▓▓▓▓▓▓▓▓</span><span class="mut">░░</span> 82%   <span class="wrn">[GAP: 2.6 OCR]</span>    <span class="bd">│</span>
+<span class="bd">│</span>   #films      “youtu.be/dQw…”   convert   <span class="mut">◷ queued  —     …-web rendition</span>    <span class="bd">│</span>
+<span class="bd">│</span> <span class="dgr">⚠ #movies     big-buck.mkv     download  ✗ failed</span>     [<span class="acc">r</span>] retry <span class="mut">(idempotent)</span> <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> events tail · NDJSON · one event per line (CLI §4.3) <span class="bd">────────────────────</span> <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">{"type":"processing.progress","post":"p_9f2","step":"download","pct":63}</span>     <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">{"type":"processing.completed","post":"p_8c1","step":"classify"}</span>             <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">r retry · enter open post · f filter · esc back</span>                              <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>Per-job progress bars over the documented phase order; the precedence caption (download &gt; convert &gt; analyze &gt; research &gt; reply) is the §3.6 contract.</li>
+  <li>The failed row is <code>--danger</code> with an inline <b>[r] retry</b> (idempotent single-claim); <b>errors are never tinted <code>--accent</code></b> — brand can never mask an error (design-system §6).</li>
+  <li>The events strip is the same stream <code>thready events tail --json</code> consumes: NDJSON, one event per line, reconnect with backoff (CLI §4.3) — TUI and CLI share one Go SDK so behavior is identical.</li>
+  <li>OCR row is flagged <span class="gap">[GAP: 2.6]</span>; the queue never claims a stub backend works.</li>
+  <li>Offline: bars freeze at the last known value under a connection drop rather than resetting (the wireframes §6.2 rule, applied to the TUI's WS/SSE subscription).</li>
+</ul>
+</section>
+
+<section id="login">
+<h2>6 · Login <span class="tag">wireframes §5 (Login → Dashboard) + ux-flows §2.1 · textinput ×2 + choice + spinner + statusbar</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · sign in · token | device-code</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Thready</b> · sign in · profile: default <span class="bd">─────────────────────────────</span> <span class="mut">[?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">endpoint</span>   https://thready.example.com<span class="inv"> </span>                                     <span class="bd">│</span>
+<span class="bd">│</span>             <span class="mut">flag → env THREADY_ENDPOINT → profile file → default</span>             <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">auth mode</span>  <span class="acc">●token</span>  <span class="mut">○device-code</span>                                             <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">token</span>      thr_****************a2      <span class="mut">OS keychain · THREADY_TOKEN in CI</span>    <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="inv">[ Sign in ]</span>                                                                 <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">tab next field · h/l auth mode · enter sign in · esc quit</span>                    <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · sign in · auth pending (spinner)</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Thready</b> · sign in · device-code <span class="bd">─────────────────────────────</span> <span class="mut">[esc] cancel</span> <span class="bd">─┐</span>
+<span class="bd">│</span> <span class="acc">⠋</span> waiting for approval — code <b>THDY-4F2K</b>                                      <span class="bd">│</span>
+<span class="bd">│</span>   open https://thready.example.com/device and enter the code                 <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">expires in 04:37 · polling every 5s</span>                                        <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">esc cancel · r request a new code</span>                                            <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · sign in · failed (401 → exit 3)</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Thready</b> · sign in — failed <span class="bd">───────────────────────────────────────</span> <span class="mut">[?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span> <span class="dgr">✗ 401 unauthorized — token thr_…a2 expired 2026-07-19</span>   <span class="mut">(CLI exit code 3)</span>    <span class="bd">│</span>
+<span class="bd">│</span>   fix: <span class="acc">thready auth token create --scope tui</span> → paste the new token below     <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">token</span>      <span class="inv"> </span>                                                                <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">enter retry · tab edit endpoint · esc quit</span>                                   <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>The §5 state machine enters here: <b>Login → Dashboard on "authenticated"</b>. Composition: two <code>textinput</code>s (endpoint, token) + a horizontal auth-mode choice + <code>spinner</code> + statusbar.</li>
+  <li>The <b>token path is grounded in CLI §4.1</b>: <code>--endpoint</code>/<code>THREADY_ENDPOINT</code>, <code>--token</code>/<code>THREADY_TOKEN</code>, OS-keychain-first, precedence <b>flag → env → profile file → default</b> — echoed under the field so the TUI never hides where a value came from. TUI and CLI share one Go SDK and one config (<code>~/.config/thready/config.yaml</code>).</li>
+  <li>The <b>device-code</b> frame is the TUI realization of interactive sign-in, mirroring the ux-flows §2.1 pending/failure state machine (spinner while pending; an expired code restarts the flow rather than hanging). Whether the TUI ships device-code or stays scoped-token-only is <span class="gap">[OPEN: THREADY-DES-TUI-02]</span>.</li>
+  <li><b>Failure is instructive</b>: the <code>--danger</code> line names the failing value (masked token + expiry date) and the fix line gives the exact command to run — never a bare "invalid". A <code>401</code> here is the same condition as CLI exit code <b>3</b> (§4.2).</li>
+  <li>The token is masked to its last two characters; secrets are never echoed to the terminal (§6.3 scoped API keys).</li>
+  <li><code>h/l</code> flips the horizontal choice — the verified "move between areas/tabs" binding (§5.1) reused inside the form row; every key is echoed in the statusbar.</li>
+</ul>
+</section>
+
+<section id="channel-detail">
+<h2>7 · Channel detail <span class="tag">wireframes §5.3 + §3.5 → TUI · list + viewport + statusbar</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · #ml-papers · thread list</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> ‹ <b class="acc">#ml-papers</b> · Telegram · Research · poll 5m ─ <span class="suc">✓ healthy</span> <span class="bd">────────</span> <span class="mut">[r]esync</span> <span class="bd">─┐</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel"><span class="acc">●</span> ▸ “Diffusion models for…”      <span class="mut">↩12</span>  <span class="acc">#Research #TODO</span>     <span class="suc">✓ processed</span>       </span> <span class="bd">│</span>
+<span class="bd">│</span> <span class="acc">●</span>   “RAG survey…”                <span class="mut">↩7</span>   <span class="acc">#Research</span>           <span class="suc">✓ processed</span>        <span class="bd">│</span>
+<span class="bd">│</span>     “magnet:?xt=urn:btih:…”      <span class="mut">↩3</span>   <span class="acc">#Movie #ToDownload</span>  <span class="acc">⭮ ▓▓▓▓▓▓</span><span class="mut">░░░░</span> 63%   <span class="bd">│</span>
+<span class="bd">│</span>     “https://youtu.be/dQw…”      <span class="mut">↩0</span>   <span class="mut">#Video ○indirect</span>    <span class="mut">◷ queued</span>           <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> <span class="mut">1–4 of 128 · ▼ 124 more · ● unread</span> <span class="bd">────────────────────────────────────── </span><span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">j/k move · enter open · n new · p pause · f filter · r resync · esc back</span>     <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · Max: dev-notes · auth-warning variant</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> ‹ <b class="acc">Max: dev-notes</b> · Max · Notes ─ <span class="wrn">⚠ auth needed</span> <span class="bd">────────────────</span> <span class="wrn">[GAP: 5.1]</span> <span class="bd">─┐</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="wrn">⚠ no messenger session — the Max adapter is BUILD-NEW [GAP: 5.1]</span>             <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">threads cannot sync; nothing below pretends otherwise</span>                      <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>     <span class="mut">(no threads yet — sign in to start the first sync)</span>                       <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">enter sign in (thready-messenger-signin) · esc back</span>                          <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>This is the <b>thread list within one channel</b> — the §5 state machine's <code>Channels → ChannelDetail → PostDetail</code> middle state. Screen 3 shows the drill-in continuation (Post detail); this screen is the list itself with its scroll viewport.</li>
+  <li>Composition: <code>list</code> (threads) + <code>viewport</code> (the <b>1–4 of 128 · ▼ 124 more</b> scroll rule) + statusbar.</li>
+  <li><b>Unread markers</b>: ● in <code>--accent</code> before the title, with the "● unread" legend printed in the scroll rule — glyph + text, never color alone (a11y contract §6). Rows keep the §5.3 anatomy: excerpt, <code>↩N</code> organic replies, tags, status glyph.</li>
+  <li>The header carries a <b>state chip</b> — <span class="suc">✓ healthy</span> / <span class="acc">⭮ syncing</span> / <span class="wrn">⚠ auth needed</span> — the same health vocabulary as the web Channels list (§3.4).</li>
+  <li>The second frame is the honest <b>Max ⚠ auth-warning variant</b> <span class="gap">[GAP: 5.1]</span>: a <code>--warn</code> banner, an empty list that says why, and <code>enter</code> opening the <code>thready-messenger-signin</code> prompt (component-library §7.1) — the screen never renders threads a nonexistent session could not have fetched.</li>
+</ul>
+</section>
+
+<section id="add-channel">
+<h2>8 · Add-Channel form <span class="tag">wireframes §3.4 wizard + ux-flows §2 · choice + textinput ×2 + progress + statusbar</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · add channel · inline validation</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Add channel</b> <span class="bd">─────────────────────────────────────────────────</span> <span class="mut">[esc] cancel</span> <span class="bd">─┐</span>
+<span class="bd">│</span>  <span class="mut">source</span>     <span class="acc">●Telegram</span>  <span class="mut">○Max — coming; adapter BUILD-NEW</span> <span class="wrn">[GAP: 5.1]</span>           <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">account</span>    @acme_ops · Telegram · signed in         <span class="mut">space = other account</span>   <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">target</span>     telegram.me/ml_papers<span class="inv"> </span>                                           <span class="bd">│</span>
+<span class="bd">│</span>  <span class="dgr">✗ that link can't be resolved — got “telegram.me/ml_papers”</span>                 <span class="bd">│</span>
+<span class="bd">│</span>    <span class="mut">expected t.me/… or max.ru/join/… — try </span>“https://t.me/ml_papers”           <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">type</span>       <span class="mut">— resolve the link first</span>    <span class="mut">schedule</span>   poll 5m + on-event        <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="inv">[ Resolve ]</span>                                                                 <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">h/l source · tab next field · enter resolve · esc cancel (input kept)</span>        <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · add channel · resolved → submitting</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Add channel</b> · resolved <span class="bd">──────────────────────────────────────</span> <span class="mut">[esc] cancel</span> <span class="bd">─┐</span>
+<span class="bd">│</span>  <span class="mut">source</span>     <span class="acc">●Telegram</span>  <span class="mut">○Max</span>                                                  <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">account</span>    @acme_ops · Telegram · signed in                                 <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">target</span>     https://t.me/ml_papers            <span class="suc">✓ “ML Papers” · public · 128</span>   <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">type</span>       auto: <span class="acc">Research</span>  <span class="mut">[override ▾]</span>  <span class="mut">schedule</span>   poll 5m + on-event      <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="inv">[ Add channel ]</span>                                                             <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span>  <span class="acc">⭮ adding… backfill 12/128</span>  <span class="acc">▓</span><span class="mut">░░░░░░░░░</span> 9%   <span class="mut">reconciles on channel.added</span>      <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">tab field · enter submit · esc cancel (input kept)</span>                           <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span></pre>
+</figure>
+<ul class="notes">
+  <li>The §3.4 <b>five-step wizard realized as one TUI prompt sequence</b> (the documented TUI realization, component-library §7.1); the journey and its status-code table are ux-flows §2. Composition: horizontal <code>choice</code> (platform) + <code>textinput</code>s (account, link) + <code>progress</code> + statusbar.</li>
+  <li>The platform picker is a horizontal choice on <code>h/l</code>; <b>Max is visible but honestly marked</b> — the adapter is BUILD-NEW <span class="gap">[GAP: 5.1]</span>, so it cannot be selected as if it worked.</li>
+  <li><b>Validation is instructive</b>: the error repeats the failing value (<code>telegram.me/ml_papers</code>) and gives the concrete fix (<code>https://t.me/ml_papers</code>) — a <code>--danger</code> message, never <code>--accent</code> (§1.3); the rule is the §3.4 one (<code>t.me/…</code> or <code>max.ru/join/…</code>, then <b>Resolve</b> must succeed; <code>422</code>/<code>403</code> map per the ux-flows §2 table).</li>
+  <li>Resolve success shows the §3.4 <b>resolved preview</b> (title · kind · size) inline; the auto-detected type appears with an override — the user confirms rather than configures (ux-flows §6.2).</li>
+  <li>Submit renders a <b>processing progress line</b> (backfill counted by incoming <code>post.received</code>); the optimistic entry reconciles on the <code>channel.added</code> event (§3.4 states).</li>
+  <li><code>esc</code> cancels but <b>keeps entered data</b> — the wizard model persists, matching the web wizard's Back/Esc contract (§3.4).</li>
+</ul>
+</section>
+
+<section id="assets">
+<h2>9 · Assets <span class="tag">wireframes §3.8 → TUI · list (table) + preview viewport + statusbar</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · assets · list + preview stub</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Assets</b> · 6 of 3,412 · filter: all <span class="bd">──────────────────────</span> <span class="mut">[f]ilter  [?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span>   <span class="mut">type  name            size    source post</span>                                  <span class="bd">│</span>
+<span class="bd">│</span> <span class="inv">▸ vid   video-web.mp4   214.8M  p_9f2  · #ml-papers   …-web rendition       </span> <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">vid</span>   big-buck.mkv    1.4G    p_b77  · <span class="acc">#movies</span>                             <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">img</span>   cover.jpg       812K    p_77aa · <span class="acc">#films</span>                              <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">aud</span>   track.flac      31.2M   p_c119 · <span class="acc">#music</span>                              <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">doc</span>   research.md     48K     p_9f2  · <span class="acc">#ml-papers</span>   <span class="mut">generated · indexed</span>    <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">doc</span>   book.pdf        9.6M    p_5d0  · <span class="acc">#ml-papers</span>                          <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> <span class="b2">preview · video-web.mp4</span> <span class="bd">───────────────────────────────────────────────── </span><span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">vid · 214.8M · sha256 9f2…e1</span> · linked post p_9f2 · streams via Asset Svc    <span class="bd">│</span>
+<span class="bd">│</span>  <span class="wrn">⚠ no inline preview here: terminal graphics are protocol-dependent</span>          <span class="bd">│</span>
+<span class="bd">│</span>    <span class="mut">(kitty / iTerm2 / sixel)</span> <span class="wrn">[OPEN: THREADY-DES-TUI-01]</span> <span class="mut">— enter streams</span>       <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">j/k move · enter open/stream · r re-download · f filter · esc back</span>           <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<ul class="notes">
+  <li>Composition: a <code>list</code> rendered as a table — columns <b>type</b> (<code>img/vid/aud/doc</code>), <b>name</b>, <b>size</b>, <b>source post</b> — + a <code>viewport</code> preview pane + statusbar.</li>
+  <li>The selected row uses the <b>inverse-accent</b> <code>Selected</code> style (<code>AccentOn</code> ink on <code>Accent</code> fill, lipgloss-theme §4) — the strongest highlight in the palette, reserved here for the active asset; other lists use the softer <code>--surface-warm</code> selection.</li>
+  <li>Data is consistent with the sibling screens: <code>video-web.mp4</code>/<code>research.md</code> are the p_9f2 generated assets (screen 3); <code>big-buck.mkv</code> is the §5 queue's #movies download; client links resolve <b>through the Asset Service</b>, never raw paths (§7.1).</li>
+  <li><b>Preview honesty</b>: inline terminal image/video rendering is <b>protocol-dependent</b> (kitty graphics / iTerm2 inline images / sixel) and not universally available, so the pane ships metadata + open/stream and the inline-rendering decision is tracked as <span class="gap">[OPEN: THREADY-DES-TUI-01]</span> — the mockup does not pretend a plain terminal shows pixels.</li>
+  <li><code>r</code> re-download is the web §3.8 broken-physical-link action on the verified <code>r</code> binding; <code>enter</code> opens/streams (Range/HLS via the Asset Service).</li>
+</ul>
+</section>
+
+<section id="skills">
+<h2>10 · Skills <span class="tag">wireframes §3.9 → TUI · list + detail viewport + statusbar</span></h2>
+<figure class="termwin">
+  <figcaption class="termbar"><i style="background:#ef4444"></i><i style="background:#eab308"></i><i style="background:#16a34a"></i><span>thready · skills / recipes · manager</span></figcaption>
+  <pre class="term"><span class="bd">┌─</span> <b class="acc">Skills / Recipes</b> · dispatch mapping <span class="bd">─────────────────</span> <span class="wrn">[GAP: 4.1]</span> <span class="mut">· [?]help</span> <span class="bd">─┐</span>
+<span class="bd">│</span>   <span class="mut">on    name               ver    scope      triggers</span>                        <span class="bd">│</span>
+<span class="bd">│</span> <span class="sel">▸ <span class="acc">[x]</span>   Research           v3     umbrella   <span class="acc">#Research · GitHub · IT</span>        </span> <span class="bd">│</span>
+<span class="bd">│</span>   <span class="acc">[x]</span>   Movies             v5     umbrella   <span class="acc">#Movie #ToDownload</span>              <span class="bd">│</span>
+<span class="bd">│</span>   <span class="acc">[x]</span>   Notes / Everything v1     fallback   <span class="mut">system default · locked</span>         <span class="bd">│</span>
+<span class="bd">│</span>   <span class="acc">[x]</span>   web-research       v1.0   composite  <span class="mut">multi-pass</span>                      <span class="bd">│</span>
+<span class="bd">│</span>   <span class="mut">[ ]</span>   ocr                v0.1   atomic     <span class="wrn">⚠ engine BUILD-NEW [GAP: 2.6]</span>   <span class="bd">│</span>
+<span class="bd">│</span> <span class="bd">──</span> <span class="b2">detail · Research</span> <span class="bd">─────────────────────────────────────────────────────── </span><span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">triggers</span>  <span class="acc">#Research</span> · GitHub link · IT content (classifier)                 <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">order</span>     research &gt; reply                                                  <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">steps</span>     web-research(multi-pass) → docs gen → skill-graph grow →          <span class="bd">│</span>
+<span class="bd">│</span>            semantic idx                                                      <span class="bd">│</span>
+<span class="bd">│</span>  <span class="mut">v3 · ✎ last edited by root · 2026-07-18</span>                                     <span class="bd">│</span>
+<span class="bd">│</span>                                                                              <span class="bd">│</span>
+<span class="bd">│</span> <span class="mut">j/k move · space toggle · enter detail · f filter · esc back</span>                 <span class="bd">│</span>
+<span class="bd">└──────────────────────────────────────────────────────────────────────────────┘</span>
+ Made with <span class="hrt">♥</span> by Helix Development</pre>
+</figure>
+<ul class="notes">
+  <li>Composition: <code>list</code> (skills) + <code>viewport</code> detail pane for the selection + statusbar. Columns: <b>enabled</b> (<code>[x]</code>/<code>[ ]</code>), <b>name</b>, <b>version</b>, <b>scope</b>.</li>
+  <li>Vocabulary is <b>identical to the web skills-manager</b>: scopes are the Skill-Graph tiers <b>atomic → composite → umbrella</b> (+ the <code>fallback</code> recipe), and the rows/detail reuse the same records — Research v3 (triggers <code>#Research</code> · GitHub link · IT content; order <code>research &gt; reply</code>; steps <code>web-research(multi-pass) → docs gen → skill-graph grow → semantic idx</code>), Movies v5, Notes/Everything v1.</li>
+  <li>The enabled toggle flips on <code>space</code> (the verified activate binding); <code>enter</code> opens the detail pane — this space/enter split is a Thready layering <b>[DEFAULT — adjustable]</b>.</li>
+  <li><b>Honesty</b>: enabling/disabling edits only the <b>dispatch mapping</b> — the execution engine is BUILD-NEW <span class="gap">[GAP: 4.1 helix_skills]</span> (HelixSkills supplies the knowledge DAG, not a runner), and <code>ocr</code> ships disabled because VisionEngine has no OCR engine yet <span class="gap">[GAP: 2.6]</span>.</li>
+  <li>The <code>fallback</code> recipe is <b>locked on</b>: an uncertain auto-type must always land somewhere for review — never silently dropped <b>[§Q32]</b>.</li>
+</ul>
+</section>
+
+<section id="palette">
+<h2>11 · ANSI palette — brand tokens → terminal roles <span class="tag">measured; see lipgloss-theme.md</span></h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Role (Lipgloss style)</th><th>Token</th><th>Light</th><th>Contrast</th><th>Dark</th><th>Contrast</th><th>xterm-256 L/D</th></tr></thead><tbody>
+<tr><td>Title / Accent / active nav</td><td><code>--accent</code></td><td><span class="sw" style="background:#446E12"></span><code>#446E12</code></td><td>6.03:1 on #FFF</td><td><span class="sw" style="background:#B6E376"></span><code>#B6E376</code></td><td>13.56:1 on #020817</td><td><code>58 / 150</code></td></tr>
+<tr><td>Foreground (body text)</td><td><code>--fg</code></td><td><span class="sw" style="background:#020817"></span><code>#020817</code></td><td>20.01:1</td><td><span class="sw" style="background:#F8FAFC"></span><code>#F8FAFC</code></td><td>19.12:1</td><td><code>232 / 231</code></td></tr>
+<tr><td>Muted / help / inactive nav</td><td><code>--muted</code></td><td><span class="sw" style="background:#475569"></span><code>#475569</code></td><td>7.58:1</td><td><span class="sw" style="background:#94A3B8"></span><code>#94A3B8</code></td><td>7.80:1</td><td><code>240 / 109</code></td></tr>
+<tr><td>Border (box-drawing glyphs)</td><td><code>--border-strong</code></td><td><span class="sw" style="background:#64748B"></span><code>#64748B</code></td><td>4.76:1</td><td><span class="sw" style="background:#64748B"></span><code>#64748B</code></td><td>4.20:1</td><td><code>66 / 66</code></td></tr>
+<tr><td>Danger / failed / retry</td><td><code>--danger</code></td><td><span class="sw" style="background:#DC2626"></span><code>#DC2626</code></td><td>4.83:1</td><td><span class="sw" style="background:#EF4444"></span><code>#EF4444</code></td><td>5.32:1</td><td><code>160 / 203</code></td></tr>
+<tr><td>Success / processed ✓</td><td><code>--success</code></td><td><span class="sw" style="background:#166534"></span><code>#166534</code></td><td>7.13:1</td><td><span class="sw" style="background:#16A34A"></span><code>#16A34A</code></td><td>6.07:1</td><td><code>23 / 35</code></td></tr>
+<tr><td>Warn / degraded / gaps</td><td><code>--warn</code></td><td><span class="sw" style="background:#854D0E"></span><code>#854D0E</code></td><td>6.85:1</td><td><span class="sw" style="background:#EAB308"></span><code>#EAB308</code></td><td>10.43:1</td><td><code>94 / 178</code></td></tr>
+<tr><td>Brand-2 (decorative ⬒ marks)</td><td><code>--brand-2</code></td><td><span class="sw" style="background:#ABDDC9"></span><code>#ABDDC9</code></td><td>decorative</td><td><span class="sw" style="background:#B7EBD6"></span><code>#B7EBD6</code></td><td>decorative</td><td><code>152 / 152</code></td></tr>
+<tr><td>Selection background</td><td><code>--surface-warm</code></td><td><span class="sw" style="background:#F1F5F9"></span><code>#F1F5F9</code></td><td>bg fill</td><td><span class="sw" style="background:#1E293B"></span><code>#1E293B</code></td><td>bg fill</td><td><code>255 / 236</code></td></tr>
+<tr><td>Button / cursor (inverse)</td><td><code>--accent</code> + <code>--accent-on</code></td><td><span class="sw" style="background:#446E12"></span><code>#446E12 / #FFF</code></td><td>6.03:1 ink</td><td><span class="sw" style="background:#B6E376"></span><code>#B6E376 / #0A0F04</code></td><td>13.15:1 ink</td><td><code>58 / 150</code></td></tr>
+</tbody></table></div>
+<ul class="notes">
+  <li>All hexes are the <b>verbatim</b> Thready theme tokens (design-system §3.1/§3.2); contrast ratios are measured (sRGB relative luminance) and corroborate the shipped THEMES.md values (6.03:1 / 13.56:1 / 13.15:1).</li>
+  <li>Box-drawing glyphs bind to <code>--border-strong</code>, not <code>--border</code>: a border <b>glyph</b> is a load-bearing boundary and <code>#1E293B</code> on the dark surface measures only <b>1.37:1</b> (fails the 3:1 non-text minimum); <code>#64748B</code> measures 4.20:1 / 4.76:1. Rationale + the full mapping in <a href="./lipgloss-theme.md" style="color:var(--accent)">lipgloss-theme.md</a>.</li>
+  <li>xterm-256 columns are the nearest cube/gray indices (Euclidean sRGB, computed) — the documented expectation for non-truecolor terminals; the runtime quantization is termenv's own <b>[ASSUMED ±1 index]</b>.</li>
+</ul>
+</section>
+
+<section id="keys">
+<h2>12 · Keybinding map <span class="tag">wireframes §5.1 — verified in-house model</span></h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Key(s)</th><th>Action</th><th>Provenance</th></tr></thead><tbody>
+<tr><td><code>ctrl+c</code>, <code>q</code></td><td>quit</td><td>verified — app.go</td></tr>
+<tr><td><code>1</code>–<code>4</code>, <code>F1</code>–<code>F4</code></td><td>jump to primary area</td><td>verified — app.go</td></tr>
+<tr><td><code>left/h</code>, <code>right/l</code></td><td>move between areas/tabs</td><td>verified — app.go</td></tr>
+<tr><td><code>tab</code></td><td>cycle focusable region</td><td>verified — app.go</td></tr>
+<tr><td><code>home</code>, <code>end</code></td><td>first / last</td><td>verified — app.go</td></tr>
+<tr><td><code>up/k</code>, <code>down/j</code></td><td>list navigation</td><td>verified — screens/dashboard.go</td></tr>
+<tr><td><code>enter</code>, <code>space</code></td><td>open / activate selection</td><td>verified — screens/dashboard.go</td></tr>
+<tr><td><code>f</code>, <code>/</code></td><td>filter / search</td><td>verified — screens/dashboard.go</td></tr>
+<tr><td><code>r</code>, <code>R</code></td><td>refresh / reprocess / retry</td><td>verified — both files</td></tr>
+<tr><td><code>esc</code></td><td>back / cancel</td><td>verified — screens/dashboard.go</td></tr>
+<tr><td><code>?</code></td><td>help overlay</td><td>verified — app.go</td></tr>
+<tr><td><code>c a k n p</code></td><td>Channels · Assets · Skills · new-channel · pause</td><td>Thready addition (non-colliding)</td></tr>
+</tbody></table></div>
+<ul class="notes">
+  <li>The first eleven rows are the <b>exact key model shipped</b> in <code>helix_track/llms_verifier/llm-verifier/tui</code> (grepped <code>case tea.KeyMsg</code> — wireframes §5.1); Thready's domain keys are layered on the same switch and chosen not to collide.</li>
+  <li>Every key is echoed in the on-screen help rail (Lipgloss <code>Help</code> style) so the TUI is discoverable without documentation.</li>
+</ul>
+</section>
+</main>
+
+<p class="foot">Made with <span class="hrt">♥</span> by Helix Development · Thready TUI screen mockups ·
+light+dark via <code>[data-theme="dark"]</code></p>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function press(val){document.querySelectorAll('[data-theme-btn]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(b.getAttribute('data-theme-btn')===val));});}
+  window.setTheme=function(t){if(t==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',t);}press(t);};
+  press('system');
+})();
+</script>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Desktop (Tauri 2) Screen Designs</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Desktop (Tauri 2) Screen Designs</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#position" id="toc-position">1. Position</a></li>
+<li><a href="#catalogue" id="toc-catalogue">2. Catalogue</a></li>
+<li><a href="#desktop-differences-catalogue"
+id="toc-desktop-differences-catalogue">3. Desktop-differences
+catalogue</a>
+<ul>
+<li><a href="#keyboard-shortcuts" id="toc-keyboard-shortcuts">3.1
+Keyboard shortcuts</a></li>
+<li><a href="#offline-cache" id="toc-offline-cache">3.2 Offline
+cache</a></li>
+<li><a href="#notifications" id="toc-notifications">3.3
+Notifications</a></li>
+<li><a href="#file-drop" id="toc-file-drop">3.4 File-drop</a></li>
+<li><a href="#tray-open-thready-des-08-default-adjustable"
+id="toc-tray-open-thready-des-08-default-adjustable">3.5 Tray
+<code>[OPEN: THREADY-DES-08]</code>
+<code>[DEFAULT — adjustable]</code></a></li>
+<li><a href="#native-menus-title-bar"
+id="toc-native-menus-title-bar">3.6 Native menus &amp; title
+bar</a></li>
+<li><a href="#theming" id="toc-theming">3.7 Theming</a></li>
+</ul></li>
+<li><a href="#open-items" id="toc-open-items">4. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Desktop Screen Designs (Tauri) & Differences Catalogue
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/desktop/README.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./desktop-shell.html, ../../wireframes.md, ../../design-system.md,
+                    ../../theming.md, ../../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>Initial: Tauri shell artifact + desktop-differences catalogue
+(shortcuts, offline cache, notifications, file-drop, tray, menus)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-position">1. Position</a></li>
+<li><a href="#2-catalogue">2. Catalogue</a></li>
+<li><a href="#3-desktop-differences-catalogue">3. Desktop-differences
+catalogue</a></li>
+<li><a href="#4-open-items">4. Open items</a></li>
+</ul>
+<h2 id="position">1. Position</h2>
+<p>The desktop client is <strong>Tauri 2 wrapping the Angular 19 product
+portal</strong> — “no separate token work; OS-specific chrome overrides
+only”
+<code>[VERIFIED — design-system.md §7 platform table; wireframes.md §1]</code>.
+There are therefore <strong>no separate desktop screen designs</strong>:
+every screen is the responsive web portal (<a
+href="../../wireframes.md#3-web-portal--screen-wireframes">wireframes.md
+§3</a>, realized in <code>screens/web/</code>). What <em>is</em>
+desktop-specific is the shell around it — title bar, menus, tray, native
+notifications, shortcuts-as-accelerators, offline behavior,
+drag-and-drop — and that is what this directory designs. Whether desktop
+needs <strong>anything</strong> beyond the wrapped web UI (tray, native
+notifications) is explicitly <code>[OPEN: THREADY-DES-08]</code>;
+everything in that scope below is a proposal
+(<code>[DEFAULT — adjustable]</code>), never presented as decided.</p>
+<h2 id="catalogue">2. Catalogue</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 24%" />
+<col style="width: 37%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Content</th>
+<th>Ground truth</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./desktop-shell.html">desktop-shell.html</a></td>
+<td>Self-contained artifact: Tauri window with per-OS custom title bar
+(macOS traffic lights + global menu bar / Windows caption buttons /
+Linux CSD), native menu map, wrapped app shell + Dashboard, tray popover
+mock, native notification mock, file-drop overlay; light+dark via
+<code>[data-theme="dark"]</code></td>
+<td>design-system §7, wireframes §3.1/§3.3/§1.2, theming §2</td>
+<td>shell grounded; tray/notifications
+<code>[OPEN: THREADY-DES-08]</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="desktop-differences-catalogue">3. Desktop-differences
+catalogue</h2>
+<p>Everything the desktop build adds/changes relative to the same web
+app running in a browser tab.</p>
+<h3 id="keyboard-shortcuts">3.1 Keyboard shortcuts</h3>
+<p>The web keyboard model is <strong>verified ground truth</strong>
+(wireframes §1.2) and works unchanged; desktop promotes it to native
+menu accelerators so shortcuts appear in menus and work when focus is in
+webview chrome:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 32%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Binding</th>
+<th>Action</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code> or <code>Ctrl/⌘+K</code></td>
+<td>focus global search</td>
+<td>wireframes §1.2 (verified web model)</td>
+</tr>
+<tr>
+<td><code>g</code> then <code>d/c/s/a/k</code></td>
+<td>go to Dashboard/Channels/Search/Assets/Skills</td>
+<td>wireframes §1.2</td>
+</tr>
+<tr>
+<td><code>Esc</code>, <code>?</code>, <code>[</code>/<code>]</code>,
+<code>Tab</code>, <code>Enter</code>/<code>Space</code></td>
+<td>overlays / help / nav collapse / focus / activate</td>
+<td>wireframes §1.2</td>
+</tr>
+<tr>
+<td><code>Ctrl/⌘+N</code></td>
+<td>New Channel (Add-Channel wizard)</td>
+<td><code>[DEFAULT — adjustable]</code> desktop accelerator</td>
+</tr>
+<tr>
+<td><code>Ctrl/⌘+W</code></td>
+<td>close window → hide to tray</td>
+<td><code>[DEFAULT — adjustable]</code>, tray under
+<code>[OPEN: THREADY-DES-08]</code></td>
+</tr>
+<tr>
+<td><code>Ctrl/⌘+ +/−/0</code></td>
+<td>zoom in/out/reset (webview zoom)</td>
+<td><code>[DEFAULT — adjustable]</code></td>
+</tr>
+<tr>
+<td>Global (system-wide) show/hide shortcut</td>
+<td>none by default</td>
+<td>deliberately omitted — not grounded</td>
+</tr>
+</tbody>
+</table>
+<p>Rule: desktop MUST NOT rebind any verified web binding; accelerators
+are additive.</p>
+<h3 id="offline-cache">3.2 Offline cache</h3>
+<p>The web app already specifies connectivity states for mobile (banner
+<em>live/reconnecting/offline</em>, cached snapshot reads “stale ·
+updated 3m ago”, queued optimistic mutations, WS→polling fallback —
+wireframes §6.2). Desktop adopts the <strong>same contract</strong>
+<code>[DEFAULT — adjustable]</code>:</p>
+<ul>
+<li>Last-snapshot cache for Dashboard/Channels/Search results renders
+when offline; footer shows
+<code>offline cache: fresh | stale (3m) | offline</code>.</li>
+<li>Mutations queue and flush on reconnect with the same
+conflict-resolution toast.</li>
+<li>The Tauri shell adds nothing beyond persistence of the webview cache
+— no separate sync engine is designed (or claimed).</li>
+</ul>
+<h3 id="notifications">3.3 Notifications</h3>
+<ul>
+<li>In-focus: the standard in-app toast (<code>thready-toast</code>) —
+identical to web.</li>
+<li>Hidden/unfocused: native OS notification on
+<code>processing.completed</code> / <code>processing.failed</code> (the
+verified Event Bus contract, ux-flows §3); click focuses the window on
+the Post detail. Never both at once. <strong>Scope is
+<code>[OPEN: THREADY-DES-08]</code></strong> — the wireframes explicitly
+leave “native tray/notifications for processing completion”
+undecided.</li>
+</ul>
+<h3 id="file-drop">3.4 File-drop</h3>
+<p>Two distinct cases, deliberately separated for honesty:</p>
+<ol type="1">
+<li><strong>Text/URL drop</strong> (grounded): a dropped string matching
+<code>t.me/…</code> or <code>max.ru/join/…</code> opens the
+<strong>Add-Channel wizard at step 3 with the link pre-filled</strong> —
+exactly the paste+Resolve step that already exists (wireframes §3.4).
+Non-matching text is rejected with the same <code>422</code> message the
+Resolve step uses.</li>
+<li><strong>Media-file drop</strong>
+(<code>[OPEN: THREADY-DES-16]</code>): there is <strong>no ground-truth
+ingest path for local files</strong> — posts and assets originate from
+messenger channels, and the Assets library has no upload flow in the
+wireframes. Until product decides whether local-file ingest exists at
+all, the drop overlay names the gap and does nothing else. Never fake an
+upload UI.</li>
+</ol>
+<h3 id="tray-open-thready-des-08-default-adjustable">3.5 Tray
+<code>[OPEN: THREADY-DES-08]</code>
+<code>[DEFAULT — adjustable]</code></h3>
+<p>Close hides to tray; background WS/SSE subscriptions continue; tray
+badge = active processing count (danger tint on failure); popover: live
+queue summary, Open, Pause polling, Quit. See the mock in <a
+href="./desktop-shell.html">desktop-shell.html</a>.</p>
+<h3 id="native-menus-title-bar">3.6 Native menus &amp; title bar</h3>
+<p>Per-OS chrome only (macOS global menu bar + traffic lights;
+Windows/Linux in-window menu row + caption buttons); the menu
+<strong>map</strong> mirrors the web IA and verified shortcuts (table in
+<a href="./desktop-shell.html">desktop-shell.html</a>); menu structure
+itself <code>[DEFAULT — adjustable]</code>. Window title carries the
+active Account (<code>Thready — Acme</code>).</p>
+<h3 id="theming">3.7 Theming</h3>
+<p>Identical to web: shared <code>ThemeService</code>
+(<code>thready-theme</code> storage, system default) + the per-Account
+white-label <code>:root[data-account=…]</code> injection (theming
+§2/§6). The View ▸ Appearance menu drives the same three-state toggle. A
+pre-paint head script avoids the wrong-theme flash on the webview
+(theming §2).</p>
+<h2 id="open-items">4. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-08]</code> — confirm desktop scope beyond
+the wrapped web UI: tray, native notifications, close-to-tray. All such
+designs above are proposals pending this decision.</li>
+<li><code>[OPEN: THREADY-DES-16]</code> — local media-file ingest
+(file-drop case 2): decide whether a local upload path into the Asset
+Service exists at all; no UI is designed until it does.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

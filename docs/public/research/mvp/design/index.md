@@ -3,11 +3,16 @@
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/index.md
   Status          : Draft — v0.1
-  Revision        : 1 (2026-07-21)
+  Revision        : 6 (2026-07-22)
   Author          : Helix Thready documentation swarm (design)
   Related         : ./design-system.md, ./brand-assets.md, ./theming.md,
                     ./wireframes.md, ./ux-flows.md, ./component-library.md,
-                    ./prototypes.md, ../CONVENTIONS.md, ../index.md
+                    ./prototypes.md, ./figma/README.md, ./library/README.md,
+                    ./motion/README.md, ./opendesign/DESIGN.md, ./screens/web/README.md,
+                    ./screens/mobile/README.md, ./screens/desktop/README.md,
+                    ./screens/tui/README.md, ./screens/marketing/README.md,
+                    ./assets/icon-export-matrix.md, ./exports/README.md,
+                    ../CONVENTIONS.md, ../index.md
 -->
 
 # Helix Thready — Design & UX Area (Index)
@@ -18,18 +23,27 @@
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: fixed cross-link anchors (numbered to match target ToCs), noted `account_branding` reconciliation with canonical `accounts.branding` JSONB, tracked `challenges` scenario bank + delegated-branding open items |
 | 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass to implementation-ready: re-verified all `design_system` token/component/adapter names at source (`gh vasic-digital/design_system`); deepened wireframes (per-screen validation/state tables, CLI flags/exit-codes, **verified** TUI keymap + Lipgloss bindings from `helix_track/llms_verifier/.../tui`, per-platform mobile map); expanded UX flows (+messenger sign-in, +reprocess diagrams); completed component per-platform variant matrix + 6 more contracts + state-lifecycle diagram; finalized brand-assets geometry + concrete platform manifests + slogan-placement matrix; added shipped-theme precedents. 4 new diagrams. |
 | 4 | 2026-07-22 | swarm (design · critic pass) | Completeness/consistency pass: made the index the **canonical registry** — completed the [Open items](#open-items) list (was 4 of 14; now all `THREADY-DES-01…-14`) and added the [Workable-items registry](#workable-items-registry) (was scattered across files; now consolidated with owning gap + file). Brought `prototypes.md` to area depth (Pass 3): corrected the **unverified "first-party Figma plugin"** claim to an assumption + source-confirmed Figma-Variables fallback; added the interactive-prototype traceability matrix + prototype runtime-evidence gate. |
+| 5 | 2026-07-22 | swarm (design · figma) | Added the **[figma/](./figma/README.md)** import kit to the catalogue: the canonical token set as Figma Variables JSON (`Thready / Color` Light+Dark incl. `ds-heart` alias + `Thready / Structure`), the 8-page `figma-file-plan.md` blueprint of the "Thready — Design Library" file, and the two materialization paths (Figma MCP `use_figma` Plugin API with OAuth vs manual `components-sheet.svg` + variables import). No Figma file exists yet — its creation is tracked as `[OPEN: THREADY-DES-FIG-01]` in the kit. |
+| 6 | 2026-07-22 | swarm (design · package critic) | Wired the **rendered/executable design package** into this registry: the [`opendesign/`](./opendesign/DESIGN.md) OpenDesign brand contract + `tokens.css`, the [`screens/`](./screens/web/README.md) rendered HTML surfaces (web incl. interactive [`index.html`](./screens/web/index.html), mobile, desktop, TUI, marketing), the [`library/`](./library/README.md) living component page, the [`motion/`](./motion/README.md) Lottie set, and the [`exports/`](./exports/README.md) PNG/PDF/PenPot/Figma-IR bundle — see the new [Rendered design package](#rendered-design-package-on-disk) section. Package sign-off recorded in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md). |
+| 6 | 2026-07-22 | swarm (design · index) | Consolidation after the multi-agent design expansion: **subdirectory catalogue completed** — [Files in this area](#files-in-this-area) now lists every subdirectory (`library/`, `motion/`, `opendesign/`, `screens/{web,mobile,desktop,tui,marketing}/`, `assets/`, `diagrams/`, `exports/`) alongside the 7 area docs and the `figma/` kit — and the **canonical open-items registry rebuilt**: re-verified against the tree by grep (`OPEN: THREADY-…`) and expanded from `THREADY-DES-01…-14` to all **41 registered IDs** across nine families (`-15…-17`, `-LIB-01…04`, `-SCR-01…04`, `-SCR-MOB-01…03`, `-TUI-01/02`, `-MKT-01/02`, `-OD-01…03`, `-FIG-01…03`, `THREADY-MOT-01…03`). `THREADY-DES-OD-03` (link `opendesign/` from this index) is **closed by this very change**; `THREADY-MOT-03` recorded in its narrowed (2026-07-22) state per [motion.md §8](./motion/motion.md#8-gaps--open-items). |
 
 This is the canonical entry point for the **Design & UX** documentation of Helix Thready. It
 specifies the design system (derived from **OpenDesign** and the shared in‑house
 `vasic-digital/design_system`), the **Thready** brand theme derived from `assets/Logo.png`, the
 launcher‑icon and slogan brand assets, per‑account theming / white‑labeling, wireframes for every
 client surface, the key UX journeys, the reusable component library, and the interactive /
-non‑interactive prototype plans. All authors follow **[../CONVENTIONS.md](../CONVENTIONS.md)**.
+non‑interactive prototype plans. Beyond the specification documents, the area now also carries its
+**concrete artifacts** — the living design library, the screen‑design sets for every surface
+(web, mobile, desktop, TUI, marketing), the motion package, the OpenDesign brand contract, the
+Figma import kit, the icon‑export masters + tooling, and the rendered export package — all
+catalogued in [Files in this area](#files-in-this-area). All authors follow
+**[../CONVENTIONS.md](../CONVENTIONS.md)**.
 
 ## Table of contents
 
 - [Scope](#scope)
 - [Files in this area](#files-in-this-area)
+- [Rendered design package (on disk)](#rendered-design-package-on-disk)
 - [Upstream / Downstream dependencies](#upstream--downstream-dependencies)
 - [Area dependency map](#area-dependency-map)
 - [Sources of truth](#sources-of-truth)
@@ -73,6 +87,41 @@ specified to design depth with their scaffold gaps tracked.
 | [ux-flows.md](./ux-flows.md) | The four key journeys as flow/sequence diagrams with states, errors, and event hooks |
 | [component-library.md](./component-library.md) | The `.ds-*` component catalogue, per‑platform adapters, props/anatomy/states, and the build‑order backlog |
 | [prototypes.md](./prototypes.md) | Figma authoring plan, interactive vs. non‑interactive prototypes, transition/motion spec, and the export pipeline (Figma/PenPot/PDF/PNG/SVG/Lottie) |
+| [figma/](./figma/README.md) | **Figma import kit**: `figma-variables.json` (the full token set as Figma Variables — `Thready / Color` Light+Dark + `Thready / Structure`), `figma-file-plan.md` (8‑page blueprint of the "Thready — Design Library" file, executable via the Figma MCP `use_figma` Plugin API or manual import); the actual Figma file is `[OPEN: THREADY-DES-FIG-01]` |
+| [library/](./library/README.md) | **Design library artifacts**: `components.html` (the living component library — 14 groups, ~38 components, ≈118 state cells, each auditable in light + dark), `components-sheet.svg` (importable one‑sheet overview), `platform-map.md` (36 components × 8 platforms reusability matrix with per‑cell VERIFIED / PROPOSED / ASSUMED markers) |
+| [motion/](./motion/README.md) | **Motion package (Lottie catalogue)**: six hand‑authored vector Lottie animations + five static reduced‑motion fallback SVGs, `motion.md` (motion spec + honest validation record), `motion-manifest.json` (runtime manifest v2 with per‑animation `reducedMotionFallback`), self‑contained `preview.html` (vendored lottie‑web, zero network) |
+| [opendesign/](./opendesign/DESIGN.md) | **OpenDesign brand contract**: `DESIGN.md` (the Thready contract in the verified 9‑section OpenDesign schema, Lens A/B compliant), `tokens.css` (its machine‑readable twin — compiled CSS custom properties, light + dark, per the OpenDesign token schema), `TOOLING.md` (honest tooling capability check: daemon/CLI probes, headless‑vs‑operator matrix, exact Figma import flow) |
+| [screens/web/](./screens/web/README.md) | **Web portal screen designs**: 13 self‑contained OpenDesign‑style HTML screens + the interactive prototype shell (`index.html`) walking the four ux‑flows journeys; per‑screen state contracts, light + dark, realistic Thready data |
+| [screens/mobile/](./screens/mobile/README.md) | **Mobile screen designs**: 11 device‑framed 390×844 artifacts (Android/iOS chrome toggle, HarmonyOS/Aurora port notes) covering every node of the wireframes §6 IA, plus the derived notifications centre (`[OPEN: THREADY-DES-15]`) |
+| [screens/desktop/](./screens/desktop/README.md) | **Desktop (Tauri 2) shell design**: `desktop-shell.html` (per‑OS title bar, menus, tray/notification/file‑drop mocks) + the desktop‑differences catalogue; scope beyond the wrapped web UI stays `[OPEN: THREADY-DES-08]` |
+| [screens/tui/](./screens/tui/README.md) | **TUI screen designs**: `tui-screens.html` (ten 80‑column Bubble Tea/Lipgloss terminal mockups covering the full wireframes §5 state machine, Login through Skills) + `lipgloss-theme.md` (normative token → `lipgloss.Color` mapping, truecolor → ANSI‑256 → ANSI‑16) |
+| [screens/marketing/](./screens/marketing/README.md) | **Marketing site (Angular 22) designs**: 3 pages (`landing` / `features` / `download`) built to the web‑set construction pattern, with a full claims‑traceability register; minimal‑viable scope recorded honestly (`[OPEN: THREADY-DES-MKT-01/-02]`) |
+| [assets/](./assets/icon-export-matrix.md) | **Brand asset masters + export tooling**: the 7 SVG masters (`launcher-icon` + `-light`/`-dark`/`-mono`, `logo-mark`, `logo-full`, `footer-slogan`), `icon-export-matrix.md` (exact per‑platform pixel/format matrix, all OS surfaces) and `generate-raster.sh` (its 1:1 implementation — verified live run, 83 real rasters) |
+| [diagrams/](./diagrams/) | Mermaid sources (`.mmd`) + rendered SVGs for the area's diagrams — 17 source/render pairs (area map, token fan‑out, journey flows, IA/navigation, export pipelines, component lifecycle) per `[CONVENTIONS §4]` |
+| [exports/](./exports/README.md) | **Design export package** (capstone): screen PNG renders light + dark at 2× (49 on disk), the 54‑page `design-book.pdf`, and the PenPot + Figma hand‑off bundles (editable vectors, screen rasters, genuine `.od-figma.json` IR captures, `IMPORT.md` guides), built by `scripts/` (`render-cdp.mjs` / `build-book.mjs` / `capture-figma.mjs`). Rendered before the marketing / +4‑mobile / TUI‑expansion wave — regeneration is a downstream Docs Chain pass |
+
+## Rendered design package (on disk)
+
+Beyond the specification `.md` documents above, the area ships a **rendered, executable design
+package** — the concrete deliverables the operator mandates require. The full audit and sign‑off is
+in **[DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md)**; this table is the at‑a‑glance manifest
+(counts **VERIFIED** on disk 2026‑07‑22).
+
+| Deliverable | Where | Count / form (VERIFIED) |
+|-------------|-------|--------------------------|
+| OpenDesign brand contract | [`opendesign/`](./opendesign/DESIGN.md) | `DESIGN.md` (9‑section contract) + `tokens.css` (light + dark) + `TOOLING.md` |
+| Rendered screens | [`screens/`](./screens/web/README.md) | 30 self‑contained HTML — web 13 + interactive `index.html`, mobile 11, desktop 1, TUI 1, marketing 3 |
+| Interactive prototype | [`screens/web/index.html`](./screens/web/index.html) | Journey‑walking shell embedding the live screens (0 broken sibling links) |
+| Living component library | [`library/`](./library/README.md) | `components.html` (all states × light/dark) + `components-sheet.svg` + `platform-map.md` (×8 platforms) |
+| Motion (Lottie) | [`motion/`](./motion/README.md) | 6 Lottie `.json` (all parse, bodymovin v5.7.4) + 5 static fallbacks + `preview.html` (vendored, zero‑network) |
+| Brand assets + tooling | [`assets/`](./assets/icon-export-matrix.md) | 7 SVG masters (launcher icon: **0 letters**, helix element; footer slogan) + export matrix + `generate-raster.sh` |
+| Diagrams | [`diagrams/`](./diagrams/) | 17 `.mmd` + rendered `.svg` pairs |
+| Export bundle | [`exports/`](./exports/README.md) | 49 PNG (light+dark, 2×) · `design-book.pdf` (54 pp) · PenPot (16 SVG + 22 PNG) · Figma **28** genuine `.od-figma.json` IR (11 291 nodes) |
+
+**Non‑interactive prototype** = the PNG render set + the PDF design book + the PenPot/Figma
+hand‑off bundles under `exports/`. **Cloud hand‑off is operator‑only** (no Figma/PenPot token in
+this environment; the OD Figma‑import plugin pins `networkAccess:none`) — see the report's
+operator‑action list.
 
 ## Upstream / Downstream dependencies
 
@@ -203,8 +252,15 @@ priority `[OPERATOR]`. IDs are stable and referenced verbatim by the owning file
 
 ## Open items
 
-The full, canonical open‑item list for this area (`THREADY-DES-01…-14`). Each is tracked in its owning
-file; this table is the single place to see them all and their state.
+The full, canonical open‑item registry for this area — **41 registered IDs** across nine families:
+the core `THREADY-DES-01…-17` plus the per‑directory families minted by the artifact waves
+(`-LIB`, `-SCR`, `-SCR-MOB`, `-TUI`, `-MKT`, `-OD`, `-FIG`, and `THREADY-MOT`). Each is tracked in
+its owning file; this registry is the single place to see them all and their state. Verified
+against the tree on 2026‑07‑22 by grepping `OPEN: THREADY-…` over `design/`: every ID below exists
+at its owning file, and no ID exists in the tree that is absent below. **State summary: 39 open
+(one narrowed), 2 closed (`THREADY-DES-01`, `THREADY-DES-OD-03`).**
+
+### Core area items (`THREADY-DES-01…-17`)
 
 | ID | State | Summary | Owning file(s) |
 |----|-------|---------|----------------|
@@ -222,6 +278,73 @@ file; this table is the single place to see them all and their state.
 | **THREADY-DES-12** | `OPEN` | Decide which composites are generic enough to contribute upstream to `design_system` vs. keep in Thready | [component-library §11](./component-library.md#11-open-items) |
 | **THREADY-DES-13** | `OPEN` | Decide PenPot's role: mirror of Figma (portability only) vs. a co‑equal editing surface | [prototypes §11](./prototypes.md#11-gaps--open-items) |
 | **THREADY-DES-14** | `OPEN` | Branding model reconciliation (storage **and** contract) with the canonical database + API areas | [theming §5/§7/§11](./theming.md#11-gaps--open-items), below |
+| **THREADY-DES-15** | `OPEN` | Mobile **notifications centre**: confirm whether mobile ships a dedicated notifications surface (+ push delivery preferences) — the wireframes §6 IA has none; `notifications.html` is a derived proposal over the verified event contract | [screens/mobile/README §4](./screens/mobile/README.md#4-open-items) |
+| **THREADY-DES-16** | `OPEN` | **Local media‑file ingest** (desktop file‑drop case 2): decide whether a local upload path into the Asset Service exists at all; no upload UI is designed until it does | [screens/desktop/README §3.4/§4](./screens/desktop/README.md#4-open-items) |
+| **THREADY-DES-17** | `OPEN` | **ANSI degradation decisions** for the TUI palette: pinned `CompleteColor` vs automatic, border‑glyph color, optional light‑terminal adaptive palette | [screens/tui/README §4](./screens/tui/README.md#4-open-items), [lipgloss-theme §8](./screens/tui/lipgloss-theme.md#8-open-items) |
+
+### Design library (`THREADY-DES-LIB-*`) — [library/](./library/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-LIB-01** | `OPEN` | Re‑audit the React column component‑by‑component (`[GAP: 8.6]`): confirm each verified file implements the library's states before any React surface consumes it | [platform-map §6](./library/platform-map.md#6-open-items) |
+| **THREADY-DES-LIB-02** | `OPEN` | iOS host decision: KMP/Compose (current plan, SwiftUI column moot) vs. a `[BUILD-NEW]` SwiftUI package — none exists or is named in the decision matrix | [platform-map §6](./library/platform-map.md#6-open-items) |
+| **THREADY-DES-LIB-03** | `OPEN` | `helix_shims` ArkTS/Qt interface not inspected (`[GAP: 8.5]`); the HarmonyOS/Aurora cells need re‑verification once the shim contracts exist | [platform-map §6](./library/platform-map.md#6-open-items) |
+| **THREADY-DES-LIB-04** | `OPEN` | Token‑bridge codegen (CSS → Lipgloss / `ThreadyColors` / Flutter theme) does not exist yet; build tracked as THREADY‑DES‑KMP‑01 / ‑FLUT‑01 / ‑TUI‑01 | [platform-map §6](./library/platform-map.md#6-open-items), [component-library §10](./component-library.md#10-build-backlog--gaps) |
+
+### Web screens (`THREADY-DES-SCR-*`) — [screens/web/](./screens/web/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-SCR-01** | `OPEN` | **Billing pricing**: plan tiers beyond "Pro", unit prices, included quotas and grace‑period policy are undefined; `billing.html` ships the layout contract with placeholder amounts | [screens/web/README §6](./screens/web/README.md#6-open-items) |
+| **THREADY-DES-SCR-02** | `OPEN` | **Research doc versioning**: diff/history between successive research generations after a reprocess is unspecified; the viewer shows latest + a "stale" state only | [screens/web/README §6](./screens/web/README.md#6-open-items) |
+| **THREADY-DES-SCR-03** | `OPEN` | **Events retention**: history depth / queryable window for the events monitor beyond the live tail is unspecified | [screens/web/README §6](./screens/web/README.md#6-open-items) |
+| **THREADY-DES-SCR-04** | `OPEN` | **Forgot‑password flow**: referenced by wireframes §3.2 but never specified; `login.html` links it with an inline note, no fake flow is designed | [screens/web/README §6](./screens/web/README.md#6-open-items) |
+
+### Mobile screens (`THREADY-DES-SCR-MOB-*`) — [screens/mobile/](./screens/mobile/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-SCR-MOB-01** | `OPEN` | Unread **"N new" pills** on Channels rows are a `[DEFAULT — adjustable]` proposal (derived from `post.received`); confirm whether mobile shows unread counts at all, and the reset rule | [screens/mobile/README §4](./screens/mobile/README.md#4-open-items) |
+| **THREADY-DES-SCR-MOB-02** | `OPEN` | Media viewer **Share / Save‑to‑device**: no ground‑truth export path exists (§3.8 "re‑download" is server‑side); both actions specified disabled until product resolves it — coupled to `THREADY-DES-16` | [screens/mobile/README §4](./screens/mobile/README.md#4-open-items) |
+| **THREADY-DES-SCR-MOB-03** | `OPEN` | **WhatsApp as a third Add‑Channel source**: requested but absent from the verified source set (Telegram/Max); rendered as a disabled tile until the decision matrix adds an adapter | [screens/mobile/README §4](./screens/mobile/README.md#4-open-items) |
+
+### TUI screens (`THREADY-DES-TUI-*`) — [screens/tui/](./screens/tui/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-TUI-01** | `OPEN` | **Inline asset preview** (screen 9): terminal image rendering is protocol‑dependent (kitty / iTerm2 / sixel); decide pixels‑where‑possible vs. metadata + open/stream everywhere — mockup ships the honest metadata‑only stub | [screens/tui/README §4](./screens/tui/README.md#4-open-items) |
+| **THREADY-DES-TUI-02** | `OPEN` | **TUI sign‑in method** (screen 6): ground truth pins the scoped‑token path (`THREADY_TOKEN`/keychain); confirm whether the proposed interactive device‑code frame ships or the TUI stays token‑only | [screens/tui/README §4](./screens/tui/README.md#4-open-items) |
+
+### Marketing site (`THREADY-DES-MKT-*`) — [screens/marketing/](./screens/marketing/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-MKT-01** | `OPEN` | **Final marketing IA / copy sign‑off**: page set, information architecture and every headline/body string are `[DEFAULT — adjustable]`; explicitly includes whether any self‑host claim is ever made | [screens/marketing/README §7](./screens/marketing/README.md#7-open-items) |
+| **THREADY-DES-MKT-02** | `OPEN` | **SEO / analytics / legal pages scope**: meta/OG/sitemap/robots for the SSG site, analytics (or its deliberate absence), privacy/terms/imprint, store‑listing legal footprint | [screens/marketing/README §7](./screens/marketing/README.md#7-open-items) |
+
+### OpenDesign contract (`THREADY-DES-OD-*`) — [opendesign/](./opendesign/DESIGN.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-OD-01** | `OPEN` | On vendoring into `open-design/design-systems/thready/`: register the C‑extension tokens (`--brand`, `--brand-2`, `--brand-ink`, `--border-strong`, `--ds-heart`, `--theme-id`) in `BRAND_EXTENSIONS["thready"]` + author the v1 `manifest.json` | [TOOLING §7](./opendesign/TOOLING.md#7-open-items) |
+| **THREADY-DES-OD-02** | `OPEN` | Dark‑mode blocks in `tokens.css` exceed the single‑mode bundled precedent; confirm the 0.14.1 guard accepts the extra selectors, or split light/dark via the derive pipeline | [TOOLING §7](./opendesign/TOOLING.md#7-open-items) |
+| **THREADY-DES-OD-03** | `CLOSED` | Link `opendesign/` from this index — **closed by this revision (rev 6)**: `opendesign/` (`DESIGN.md` · `tokens.css` · `TOOLING.md`) now appears in [Files in this area](#files-in-this-area) | [TOOLING §7](./opendesign/TOOLING.md#7-open-items) |
+
+### Figma kit (`THREADY-DES-FIG-*`) — [figma/](./figma/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-FIG-01** | `OPEN` | **Create the actual "Thready — Design Library" Figma file** by executing the kit (path A: MCP `use_figma` Plugin API, or path B: manual import); until then no Figma artifact exists | [figma/README](./figma/README.md#open-items) |
+| **THREADY-DES-FIG-02** | `OPEN` | Variables import mechanism: Enterprise REST bulk endpoint vs. Plugin‑API replay vs. import plugin | [figma/README](./figma/README.md#open-items) |
+| **THREADY-DES-FIG-03** | `OPEN` | `mobile/channels-list` frame lacked a mid‑fi HTML source when the kit was authored (a `screens/mobile/channels.html` artifact has since landed in mobile Rev 2 — closure pending the kit's re‑verification) | [figma/README](./figma/README.md#open-items) |
+
+### Motion package (`THREADY-MOT-*`) — [motion/](./motion/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-MOT-01** | `OPEN` | Verify all six Lottie files in `lottie-compose` and `lottie-ios` before mobile ships them (only `lottie-web`/jsdom + headless Chromium are verified) | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
+| **THREADY-MOT-02** | `OPEN` | Light‑theme strategy: load‑time color remap vs. shipping generated `-light` variants; wire the white‑label remap into the branding‑editor preview | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
+| **THREADY-MOT-03** | `OPEN` *(narrowed 2026‑07‑22)* | Asset half **closed** — the five static `reducedMotionFallback` SVGs are delivered, keyframe‑derived, manifest v2‑named. Remaining, narrowed: (a) independent design review / pixel A‑B of the statics against the frozen Lottie frames on a physical display; (b) the `empty-channels.svg` fallback — blocked on the `THREADY-DES-02` illustration‑grade set, delivered with it | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
 
 Detail on the two highest‑impact opens:
 

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Thready</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Thready</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#visual-theme-atmosphere"
+id="toc-visual-theme-atmosphere">1. Visual Theme &amp; Atmosphere</a>
+<ul>
+<li><a href="#brand-identity-logo-assets"
+id="toc-brand-identity-logo-assets">Brand identity — logo
+assets</a></li>
+<li><a href="#voice-tone" id="toc-voice-tone">Voice &amp; tone</a></li>
+</ul></li>
+<li><a href="#color-palette-roles" id="toc-color-palette-roles">2. Color
+Palette &amp; Roles</a>
+<ul>
+<li><a href="#brand-decorative-only-never-body-text"
+id="toc-brand-decorative-only-never-body-text">Brand (decorative only —
+never body text)</a></li>
+<li><a href="#accent-interactive-text-safe-aa-pinned"
+id="toc-accent-interactive-text-safe-aa-pinned">Accent (interactive /
+text-safe — AA-pinned)</a></li>
+<li><a
+href="#surfaces-neutrals-brand-neutral-slate-shared-with-all-helix-themes"
+id="toc-surfaces-neutrals-brand-neutral-slate-shared-with-all-helix-themes">Surfaces
+&amp; neutrals (brand-neutral slate, shared with all Helix
+themes)</a></li>
+<li><a
+href="#semantic-state-never-decoration-never-overridden-by-a-brand"
+id="toc-semantic-state-never-decoration-never-overridden-by-a-brand">Semantic
+(state, never decoration — never overridden by a brand)</a></li>
+<li><a href="#heart-glyph" id="toc-heart-glyph">Heart glyph</a></li>
+<li><a href="#white-label-override-points"
+id="toc-white-label-override-points">White-label override
+points</a></li>
+<li><a href="#color-token-blocks-light-default-dark-override"
+id="toc-color-token-blocks-light-default-dark-override">Color token
+blocks (light default + dark override)</a></li>
+</ul></li>
+<li><a href="#typography-rules" id="toc-typography-rules">3. Typography
+Rules</a></li>
+<li><a href="#component-stylings" id="toc-component-stylings">4.
+Component Stylings</a>
+<ul>
+<li><a href="#reference-css-shipped-button-contract-verbatim"
+id="toc-reference-css-shipped-button-contract-verbatim">Reference CSS
+(shipped button contract, verbatim)</a></li>
+<li><a href="#forms-validation-hints-mandated"
+id="toc-forms-validation-hints-mandated">Forms: validation + hints
+(mandated)</a></li>
+</ul></li>
+<li><a href="#layout-principles" id="toc-layout-principles">5. Layout
+Principles</a></li>
+<li><a href="#depth-elevation" id="toc-depth-elevation">6. Depth &amp;
+Elevation</a>
+<ul>
+<li><a href="#motion" id="toc-motion">Motion</a></li>
+</ul></li>
+<li><a href="#dos-and-donts" id="toc-dos-and-donts">7. Do’s and
+Don’ts</a>
+<ul>
+<li><a href="#do" id="toc-do">Do</a></li>
+<li><a href="#dont" id="toc-dont">Don’t</a></li>
+</ul></li>
+<li><a href="#responsive-behavior" id="toc-responsive-behavior">8.
+Responsive Behavior</a>
+<ul>
+<li><a href="#per-platform-notes"
+id="toc-per-platform-notes">Per-platform notes</a></li>
+</ul></li>
+<li><a href="#agent-prompt-guide" id="toc-agent-prompt-guide">9. Agent
+Prompt Guide</a>
+<ul>
+<li><a href="#quick-color-reference"
+id="toc-quick-color-reference">Quick color reference</a></li>
+<li><a href="#example-component-prompts"
+id="toc-example-component-prompts">Example component prompts</a></li>
+<li><a href="#iteration-guide" id="toc-iteration-guide">Iteration
+guide</a></li>
+</ul></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — OpenDesign Brand Contract (DESIGN.md)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/opendesign/DESIGN.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · opendesign)
+  Related         : ./tokens.css, ./TOOLING.md, ../design-system.md, ../theming.md,
+                    ../brand-assets.md, ../../CONVENTIONS.md
+  Format          : OpenDesign 9-section DESIGN.md schema
+                    [VERIFIED — open-design/docs/spec.md §2 bet #4 ("DESIGN.md files following
+                    the awesome-claude-design 9-section schema") + design-systems/README.md
+                    ("normalized 9-section DESIGN.md files"; legacy file shape: H1 title, then
+                    a "> Category:" blockquote) + design-systems/default/DESIGN.md +
+                    design-systems/claude/DESIGN.md (numbered-section exemplar)]
+  Note            : The "> Category:" blockquote sits IMMEDIATELY after the H1 because the
+                    OpenDesign picker parses "the line immediately after the H1"
+                    [VERIFIED — design-systems/README.md "Legacy File Shape"]. The
+                    CONVENTIONS.md revision table therefore follows the blockquote, not the
+                    H1 directly — a deliberate, documented ordering to satisfy both contracts.
+-->
+<blockquote>
+<p>Category: Helix Development Threads-reading companion by Helix
+Development. Chartreuse-to-mint spiral brand on an AA-tuned slate; Space
+Grotesk display, Hanken Grotesk body; light + dark first-class.</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · opendesign)</td>
+<td>Initial brand contract in the verified OpenDesign 9-section
+<code>DESIGN.md</code> schema; every value derived from
+<code>../design-system.md</code> / <code>../theming.md</code> /
+<code>../brand-assets.md</code> — nothing invented</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · opendesign · verify)</td>
+<td>Lens A/B compliance per the contributor authoring guide
+<code>[VERIFIED — open-design/docs/design-systems.md]</code>: added the
+<strong>Font labels for catalog extraction</strong> block (§3 — daemon
+parser regexes), an in-file <code>:root {}</code> +
+<code>[data-theme="dark"]</code> token block (§2), and real component
+CSS with a targeted <code>prefers-reduced-motion</code> gate (§4).
+Values unchanged</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Machine-readable twin:</strong> <a
+href="./tokens.css"><code>tokens.css</code></a> — the compiled CSS
+custom properties for this contract, following the OpenDesign token
+schema
+(<code>packages/contracts/src/design-systems/token-schema.ts</code>)
+with light + dark blocks. <strong>Tooling status:</strong> <a
+href="./TOOLING.md"><code>TOOLING.md</code></a>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-visual-theme--atmosphere">1. Visual Theme &amp;
+Atmosphere</a></li>
+<li><a href="#2-color-palette--roles">2. Color Palette &amp;
+Roles</a></li>
+<li><a href="#3-typography-rules">3. Typography Rules</a></li>
+<li><a href="#4-component-stylings">4. Component Stylings</a></li>
+<li><a href="#5-layout-principles">5. Layout Principles</a></li>
+<li><a href="#6-depth--elevation">6. Depth &amp; Elevation</a></li>
+<li><a href="#7-dos-and-donts">7. Do’s and Don’ts</a></li>
+<li><a href="#8-responsive-behavior">8. Responsive Behavior</a></li>
+<li><a href="#9-agent-prompt-guide">9. Agent Prompt Guide</a></li>
+</ul>
+<h2 id="visual-theme-atmosphere">1. Visual Theme &amp; Atmosphere</h2>
+<p>Thready is a <strong>threads-reading companion</strong>: calm,
+content-first, quietly organic. The brand mark is a <strong>spiral — a
+thread unspooling into a helix coil</strong> — read simultaneously as
+the Helix Development helix, a thread of posts, and an adaptive organic
+shell <code>[VERIFIED — ../brand-assets.md §2]</code>. The palette flows
+the same way the mark does: a chartreuse/lime green
+(<code>#B6E376</code>) sweeping into a soft mint/teal
+(<code>#ABDDC9</code>), both eyedrop-captured from <code>Logo.png</code>
+pixel evidence, never guessed
+<code>[VERIFIED — ../design-system.md §3.2]</code>.</p>
+<p>The surfaces stay out of the way: brand-neutral
+<strong>slate</strong> neutrals (white / <code>#020817</code> night,
+<code>#475569</code> / <code>#94A3B8</code> muted) carried from the
+AA-verified <code>helix-green</code> theme of the shared
+<code>vasic-digital/design_system</code> — Thready is a <strong>brand
+theme layered on that shared system, never a fork</strong>
+<code>[VERIFIED — ../design-system.md §1]</code>. Light and dark are
+<strong>both first-class</strong>, with an explicit choice and a system
+default <code>[OPERATOR]</code>. One design system covers
+<strong>every</strong> surface — web, desktop, mobile, and the TUI
+<code>[OPERATOR — ../design-system.md §1]</code>.</p>
+<p><strong>Key characteristics:</strong></p>
+<ul>
+<li>Spiral/thread brand mark, <strong>letter-free by
+construction</strong> (the OS prints the app title)
+<code>[OPERATOR — ../brand-assets.md §1]</code></li>
+<li>Chartreuse→mint brand gradient, <strong>decorative only</strong> —
+text always uses the AA-pinned accent</li>
+<li>Slate neutrals shared with every Helix brand theme; brand color
+isolated so a white-label re-tints without touching structure
+<code>[VERIFIED — ../design-system.md §3]</code></li>
+<li>Space Grotesk display / Hanken Grotesk body / JetBrains Mono code —
+all variable, self-hosted</li>
+<li>Light + dark palettes ship together; the user’s mode choice selects
+which renders</li>
+<li>The locked footer: <em>“Made with ♥ by Helix Development”</em> —
+never removed, even white-labeled
+<code>[OPERATOR — ../theming.md §3]</code></li>
+</ul>
+<h3 id="brand-identity-logo-assets">Brand identity — logo assets</h3>
+<p>All masters live beside this contract (relative refs from this
+folder) <code>[VERIFIED — files inspected]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 33%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th>Asset</th>
+<th>File</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Launcher icon (master, neutral)</td>
+<td><a
+href="../assets/launcher-icon.svg"><code>../assets/launcher-icon.svg</code></a></td>
+<td>Letter-free double-helix + thread motif; source of every OS
+export</td>
+</tr>
+<tr>
+<td>Launcher icon — light variant</td>
+<td><a
+href="../assets/launcher-icon-light.svg"><code>../assets/launcher-icon-light.svg</code></a></td>
+<td>Light home screens / white UIs; fill
+<code>#446E12 → #B6E376</code></td>
+</tr>
+<tr>
+<td>Launcher icon — dark variant</td>
+<td><a
+href="../assets/launcher-icon-dark.svg"><code>../assets/launcher-icon-dark.svg</code></a></td>
+<td>Dark home screens / <code>#020817</code> UIs; fill
+<code>#B6E376 → #B7EBD6</code></td>
+</tr>
+<tr>
+<td>Launcher icon — monochrome</td>
+<td><a
+href="../assets/launcher-icon-mono.svg"><code>../assets/launcher-icon-mono.svg</code></a></td>
+<td>Android themed/monochrome, iOS 18 tinted, notifications;
+<code>currentColor</code></td>
+</tr>
+<tr>
+<td>Brand mark (tight crop)</td>
+<td><a
+href="../assets/logo-mark.svg"><code>../assets/logo-mark.svg</code></a></td>
+<td>Lockups, headers, avatars</td>
+</tr>
+<tr>
+<td>Full logo lockup (mark + wordmark)</td>
+<td><a
+href="../assets/logo-full.svg"><code>../assets/logo-full.svg</code></a></td>
+<td>Headers / marketing <strong>only</strong>; never inside the launcher
+icon</td>
+</tr>
+<tr>
+<td>Footer slogan lockup</td>
+<td><a
+href="../assets/footer-slogan.svg"><code>../assets/footer-slogan.svg</code></a></td>
+<td>“Made with ♥ by Helix Development” attribution</td>
+</tr>
+</tbody>
+</table>
+<p>Clear-space ≥ one outer ribbon width (≈ ⅛ of the icon box); misuse
+rules (no letters, no recolor outside brand/mono, no skew, keep
+transparency) per <code>[VERIFIED — ../brand-assets.md §10]</code>.</p>
+<h3 id="voice-tone">Voice &amp; tone</h3>
+<ul>
+<li><strong>Warm, human, understated.</strong> The one emotional
+flourish is the locked slogan <em>“Made with love ♥ by Helix
+Development”</em> (the heart carries the accessible name “love”)
+<code>[VERIFIED — ../brand-assets.md §8]</code>. Tagline: <em>“read your
+threads, smarter”</em>
+<code>[VERIFIED — ../brand-assets.md §8.1, login/splash]</code>.</li>
+<li><strong>Precise and honest.</strong> Surfaces state what is real;
+unresolved items are marked, never papered over — mirroring the
+documentation “no bluff” bar
+<code>[VERIFIED — ../../CONVENTIONS.md §7]</code>.</li>
+<li><strong>Localized by contract, not by habit.</strong> Every UI
+string goes through the shipped <code>I18nService</code> keys
+(<code>footer.made</code> / <code>footer.by</code> /
+<code>a11y.love</code> / <code>a11y.language</code>); shipped locales en
+/ ru / sr-Cyrl <code>[OPERATOR — ../design-system.md §4]</code>.</li>
+<li>Calm, reading-oriented microcopy; short sentences; no
+exclamation-mark enthusiasm <code>[DEFAULT — adjustable]</code>.</li>
+</ul>
+<h2 id="color-palette-roles">2. Color Palette &amp; Roles</h2>
+<p>Every value below is carried verbatim from the Thready theme
+(<code>tokens/themes/thready.css</code> design,
+<code>[VERIFIED — ../design-system.md §3.2]</code>) which extends the
+measured, AA-verified <code>helix-green</code> theme. Nothing here is
+invented <code>[CONSTITUTION §11.4.6]</code>.</p>
+<h3 id="brand-decorative-only-never-body-text">Brand (decorative only —
+never body text)</h3>
+<ul>
+<li><strong>Brand base</strong> (<code>#B6E376</code>) —
+chartreuse/lime; eyedrop <strong>mean of 1,625,855 green-dominant logo
+pixels</strong> <code>[VERIFIED]</code>. Only <strong>1.47:1</strong> on
+white — logo marks, gradients, one focal element.</li>
+<li><strong>Brand secondary — light</strong> (<code>#ABDDC9</code>) —
+mint/teal; eyedrop mean of the <code>Logo.png</code> mint region (n =
+618,886) <code>[VERIFIED]</code>.</li>
+<li><strong>Brand secondary — dark</strong> (<code>#B7EBD6</code>) — the
+brighter mint <strong>median</strong>, used on dark surfaces so the mark
+holds <code>[VERIFIED]</code>.</li>
+<li><strong>Brand ink</strong> (<code>#0A0F04</code>) — readable ink on
+a brand fill (13.15:1) <code>[VERIFIED]</code>.</li>
+</ul>
+<h3 id="accent-interactive-text-safe-aa-pinned">Accent (interactive /
+text-safe — AA-pinned)</h3>
+<ul>
+<li><strong>Accent — light</strong> (<code>#446E12</code>) deep green =
+<strong>6.03:1 on white</strong> ✅;
+<code>--accent-on: #FFFFFF</code>.</li>
+<li><strong>Accent — dark</strong> (<code>#B6E376</code>) the logo lime
+<em>is</em> the dark accent = <strong>13.56:1 on
+<code>#020817</code></strong> ✅; <code>--accent-on: #0A0F04</code>.
+<code>[VERIFIED — measured, design_system THEMES.md]</code></li>
+</ul>
+<h3
+id="surfaces-neutrals-brand-neutral-slate-shared-with-all-helix-themes">Surfaces
+&amp; neutrals (brand-neutral slate, shared with all Helix themes)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 36%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Light</th>
+<th>Dark</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Background <code>--bg</code></td>
+<td><code>#FFFFFF</code></td>
+<td><code>#020817</code></td>
+</tr>
+<tr>
+<td>Surface <code>--surface</code></td>
+<td><code>#FFFFFF</code></td>
+<td><code>#020817</code></td>
+</tr>
+<tr>
+<td>Warm/tertiary surface <code>--surface-warm</code></td>
+<td><code>#F1F5F9</code></td>
+<td><code>#1E293B</code></td>
+</tr>
+<tr>
+<td>Foreground <code>--fg</code></td>
+<td><code>#020817</code></td>
+<td><code>#F8FAFC</code></td>
+</tr>
+<tr>
+<td>Muted <code>--muted</code></td>
+<td><code>#475569</code></td>
+<td><code>#94A3B8</code></td>
+</tr>
+<tr>
+<td>Border <code>--border</code></td>
+<td><code>#E2E8F0</code></td>
+<td><code>#1E293B</code></td>
+</tr>
+<tr>
+<td>Strong border <code>--border-strong</code> (load-bearing boundaries
+≥3:1)</td>
+<td><code>#64748B</code></td>
+<td><code>#64748B</code></td>
+</tr>
+</tbody>
+</table>
+<h3
+id="semantic-state-never-decoration-never-overridden-by-a-brand">Semantic
+(state, never decoration — never overridden by a brand)</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Light</th>
+<th>Dark</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Success</td>
+<td><code>#166534</code></td>
+<td><code>#16A34A</code></td>
+</tr>
+<tr>
+<td>Warn</td>
+<td><code>#854D0E</code></td>
+<td><code>#EAB308</code></td>
+</tr>
+<tr>
+<td>Danger</td>
+<td><code>#DC2626</code></td>
+<td><code>#EF4444</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>--accent</code> (brand) and <code>--danger</code> (error) are
+<strong>separate tokens by contract</strong> — a brand color can never
+mask an error signal
+<code>[VERIFIED — ../design-system.md §6.2]</code>.</p>
+<h3 id="heart-glyph">Heart glyph</h3>
+<p><code>--ds-heart</code> defaults to <code>var(--accent)</code>
+(AA-legible in both modes)
+<code>[VERIFIED precedent — ../brand-assets.md §8]</code>; classic
+love-red alternative is <code>[OPEN: THREADY-DES-03]</code>.</p>
+<h3 id="white-label-override-points">White-label override points</h3>
+<p>Per-Account white-labeling swaps <strong>only</strong> these tokens,
+exactly as the three shipped themes prove works
+(<code>helix-green</code> / <code>vasic-red</code> /
+<code>helix-ota-blue</code>)
+<code>[VERIFIED — ../theming.md §3]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 25%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Override point</th>
+<th style="text-align: center;">Allowed</th>
+<th>Guardrail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--brand</code>, <code>--brand-2</code> (decorative)</td>
+<td style="text-align: center;">✅</td>
+<td>any hue; never used as text</td>
+</tr>
+<tr>
+<td><code>--accent</code>, <code>--accent-on</code> (light + dark
+pair)</td>
+<td style="text-align: center;">✅</td>
+<td>server-validated <strong>WCAG AA ≥ 4.5:1</strong> or rejected
+(<code>422</code>) <code>[VERIFIED — ../theming.md §10]</code></td>
+</tr>
+<tr>
+<td>Product logo (light + dark, transparent)</td>
+<td style="text-align: center;">✅</td>
+<td>Asset-service refs</td>
+</tr>
+<tr>
+<td>Slogan / tagline</td>
+<td style="text-align: center;">✅</td>
+<td>free text</td>
+</tr>
+<tr>
+<td>Structural tokens (type/space/radius/motion)</td>
+<td style="text-align: center;">❌</td>
+<td>one system across all Accounts</td>
+</tr>
+<tr>
+<td>Neutral surfaces + semantic tokens</td>
+<td style="text-align: center;">❌ (default)</td>
+<td>AA-tuned; advanced override gated behind full AA re-validation</td>
+</tr>
+<tr>
+<td>Helix Development attribution footer</td>
+<td style="text-align: center;">❌</td>
+<td>always present</td>
+</tr>
+</tbody>
+</table>
+<p>Dark-mode selection uses the three sanctioned mechanisms:
+<code>@media (prefers-color-scheme: dark)</code> (system),
+<code>:root[data-theme="dark"]</code> (explicit), <code>.dark</code>
+(framework compat) <code>[VERIFIED — ../theming.md §2]</code>. See <a
+href="./tokens.css"><code>tokens.css</code></a> for the compiled
+blocks.</p>
+<h3 id="color-token-blocks-light-default-dark-override">Color token
+blocks (light default + dark override)</h3>
+<p>The color-bearing tokens, in the <code>:root {}</code> +
+<code>[data-theme="dark"]</code> override pattern the authoring guide
+requires
+(<code>[VERIFIED — open-design/docs/design-systems.md §3]</code>; the
+full pasteable set — structural tokens and all three dark mechanisms —
+is <a href="./tokens.css"><code>tokens.css</code></a>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="in">:root</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">--theme-id</span><span class="ch">:</span> <span class="st">&quot;thready&quot;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span>   <span class="va">--brand-2</span><span class="ch">:</span> <span class="cn">#abddc9</span><span class="op">;</span>   <span class="va">--brand-ink</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span>  <span class="co">/* decorative only */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">--bg</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span>      <span class="va">--surface</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span>   <span class="va">--surface-warm</span><span class="ch">:</span> <span class="cn">#f1f5f9</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">--fg</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span>      <span class="va">--muted</span><span class="ch">:</span> <span class="cn">#475569</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">--border</span><span class="ch">:</span> <span class="cn">#e2e8f0</span><span class="op">;</span>  <span class="va">--border-strong</span><span class="ch">:</span> <span class="cn">#64748b</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent</span><span class="ch">:</span> <span class="cn">#446e12</span><span class="op">;</span>  <span class="va">--accent-on</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span>   <span class="co">/* 6.03:1 on white [VERIFIED] */</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">--success</span><span class="ch">:</span> <span class="cn">#166534</span><span class="op">;</span> <span class="va">--warn</span><span class="ch">:</span> <span class="cn">#854d0e</span><span class="op">;</span>        <span class="va">--danger</span><span class="ch">:</span> <span class="cn">#dc2626</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">--ds-heart</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="va">--fg-2</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--fg</span><span class="fu">)</span><span class="op">;</span>  <span class="va">--meta</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--muted</span><span class="fu">)</span><span class="op">;</span>   <span class="va">--border-soft</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--border</span><span class="fu">)</span><span class="op">;</span> <span class="co">/* B-slot aliases */</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">data-theme</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ex">]</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="va">--brand</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span>   <span class="va">--brand-2</span><span class="ch">:</span> <span class="cn">#b7ebd6</span><span class="op">;</span>   <span class="va">--brand-ink</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">--bg</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span>      <span class="va">--surface</span><span class="ch">:</span> <span class="cn">#020817</span><span class="op">;</span>   <span class="va">--surface-warm</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">--fg</span><span class="ch">:</span> <span class="cn">#f8fafc</span><span class="op">;</span>      <span class="va">--muted</span><span class="ch">:</span> <span class="cn">#94a3b8</span><span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="va">--border</span><span class="ch">:</span> <span class="cn">#1e293b</span><span class="op">;</span>  <span class="va">--border-strong</span><span class="ch">:</span> <span class="cn">#64748b</span><span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="va">--accent</span><span class="ch">:</span> <span class="cn">#b6e376</span><span class="op">;</span>  <span class="va">--accent-on</span><span class="ch">:</span> <span class="cn">#0a0f04</span><span class="op">;</span>   <span class="co">/* logo lime IS the dark accent — 13.56:1 [VERIFIED] */</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="va">--success</span><span class="ch">:</span> <span class="cn">#16a34a</span><span class="op">;</span> <span class="va">--warn</span><span class="ch">:</span> <span class="cn">#eab308</span><span class="op">;</span>        <span class="va">--danger</span><span class="ch">:</span> <span class="cn">#ef4444</span><span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="va">--ds-heart</span><span class="ch">:</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="typography-rules">3. Typography Rules</h2>
+<p>Three shipped <strong>variable</strong> faces, self-hosted via
+<code>@fontsource</code> — no external CDN (offline/CSP posture)
+<code>[VERIFIED — ../design-system.md §4]</code>:</p>
+<ul>
+<li><strong>Display / headings:</strong>
+<code>"Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif</code>
+— weights 600–700, <code>h1–h3</code>, hero</li>
+<li><strong>Body / UI:</strong>
+<code>"Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif</code>
+— weights 400–500 (buttons 500, badges 600
+<code>[VERIFIED — .ds-btn / .ds-badge]</code>)</li>
+<li><strong>Mono / code:</strong>
+<code>"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace</code>
+— code, post payloads, CLI transcripts, hashtags, IDs; <strong>tabular
+figures</strong> for aligned columns</li>
+</ul>
+<p>Font labels for catalog extraction:</p>
+<p>Display: “Space Grotesk Variable”, ui-sans-serif, system-ui,
+sans-serif Body: “Hanken Grotesk Variable”, ui-sans-serif, system-ui,
+sans-serif Mono: “JetBrains Mono”, ui-monospace, “SF Mono”, Menlo,
+monospace</p>
+<p><strong>Scale (px):</strong> 12 · 14 · 16 · 20 · 24 · 32 · 48 · 64
+(<code>--text-xs</code> … <code>--text-4xl</code>)
+<strong>Line-height:</strong> 1.5 body / 1.2 headings.
+<strong>Letter-spacing:</strong> −0.01em on display sizes.
+<code>[VERIFIED — core.css, ../design-system.md §3.1]</code></p>
+<p>Weight steps are subsets of one variable <code>wght</code> axis — no
+extra font downloads. Cyrillic coverage (ru, sr-Cyrl) is mandatory
+<code>[OPERATOR §12]</code>; subset verification is tracked as
+<code>[OPEN: THREADY-DES-04]</code>. Logical properties keep the type
+layer direction-agnostic.</p>
+<h2 id="component-stylings">4. Component Stylings</h2>
+<p>Principles first (non-negotiable
+<code>[VERIFIED — ../design-system.md §1/§6]</code>):</p>
+<ul>
+<li><strong>Consume, never fork</strong> — every widget comes from the
+shared <code>.ds-*</code> set + Thready extensions; no bespoke one-off
+components, <strong>TUI included</strong>.</li>
+<li><strong>Brand is decorative, accent is interactive, semantic is
+state</strong> — three disjoint color roles.</li>
+<li><strong>Focus visible everywhere</strong> —
+<code>--focus-ring</code> (3px accent-tinted) on
+<code>:focus-visible</code>; shipped <code>.ds-btn</code>,
+<code>.ds-input</code>, toggle, and picker all implement it
+<code>[VERIFIED]</code>.</li>
+<li>Keyboard + screen-reader complete: correct accessible names (theme
+toggle <code>aria-pressed</code>, language picker is a native
+<code>&lt;select&gt;</code>) <code>[VERIFIED]</code>.</li>
+</ul>
+<p>Stylings (token-bound; values from
+<code>[VERIFIED — ../design-system.md §5]</code>):</p>
+<ul>
+<li><strong>Buttons:</strong> <code>--radius-sm</code> (8px), body face
+at weight 500, primary = <code>--accent</code> fill with
+<code>--accent-on</code> label; hover/active via
+<code>--accent-hover</code> / <code>--accent-active</code> (oklab
+mixes); focus via <code>--focus-ring</code>.</li>
+<li><strong>Cards:</strong> <code>--surface</code> on
+<code>--border</code> 1px, <code>--radius-md</code> (12px); prefer
+<code>--elev-ring</code> over shadows in dark.</li>
+<li><strong>Inputs:</strong> 1px <code>--border</code>,
+<code>--radius-sm</code>, accent-tinted focus ring; error state uses
+<code>--danger</code>, never the brand.</li>
+<li><strong>Chips / toggles / badges:</strong>
+<code>--radius-pill</code>; badges weight 600
+<code>[VERIFIED]</code>.</li>
+<li><strong>Sheets / large surfaces:</strong> <code>--radius-lg</code>
+(16px).</li>
+<li><strong>Footer:</strong> <code>.ds-footer</code> with the heart
+lockup — lucide SVG heart in <code>--ds-heart</code>, ordered fallbacks
+SVG → <code>♥</code> → the word “love”
+<code>[VERIFIED — ../brand-assets.md §8]</code>.</li>
+</ul>
+<h3 id="reference-css-shipped-button-contract-verbatim">Reference CSS
+(shipped button contract, verbatim)</h3>
+<p>The exact shipped <code>.ds-btn</code> — every color a token
+reference, focus via <code>--focus-ring</code>, reduced-motion gated on
+the component (never a global <code>*</code>)
+<code>[VERIFIED — design_system components.css, reproduced in ../component-library.md §3]</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn</span> { <span class="kw">display</span><span class="ch">:</span><span class="dv">inline-flex</span><span class="op">;</span> <span class="kw">align-items</span><span class="ch">:</span><span class="dv">center</span><span class="op">;</span> <span class="kw">gap</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--space-2</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">font</span><span class="ch">:</span><span class="dv">500</span> <span class="fu">var(</span><span class="va">--text-base</span><span class="fu">)</span>/<span class="dv">1</span> <span class="fu">var(</span><span class="va">--font-body</span><span class="fu">)</span><span class="op">;</span> <span class="kw">padding</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--space-3</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--space-5</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--radius-sm</span><span class="fu">)</span><span class="op">;</span> <span class="kw">border</span><span class="ch">:</span><span class="dv">1</span><span class="dt">px</span> <span class="dv">solid</span> <span class="dv">transparent</span><span class="op">;</span> <span class="kw">cursor</span><span class="ch">:</span><span class="dv">pointer</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">transition</span><span class="ch">:</span> <span class="dv">background-color </span><span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>              <span class="dv">color</span> <span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>              <span class="dv">box-shadow </span><span class="fu">var(</span><span class="va">--motion-fast</span><span class="fu">)</span> <span class="fu">var(</span><span class="va">--ease-standard</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn</span><span class="in">:focus-visible</span> { <span class="kw">outline</span><span class="ch">:</span><span class="dv">none</span><span class="op">;</span> <span class="kw">box-shadow</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--focus-ring</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span>   { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-on</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span><span class="in">:hover</span>  { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-hover</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--primary</span><span class="in">:active</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent-active</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--secondary</span> { <span class="kw">background</span><span class="ch">:</span><span class="dv">transparent</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--fg</span><span class="fu">)</span><span class="op">;</span> <span class="kw">border-color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--border-strong</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--secondary</span><span class="in">:hover</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--surface-warm</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--ghost</span>     { <span class="kw">background</span><span class="ch">:</span><span class="dv">transparent</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span><span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">.ds-btn--ghost</span><span class="in">:hover</span> { <span class="kw">background</span><span class="ch">:</span><span class="fu">color-mix(</span><span class="dv">in oklab</span><span class="op">,</span> <span class="fu">var(</span><span class="va">--accent</span><span class="fu">)</span><span class="op">,</span> <span class="dv">transparent</span> <span class="dv">90</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span> }</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-reduced-motion</span><span class="ch">:</span> <span class="dv">reduce</span><span class="fu">)</span> { <span class="fu">.ds-btn</span> { <span class="kw">transition</span><span class="ch">:</span><span class="dv">none</span><span class="op">;</span> } }</span></code></pre></div>
+<p>Badges tint by formula —
+<code>color-mix(in oklab, &lt;semantic&gt;, transparent 90%)</code> — so
+a theme or white-label swap re-tints every semantic badge with no new
+CSS <code>[VERIFIED — ../component-library.md §3]</code>.</p>
+<h3 id="forms-validation-hints-mandated">Forms: validation + hints
+(mandated)</h3>
+<p><code>[OPERATOR — "full forms validations, hints"]</code> Every field
+ships a <strong>hint</strong> line (<code>--muted</code>,
+<code>--text-sm</code>, wired via <code>aria-describedby</code>) and an
+inline <strong>error</strong> state (<code>--danger</code> text +
+border, <code>aria-invalid</code>, <code>aria-describedby</code> to the
+message). Errors are instructive, never bare — they carry the failing
+value and a concrete fix, the shape the branding editor’s AA gate models
+(<code>422</code> returns the measured ratio + an AA-passing suggestion)
+<code>[VERIFIED — ../theming.md §7/§10]</code>. The full lifecycle
+(Loading → Skeleton ≥150ms → Content/Empty/Error → Validating →
+InvalidInline) is the single state machine in <a
+href="../component-library.md#5b-component-state-lifecycle"><code>../component-library.md §5b</code></a>.</p>
+<h2 id="layout-principles">5. Layout Principles</h2>
+<p><code>[VERIFIED — core.css layout tokens, ../design-system.md §3.1/§5]</code></p>
+<ul>
+<li>Content container <strong>max 1200px</strong>
+(<code>--container-max</code>), centered.</li>
+<li>Gutters: <strong>24px</strong> desktop / <strong>16px</strong>
+tablet / <strong>12px</strong> phone.</li>
+<li>Spacing on a <strong>4px base</strong>: 4 · 8 · 12 · 16 · 20 · 24 ·
+32 · 48 (<code>--space-1</code> … <code>--space-12</code>).</li>
+<li>Section vertical rhythm: <strong>80px</strong> desktop /
+<strong>48px</strong> tablet / <strong>32px</strong> phone
+(<code>--section-y-*</code>).</li>
+<li>Whitespace is the primary separator; the reading pane is the hero of
+every screen <code>[DEFAULT — adjustable]</code>.</li>
+</ul>
+<h2 id="depth-elevation">6. Depth &amp; Elevation</h2>
+<p>Three levels only
+<code>[VERIFIED — ../design-system.md §3.1/§5]</code>:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 23%" />
+<col style="width: 36%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Level</th>
+<th>Token</th>
+<th>Treatment</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flat</td>
+<td><code>--elev-flat</code></td>
+<td><code>none</code></td>
+<td>default</td>
+</tr>
+<tr>
+<td>Ring</td>
+<td><code>--elev-ring</code></td>
+<td><code>0 0 0 1px var(--border)</code></td>
+<td>hairline lift; <strong>preferred in dark</strong> (avoids muddy
+shadows)</td>
+</tr>
+<tr>
+<td>Raised</td>
+<td><code>--elev-raised</code></td>
+<td><code>0 2px 8px</code> fg-mix at 8% (<code>color-mix</code> in
+oklab)</td>
+<td>dropdowns, modals, floating elements</td>
+</tr>
+</tbody>
+</table>
+<p>No neumorphism, no glassmorphism
+<code>[DEFAULT — adjustable, aligned with the shared system]</code>.</p>
+<h3 id="motion">Motion</h3>
+<ul>
+<li>Two durations: <code>--motion-fast</code> <strong>150ms</strong>
+(hover/press, control state) and <code>--motion-base</code>
+<strong>200ms</strong> (enter/exit, disclosure), on
+<code>--ease-standard: cubic-bezier(0.2, 0, 0, 1)</code>
+<code>[VERIFIED]</code>.</li>
+<li><strong>All motion honors
+<code>prefers-reduced-motion: reduce</code></strong> — the shipped
+components already gate transitions on it
+<code>[VERIFIED — components.css]</code>.</li>
+<li>Larger choreographed transitions (route changes, skeleton→content)
+extend these in <a
+href="../prototypes.md"><code>../prototypes.md</code></a>
+<code>[DEFAULT — adjustable]</code>.</li>
+</ul>
+<h2 id="dos-and-donts">7. Do’s and Don’ts</h2>
+<h3 id="do">Do</h3>
+<ul>
+<li>✅ Use <code>--accent</code> for every interactive/text emphasis; it
+is the only AA-pinned green.</li>
+<li>✅ Keep the brand gradient
+(<code>#B6E376 → #ABDDC9</code>/<code>#B7EBD6</code>) for marks,
+gradients, one focal element per screen.</li>
+<li>✅ Ship light <strong>and</strong> dark for anything brand-colored;
+dark uses the brighter mint median.</li>
+<li>✅ Route every string through i18n keys (en / ru / sr-Cyrl); test
+Cyrillic.</li>
+<li>✅ Keep the Helix Development attribution footer on every surface —
+including white-labels.</li>
+<li>✅ Use <code>--border-strong</code> for load-bearing boundaries
+(≥3:1 non-text contrast).</li>
+<li>✅ Respect <code>prefers-reduced-motion</code> and reduced
+transparency.</li>
+</ul>
+<h3 id="dont">Don’t</h3>
+<ul>
+<li>❌ Never set body text in <code>--brand</code> or
+<code>--brand-2</code> (1.47:1 / ~2:1 on white)
+<code>[VERIFIED — ../design-system.md §6.2]</code>.</li>
+<li>❌ Never use brand color for destructive UI — errors are always
+<code>--danger</code>.</li>
+<li>❌ Never invent hex values outside this palette
+<code>[CONSTITUTION §11.4.6]</code> — if a request needs one, surface a
+warning and use the closest existing token.</li>
+<li>❌ Never put letters inside the launcher icon
+<code>[OPERATOR — ../brand-assets.md §1]</code>.</li>
+<li>❌ Never load fonts from an external CDN — all faces are
+self-hosted.</li>
+<li>❌ Never re-bind structural tokens per theme or per Account — brand
+color only.</li>
+</ul>
+<h2 id="responsive-behavior">8. Responsive Behavior</h2>
+<p>Three tiers, bound to the section-rhythm and gutter tokens
+<code>[VERIFIED tiers — core.css]</code>; the pixel boundaries follow
+the OpenDesign starter defaults <code>[DEFAULT — adjustable]</code>:</p>
+<ul>
+<li><strong>Desktop ≥ 1024px:</strong> 24px gutters, 80px section
+rhythm, full multi-column layout.</li>
+<li><strong>Tablet 640–1023px:</strong> 16px gutters, 48px section
+rhythm, condensed nav.</li>
+<li><strong>Phone &lt; 640px:</strong> 12px gutters, 32px section
+rhythm, single column.</li>
+</ul>
+<p>Touch targets ≥ 44×44px on touch surfaces
+<code>[DEFAULT — adjustable]</code>. Layout uses logical properties
+(<code>padding-inline</code> / <code>margin-inline</code>) so nothing
+assumes LTR <code>[VERIFIED — ../design-system.md §6.6]</code>.</p>
+<h3 id="per-platform-notes">Per-platform notes</h3>
+<p>The CSS custom properties are canonical; every non-web platform
+consumes a <strong>generated</strong> binding (OpenDesign
+<code>tokensToJson</code> → per-platform codegen), never a hand-kept
+copy <code>[VERIFIED mechanism — ../design-system.md §7]</code>. Honest
+status per the gap register:</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 30%" />
+<col style="width: 22%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Mechanism</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Web — Angular 19 (product) / 22 (marketing)</strong></td>
+<td><code>@vasic-digital/design-system</code> <code>.ds-*</code> +
+<code>ThemeService</code>/<code>I18nService</code> adapters</td>
+<td>PRODUCTION-usable (web foundation) <code>[GAP: 8.1]</code></td>
+<td>Primary surface; Thready adds one theme file +
+<code>DS_CONFIG</code> (<code>storagePrefix: 'thready'</code>,
+<code>defaultTheme: 'system'</code>)</td>
+</tr>
+<tr>
+<td><strong>Desktop — Tauri 2</strong></td>
+<td>Wraps the Angular web UI</td>
+<td>Inherits web</td>
+<td>OS-chrome overrides only; no separate token work</td>
+</tr>
+<tr>
+<td><strong>Mobile — KMP / Compose (Android, iOS/SwiftUI
+host)</strong></td>
+<td><code>UI-Components-KMP</code> + token-bridge codegen (Compose
+<code>Color</code>/<code>Dp</code>)</td>
+<td><strong>SCAFFOLD</strong>, no CI/publish
+<code>[GAP: 8.4]</code></td>
+<td>Fetches effective branding at login; do not claim it works
+today</td>
+</tr>
+<tr>
+<td><strong>Mobile alt — ArkTS (HarmonyOS) / Qt (Aurora)</strong></td>
+<td>native clients via <code>helix_shims</code>;
+<code>helix_design</code> tokens</td>
+<td><strong>SCAFFOLD</strong> <code>[GAP: 8.2/8.3/8.5]</code></td>
+<td>Only HarmonyOS/Aurora path; layered icon JSON ready</td>
+</tr>
+<tr>
+<td><strong>TUI — Lipgloss (Bubble Tea)</strong></td>
+<td>Generated Go palette from the same tokens</td>
+<td>Pattern verified in-house <code>[VERIFIED]</code></td>
+<td>Dark palette default: <code>Accent #B6E376</code>,
+<code>Fg #F8FAFC</code>, <code>Muted #94A3B8</code>,
+<code>Border #1E293B</code>, <code>Danger #EF4444</code>,
+<code>Success #16A34A</code>; heart = <code>♥</code> glyph</td>
+</tr>
+</tbody>
+</table>
+<h2 id="agent-prompt-guide">9. Agent Prompt Guide</h2>
+<h3 id="quick-color-reference">Quick color reference</h3>
+<ul>
+<li>Accent (light): “deep green (#446E12)” on white — the only text-safe
+green in light mode</li>
+<li>Accent (dark): “logo lime (#B6E376)” on night (#020817)</li>
+<li>Brand gradient: “chartreuse (#B6E376) → mint (#ABDDC9 light /
+#B7EBD6 dark)” — decorative only</li>
+<li>Page background: “#FFFFFF light / night (#020817) dark”</li>
+<li>Text: “ink (#020817) light / snow (#F8FAFC) dark”; muted “slate
+(#475569 / #94A3B8)”</li>
+<li>Border: “#E2E8F0 light / #1E293B dark”; strong boundary
+“#64748B”</li>
+<li>Danger stays “#DC2626 / #EF4444” — never the brand green family</li>
+</ul>
+<h3 id="example-component-prompts">Example component prompts</h3>
+<ul>
+<li>“Create a primary button: deep-green (#446E12) fill, white label,
+8px radius, Hanken Grotesk 500, 150ms hover to the oklab-darkened
+accent, 3px accent-tinted focus ring.”</li>
+<li>“Design a post card on <code>--surface</code> with a 1px #E2E8F0
+border, 12px radius, title in Space Grotesk 600 at 20px, body in Hanken
+Grotesk at 16px/1.5, metadata in JetBrains Mono with tabular
+figures.”</li>
+<li>“Build the dark variant: night (#020817) surface, snow (#F8FAFC)
+text, lime (#B6E376) accent with dark ink (#0A0F04) on fills, ring
+elevation instead of shadows.”</li>
+<li>“Add the footer: ‘Made with ♥ by Helix Development’, heart in
+var(–ds-heart), SVG → ♥ → ‘love’ fallbacks, localized via footer.made /
+footer.by.”</li>
+</ul>
+<h3 id="iteration-guide">Iteration guide</h3>
+<ol type="1">
+<li>Paste the <a href="./tokens.css"><code>tokens.css</code></a>
+<code>:root</code> + dark blocks into the artifact’s first
+<code>&lt;style&gt;</code> and reference everything via
+<code>var(--…)</code> — never restate hex inline.</li>
+<li>One brand-gradient focal element per screen, at most.</li>
+<li>Always author both modes; check the accent flips (#446E12 ↔︎ #B6E376)
+and <code>--accent-on</code> flips (#FFFFFF ↔︎ #0A0F04).</li>
+<li>Errors and destructive actions: <code>--danger</code> only.</li>
+<li>If a value is missing, do <strong>not</strong> invent it — flag it
+and use the nearest token <code>[CONSTITUTION §11.4.6]</code>.</li>
+</ol>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

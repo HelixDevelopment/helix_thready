@@ -1,0 +1,208 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * docs/public/research/mvp/design/opendesign/tokens.css
+ *
+ * Helix Thready — machine-readable twin of ./DESIGN.md (the OpenDesign
+ * brand contract). Agents paste the :root block (and the dark blocks)
+ * into the first <style> of every artifact and reference tokens via
+ * var(--name) from then on.
+ *
+ * Contract sources (all VERIFIED):
+ *   - Token schema (names + layers A1/A2/B-slot):
+ *       open-design/packages/contracts/src/design-systems/token-schema.ts
+ *       (re-exported by design-systems/_schema/tokens.schema.ts)
+ *   - Reference shape: open-design/design-systems/default/tokens.css
+ *   - Values: helix_thready ../design-system.md §3.1 (core, verbatim from
+ *     design_system tokens/core.css) + §3.2 (the Thready theme).
+ *     No value below is invented [CONSTITUTION §11.4.6].
+ *
+ * Dark mode — honest deviation note:
+ *   The bundled OpenDesign design-systems ship SINGLE-MODE tokens.css
+ *   files (one :root block; dark exists only as prose in DESIGN.md).
+ *   Thready's ground truth mandates first-class light + dark, selected
+ *   via the three sanctioned mechanisms [VERIFIED — ../theming.md §2]:
+ *     1. @media (prefers-color-scheme: dark)  — system default
+ *     2. :root[data-theme="dark"]             — explicit choice
+ *     3. .dark                                 — framework compat
+ *   The dark blocks below re-bind ONLY color-bearing tokens; structural
+ *   tokens (type/space/radius/motion/layout) are declared once and never
+ *   re-bound per theme [VERIFIED — ../design-system.md §3.1].
+ *
+ * Thready brand extensions (Layer C — brand-specific, must be registered
+ * in BRAND_EXTENSIONS["thready"] if this folder is ever vendored into
+ * open-design/design-systems/):
+ *   --theme-id, --brand, --brand-2, --brand-ink, --border-strong,
+ *   --ds-heart
+ * ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  --theme-id: "thready"; /* C-extension */
+
+  /* ─── Brand identity (C-extensions — decorative ONLY, never body text) ──
+   * --brand    #B6E376: eyedrop mean of 1,625,855 green-dominant logo
+   *            pixels [VERIFIED]. 1.47:1 on white — logo marks, gradients,
+   *            one focal element per screen.
+   * --brand-2  #ABDDC9: eyedrop mean of the Logo.png mint region
+   *            (n = 618,886) [VERIFIED]. Dark mode re-binds to the
+   *            brighter median #B7EBD6.
+   * --brand-ink: readable ink on a --brand fill (13.15:1) [VERIFIED]. */
+  --brand: #b6e376;
+  --brand-2: #abddc9;
+  --brand-ink: #0a0f04;
+
+  /* ─── Surface (schema: --bg / --surface / --surface-warm) ─────────
+   * Brand-neutral slate carried from the AA-verified helix-green theme
+   * [VERIFIED — ../design-system.md §3.2]. */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-warm: #f1f5f9;
+
+  /* ─── Foreground ramp (--fg / --fg-2 / --muted / --meta) ──────────
+   * Thready differentiates two text tiers; the B-slots alias to their
+   * richer siblings per the schema [VERIFIED — token-schema.ts]. */
+  --fg: #020817;
+  --fg-2: var(--fg);        /* B-slot alias — no secondary tier */
+  --muted: #475569;
+  --meta: var(--muted);     /* B-slot alias — no metadata tier */
+
+  /* ─── Border (--border / --border-soft + C-ext --border-strong) ───
+   * --border-strong exists for load-bearing boundaries (≥3:1 non-text
+   * contrast) [VERIFIED — ../design-system.md §6.1]. */
+  --border: #e2e8f0;
+  --border-soft: var(--border); /* B-slot alias — no soft tier */
+  --border-strong: #64748b;     /* C-extension */
+
+  /* ─── Accent (interactive / text-safe — AA-pinned) ────────────────
+   * #446E12 = 6.03:1 on white [VERIFIED — measured, THEMES.md].
+   * Hover/active use the schema's oklab black-mix formula; they read
+   * var(--accent) so the dark re-bind propagates automatically. */
+  --accent: #446e12;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+
+  /* ─── Semantic (state, never decoration; never brand-overridden) ──
+   * AA light values [VERIFIED — ../design-system.md §3.2]. --danger is
+   * a separate token from --accent by contract so brand color can
+   * never mask an error signal. */
+  --success: #166534;
+  --warn: #854d0e;
+  --danger: #dc2626;
+
+  /* ─── Heart (C-extension) — footer slogan glyph tint ──────────────
+   * Defaults to the accent (AA-legible both modes) [VERIFIED
+   * precedent — ../brand-assets.md §8]; love-red alternative is
+   * [OPEN: THREADY-DES-03]. */
+  --ds-heart: var(--accent);
+
+  /* ─── Typography — fonts (variable, self-hosted, no CDN) ──────────
+   * [VERIFIED — design_system fonts/fonts.css via ../design-system.md §4] */
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ─── Typography — type scale (px) [VERIFIED — core.css] ────────── */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+  --text-4xl: 64px;
+
+  --leading-body: 1.5;
+  --leading-tight: 1.2;
+  --tracking-display: -0.01em;
+
+  /* ─── Spacing (4px base) [VERIFIED — core.css] ──────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* ─── Section rhythm [VERIFIED — core.css] ──────────────────────── */
+  --section-y-desktop: 80px;
+  --section-y-tablet: 48px;
+  --section-y-phone: 32px;
+
+  /* ─── Radius [VERIFIED — core.css] ────────────────────────────────
+   * sm = controls, md = cards, lg = surfaces/sheets, pill = chips. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* ─── Elevation [VERIFIED — core.css] ─────────────────────────────
+   * Prefer --elev-ring in dark mode (shadows go muddy on #020817). */
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
+
+  /* ─── Focus [VERIFIED — core.css] ─────────────────────────────────
+   * Every :focus-visible rule must use this token. */
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+
+  /* ─── Motion [VERIFIED — core.css] ────────────────────────────────
+   * All motion honors prefers-reduced-motion: reduce. */
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ─── Layout [VERIFIED — core.css] ──────────────────────────────── */
+  --container-max: 1200px;
+  --container-gutter-desktop: 24px;
+  --container-gutter-tablet: 16px;
+  --container-gutter-phone: 12px;
+}
+
+/* ─── Dark — mechanism 1: system default (respects an explicit light
+ * choice via :not) [VERIFIED pattern — ../design-system.md §3.2].
+ * Accent: the logo lime IS the dark accent — 13.56:1 on #020817
+ * [VERIFIED — measured]. --brand-2 brightens to the mint median
+ * #B7EBD6 so the mark holds on the dark surface [VERIFIED]. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #b6e376;
+    --brand-2: #b7ebd6;
+    --brand-ink: #0a0f04;
+    --bg: #020817;
+    --surface: #020817;
+    --surface-warm: #1e293b;
+    --fg: #f8fafc;
+    --muted: #94a3b8;
+    --border: #1e293b;
+    --border-strong: #64748b;
+    --accent: #b6e376;
+    --accent-on: #0a0f04;
+    --success: #16a34a;
+    --warn: #eab308;
+    --danger: #ef4444;
+    --ds-heart: var(--accent);
+  }
+}
+
+/* ─── Dark — mechanisms 2 + 3: explicit choice ([data-theme="dark"])
+ * and framework-compat (.dark). Same bindings as the media block. */
+:root[data-theme="dark"],
+.dark {
+  --brand: #b6e376;
+  --brand-2: #b7ebd6;
+  --brand-ink: #0a0f04;
+  --bg: #020817;
+  --surface: #020817;
+  --surface-warm: #1e293b;
+  --fg: #f8fafc;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --border-strong: #64748b;
+  --accent: #b6e376;
+  --accent-on: #0a0f04;
+  --success: #16a34a;
+  --warn: #eab308;
+  --danger: #ef4444;
+  --ds-heart: var(--accent);
+}

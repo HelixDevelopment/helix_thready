@@ -1,0 +1,333 @@
+<!--
+  Title           : Helix Thready — Desktop Shell (Tauri 2 window variant)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/desktop/desktop-shell.html
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./README.md, ../../wireframes.md (§3.1/§3.3), ../../design-system.md (§7),
+                    ../../theming.md, ../../ux-flows.md
+  Ground truth    : design-system.md §7 (Tauri wraps the Angular web UI — OS chrome only);
+                    wireframes.md §3.1 app shell + §3.3 dashboard + §1.2 keyboard model;
+                    tray/native notifications are [OPEN: THREADY-DES-08]
+-->
+<title>Thready Desktop — Tauri Shell</title>
+<style>
+  /* == Thready tokens — inlined verbatim from design-system.md §3.1/§3.2 (self-contained, no CDN) == */
+  :root{
+    --font-display:"Space Grotesk","Space Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Hanken Grotesk","Hanken Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:9999px;
+    --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);
+    --brand:#b6e376;--brand-2:#abddc9;--brand-ink:#0a0f04;
+    --bg:#ffffff;--surface:#ffffff;--surface-warm:#f1f5f9;
+    --fg:#020817;--muted:#475569;--border:#e2e8f0;--border-strong:#64748b;
+    --accent:#446e12;--accent-on:#ffffff;
+    --success:#166534;--warn:#854d0e;--danger:#dc2626;
+    --elev-ring:0 0 0 1px var(--border);
+    --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+      --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+      --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+      --accent:#b6e376;--accent-on:#0a0f04;
+      --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+    }
+  }
+  :root[data-theme="dark"]{
+    --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+    --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+    --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+    --accent:#b6e376;--accent-on:#0a0f04;
+    --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:light dark}
+  body{font-family:var(--font-body);background:var(--surface-warm);color:var(--fg);min-height:100vh;
+       padding:var(--space-6);font-size:var(--text-sm)}
+  .page-head{max-width:1240px;margin:0 auto var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-3);
+             align-items:center;justify-content:space-between}
+  .page-head h1{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:-.01em}
+  .page-head .sub{color:var(--muted);font-size:var(--text-sm);flex-basis:100%}
+  .controls{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+  .seg button{border:0;background:transparent;color:var(--muted);font:500 13px var(--font-body);
+              padding:6px 14px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+  .seg button:focus-visible,.pbtn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .pbtn{border:1px solid var(--border);background:var(--surface);color:var(--fg);font:500 13px var(--font-body);
+        border-radius:var(--radius-pill);padding:6px 14px;cursor:pointer}
+  .pbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .stage{max-width:1240px;margin:0 auto}
+  /* ---- macOS global menu bar (outside the window) ---- */
+  .macbar{display:none;align-items:center;gap:var(--space-4);height:30px;padding:0 var(--space-4);
+          background:var(--surface);border:1px solid var(--border);border-bottom:0;
+          border-radius:10px 10px 0 0;font-size:13px;color:var(--fg)}
+  .stage[data-os="mac"] .macbar{display:flex}
+  .macbar b{font-family:var(--font-display)}
+  .macbar span{color:var(--muted)}
+  /* ---- Tauri window ---- */
+  .window{position:relative;border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;
+          background:var(--bg);box-shadow:0 24px 60px rgba(2,8,23,.30)}
+  .stage[data-os="mac"] .window{border-radius:0 0 12px 12px;border-top:0}
+  .titlebar{display:flex;align-items:center;height:38px;padding:0 var(--space-3);gap:var(--space-3);
+            background:var(--surface);border-bottom:1px solid var(--border);user-select:none}
+  .titlebar .drag{flex:1;text-align:center;font:500 13px var(--font-body);color:var(--muted)}
+  .traffic{display:none;gap:8px}
+  .traffic i{width:12px;height:12px;border-radius:50%;display:block}
+  .stage[data-os="mac"] .traffic{display:flex}
+  .caption{display:flex;gap:2px;margin-left:auto}
+  .caption span{width:38px;height:30px;display:flex;align-items:center;justify-content:center;
+                color:var(--muted);font-size:13px;border-radius:6px}
+  .caption span:hover{background:var(--surface-warm)}
+  .caption .close:hover{background:var(--danger);color:#fff}
+  .stage[data-os="mac"] .caption{display:none}
+  .menurow{display:flex;gap:var(--space-4);padding:4px var(--space-4);background:var(--surface);
+           border-bottom:1px solid var(--border);font-size:13px;color:var(--fg)}
+  .stage[data-os="mac"] .menurow{display:none}
+  /* ---- wrapped web app shell (wireframes §3.1) ---- */
+  .topbar{display:flex;align-items:center;gap:var(--space-4);height:52px;padding:0 var(--space-4);
+          background:var(--surface);border-bottom:1px solid var(--border)}
+  .logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:700}
+  .logo i{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:block}
+  .gsearch{flex:1;max-width:420px;border:1px solid var(--border);border-radius:var(--radius-sm);
+           padding:7px 12px;color:var(--muted);background:var(--bg)}
+  .gsearch kbd{float:right;font:600 10px var(--font-mono);border:1px solid var(--border);border-radius:4px;
+           padding:1px 5px;color:var(--muted)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:var(--space-3);color:var(--muted)}
+  .acct{border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px 12px;font-size:12px;color:var(--fg)}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--brand);color:var(--brand-ink);
+          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .shellbody{display:flex;min-height:560px}
+  .leftnav{width:190px;flex:0 0 auto;border-right:1px solid var(--border);background:var(--surface);padding:var(--space-3) 0}
+  .leftnav a{display:flex;gap:10px;align-items:center;padding:8px var(--space-4);color:var(--muted);
+             text-decoration:none;font-weight:500;border-left:3px solid transparent}
+  .leftnav a[aria-current="page"]{color:var(--accent);border-left-color:var(--accent);
+             background:color-mix(in oklab,var(--accent),transparent 92%)}
+  .contentcol{flex:1;padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);background:var(--bg);min-width:0}
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+  .card h3{font:600 11px var(--font-display);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:var(--space-2)}
+  .stat b{display:block;font:600 var(--text-xl) var(--font-display);letter-spacing:-.01em}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .twocol{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--space-3)}
+  .row{display:flex;align-items:center;gap:var(--space-3);padding:8px 0;border-bottom:1px solid var(--border)}
+  .row:last-child{border-bottom:0}
+  .row .grow{flex:1;min-width:0}
+  .badge{font:600 10px var(--font-body);padding:2px 8px;border-radius:var(--radius-pill);white-space:nowrap}
+  .badge.ok{background:color-mix(in oklab,var(--success),transparent 88%);color:var(--success)}
+  .badge.run{background:color-mix(in oklab,var(--accent),transparent 88%);color:var(--accent)}
+  .badge.q{background:var(--surface-warm);color:var(--muted)}
+  .badge.err{background:color-mix(in oklab,var(--danger),transparent 88%);color:var(--danger)}
+  .bar{height:6px;border-radius:3px;background:var(--surface-warm);overflow:hidden;flex:1}
+  .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+  .mono{font-family:var(--font-mono)}
+  .mut{color:var(--muted)}
+  table.threads{width:100%;border-collapse:collapse;font-size:13px}
+  table.threads th{text-align:left;font:600 10px var(--font-display);text-transform:uppercase;letter-spacing:.07em;
+                   color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border)}
+  table.threads td{padding:8px;border-bottom:1px solid var(--border)}
+  .chip{font:500 10px var(--font-mono);padding:2px 8px;border-radius:var(--radius-pill);
+        background:color-mix(in oklab,var(--accent),transparent 88%);color:var(--accent);white-space:nowrap}
+  .shellfoot{display:flex;justify-content:space-between;align-items:center;padding:8px var(--space-4);
+             border-top:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px}
+  /* ---- file-drop overlay ---- */
+  .drop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:30;
+        background:color-mix(in oklab,var(--bg),transparent 18%)}
+  .drop.on{display:flex}
+  .drop .zone{border:2px dashed var(--accent);border-radius:var(--radius-lg);padding:var(--space-8);
+        background:var(--surface);max-width:520px;text-align:center}
+  .drop .zone b{font-family:var(--font-display);font-size:var(--text-lg)}
+  .drop .zone p{color:var(--muted);margin-top:var(--space-2);line-height:1.55}
+  /* ---- tray + notification demo panels ---- */
+  .osdemos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4);
+           max-width:1240px;margin:var(--space-6) auto 0}
+  .demo{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)}
+  .demo h2{font:600 var(--text-sm) var(--font-display);margin-bottom:var(--space-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .demo ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .tag{font:600 10px var(--font-mono);padding:2px 6px;border-radius:4px;background:var(--surface-warm);color:var(--muted)}
+  .tag.gap{color:var(--warn)}
+  .traypop{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-top:var(--space-2);font-size:13px}
+  .traypop div{padding:7px 12px;border-bottom:1px solid var(--border)}
+  .traypop div:last-child{border-bottom:0}
+  .traypop .hd{background:var(--surface-warm);font-weight:600}
+  .notif{display:flex;gap:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);
+         padding:var(--space-3);margin-top:var(--space-2);box-shadow:0 8px 24px rgba(2,8,23,.15);align-items:center}
+  .notif .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+         flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--brand-ink);font-weight:700}
+  .menumap{width:100%;border-collapse:collapse;font-size:13px;margin-top:var(--space-2)}
+  .menumap th,.menumap td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+  .menumap th{font:600 10px var(--font-display);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  kbd{font:600 11px var(--font-mono);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--muted)}
+  .foot{max-width:1240px;margin:var(--space-8) auto 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+
+<header class="page-head">
+  <h1>Thready Desktop — Tauri 2 Shell</h1>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Theme">
+      <button data-theme-btn="light"  onclick="setTheme('light')">Light</button>
+      <button data-theme-btn="system" onclick="setTheme('system')">System</button>
+      <button data-theme-btn="dark"   onclick="setTheme('dark')">Dark</button>
+    </div>
+    <div class="seg" role="group" aria-label="OS chrome">
+      <button data-os-btn="mac"   onclick="setOS('mac')">macOS</button>
+      <button data-os-btn="win"   onclick="setOS('win')">Windows</button>
+      <button data-os-btn="linux" onclick="setOS('linux')">Linux</button>
+    </div>
+    <button class="pbtn" id="dropBtn" aria-pressed="false" onclick="toggleDrop()">Simulate file drop</button>
+  </div>
+  <p class="sub">The Tauri 2 desktop client <b>wraps the Angular web app with OS chrome only</b> — no separate token or layout work
+     (design-system §7; wireframes §1). Shown: custom title bar per OS, native menu map, the wrapped app shell
+     (wireframes §3.1) with the Dashboard (wireframes §3.3). Tray + native notifications are proposals under
+     <b>[OPEN: THREADY-DES-08]</b>. Differences catalogue: <a href="./README.md">README.md</a>.</p>
+</header>
+
+<main class="stage" data-os="mac">
+  <div class="macbar"> <b>Thready</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span>
+    <span style="margin-left:auto;font-size:12px">macOS: menus live in the global system menu bar</span></div>
+
+  <div class="window">
+    <div class="titlebar" title="data-tauri-drag-region">
+      <span class="traffic" aria-hidden="true"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+      <span class="drag">Thready — Acme</span>
+      <span class="caption" aria-hidden="true"><span>─</span><span>▢</span><span class="close">✕</span></span>
+    </div>
+    <div class="menurow"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>V</u>iew</span><span><u>G</u>o</span><span><u>H</u>elp</span>
+      <span style="margin-left:auto;color:var(--muted);font-size:12px">Windows/Linux: in-window menu row (CSD)</span></div>
+
+    <!-- wrapped web app shell — identical to the responsive web portal -->
+    <div class="topbar">
+      <span class="logo"><i></i>Thready</span>
+      <span class="gsearch">🔍 global search… <kbd>Ctrl/⌘ K</kbd></span>
+      <span class="right">
+        <span title="Theme toggle">☾</span><span title="Language">EN ▾</span>
+        <span class="acct">Acct: Acme ▾</span><span class="avatar">A</span>
+      </span>
+    </div>
+    <div class="shellbody">
+      <nav class="leftnav" aria-label="Primary">
+        <a aria-current="page">▤ Dashboard</a><a># Channels</a><a>🔍 Search</a>
+        <a>⬒ Assets</a><a>✦ Skills</a><a>⚙ Settings</a><a>⛨ Admin</a>
+      </nav>
+      <div class="contentcol">
+        <div class="statrow">
+          <div class="card stat"><b>128</b><span>Channels</span></div>
+          <div class="card stat"><b>1,204</b><span>Posts today</span></div>
+          <div class="card stat"><b>17</b><span>Processing</span></div>
+          <div class="card stat"><b>42.1 TB</b><span>Assets</span></div>
+        </div>
+        <div class="twocol">
+          <div class="card">
+            <h3>Live activity (WS/SSE)</h3>
+            <div class="row"><span class="badge ok">✓</span><div class="grow">#ml-papers · Research post processed</div><span class="mut mono" style="font-size:11px">2s</span></div>
+            <div class="row"><span class="badge run">⭮</span><div class="grow">#films · Video download started</div><span class="mut mono" style="font-size:11px">9s</span></div>
+            <div class="row"><span class="badge ok">✓</span><div class="grow">#comics · OCR complete</div><span class="mut mono" style="font-size:11px">34s</span></div>
+          </div>
+          <div class="card">
+            <h3>Processing queue</h3>
+            <div class="row"><div class="grow">downloading</div><span class="bar" style="max-width:140px"><i style="width:63%"></i></span><span class="mono" style="font-size:11px">63%</span></div>
+            <div class="row"><div class="grow">research</div><span class="bar" style="max-width:140px"><i style="width:31%"></i></span><span class="mono" style="font-size:11px">31%</span></div>
+            <div class="row"><span class="badge err">⚠ 1 failed</span><div class="grow mut">convert · dead-lettered</div><span style="color:var(--accent);font-weight:600;font-size:12px">retry</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Recent threads</h3>
+          <table class="threads">
+            <tr><th>Channel</th><th>Root post (excerpt)</th><th>Tags</th><th>Status</th></tr>
+            <tr><td>#ml-papers</td><td>“New paper on diffusion…” <span class="mut">↩12</span></td>
+                <td><span class="chip">#Research</span></td><td><span class="badge ok">✓ processed</span></td></tr>
+            <tr><td>#films</td><td class="mono" style="font-size:12px">magnet:?xt=urn:btih:9f6a… <span class="mut">↩3</span></td>
+                <td><span class="chip">#Movie</span> <span class="chip">#ToDl</span></td><td><span class="badge run">⭮ downloading</span></td></tr>
+            <tr><td>#nlp</td><td>“Dense retrieval at scale…” <span class="mut">↩5</span></td>
+                <td><span class="chip">#Research</span></td><td><span class="badge q">◷ queued</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="shellfoot">
+      <span>Helix Development ◈ · Made with ♥ by Helix Development <span style="font-size:10px">(locked)</span></span>
+      <span>offline cache: <b style="color:var(--success)">fresh</b> · v1.0 · © 2026</span>
+    </div>
+
+    <div class="drop" id="dropOverlay" aria-hidden="true">
+      <div class="zone">
+        <b>⬇ Drop a channel link</b>
+        <p>Dropping text/URL matching <span class="mono">t.me/…</span> or <span class="mono">max.ru/join/…</span> opens the
+           <b>Add-Channel wizard at step 3</b> with the link pre-filled (grounded: wizard step 3, wireframes §3.4).<br>
+           Dropping <em>media files</em> has <b>no ground-truth ingest path</b> — posts and assets originate from messenger
+           channels — so file ingest is <span class="mono">[OPEN: THREADY-DES-16]</span>, not designed here.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<section class="osdemos">
+  <div class="demo">
+    <h2>Custom title bar per OS <span class="tag">chrome only — web UI unchanged</span></h2>
+    <ul>
+      <li><b>macOS:</b> traffic lights leading; global system menu bar; title bar is a <span class="mono">data-tauri-drag-region</span>; fullscreen behavior native.</li>
+      <li><b>Windows:</b> caption buttons ─ ▢ ✕ trailing; in-window menu row; snap layouts on ▢ hover (native).</li>
+      <li><b>Linux:</b> client-side decorations mirroring Windows layout; respects the desktop environment’s dark preference.</li>
+      <li>Window title = <span class="mono">Thready — &lt;active Account&gt;</span> (account switcher, wireframes §3.1).</li>
+    </ul>
+  </div>
+  <div class="demo">
+    <h2>Tray behavior <span class="tag gap">[OPEN: THREADY-DES-08] · [DEFAULT — adjustable]</span></h2>
+    <ul>
+      <li>Close (✕) hides to tray; polling/WS subscriptions keep running so processing continues to stream.</li>
+      <li>Tray icon badges the count of active processing jobs; failure turns the badge <span style="color:var(--danger)">danger</span>.</li>
+    </ul>
+    <div class="traypop" role="img" aria-label="Tray popover mock">
+      <div class="hd">◈ Thready — 17 processing</div>
+      <div>⭮ #films · download 63%</div>
+      <div>⚠ 1 failed · click to retry</div>
+      <div>Open Thready</div>
+      <div>Pause polling</div>
+      <div style="color:var(--danger)">Quit</div>
+    </div>
+  </div>
+  <div class="demo">
+    <h2>Native notifications <span class="tag gap">[OPEN: THREADY-DES-08]</span></h2>
+    <ul>
+      <li>OS notification on <span class="mono">processing.completed</span> / <span class="mono">processing.failed</span> when the window is hidden/unfocused; click focuses the Post detail.</li>
+      <li>In-window, the same events render as the standard toast — never duplicated when focused.</li>
+    </ul>
+    <div class="notif" role="img" aria-label="Native notification mock">
+      <span class="ic">◈</span>
+      <span><b>Thready — #ml-papers</b><br><span class="mut">Research complete · research.md ready</span></span>
+    </div>
+  </div>
+  <div class="demo" style="grid-column:1/-1">
+    <h2>Native menu map <span class="tag">structure [DEFAULT — adjustable]; shortcuts verified from wireframes §1.2</span></h2>
+    <table class="menumap">
+      <tr><th>Menu</th><th>Items → app action</th></tr>
+      <tr><td><b>File</b></td><td>New Channel… <kbd>Ctrl/⌘ N</kbd> → Add-Channel wizard (§3.4) · Close Window <kbd>Ctrl/⌘ W</kbd> → hide to tray</td></tr>
+      <tr><td><b>Edit</b></td><td>native clipboard roles (Undo/Cut/Copy/Paste/Select All)</td></tr>
+      <tr><td><b>View</b></td><td>Appearance → Light / Dark / System (ds-theme-toggle) · Toggle left nav <kbd>[</kbd>/<kbd>]</kbd> · Zoom <kbd>Ctrl/⌘ +/−/0</kbd> · Reload</td></tr>
+      <tr><td><b>Go</b></td><td>Dashboard <kbd>g d</kbd> · Channels <kbd>g c</kbd> · Search <kbd>g s</kbd>/<kbd>Ctrl/⌘ K</kbd> · Assets <kbd>g a</kbd> · Skills <kbd>g k</kbd></td></tr>
+      <tr><td><b>Help</b></td><td>Keyboard shortcuts <kbd>?</kbd> · Documentation · About Thready</td></tr>
+    </table>
+  </div>
+</section>
+
+<p class="foot">Made with ♥ by Helix Development · Tauri 2 wraps the Angular 19 product portal — OS chrome only · light+dark via <code>[data-theme="dark"]</code></p>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function press(group,val){document.querySelectorAll('[data-'+group+'-btn]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(b.getAttribute('data-'+group+'-btn')===val));});}
+  window.setTheme=function(t){if(t==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',t);}press('theme',t);};
+  window.setOS=function(o){document.querySelector('.stage').setAttribute('data-os',o);press('os',o);};
+  window.toggleDrop=function(){var ov=document.getElementById('dropOverlay'),b=document.getElementById('dropBtn');
+    var on=!ov.classList.contains('on');ov.classList.toggle('on',on);ov.setAttribute('aria-hidden',String(!on));
+    b.setAttribute('aria-pressed',String(on));};
+  press('theme','system');press('os','mac');
+})();
+</script>

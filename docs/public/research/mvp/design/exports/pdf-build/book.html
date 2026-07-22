@@ -1,0 +1,350 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Helix Thready — Design Book</title>
+<style>
+  @page { size: A4; margin: 0; }
+  @page :first { margin: 0; }
+  * { box-sizing: border-box; -weasy-hyphens: none; }
+  html,body { margin:0; padding:0; font-family:"Hanken Grotesk","Helvetica Neue",Arial,sans-serif; color:#020817; }
+  code { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.85em; }
+  .slide { position:relative; width:210mm; height:297mm; display:flex; align-items:center; justify-content:center;
+           page-break-after:always; break-after:page; overflow:hidden; padding:10mm; }
+  .slide.light { background:#eef2f7; }
+  .slide.dark  { background:#020817; }
+  .slide img.shot { max-width:100%; max-height:100%; object-fit:contain; box-shadow:0 3px 22px rgba(2,8,23,.28); }
+  .cap { position:absolute; left:9mm; bottom:8mm; background:rgba(255,255,255,.92); color:#020817;
+         border:1px solid #cbd5e1; border-radius:9999px; padding:4px 12px; font-size:10pt; letter-spacing:.01em; }
+  .slide.dark .cap { background:rgba(15,23,42,.9); color:#f8fafc; border-color:#334155; }
+  .cap b { color:#446e12; } .slide.dark .cap b { color:#b6e376; } .cap i { opacity:.7; font-style:italic; }
+  /* cover */
+  .cover { width:210mm; height:297mm; page-break-after:always; break-after:page; position:relative;
+           background:linear-gradient(150deg,#b6e376 0%,#abddc9 46%,#eef2f7 47%,#ffffff 100%);
+           display:flex; flex-direction:column; }
+  .cover .top { flex:0 0 46%; display:flex; align-items:center; justify-content:center; }
+  .cover .logo { width:120mm; }
+  .cover .bot { flex:1; padding:16mm 20mm; display:flex; flex-direction:column; gap:5mm; }
+  .cover h1 { font-family:"Space Grotesk","Hanken Grotesk",sans-serif; font-size:34pt; margin:0; letter-spacing:-.01em; color:#020817; }
+  .cover .sub { font-size:14pt; color:#334155; margin:0; }
+  .cover .meta { margin-top:auto; font-size:10.5pt; color:#475569; line-height:1.6; }
+  .cover .slogan { font-size:13pt; color:#446e12; font-weight:600; }
+  .cover .heart { color:#dc2626; }
+  /* doc pages */
+  .doc { width:210mm; min-height:297mm; padding:20mm; page-break-after:always; break-after:page; }
+  .doc h2 { font-family:"Space Grotesk",sans-serif; font-size:24pt; margin:0 0 4mm; color:#020817; border-bottom:3px solid #b6e376; padding-bottom:3mm; }
+  .doc h3 { font-family:"Space Grotesk",sans-serif; font-size:13pt; margin:8mm 0 3mm; color:#020817; }
+  .doc h3 .hint,.doc .hint { font-weight:400; font-size:9pt; color:#64748b; }
+  .lede { font-size:11pt; color:#334155; line-height:1.55; max-width:150mm; }
+  .swgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:5mm; }
+  .sw { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
+  .sw .chip { height:12mm; } .sw .chip.dk { height:7mm; border-top:1px solid #e2e8f0; }
+  .sw .swmeta { padding:2.5mm 3mm; } .sw .swmeta code { font-weight:600; display:block; font-size:9.5pt; }
+  .sw .swmeta span { font-size:7.7pt; color:#64748b; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10mm; margin-top:4mm; }
+  table.tok { width:100%; border-collapse:collapse; font-size:10pt; }
+  table.tok td,table.tok th { border-bottom:1px solid #e2e8f0; padding:2mm 2mm; text-align:left; }
+  table.tok.wide { font-size:9pt; } table.tok.wide code { font-size:8.5pt; }
+  .bars .bar { display:flex; align-items:center; gap:3mm; font-size:9pt; color:#475569; margin:2mm 0; }
+  .bars .bar span { display:inline-block; height:5mm; background:#446e12; border-radius:3px; }
+  .tiny { font-size:8.5pt; color:#64748b; line-height:1.5; } .lede code,.tiny code { color:#446e12; }
+</style></head><body>
+
+<div class="cover">
+  <div class="top"><img class="logo" src="../../assets/logo-full.svg" alt="Helix Thready"/></div>
+  <div class="bot">
+    <h1>Helix Thready — Design Book</h1>
+    <p class="sub">MVP design package · screens, tokens, component library & motion</p>
+    <div class="meta">
+      <div><b>44</b> screen renders (light + dark, deviceScaleFactor 2) across web · mobile · desktop · TUI.</div>
+      <div>Tokens · component library · motion spec · 22 genuine OD&nbsp;Figma capture IRs.</div>
+      <div>Generated 2026-07-22 · self-contained HTML → PNG (headless Chromium) → PDF (WeasyPrint).</div>
+      <div class="slogan">Made with <span class="heart">&#9829;</span> by Helix Development</div>
+    </div>
+  </div>
+</div>
+
+<section class="doc">
+  <h2>What's in this book</h2>
+  <p class="lede">A single portable record of the Helix Thready MVP design package. Each screen is
+  a self-contained OpenDesign-style HTML artifact with inlined brand tokens and first-class light +
+  dark themes; the pages here are 2× headless-Chromium renders, one screen per page, captioned
+  <code>area / screen / theme</code>.</p>
+  <table class="tok"><thead><tr><th>Section</th><th>Contents</th></tr></thead><tbody>
+    <tr><td>Design tokens</td><td>Colour roles (light + dark), type scale, spacing, radius</td></tr>
+    <tr><td>Web portal</td><td>14 screens × 2 themes (incl. prototype shell)</td></tr>
+    <tr><td>Mobile app</td><td>7 screens × 2 themes (390px device frame)</td></tr>
+    <tr><td>Desktop shell</td><td>1 screen × 2 themes</td></tr>
+    <tr><td>Terminal (TUI)</td><td>1 screen × 2 themes</td></tr>
+    <tr><td>Component library</td><td>Full component sheet, light + dark</td></tr>
+    <tr><td>Motion spec</td><td>6 Lottie animations + preview board</td></tr>
+  </tbody></table>
+</section>
+
+
+<section class="doc">
+  <h2>Design tokens</h2>
+  <p class="lede">The Helix Thready brand contract — the machine-readable twin of
+  <code>opendesign/tokens.css</code>. Every screen in this book inlines these tokens; dark mode
+  re-binds only the colour-bearing tokens (structural tokens are declared once).</p>
+  <h3>Colour roles <span class="hint">left = light · right = dark</span></h3>
+  <div class="swgrid"><div class="sw"><div class="chip" style="background:#b6e376"></div>
+  <div class="chip dk" style="background:#b6e376"></div>
+  <div class="swmeta"><code>--brand</code><span>#b6e376 · <b>dark</b> #b6e376</span></div></div><div class="sw"><div class="chip" style="background:#abddc9"></div>
+  <div class="chip dk" style="background:#b7ebd6"></div>
+  <div class="swmeta"><code>--brand-2</code><span>#abddc9 · <b>dark</b> #b7ebd6</span></div></div><div class="sw"><div class="chip" style="background:#0a0f04"></div>
+  <div class="chip dk" style="background:#0a0f04"></div>
+  <div class="swmeta"><code>--brand-ink</code><span>#0a0f04 · <b>dark</b> #0a0f04</span></div></div><div class="sw"><div class="chip" style="background:#ffffff"></div>
+  <div class="chip dk" style="background:#020817"></div>
+  <div class="swmeta"><code>--bg</code><span>#ffffff · <b>dark</b> #020817</span></div></div><div class="sw"><div class="chip" style="background:#ffffff"></div>
+  <div class="chip dk" style="background:#020817"></div>
+  <div class="swmeta"><code>--surface</code><span>#ffffff · <b>dark</b> #020817</span></div></div><div class="sw"><div class="chip" style="background:#f1f5f9"></div>
+  <div class="chip dk" style="background:#1e293b"></div>
+  <div class="swmeta"><code>--surface-warm</code><span>#f1f5f9 · <b>dark</b> #1e293b</span></div></div><div class="sw"><div class="chip" style="background:#020817"></div>
+  <div class="chip dk" style="background:#f8fafc"></div>
+  <div class="swmeta"><code>--fg</code><span>#020817 · <b>dark</b> #f8fafc</span></div></div><div class="sw"><div class="chip" style="background:#475569"></div>
+  <div class="chip dk" style="background:#94a3b8"></div>
+  <div class="swmeta"><code>--muted</code><span>#475569 · <b>dark</b> #94a3b8</span></div></div><div class="sw"><div class="chip" style="background:#e2e8f0"></div>
+  <div class="chip dk" style="background:#1e293b"></div>
+  <div class="swmeta"><code>--border</code><span>#e2e8f0 · <b>dark</b> #1e293b</span></div></div><div class="sw"><div class="chip" style="background:#64748b"></div>
+  <div class="chip dk" style="background:#64748b"></div>
+  <div class="swmeta"><code>--border-strong</code><span>#64748b · <b>dark</b> #64748b</span></div></div><div class="sw"><div class="chip" style="background:#446e12"></div>
+  <div class="chip dk" style="background:#b6e376"></div>
+  <div class="swmeta"><code>--accent</code><span>#446e12 · <b>dark</b> #b6e376</span></div></div><div class="sw"><div class="chip" style="background:#ffffff"></div>
+  <div class="chip dk" style="background:#0a0f04"></div>
+  <div class="swmeta"><code>--accent-on</code><span>#ffffff · <b>dark</b> #0a0f04</span></div></div><div class="sw"><div class="chip" style="background:#166534"></div>
+  <div class="chip dk" style="background:#16a34a"></div>
+  <div class="swmeta"><code>--success</code><span>#166534 · <b>dark</b> #16a34a</span></div></div><div class="sw"><div class="chip" style="background:#854d0e"></div>
+  <div class="chip dk" style="background:#eab308"></div>
+  <div class="swmeta"><code>--warn</code><span>#854d0e · <b>dark</b> #eab308</span></div></div><div class="sw"><div class="chip" style="background:#dc2626"></div>
+  <div class="chip dk" style="background:#ef4444"></div>
+  <div class="swmeta"><code>--danger</code><span>#dc2626 · <b>dark</b> #ef4444</span></div></div></div>
+  <div class="two">
+    <div>
+      <h3>Type scale</h3>
+      <table class="tok"><tbody><tr><td><code>--text-xs</code></td><td>12px</td></tr><tr><td><code>--text-sm</code></td><td>14px</td></tr><tr><td><code>--text-base</code></td><td>16px</td></tr><tr><td><code>--text-lg</code></td><td>20px</td></tr><tr><td><code>--text-xl</code></td><td>24px</td></tr><tr><td><code>--text-2xl</code></td><td>32px</td></tr><tr><td><code>--text-3xl</code></td><td>48px</td></tr><tr><td><code>--text-4xl</code></td><td>64px</td></tr></tbody></table>
+      <p class="tiny">Display: Space Grotesk · Body: Hanken Grotesk · Mono: JetBrains Mono</p>
+    </div>
+    <div>
+      <h3>Spacing (4px base)</h3>
+      <div class="bars"><div class="bar"><span style="width:4px"></span><code>--space-1</code> 4px</div><div class="bar"><span style="width:8px"></span><code>--space-2</code> 8px</div><div class="bar"><span style="width:12px"></span><code>--space-3</code> 12px</div><div class="bar"><span style="width:16px"></span><code>--space-4</code> 16px</div><div class="bar"><span style="width:20px"></span><code>--space-5</code> 20px</div><div class="bar"><span style="width:24px"></span><code>--space-6</code> 24px</div><div class="bar"><span style="width:32px"></span><code>--space-8</code> 32px</div><div class="bar"><span style="width:48px"></span><code>--space-12</code> 48px</div></div>
+      <h3>Radius</h3>
+      <table class="tok"><tbody><tr><td><code>--radius-sm</code></td><td>8px</td></tr><tr><td><code>--radius-md</code></td><td>12px</td></tr><tr><td><code>--radius-lg</code></td><td>16px</td></tr><tr><td><code>--radius-pill</code></td><td>pill</td></tr></tbody></table>
+    </div>
+  </div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/index.png" alt="web index light"/>
+  <div class="cap"><b>web</b> / index / light <i>(prototype shell)</i></div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/index-dark.png" alt="web index dark"/>
+  <div class="cap"><b>web</b> / index / dark <i>(prototype shell)</i></div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/dashboard.png" alt="web dashboard light"/>
+  <div class="cap"><b>web</b> / dashboard / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/dashboard-dark.png" alt="web dashboard dark"/>
+  <div class="cap"><b>web</b> / dashboard / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/channels.png" alt="web channels light"/>
+  <div class="cap"><b>web</b> / channels / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/channels-dark.png" alt="web channels dark"/>
+  <div class="cap"><b>web</b> / channels / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/thread-explorer.png" alt="web thread-explorer light"/>
+  <div class="cap"><b>web</b> / thread-explorer / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/thread-explorer-dark.png" alt="web thread-explorer dark"/>
+  <div class="cap"><b>web</b> / thread-explorer / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/post-detail.png" alt="web post-detail light"/>
+  <div class="cap"><b>web</b> / post-detail / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/post-detail-dark.png" alt="web post-detail dark"/>
+  <div class="cap"><b>web</b> / post-detail / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/search.png" alt="web search light"/>
+  <div class="cap"><b>web</b> / search / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/search-dark.png" alt="web search dark"/>
+  <div class="cap"><b>web</b> / search / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/research-viewer.png" alt="web research-viewer light"/>
+  <div class="cap"><b>web</b> / research-viewer / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/research-viewer-dark.png" alt="web research-viewer dark"/>
+  <div class="cap"><b>web</b> / research-viewer / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/assets-browser.png" alt="web assets-browser light"/>
+  <div class="cap"><b>web</b> / assets-browser / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/assets-browser-dark.png" alt="web assets-browser dark"/>
+  <div class="cap"><b>web</b> / assets-browser / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/skills-manager.png" alt="web skills-manager light"/>
+  <div class="cap"><b>web</b> / skills-manager / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/skills-manager-dark.png" alt="web skills-manager dark"/>
+  <div class="cap"><b>web</b> / skills-manager / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/events-monitor.png" alt="web events-monitor light"/>
+  <div class="cap"><b>web</b> / events-monitor / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/events-monitor-dark.png" alt="web events-monitor dark"/>
+  <div class="cap"><b>web</b> / events-monitor / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/accounts-admin.png" alt="web accounts-admin light"/>
+  <div class="cap"><b>web</b> / accounts-admin / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/accounts-admin-dark.png" alt="web accounts-admin dark"/>
+  <div class="cap"><b>web</b> / accounts-admin / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/billing.png" alt="web billing light"/>
+  <div class="cap"><b>web</b> / billing / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/billing-dark.png" alt="web billing dark"/>
+  <div class="cap"><b>web</b> / billing / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/settings.png" alt="web settings light"/>
+  <div class="cap"><b>web</b> / settings / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/settings-dark.png" alt="web settings dark"/>
+  <div class="cap"><b>web</b> / settings / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/web/login.png" alt="web login light"/>
+  <div class="cap"><b>web</b> / login / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/web/login-dark.png" alt="web login dark"/>
+  <div class="cap"><b>web</b> / login / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/home-feed.png" alt="mobile home-feed light"/>
+  <div class="cap"><b>mobile</b> / home-feed / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/home-feed-dark.png" alt="mobile home-feed dark"/>
+  <div class="cap"><b>mobile</b> / home-feed / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/channel-threads.png" alt="mobile channel-threads light"/>
+  <div class="cap"><b>mobile</b> / channel-threads / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/channel-threads-dark.png" alt="mobile channel-threads dark"/>
+  <div class="cap"><b>mobile</b> / channel-threads / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/post-detail.png" alt="mobile post-detail light"/>
+  <div class="cap"><b>mobile</b> / post-detail / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/post-detail-dark.png" alt="mobile post-detail dark"/>
+  <div class="cap"><b>mobile</b> / post-detail / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/search.png" alt="mobile search light"/>
+  <div class="cap"><b>mobile</b> / search / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/search-dark.png" alt="mobile search dark"/>
+  <div class="cap"><b>mobile</b> / search / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/notifications.png" alt="mobile notifications light"/>
+  <div class="cap"><b>mobile</b> / notifications / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/notifications-dark.png" alt="mobile notifications dark"/>
+  <div class="cap"><b>mobile</b> / notifications / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/account.png" alt="mobile account light"/>
+  <div class="cap"><b>mobile</b> / account / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/account-dark.png" alt="mobile account dark"/>
+  <div class="cap"><b>mobile</b> / account / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/mobile/settings.png" alt="mobile settings light"/>
+  <div class="cap"><b>mobile</b> / settings / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/mobile/settings-dark.png" alt="mobile settings dark"/>
+  <div class="cap"><b>mobile</b> / settings / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/desktop/desktop-shell.png" alt="desktop desktop-shell light"/>
+  <div class="cap"><b>desktop</b> / desktop-shell / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/desktop/desktop-shell-dark.png" alt="desktop desktop-shell dark"/>
+  <div class="cap"><b>desktop</b> / desktop-shell / dark</div>
+</section>
+<section class="slide light">
+  <img class="shot" src="../png/tui/tui-screens.png" alt="tui tui-screens light"/>
+  <div class="cap"><b>tui</b> / tui-screens / light</div>
+</section>
+<section class="slide dark">
+  <img class="shot" src="../png/tui/tui-screens-dark.png" alt="tui tui-screens dark"/>
+  <div class="cap"><b>tui</b> / tui-screens / dark</div>
+</section>
+<section class="slide light"><img class="shot" src="../png/library/components.png" alt="component library light"/>
+    <div class="cap"><b>library</b> / components sheet / light</div></section><section class="slide dark"><img class="shot" src="../png/library/components-dark.png" alt="component library dark"/>
+    <div class="cap"><b>library</b> / components sheet / dark</div></section>
+
+<section class="doc">
+  <h2>Motion spec summary</h2>
+  <p class="lede">Six Lottie animations (self-hosted JSON, no CDN). Each declares a
+  <code>reducedMotion</code> fallback honoured under <code>prefers-reduced-motion: reduce</code>.
+  Full preview board rendered on the facing page.</p>
+  <table class="tok wide"><thead><tr><th>id</th><th>file</th><th>play</th><th>frames</th><th>poster</th><th>reduced-motion</th></tr></thead>
+  <tbody><tr>
+  <td><code>helix-spinner</code><br><span class="tiny">alias spiral-loader</span></td>
+  <td>helix-spinner.json</td><td>loop</td><td>120f @ 60fps</td>
+  <td>poster 15</td><td>freeze-poster</td></tr><tr>
+  <td><code>success-check</code></td>
+  <td>success-check.json</td><td>once</td><td>90f @ 60fps</td>
+  <td>poster 89</td><td>final-frame</td></tr><tr>
+  <td><code>error-cross</code></td>
+  <td>error-cross.json</td><td>once</td><td>90f @ 60fps</td>
+  <td>poster 89</td><td>final-frame</td></tr><tr>
+  <td><code>processing-pulse</code></td>
+  <td>processing-pulse.json</td><td>loop</td><td>120f @ 60fps</td>
+  <td>poster 30</td><td>freeze-poster</td></tr><tr>
+  <td><code>thread-sync</code></td>
+  <td>thread-sync.json</td><td>loop</td><td>120f @ 60fps</td>
+  <td>poster 30</td><td>freeze-poster</td></tr><tr>
+  <td><code>transition-fade-slide</code></td>
+  <td>transition-fade-slide.json</td><td>once</td><td>90f @ 60fps</td>
+  <td>poster 89</td><td>instant-cut</td></tr></tbody></table>
+  <p class="tiny">Runtime bridge — web: lottie-web · desktop: lottie-web (Tauri 2 wraps the Angular UI) ·
+  compose: lottie-compose · ios: lottie-ios · tui: none — Lipgloss spinner/progress primitives via the token bridge.</p>
+</section>
+<section class="slide light"><img class="shot" src="../png/motion/preview.png" alt="motion preview board"/>
+  <div class="cap"><b>motion</b> / preview board / light</div></section>
+</body></html>

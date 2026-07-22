@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Web Portal Screen Designs</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Web Portal Screen Designs</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#what-this-is" id="toc-what-this-is">1. What this
+is</a></li>
+<li><a href="#how-the-artifacts-are-built"
+id="toc-how-the-artifacts-are-built">2. How the artifacts are
+built</a></li>
+<li><a href="#screen-catalogue-files-purpose-states"
+id="toc-screen-catalogue-files-purpose-states">3. Screen catalogue
+(files · purpose · states)</a></li>
+<li><a href="#interactive-prototype-shell"
+id="toc-interactive-prototype-shell">4. Interactive prototype
+shell</a></li>
+<li><a href="#accessibility-theming-contract"
+id="toc-accessibility-theming-contract">5. Accessibility &amp; theming
+contract</a></li>
+<li><a href="#open-items" id="toc-open-items">6. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Web Portal Screen Designs (OpenDesign-style HTML artifacts)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/web/README.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ../../design-system.md, ../../wireframes.md, ../../ux-flows.md,
+                    ../../component-library.md, ../../theming.md, ../../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design)</td>
+<td>Initial full set: 13 screens + interactive prototype shell
+(<code>index.html</code>), each a self-contained OpenDesign-style HTML
+artifact with inlined Thready tokens, light+dark, per-screen state
+contracts, realistic Thready data</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-what-this-is">1. What this is</a></li>
+<li><a href="#2-how-the-artifacts-are-built">2. How the artifacts are
+built</a></li>
+<li><a href="#3-screen-catalogue-files--purpose--states">3. Screen
+catalogue (files · purpose · states)</a></li>
+<li><a href="#4-interactive-prototype-shell">4. Interactive prototype
+shell</a></li>
+<li><a href="#5-accessibility--theming-contract">5. Accessibility &amp;
+theming contract</a></li>
+<li><a href="#6-open-items">6. Open items</a></li>
+</ul>
+<h2 id="what-this-is">1. What this is</h2>
+<p>The <strong>full Web-portal screen design set</strong> for Thready,
+rendered as OpenDesign-style <strong>single-page HTML artifacts</strong>
+— one <code>.html</code> per screen, each fully
+<strong>self-contained</strong> (no CDNs, no external CSS, no external
+fonts; system font fallbacks for Space Grotesk / Hanken Grotesk /
+JetBrains Mono). These are the high-fidelity realization of the
+structural contract in <a href="../../wireframes.md">wireframes.md</a>
+§3, driven by the journeys in <a
+href="../../ux-flows.md">ux-flows.md</a>, composed from the
+primitives/composites in <a
+href="../../component-library.md">component-library.md</a>, themed by <a
+href="../../design-system.md">design-system.md</a> §3 and <a
+href="../../theming.md">theming.md</a>.</p>
+<p>Open any file directly in a browser, or start from <strong><a
+href="./index.html"><code>index.html</code></a></strong> — the
+interactive prototype shell that walks the ux-flows journeys across all
+screens.</p>
+<h2 id="how-the-artifacts-are-built">2. How the artifacts are built</h2>
+<ul>
+<li><strong>Tokens inlined, verbatim.</strong> Every artifact embeds the
+theme-invariant core tokens (design-system.md §3.1) and the Thready
+brand theme (§3.2): base <code>#B6E376</code>, accents
+<code>#446E12</code> (light) / <code>#B6E376</code> (dark) — both
+AA-measured — teal secondaries
+<code>#ABDDC9</code>/<code>#B7EBD6</code>, fg
+<code>#020817</code>/<code>#F8FAFC</code>, neutrals
+<code>#475569</code>/<code>#94A3B8</code>.
+<code>../opendesign/tokens.css</code> is a <strong>reference, not a
+dependency</strong> — the artifacts never load it.</li>
+<li><strong>Light + dark, three sanctioned mechanisms</strong>
+(theming.md §2): <code>@media (prefers-color-scheme: dark)</code> for
+<em>system</em>, <code>:root[data-theme="dark"]</code> for the explicit
+choice, persisted to <code>localStorage['thready-theme']</code>. Every
+screen carries a <strong>visible Light/Dark/System toggle</strong>
+(<code>ds-theme-toggle</code> contract, <code>aria-pressed</code>).</li>
+<li><strong>Shared chrome.</strong> Every screen has the embedded
+logo-mark SVG header (same geometry as
+<code>../../assets/logo-mark.svg</code>), the global search
+(<code>/</code> shortcut), language picker (en/ru/sr-Cyrl), account
+switcher, and the locked <code>.ds-footer</code> slogan <strong>“Made
+with ♥ by Helix Development”</strong> — heart in <code>--ds-heart</code>
+= <code>--accent</code> (<code>#446E12</code> light /
+<code>#B6E376</code> dark, <code>[OPEN: THREADY-DES-03]</code>).</li>
+<li><strong>Realistic Thready data only</strong> — channels
+(<code>#ml-papers</code>, <code>#films</code>, <code>#nlp</code>,
+<code>Max: dev-notes</code>), posts with direct/indirect hashtags
+(<code>#Research</code>, <code>#Video ◌ (derived)</code>,
+<code>#ToDownload</code>), processing states, semantic-search scores
+(0.94/0.91/0.88). No lorem ipsum.</li>
+<li><strong>Per-screen state contracts.</strong> Each screen ends with a
+<em>“Screen states — design contract”</em> strip rendering (or
+documenting) its loading/skeleton, empty, error and screen-specific
+states per wireframes.md §1.1 and the component-library.md §5b
+lifecycle.</li>
+<li><strong>Forms</strong> show blur/submit/server validation with
+hints, specific error messages, and <code>aria-describedby</code>
+wiring; destructive/gated actions demo their
+<code>409</code>/<code>422</code> behavior in-page.</li>
+</ul>
+<h2 id="screen-catalogue-files-purpose-states">3. Screen catalogue
+(files · purpose · states)</h2>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 32%" />
+<col style="width: 25%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Screen (wireframes ref)</th>
+<th>Realistic content</th>
+<th>States shown/documented</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./login.html"><code>login.html</code></a></td>
+<td>Login / MFA (§3.2)</td>
+<td>credentials + TOTP step, session policy, Caps-Lock hint</td>
+<td>default · validating · error (generic 401, no enumeration) ·
+locked/cooldown · MFA-required (Esc back) · SSO round-trip ·
+<strong>no-account-membership empty</strong></td>
+</tr>
+<tr>
+<td><a href="./dashboard.html"><code>dashboard.html</code></a></td>
+<td>Dashboard (§3.3)</td>
+<td>stat row 128/1,204/17/42.1 TB · live WS/SSE activity · processing
+queue (63%/31%/failed→retry) · recent-threads table</td>
+<td>skeleton · empty (add first channel) · error · live-degraded
+(reconnect) · failed-job retry (409-guarded)</td>
+</tr>
+<tr>
+<td><a href="./channels.html"><code>channels.html</code></a></td>
+<td>Channels list + <strong>Add-Channel wizard modal</strong>
+(§3.4)</td>
+<td>5 channels incl. <code>Max: dev-notes</code> ⚠ auth
+<code>[GAP: 5.1]</code>; 5-step wizard with Resolve preview (“ML Papers
+· public · 128 msgs”)</td>
+<td>skeleton · empty · error · wizard: resolving (aria-busy) / 422
+unresolvable / 403 private / auto-type banner (§Q32) · optimistic add
+(channel.added) · Max auth</td>
+</tr>
+<tr>
+<td><a
+href="./thread-explorer.html"><code>thread-explorer.html</code></a></td>
+<td>Channel detail / thread list (§3.5)</td>
+<td>root + <strong>organic reply chain</strong> (↩︎12, expandable),
+system replies separated &amp; excluded, per-post status glyphs ✓⭮◷⚠,
+indirect-tag badge</td>
+<td>skeleton · backfilling (54/128) · empty · error · re-auth needed ·
+paused</td>
+</tr>
+<tr>
+<td><a href="./post-detail.html"><code>post-detail.html</code></a></td>
+<td>Post detail / processing (§3.6)</td>
+<td>root + tags (direct ● / indirect ○ “(derived)”) · reply log (3
+system status replies) · full pipeline
+classify→download(63%)→convert→analyze(failed→retry)→research→reply with
+precedence caption · <strong>skills run</strong> table (additive
+dispatch) · generated assets (raw / …-web / research.md) ·
+<strong>Reprocess</strong> (confirm → 202; second click → 409
+toast)</td>
+<td>skeleton · pipeline-live · step-failed + idempotent retry ·
+reprocess-409 · empty replies · error</td>
+</tr>
+<tr>
+<td><a href="./search.html"><code>search.html</code></a></td>
+<td>Search (§3.7)</td>
+<td>query “papers about retrieval-augmented generation”; mode
+semantic/keyword/hybrid; scope posts/docs/assets (≥1 enforced); advanced
+filters (type/channel/tag/origin); scored results 0.94/0.91/0.88 →
+post/doc; 214 ms vs &lt;500 ms SLO</td>
+<td>idle (recent) · skeleton · empty + clear-filters · timeout nudge ·
+<strong>degraded HashEmbedder</strong> (<code>[GAP: 2.1]</code>, scores
+hidden) · scope-invalid</td>
+</tr>
+<tr>
+<td><a
+href="./assets-browser.html"><code>assets-browser.html</code></a></td>
+<td>Assets (§3.8)</td>
+<td>grid/list toggle; tiles video-web.mp4 / heat-1995.mkv (broken link)
+/ cover.jpg (OCR ✓) / deep-work.pdf (🔒 sensitive) / nocturne-op9-2.flac
+/ research.md; <strong>detail drawer</strong>: renditions, sha256,
+linked posts, stream (Range/HLS), re-download, sensitive lock</td>
+<td>skeleton · empty · error · broken-link → re-download ·
+sensitive/locked · streaming</td>
+</tr>
+<tr>
+<td><a
+href="./skills-manager.html"><code>skills-manager.html</code></a></td>
+<td>Skills / Recipes (§3.9)</td>
+<td>SVG <strong>skill graph</strong> atomic→composite→umbrella; recipes
+Research v3 (#Research, order research&gt;reply, multi-pass steps),
+Movies v5, Notes fallback (§Q32); “test on sample post” fixture
+modal</td>
+<td>skeleton · defaults-only empty · test-run preview · error · 409
+version conflict — plus the <code>[GAP: 4.1]</code> BUILD-NEW
+dispatch-engine honesty banner</td>
+</tr>
+<tr>
+<td><a
+href="./research-viewer.html"><code>research-viewer.html</code></a></td>
+<td>Generated research doc (post-detail asset; theming §9)</td>
+<td>research.md with TOC, findings, benchmark table, sources &amp; pass
+provenance (Research v3); actions: open source post, re-run
+(409-guarded), .md / Docs-Chain PDF export; account-brand note</td>
+<td>skeleton · generating · stale (post reprocessed) · empty ·
+error</td>
+</tr>
+<tr>
+<td><a
+href="./accounts-admin.html"><code>accounts-admin.html</code></a></td>
+<td>Admin — Accounts / Users &amp; roles / Audit (§3.10)</td>
+<td><strong>three-tier RBAC</strong> explainer (Root / Account Admin /
+Standard); users table root@/alice@/bob@ (invited); per-Account roles;
+invite modal (email validation, idempotent no-op); append-only audit
+log</td>
+<td>skeleton · invite-pending/resend · idempotent invite ·
+<strong>last-Root-Admin guard</strong> (disabled + tooltip) · 403
+forbidden · empty audit</td>
+</tr>
+<tr>
+<td><a href="./billing.html"><code>billing.html</code></a></td>
+<td>Billing &amp; usage (§3.10)</td>
+<td>plan <strong>Pro</strong> + metered 1.2M posts · 42 TB · 3,481
+research runs; invoices INV-2026-005…007 (Docs-Chain PDFs)</td>
+<td>skeleton · past-due · meter-near-cap · empty invoices · error · 403
+— monetary figures are placeholders (<code>[OPEN]</code> below)</td>
+</tr>
+<tr>
+<td><a href="./settings.html"><code>settings.html</code></a></td>
+<td>Settings — Prefs / <strong>Branding white-label</strong> /
+Messengers (§3.11)</td>
+<td>theme+language prefs, keyboard map; branding editor for Acme
+(#12A3FF/#0D6EFD, accents #0B5ED7 6.1:1 ✓ / #7DB3FF 7.2:1 ✓) with
+<strong>working live AA meter</strong> (WCAG math = server
+<code>ValidateAccent</code>), logo uploads, slogan, locked-attribution
+note, live preview (<code>data-account</code> scope), Save gated on AA;
+Telegram session ✓ / Max sign-in (interactive vs env)</td>
+<td>default · dirty guard · previewing · validating/<strong>422 +
+suggestion #446E12</strong> · success (audit-logged) · sign-in
+await-code · missing-env 422</td>
+</tr>
+<tr>
+<td><a
+href="./events-monitor.html"><code>events-monitor.html</code></a></td>
+<td>Events monitor (Live activity / <code>thready events tail</code>
+mirror)</td>
+<td>live table of
+<code>post.received · processing.progress · processing.completed · processing.failed · channel.added</code>
+with JSON payloads; type/channel filters, pause/tail; CLI NDJSON
+card</td>
+<td>live · reconnecting (backoff) · offline (frozen values) · paused
+(buffered) · empty-filtered · error (401 re-auth)</td>
+</tr>
+<tr>
+<td><a href="./index.html"><code>index.html</code></a></td>
+<td><strong>Interactive prototype shell</strong></td>
+<td>ux-flows journeys 1–4 as clickable steppers driving an inline
+preview of every screen + full gallery</td>
+<td>— (shell)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="interactive-prototype-shell">4. Interactive prototype shell</h2>
+<p><a href="./index.html"><code>index.html</code></a> wires the four <a
+href="../../ux-flows.md">ux-flows.md</a> journeys to the artifacts:
+<strong>1 · Add channel</strong> (login → dashboard → channels wizard →
+messenger sign-in sub-flow §2.1 → thread-explorer backfill), <strong>2 ·
+Process post + Reprocess</strong> (dashboard → thread-explorer →
+post-detail → events-monitor → research-viewer → assets), <strong>3 ·
+Search</strong> (search → post/doc), and <strong>4 · Manage
+account</strong> (accounts-admin → billing → settings branding AA gate).
+Each step loads the target screen into an embedded preview with
+prev/next stepping; the gallery links every artifact.</p>
+<h2 id="accessibility-theming-contract">5. Accessibility &amp; theming
+contract</h2>
+<ul>
+<li>WCAG 2.2 AA with the shipped tokens: text on accent uses
+<code>--accent-on</code>; <code>--brand</code>/<code>--brand-2</code>
+are <strong>decorative only</strong>; <code>--danger</code> is never
+masked by brand color.</li>
+<li><code>:focus-visible</code> shows the 3px <code>--focus-ring</code>
+on every interactive element; skip-to-content link; modals are native
+<code>&lt;dialog&gt;</code> (focus trap + <code>Esc</code>); toasts use
+<code>role="status"</code>/<code>role="alert"</code>; progress uses
+<code>role="progressbar"</code> + <code>aria-valuenow</code>; indirect
+chips carry “(derived)” in the accessible name (never color-only);
+reduced-motion disables all transitions/shimmer.</li>
+<li>The AA meter in <code>settings.html</code> implements the same sRGB
+relative-luminance ratio as the server gate (theming.md §10) and demos
+the <code>422 accent_below_wcag_aa</code> path with the measured ratio
+and the <code>#446E12</code> suggestion.</li>
+</ul>
+<h2 id="open-items">6. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-SCR-01]</code> <strong>Billing
+pricing</strong> — plan tiers beyond “Pro”, unit prices, included quotas
+and grace-period policy are not defined in the ground truth;
+<code>billing.html</code> ships the layout contract with placeholder
+amounts (<code>—</code>) and a visible note.</li>
+<li><code>[OPEN: THREADY-DES-SCR-02]</code> <strong>Research doc
+versioning</strong> — diff/history between successive research
+generations after a reprocess is unspecified;
+<code>research-viewer.html</code> shows latest + a “stale” state
+only.</li>
+<li><code>[OPEN: THREADY-DES-SCR-03]</code> <strong>Events
+retention</strong> — history depth/queryable window for the events
+monitor beyond the live tail is unspecified.</li>
+<li><code>[OPEN: THREADY-DES-SCR-04]</code> <strong>Forgot-password
+flow</strong> — referenced by wireframes.md §3.2 but not specified;
+<code>login.html</code> links it with an inline note, no fake flow is
+designed.</li>
+<li>Inherited from ground truth (noted in-page where relevant):
+<code>[OPEN: THREADY-DES-03]</code> heart color (accent vs love-red —
+artifacts follow the current default
+<code>--ds-heart: var(--accent)</code>),
+<code>[OPEN: THREADY-DES-06]</code> Account-Admin self-branding,
+<code>[OPEN: THREADY-DES-10]</code> final endpoint/event names,
+<code>[OPEN: THREADY-DES-11]</code> composite API names; gaps
+<code>[GAP: 5.1]</code> Max adapter, <code>[GAP: 4.1]</code> dispatch
+engine, <code>[GAP: 2.1]</code> HashEmbedder, <code>[GAP: 2.6]</code>
+OCR, <code>[GAP: 6.5]</code> MeTube webhook are rendered as honest in-UI
+states/banners, never as working features.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

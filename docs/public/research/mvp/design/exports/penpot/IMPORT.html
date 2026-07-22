@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready → PenPot import bundle</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready → PenPot import bundle</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#exact-import-steps" id="toc-exact-import-steps">Exact
+import steps</a>
+<ul>
+<li><a href="#a.-svg-vectors-editable-the-primary-penpot-deliverable"
+id="toc-a.-svg-vectors-editable-the-primary-penpot-deliverable">A. SVG
+vectors (editable) — the primary PenPot deliverable</a></li>
+<li><a href="#b.-screen-pngs-raster-reference"
+id="toc-b.-screen-pngs-raster-reference">B. Screen PNGs (raster
+reference)</a></li>
+</ul></li>
+<li><a href="#honest-boundaries-verified"
+id="toc-honest-boundaries-verified">Honest boundaries —
+VERIFIED</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — PenPot import bundle (SVG vectors + screen PNGs)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/exports/penpot/IMPORT.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready design-export capstone
+  Related         : ../README.md, ../../library/components-sheet.svg, ../png/
+-->
+<p>PenPot (<a href="https://penpot.app">penpot.app</a>) imports
+<strong>SVG</strong> and <strong>PNG/JPEG</strong> natively. It has
+<strong>no</strong> native OpenDesign, Figma-<code>.fig</code>, or
+Lottie importer. This bundle is therefore split by exactly what PenPot
+can do with each artifact — nothing here is misrepresented as editable
+when it is not.</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 72%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>What</th>
+<th>PenPot import result — HONEST</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>svg/*.svg</code> (16)</td>
+<td><code>components-sheet.svg</code> (the whole component library
+board) + brand lockups (<code>logo-full</code>, <code>logo-mark</code>,
+<code>footer-slogan</code>) + the 4 launcher-icon variants + 8
+design-system diagrams</td>
+<td><strong>Native editable vectors</strong> — real paths / text /
+groups you can move and restyle.</td>
+</tr>
+<tr>
+<td><code>png/&lt;area&gt;/*@2x.png</code></td>
+<td>Every screen rendered at <strong>2× in both light and dark</strong>
+(web · mobile · desktop · TUI · library · motion)</td>
+<td><strong>Raster images</strong> — PenPot places these as flattened
+bitmaps. <strong>Reference/underlay only, not editable UI.</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="exact-import-steps">Exact import steps</h2>
+<h3 id="a.-svg-vectors-editable-the-primary-penpot-deliverable">A. SVG
+vectors (editable) — the primary PenPot deliverable</h3>
+<ol type="1">
+<li>Open PenPot → open or create a <strong>Project</strong> → open a
+<strong>File</strong>.</li>
+<li>Top-left <strong>menu (☰) → Import files…</strong> <em>(or drag the
+<code>.svg</code> straight onto the canvas)</em>.</li>
+<li>Select one or more files from <strong><code>svg/</code></strong> →
+<strong>Import</strong>.</li>
+<li>Each SVG lands as a board/group of editable vector layers.
+<code>components-sheet.svg</code> gives the whole component sheet as one
+editable board; the brand + diagram SVGs come in as their own vector
+groups.</li>
+</ol>
+<h3 id="b.-screen-pngs-raster-reference">B. Screen PNGs (raster
+reference)</h3>
+<ol type="1">
+<li>Same <strong>menu (☰) → Import files…</strong> (or drag-drop).</li>
+<li>Select PNGs from <strong><code>png/&lt;area&gt;/</code></strong> →
+<strong>Import</strong>. Each becomes an image layer at its intrinsic
+pixels. These are <strong>2× renders</strong>, so scale to
+<strong>50%</strong> for 1:1 CSS-px sizing.</li>
+<li>Use them as a pixel-accurate backdrop to trace/rebuild native PenPot
+components on top. Import the <code>-dark@2x.png</code> variant to work
+against the dark theme.</li>
+</ol>
+<h2 id="honest-boundaries-verified">Honest boundaries — VERIFIED</h2>
+<ul>
+<li><strong>Per-screen <em>vector</em> SVG is not feasible</strong> with
+the available toolchain. The screens are self-contained HTML/CSS;
+headless Chromium / WeasyPrint / ImageMagick can rasterize HTML to
+PNG/PDF but <strong>cannot emit a faithful HTML→SVG vector</strong> of a
+full screen (complex CSS layout, grids, shadows, pseudo-elements). So
+full screens ship as <strong>PNG (raster)</strong> — exactly the
+mandate’s “…plus the PNG renders” fallback. The only true vectors are
+the hand-authored brand / component / diagram SVGs in <code>svg/</code>,
+which import as editable geometry.</li>
+<li><strong>No PenPot API / cloud push.</strong> No PenPot token exists
+in this environment; import is the operator-run <strong>File →
+Import</strong> flow above. Nothing here contacts a PenPot server.
+<code>[OPEN]</code> a cloud push would be operator-interactive.</li>
+<li>PenPot’s SVG importer flattens some advanced CSS-derived effects;
+<code>components-sheet.svg</code> was authored as a clean vector sheet
+so it round-trips well.</li>
+</ul>
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

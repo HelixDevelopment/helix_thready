@@ -15,10 +15,12 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: Figma plan, interactive vs. non‑interactive prototypes, motion/transition spec, export pipeline (Figma/PenPot/PDF/PNG/SVG/Lottie), review loop, Docs Chain wiring |
 | 2 | 2026-07-22 | swarm (design · Pass 3) | Depth pass to parity with the rest of the area: **corrected the unverified "first‑party Figma plugin" claim** to an explicit assumption + a source‑confirmed fallback bridge (§2, §7); added the **interactive‑prototype coverage & traceability matrix** (§4.1, every journey → screens → flow → states/motion → surfaces); added **prototype verification & runtime evidence** (§8.1, the anti‑bluff gate on the review loop); enumerated the design‑relevant subset of the 15 mandated test types the prototypes exercise |
+| 3 | 2026-07-22 | swarm (design · package critic) | Wired the plan to the **materialized artifacts now on disk** (new §1.1): the interactive prototype ([`screens/web/index.html`](./screens/web/index.html) + the 30 rendered screens), the non‑interactive set (`exports/png/` 49 renders light+dark 2×, `exports/design-book.pdf` 54 pp), the Lottie catalogue + self‑contained [`motion/preview.html`](./motion/preview.html), and the PenPot/Figma‑IR hand‑off bundles. Plan sign‑off verified in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md). |
 
 ## Table of contents
 
 - [1. Requirements (verbatim intent)](#1-requirements-verbatim-intent)
+  - [1.1 Materialized artifacts on disk](#11-materialized-artifacts-on-disk)
 - [2. Tooling: OpenDesign + Figma (+ PenPot, Lottie)](#2-tooling-opendesign--figma--penpot-lottie)
 - [3. Figma source‑of‑record structure](#3-figma-source-of-record-structure)
 - [4. Interactive prototypes](#4-interactive-prototypes)
@@ -45,6 +47,23 @@ From the request (§Design) `[OPERATOR]`:
 - Materials **connected to the project via all hooks and Docs Chain**, so a change that affects
   client UI/UX propagates.
 - **Versioned** like all documentation.
+
+### 1.1 Materialized artifacts on disk
+
+This plan is no longer prospective — the deliverables it specifies are **rendered and present in
+the area** (audited in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md)). Map from mandate to
+concrete artifact:
+
+| Mandate | Materialized artifact (VERIFIED on disk) |
+|---------|-------------------------------------------|
+| **Interactive prototype** | [`screens/web/index.html`](./screens/web/index.html) — a journey‑walking shell that embeds the live rendered screens (all 14 web sibling links resolve); the 30 screens across web/mobile/desktop/TUI/marketing are self‑contained, light + dark |
+| **Non‑interactive prototype** | [`exports/png/`](./exports/README.md) — 49 PNG renders (light + dark, 2× deviceScaleFactor) · [`exports/design-book.pdf`](./exports/design-book.pdf) — 54‑page portable design book |
+| **Lottie motion + transitions** | [`motion/`](./motion/README.md) — 6 Lottie `.json` (incl. `transition-fade-slide.json`), + the self‑contained [`motion/preview.html`](./motion/preview.html) board (vendored lottie‑web, zero network) |
+| **PenPot / Figma hand‑off** | [`exports/penpot/`](./exports/penpot/IMPORT.md) (16 SVG + 22 PNG) · [`exports/figma/`](./exports/figma/IMPORT.md) — **28** genuine `.od-figma.json` IR captures (11 291 nodes) + `IMPORT.md` |
+
+The **cloud** side of Figma/PenPot hand‑off (a live `.fig`, a hosted PenPot project) is
+**operator‑only** and honestly deferred — see §7 and the report's operator‑action list; nothing here
+claims a cloud push occurred.
 
 ## 2. Tooling: OpenDesign + Figma (+ PenPot, Lottie)
 

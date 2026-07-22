@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — OpenDesign Tooling Capability Check</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — OpenDesign Tooling Capability
+Check</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#scope-method" id="toc-scope-method">1. Scope &amp;
+method</a></li>
+<li><a href="#the-verified-design.md-brand-contract-format"
+id="toc-the-verified-design.md-brand-contract-format">2. The verified
+DESIGN.md brand-contract format</a></li>
+<li><a href="#local-runtime-status-checked-2026-07-22"
+id="toc-local-runtime-status-checked-2026-07-22">3. Local runtime status
+(checked 2026-07-22)</a></li>
+<li><a href="#what-runs-headless-now-vs.-what-is-operator-interactive"
+id="toc-what-runs-headless-now-vs.-what-is-operator-interactive">4. What
+runs headless now vs. what is operator-interactive</a></li>
+<li><a href="#figma-import-flow-exact-from-figma-plugin-source"
+id="toc-figma-import-flow-exact-from-figma-plugin-source">5. Figma
+import flow (exact, from figma-plugin/ source)</a></li>
+<li><a href="#honest-limits" id="toc-honest-limits">6. Honest
+limits</a></li>
+<li><a href="#open-items" id="toc-open-items">7. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — OpenDesign Tooling Capability Check
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/opendesign/TOOLING.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · opendesign)
+  Related         : ./DESIGN.md, ./tokens.css, ../design-system.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · opendesign)</td>
+<td>Initial honest capability check: verified <code>DESIGN.md</code>
+format, live daemon status, <code>od</code> CLI invocability,
+headless-vs-interactive matrix, exact Figma import flow, limits + open
+items</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · opendesign · verify)</td>
+<td>Second-pass verification: added the contributor <strong>authoring
+guide</strong> (<code>docs/design-systems.md</code>) findings — the
+second canonical heading family, the number-prefix-only section parser,
+Lens A/B review checks (font-labels block, <code>:root {}</code>,
+<code>[data-theme="dark"]</code>, targeted
+<code>prefers-reduced-motion</code>) — and the measured corpus split (85
+vs 61 of 150). Re-probed daemon health + CLI live
+(<code>library list --json</code> → empty library OK); confirmed local
+export toolchain paths</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--method">1. Scope &amp; method</a></li>
+<li><a href="#2-the-verified-designmd-brand-contract-format">2. The
+verified DESIGN.md brand-contract format</a></li>
+<li><a href="#3-local-runtime-status-checked-2026-07-22">3. Local
+runtime status (checked 2026-07-22)</a></li>
+<li><a
+href="#4-what-runs-headless-now-vs-what-is-operator-interactive">4. What
+runs headless now vs. what is operator-interactive</a></li>
+<li><a href="#5-figma-import-flow-exact-from-figma-plugin-source">5.
+Figma import flow (exact, from figma-plugin/ source)</a></li>
+<li><a href="#6-honest-limits">6. Honest limits</a></li>
+<li><a href="#7-open-items">7. Open items</a></li>
+</ul>
+<h2 id="scope-method">1. Scope &amp; method</h2>
+<p>Every claim below was checked directly against the local OpenDesign
+checkout at
+<code>/home/milos/Factory/projects/tools_and_research/.opendesign-src/open-design</code>
+and the live processes on this machine on 2026-07-22.
+<code>[VERIFIED]</code> = observed in source/runtime;
+<code>[ASSUMED]</code> = inference, labeled as such. Nothing is claimed
+to “work” without a runtime probe.</p>
+<h2 id="the-verified-design.md-brand-contract-format">2. The verified
+DESIGN.md brand-contract format</h2>
+<p>There <strong>is</strong> a canonical format, and it is documented +
+exemplified in the OpenDesign source <code>[VERIFIED]</code>:</p>
+<ol type="1">
+<li><strong>Named in the product spec:</strong>
+<code>docs/spec.md</code> §2 (bet #4): design systems are authored as
+<em>“<code>DESIGN.md</code> files following the [awesome-claude-design]
+9-section schema”</em>; §4/S4: the <code>design-system-skill</code>
+<em>“produces a <code>DESIGN.md</code> following the 9-section
+format”</em>.</li>
+<li><strong>Defined in <code>design-systems/README.md</code>:</strong>
+<ul>
+<li><strong>Legacy file shape:</strong> first <code># H1</code> is the
+picker title; <em>“the line immediately after the H1 is parsed for
+<code>&gt; Category: &lt;name&gt;</code>”</em> plus a one-line
+description blockquote.</li>
+<li><strong>Project shape (v1):</strong>
+<code>design-systems/&lt;slug&gt;/</code> with fixed names —
+<code>manifest.json</code> (schema
+<code>od-design-system-project/v1</code>), <code>DESIGN.md</code>
+(canonical prose), <code>tokens.css</code> (canonical compiled custom
+properties), optional <code>USAGE.md</code> /
+<code>components.html</code> / <code>design-tokens.json</code> /
+<code>tailwind-v4.css</code> / <code>assets/</code> /
+<code>fonts/</code> / <code>preview/</code> / <code>source/</code>.
+<code>DESIGN.md</code>-only folders remain valid (“legacy”).</li>
+</ul></li>
+<li><strong>The 9 sections — two verified families coexist in the
+corpus.</strong> The schema parser extracts headings with the
+<strong>number prefix only</strong> (<code>## [0-9].</code>); the text
+after the number is free
+<code>[VERIFIED — docs/design-systems.md §1: "matches the section number prefix, not the full text"]</code>.
+Measured across the 150 bundled <code>design-systems/*/DESIGN.md</code>:
+<ul>
+<li><strong>Family A (awesome-design-md import style, 85 files</strong>
+at <code>## 2.</code>, e.g.
+<code>design-systems/claude/DESIGN.md</code>; unnumbered in the
+hand-authored <code>design-systems/default/DESIGN.md</code>): 1. Visual
+Theme &amp; Atmosphere · 2. Color Palette &amp; Roles · 3. Typography
+Rules · 4. Component Stylings · 5. Layout Principles · 6. Depth &amp;
+Elevation · 7. Do’s and Don’ts · 8. Responsive Behavior · 9. Agent
+Prompt Guide.</li>
+<li><strong>Family B (contributor authoring-guide canon, 61
+files</strong>, e.g.
+<code>design-systems/mission-control/DESIGN.md</code> — the guide’s
+named reference): 1. Visual Theme &amp; Atmosphere · 2. Color · 3.
+Typography · 4. Spacing · 5. Layout &amp; Composition ·
+<ol start="6" type="1">
+<li>Components · 7. Motion &amp; Interaction · 8. Voice &amp; Brand · 9.
+Anti-patterns
+<code>[VERIFIED — docs/design-systems.md §1 "The 9-Section Schema"]</code>.
+Both parse identically (number-prefix match). <a
+href="./DESIGN.md"><code>./DESIGN.md</code></a> uses Family A headings
+and folds Family B’s distinct content (spacing, motion, voice &amp;
+brand, anti-patterns) into the matching numbered slots. 3b.
+<strong>Review framework (Lens A / Lens B)</strong>
+<code>[VERIFIED — docs/design-systems.md §2]</code>. New design systems
+are reviewed against: <strong>Lens A (blocking)</strong> — all 9
+numbered headings in order; real hex codes; CSS variables wrapped in
+<code>:root {}</code> (never bare); a <strong>“Font labels for catalog
+extraction”</strong> block in the Typography section
+(<code>Display:</code> / <code>Body:</code> / <code>Mono:</code> lines —
+the daemon’s parser regexes read these to populate the catalog); dark
+tokens via the <code>[data-theme="dark"]</code> override pattern (not
+duplicate blocks); <code>prefers-reduced-motion</code> targeting
+specific elements (never a global <code>*</code>);
+<code>:focus-visible</code> on every interactive component. <strong>Lens
+B (advisory)</strong> — ≥4 type tiers; real CSS in the Components
+section; specific, bounded anti-patterns; dark mode a genuine override;
+named prior art. WCAG AA 4.5:1 verification against the
+<strong>paired</strong> background is mandatory. <code>DESIGN.md</code>
+rev 2 satisfies these in-file (font-labels block, <code>:root</code> +
+<code>[data-theme="dark"]</code> blocks, verbatim <code>.ds-btn</code>
+CSS with a targeted reduced-motion gate).</li>
+</ol></li>
+</ul></li>
+<li><strong>The token contract for <code>tokens.css</code>:</strong>
+<code>packages/contracts/src/design-systems/token-schema.ts</code>
+(re-exported by <code>design-systems/_schema/tokens.schema.ts</code>; A2
+fallbacks mirrored in <code>_schema/defaults.css</code>) defines four
+layers — <strong>A1-identity</strong> (required, brand-defining),
+<strong>A1-structure</strong> (required, structural),
+<strong>A2</strong> (required with a schema fallback),
+<strong>B-slot</strong> (optional tier, aliased via <code>var()</code>),
+plus per-brand <strong>C-extensions</strong> allowlisted in
+<code>BRAND_EXTENSIONS</code>. Every brand <code>tokens.css</code> must
+declare every A1 + A2 + B-slot token in one pasteable <code>:root</code>
+block.</li>
+<li><strong>Single-mode caveat <code>[VERIFIED]</code>:</strong> no
+bundled <code>tokens.css</code> contains
+<code>prefers-color-scheme</code> or <code>data-theme</code> — bundled
+systems are single-mode; dark palettes exist only as prose in some
+<code>DESIGN.md</code> files (e.g. claude, linear-app). Thready’s <a
+href="./tokens.css"><code>tokens.css</code></a> adds dark blocks per the
+Thready ground truth (<code>../theming.md</code> §2 three sanctioned
+mechanisms) — a documented, additive extension: the light
+<code>:root</code> block alone still satisfies the schema.</li>
+</ol>
+<p><a href="./DESIGN.md"><code>./DESIGN.md</code></a> follows the
+9-section schema exactly (numbered variant), with the
+<code>&gt; Category:</code> blockquote immediately after the H1 as the
+picker parser requires.</p>
+<h2 id="local-runtime-status-checked-2026-07-22">3. Local runtime status
+(checked 2026-07-22)</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 32%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source checkout</td>
+<td>✅ present</td>
+<td><code>/home/milos/Factory/projects/tools_and_research/.opendesign-src/open-design</code>
+(git repo, HEAD of 2026-07-08 clone)</td>
+</tr>
+<tr>
+<td>Version</td>
+<td><strong>0.14.1</strong></td>
+<td><code>package.json</code> / daemon health. ⚠
+<code>../design-system.md</code> §2 cites release
+<strong>0.13.0</strong> “at time of writing” — the local checkout has
+moved on; re-verify token-schema drift when integrating</td>
+</tr>
+<tr>
+<td><strong>Daemon live</strong></td>
+<td>✅ <strong>running now</strong></td>
+<td><code>GET http://127.0.0.1:7456/api/health</code> →
+<code>{"ok":true,"version":"0.14.1"}</code>; listener pid 2951699,
+<strong>loopback-only</strong>; 442 bundled plugins registered
+(<code>daemon7456.log</code>)</td>
+</tr>
+<tr>
+<td><code>od</code> on PATH</td>
+<td>❌ not installed</td>
+<td><code>which od-cli od opendesign</code> → none. ⚠ <strong>Name
+collision:</strong> <code>/usr/bin/od</code> is GNU coreutils <em>octal
+dump</em> 9.4 — NOT OpenDesign. Never assume <code>od</code> on PATH is
+the design daemon</td>
+</tr>
+<tr>
+<td><code>od</code> CLI runnable</td>
+<td>✅ from the repo</td>
+<td><code>package.json</code>
+<code>"bin": {"od": "./apps/daemon/bin/od.mjs"}</code>; probe
+<code>node ./apps/daemon/bin/od.mjs --help</code> → exit 0, full usage
+printed</td>
+</tr>
+<tr>
+<td><code>od</code> CLI ↔︎ daemon round-trip</td>
+<td>✅ live</td>
+<td><code>node apps/daemon/bin/od.mjs library list --json</code> →
+<code>{ "assets": [] }</code> (auto-discovered the <code>:7456</code>
+daemon; empty library is the expected fresh state —
+<code>.od/library/</code> and <code>.od/design-systems/</code> are empty
+dirs)</td>
+</tr>
+<tr>
+<td>Toolchain</td>
+<td>✅</td>
+<td>node v24.18.0, pnpm 10.33.2, <code>node_modules/</code> installed
+(2026-07-08)</td>
+</tr>
+<tr>
+<td>Bring-up script</td>
+<td>✅ exists</td>
+<td><code>../.opendesign-src/bringup.sh</code> — bounded orchestration:
+wait-for-clone → <code>pnpm install</code> (≤600s) → detached
+<code>pnpm tools-dev run web</code> → health-poll <code>:7456</code>
+(≤180s); emits a greppable <code>RESULT:</code> line</td>
+</tr>
+<tr>
+<td>Historical logs</td>
+<td>✅</td>
+<td><code>daemon.log</code>: a 2026-07-08 <code>tools-dev</code> run
+(Web <code>:40425</code>, Daemon <code>:46591</code>) later stopped;
+<code>daemon7456.log</code>: the standalone <code>:7456</code> daemon
+start. Recorded pids 635028/639697 are dead — the
+<strong>current</strong> listener (2951699) is a later start</td>
+</tr>
+<tr>
+<td>Brands engine</td>
+<td>✅ exists</td>
+<td><code>apps/daemon/src/brands/engine/export.ts</code> exports
+<code>tokensToJson</code>, <code>tokensToCssVars</code>,
+<code>tokensToThemeJson</code> (grep-verified) — the token export
+pipeline <code>../design-system.md</code> §2 documents</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-runs-headless-now-vs.-what-is-operator-interactive">4. What
+runs headless now vs. what is operator-interactive</h2>
+<p><strong>Headless, today, on this machine
+<code>[VERIFIED — daemon live + CLI --help]</code>:</strong></p>
+<ul>
+<li><strong>Daemon API</strong> on <code>http://127.0.0.1:7456</code>
+(health, artifact store, design-system resolver, plugin registry).</li>
+<li><strong><code>od</code> CLI</strong> via
+<code>node ./apps/daemon/bin/od.mjs …</code> (or
+<code>pnpm exec od</code> in-repo):
+<ul>
+<li><code>od artifacts create --name &lt;path&gt; --input &lt;file&gt;</code>
+— create project artifacts;</li>
+<li><code>od tools design-systems read --path &lt;manifest-declared-path&gt;</code>
+— read the active design-system pull-layer files (i.e. this
+<code>DESIGN.md</code>/<code>tokens.css</code> shape);</li>
+<li><code>od library &lt;list|get|search|import|apply|edit-as-page|figma|sync|pair&gt;</code>
+— asset library,
+incl. <code>od library figma &lt;assetId&gt; --out page.od-figma.json</code>
+(export the Figma capture IR);</li>
+<li><code>od automation &lt;…&gt;</code> — drive Automations headlessly
+(“so an external agent … can schedule, trigger, or harvest results …
+without opening the web UI” — its own help text);</li>
+<li><code>od plugin &lt;…&gt;</code>,
+<code>od memory tree &lt;…&gt;</code>,
+<code>od mcp live-artifacts</code> (MCP server),
+<code>od research search</code> (needs a Tavily key — not probed).</li>
+</ul></li>
+<li><strong>Token derivation/export</strong> via the brands engine
+(<code>tokensToJson</code> / <code>tokensToCssVars</code> /
+<code>tokensToThemeJson</code>) inside the daemon.</li>
+</ul>
+<p><strong>Needs a browser (local web UI, not headless)
+<code>[VERIFIED — spec.md §5]</code>:</strong></p>
+<ul>
+<li>The Next.js web app (chat, artifact tree, iframe preview, comment
+mode, exports) — served locally by <code>pnpm tools-dev run web</code>;
+it is a UI on top of the same daemon.</li>
+<li>The <strong>OD Clipper</strong> browser extension (page capture) —
+operator-interactive by nature.</li>
+</ul>
+<p><strong>Needs a desktop application (operator-interactive or unprobed
+here):</strong></p>
+<ul>
+<li><strong>Figma import</strong> — requires the <strong>Figma desktop
+app</strong> (§5); development plugins do not run in the browser. This
+is the one third-party desktop dependency in the flow.</li>
+<li><strong><code>od export &lt;file&gt; --project &lt;id&gt; --format &lt;pdf|image|pptx&gt;</code></strong>
+— programmatic artifact export exists in the CLI, but <em>“rasterization
+uses the desktop runtime’s bundled Chromium, so a desktop/packaged
+runtime must be reachable; otherwise the command reports that the
+renderer is unavailable”</em>
+<code>[VERIFIED — apps/daemon/src/cli.ts printExportHelp, verbatim]</code>.
+The OpenDesign desktop shell is <strong>not running</strong> here, so
+this leg is unprobed — treat <code>od export</code> as
+<strong>needs-the-desktop-app</strong> for now.
+<ul>
+<li>⚠ Doc-drift note: <code>docs/spec.md</code> §6 still lists “No
+Electron, no Tauri” as a non-goal, but the 0.14.1 checkout
+<strong>does</strong> ship <code>apps/desktop</code>
+(<code>@open-design/desktop</code> 0.14.1, an Electron shell —
+<code>electron</code> in
+<code>package.json &gt; onlyBuiltDependencies</code>) and
+<code>apps/packaged</code> <code>[VERIFIED — both inspected]</code>.
+Trust the code, not the stale spec line.</li>
+</ul></li>
+<li>Agent-driven generation additionally requires a code-agent CLI
+(Claude Code, Codex, …) or a BYOK Anthropic key — present-agent
+dependent, not probed here <code>[ASSUMED — spec.md §2]</code>.</li>
+</ul>
+<p><strong>Local export toolchain (the working alternative, verified on
+this machine):</strong></p>
+<p>Thready screen artifacts are self-contained HTML inlining <a
+href="./tokens.css"><code>tokens.css</code></a>, so the export pipeline
+that already produced the sibling <code>*.html</code>/<code>*.pdf</code>
+docs works without any OpenDesign desktop runtime
+<code>[VERIFIED — command -v probes, 2026-07-22]</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chromium (headless)</td>
+<td><code>/usr/bin/chromium</code> (+
+<code>chromium-browser</code>)</td>
+<td>HTML → PNG/PDF screenshots
+(<code>--headless --screenshot/--print-to-pdf</code>)</td>
+</tr>
+<tr>
+<td>WeasyPrint</td>
+<td><code>/home/milos/Factory/software/weasyprint/bin/weasyprint</code></td>
+<td>HTML/CSS → paginated PDF</td>
+</tr>
+<tr>
+<td>Pandoc</td>
+<td><code>/home/milos/Factory/software/pandoc/bin/pandoc</code></td>
+<td>md → HTML (Docs Chain §11.4.65)</td>
+</tr>
+<tr>
+<td>Mermaid CLI</td>
+<td><code>mmdc</code> (node 24 global)</td>
+<td><code>diagrams/*.mmd</code> → SVG/PNG</td>
+</tr>
+</tbody>
+</table>
+<h2 id="figma-import-flow-exact-from-figma-plugin-source">5. Figma
+import flow (exact, from figma-plugin/ source)</h2>
+<p><code>figma-plugin/</code> is a standalone, no-build Figma
+<strong>development plugin</strong> (<code>manifest.json</code>: name
+“OD Figma Import”, <code>main: code.js</code>, <code>ui: ui.html</code>,
+<code>networkAccess.allowedDomains: ["none"]</code>)
+<code>[VERIFIED — figma-plugin/{README.md,manifest.json,IR.md}]</code>.
+It <strong>rebuilds</strong> an OD capture into editable Figma layers
+via the Plugin API — there is <strong>no cloud push</strong>: a native
+<code>.fig</code> cannot be produced outside Figma, and dragging an
+<code>.od-figma.json</code> into Figma shows “Unsupported file format”
+(expected, per the plugin README).</p>
+<p>The exact three-step flow (all steps operator-interactive except step
+1’s CLI variant):</p>
+<ol type="1">
+<li><strong>Produce a capture (<code>.od-figma.json</code>)</strong> —
+any of:
+<ul>
+<li>OD Clipper popup → <em>Download Figma (.json)</em> (captures the
+current page);</li>
+<li>OD Library → open an <code>html</code> asset → <em>Download Figma
+JSON</em>;</li>
+<li>headless:
+<code>od library figma &lt;assetId&gt; --out page.od-figma.json</code>.</li>
+</ul></li>
+<li><strong>Install the plugin once per machine</strong> — requires the
+Figma <strong>desktop</strong> app (dev plugins do not run in the
+browser): open any file → <strong>Plugins → Development → Import plugin
+from manifest…</strong> → select <code>figma-plugin/manifest.json</code>
+from the checkout.</li>
+<li><strong>Import</strong> — <strong>Plugins → Development → OD Figma
+Import</strong> → drop/choose the <code>.od-figma.json</code> (or paste
+the JSON) → <strong>Import</strong>. The capture is rebuilt as a single
+frame named after the page, selected and zoomed.</li>
+</ol>
+<p>Fidelity caveats
+<code>[VERIFIED — README.md "Fidelity notes" + IR.md]</code>: geometry
+is the captured live-page geometry; unavailable fonts fall back to
+<strong>Inter Regular</strong>; non-PNG/JPEG images (SVG/WebP/GIF/AVIF)
+are re-encoded to PNG in the plugin UI (SVGs rasterized, not editable
+vectors); complex CSS (multi-layer gradients, blend modes, transforms,
+pseudo-elements) is simplified; inset shadows skipped (IR v1). The
+capture IR contract is <code>figma-plugin/IR.md</code> (kept in sync
+with <code>clipper/capture.js</code>).</p>
+<p><strong>Thready relevance:</strong> design artifacts generated
+against <a href="./DESIGN.md"><code>./DESIGN.md</code></a> + <a
+href="./tokens.css"><code>./tokens.css</code></a> can be captured and
+hand-imported into Figma by an operator for design review. This is a
+<em>review/handoff</em> bridge, not a design-system sync — PenPot/Lottie
+and any true Figma round-trip remain non-native
+<code>[OPEN: THREADY-DES-02 — ../design-system.md §2]</code>.</p>
+<h2 id="honest-limits">6. Honest limits</h2>
+<ul>
+<li><strong>No Figma token exists on this machine, and none is needed by
+this tooling</strong> — the plugin’s manifest pins
+<code>networkAccess.allowedDomains: ["none"]</code>; it cannot reach the
+Figma cloud API at all <code>[VERIFIED]</code>. Any “pushed to Figma
+cloud” claim from this environment would be a fabrication — do not make
+it. The only path into Figma is the operator-run desktop-app import
+above.</li>
+<li>The daemon is <strong>loopback-only</strong> here
+(<code>127.0.0.1</code>) — nothing is exposed off-machine
+<code>[VERIFIED — ss output + bringup.sh OD_BIND_HOST]</code>.</li>
+<li>End-to-end <strong>generation</strong> (brief → artifact)
+additionally depends on a detected code-agent CLI or a BYOK key; that
+leg was <strong>not probed</strong> in this pass
+<code>[ASSUMED — spec.md §2/§5]</code>.</li>
+<li>Version drift: local checkout is <strong>0.14.1</strong> while
+<code>../design-system.md</code> referenced 0.13.0; the token schema
+verified here is the 0.14.1 one.</li>
+</ul>
+<h2 id="open-items">7. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-OD-01]</code> If/when the Thready folder is
+vendored into <code>open-design/design-systems/thready/</code>, register
+the C-extension tokens (<code>--brand</code>, <code>--brand-2</code>,
+<code>--brand-ink</code>, <code>--border-strong</code>,
+<code>--ds-heart</code>, <code>--theme-id</code>) in
+<code>BRAND_EXTENSIONS["thready"]</code> and author the v1
+<code>manifest.json</code> (<code>od-design-system-project/v1</code>) —
+legacy <code>DESIGN.md</code>-only shape is valid meanwhile.</li>
+<li><code>[OPEN: THREADY-DES-OD-02]</code> Dark-mode blocks in
+<code>tokens.css</code> exceed the (single-mode) bundled precedent;
+confirm the 0.14.1 guard (<code>pnpm guard</code>) accepts the extra
+selectors, or split light/dark into the derive pipeline
+(<code>tokensToCssVars(tokens, selector)</code> already takes a selector
+argument).</li>
+<li><code>[OPEN: THREADY-DES-OD-03]</code> Link this
+<code>opendesign/</code> folder from <a
+href="../index.md"><code>../index.md</code></a> (this task wrote only
+into <code>opendesign/</code> by mandate).</li>
+<li><code>[OPEN: THREADY-DES-02]</code> (carried) PenPot + Lottie
+exports are not native OpenDesign targets; Figma is import-only via the
+operator flow in §5.</li>
+<li>Re-verify the 0.13.0 → 0.14.1 schema drift against
+<code>../design-system.md</code> §2 at integration.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

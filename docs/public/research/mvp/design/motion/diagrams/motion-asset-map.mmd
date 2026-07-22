@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph JOURNEYS[ux-flows.md journeys]
+    ADD[Add channel §2\n+ sign-in §2.1]
+    PROC[Process post §3\n+ reprocess §3.1]
+    SRCH[Search §4]
+    ACCT[Manage account §5]
+  end
+  subgraph ASSETS[motion/ Lottie assets]
+    SPIN[helix-spinner.json\nloop 120f]
+    SYNC[thread-sync.json\nloop 120f]
+    PULSE[processing-pulse.json\nloop 120f]
+    CHECK[success-check.json\none-shot 90f]
+    CROSS[error-cross.json\none-shot 90f]
+    FADE[transition-fade-slide.json\none-shot 90f markers]
+  end
+  ADD -->|resolve wait / app boot| SPIN
+  ADD -->|backfill + live sync| SYNC
+  ADD -->|201 created| CHECK
+  ADD -->|422 / 403 resolve fail| CROSS
+  ADD -->|wizard step advance| FADE
+  PROC -->|step running / queued| PULSE
+  PROC -->|processing.completed| CHECK
+  PROC -->|processing.failed / DLQ| CROSS
+  SRCH -->|slow embedder wait| SPIN
+  ACCT -->|branding saved 200| CHECK
+  ACCT -->|AA-validate 422| CROSS
+  ACCT -->|route / drawer transition| FADE

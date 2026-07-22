@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<!--
+  Title           : Helix Thready — Living Component Library
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/library/components.html
+  Status          : Draft - v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./README.md, ./platform-map.md, ./components-sheet.svg,
+                    ../component-library.md, ../design-system.md, ../theming.md
+
+  Self-contained: NO CDNs, no external requests. Tokens + .ds-* primitives are
+  reproduced from vasic-digital/design_system (VERIFIED at HEAD, 2026-07-22:
+  tokens/core.css structure per design-system.md §3.1, components/css/components.css
+  fetched via gh api). Everything marked PROPOSED is [DEFAULT - adjustable] and is
+  an upstream-contribution candidate, not shipped design_system code.
+
+  Fonts: production imports @vasic-digital/design-system/fonts/fonts.css
+  (self-hosted @fontsource variable faces). This standalone file declares the same
+  family names first and falls back to the system stack - no CDN is ever contacted.
+
+  Theme: light + dark via the three sanctioned mechanisms (theming.md §2):
+  prefers-color-scheme, :root[data-theme="dark"], .dark. The header toggle cycles
+  system - light - dark and persists to localStorage 'thready-theme'
+  (DS_CONFIG storagePrefix 'thready').
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix Thready — Living Component Library</title>
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   1. CORE TOKENS — theme-invariant [VERIFIED — design_system tokens/core.css]
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Fonts */
+  --font-display: "Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Hanken Grotesk Variable", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Type scale */
+  --text-xs: 12px;  --text-sm: 14px;  --text-base: 16px; --text-lg: 20px;
+  --text-xl: 24px;  --text-2xl: 32px; --text-3xl: 48px;  --text-4xl: 64px;
+  --leading-body: 1.5; --leading-tight: 1.2; --tracking-display: -0.01em;
+
+  /* Spacing (4px base) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  --section-y-desktop: 80px; --section-y-tablet: 48px; --section-y-phone: 32px;
+
+  /* Radius */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 9999px;
+
+  /* Elevation & accent formulas */
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
+  --accent-hover:  color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --focus-ring:    0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+
+  /* Motion */
+  --motion-fast: 150ms; --motion-base: 200ms; --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layout */
+  --container-max: 1200px; --container-gutter-desktop: 24px;
+  --container-gutter-tablet: 16px; --container-gutter-phone: 12px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   2. THREADY THEME — light + dark [design-system.md §3.2; extends the
+      VERIFIED helix-green theme; --brand-2 captured from assets/Logo.png]
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --theme-id: "thready";
+  --brand:    #b6e376;   /* decorative only — 1.47:1 on white */
+  --brand-2:  #abddc9;   /* Thready teal/mint secondary (light = eyedrop mean) */
+  --brand-ink:#0a0f04;   /* readable ink on a --brand fill (13.15:1) */
+  --bg: #ffffff; --surface: #ffffff; --surface-warm: #f1f5f9;
+  --fg: #020817; --muted: #475569; --border: #e2e8f0; --border-strong: #64748b;
+  --accent: #446e12; --accent-on: #ffffff;         /* AA 6.03:1 on white */
+  --success: #166534; --warn: #854d0e; --danger: #dc2626;
+  --ds-heart: var(--accent);
+  /* library-side helper: checkmark glyph tinted for --accent-on (white in light) */
+  --lib-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --lib-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;
+    --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
+    --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
+    --accent: #b6e376; --accent-on: #0a0f04;        /* 13.56:1 on #020817 */
+    --success: #16a34a; --warn: #eab308; --danger: #ef4444;
+    --ds-heart: var(--accent);
+    --lib-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' fill='none' stroke='%230a0f04' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+:root[data-theme="dark"], .dark {
+  --brand: #b6e376; --brand-2: #b7ebd6; --brand-ink: #0a0f04;
+  --bg: #020817; --surface: #020817; --surface-warm: #1e293b;
+  --fg: #f8fafc; --muted: #94a3b8; --border: #1e293b; --border-strong: #64748b;
+  --accent: #b6e376; --accent-on: #0a0f04;
+  --success: #16a34a; --warn: #eab308; --danger: #ef4444;
+  --ds-heart: var(--accent);
+  --lib-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' fill='none' stroke='%230a0f04' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   3. SHARED PRIMITIVES — .ds-* reproduced VERBATIM
+      [VERIFIED — vasic-digital/design_system components/css/components.css @ HEAD]
+   ════════════════════════════════════════════════════════════════════════ */
+.ds-container { max-width: var(--container-max); margin-inline: auto; padding-inline: var(--container-gutter-phone); }
+@media (min-width: 768px)  { .ds-container { padding-inline: var(--container-gutter-tablet); } }
+@media (min-width: 1024px) { .ds-container { padding-inline: var(--container-gutter-desktop); } }
+.ds-section { padding-block: var(--section-y-phone); }
+@media (min-width: 768px)  { .ds-section { padding-block: var(--section-y-tablet); } }
+@media (min-width: 1024px) { .ds-section { padding-block: var(--section-y-desktop); } }
+
+.ds-btn {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font: 500 var(--text-base)/1 var(--font-body);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+.ds-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-btn--primary { background: var(--accent); color: var(--accent-on); }
+.ds-btn--primary:hover { background: var(--accent-hover); }
+.ds-btn--primary:active { background: var(--accent-active); }
+.ds-btn--secondary { background: transparent; color: var(--fg); border-color: var(--border-strong); }
+.ds-btn--secondary:hover { background: var(--surface-warm); }
+.ds-btn--ghost { background: transparent; color: var(--accent); }
+.ds-btn--ghost:hover { background: color-mix(in oklab, var(--accent), transparent 90%); }
+
+.ds-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-6); }
+.ds-card--raised { box-shadow: var(--elev-raised); }
+
+.ds-input {
+  width: 100%;
+  font: var(--text-base)/1.4 var(--font-body);
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+}
+.ds-input::placeholder { color: var(--muted); }
+.ds-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
+
+.ds-link { color: var(--accent); text-decoration: none; }
+.ds-link:hover { text-decoration: underline; }
+
+.ds-nav { display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); padding: var(--space-4) 0; border-bottom: 1px solid var(--border); }
+.ds-nav__links { display: flex; gap: var(--space-5); }
+.ds-nav__link { color: var(--muted); font-size: var(--text-sm); }
+.ds-nav__link:hover, .ds-nav__link[aria-current="page"] { color: var(--fg); }
+
+.ds-footer { border-top: 1px solid var(--border); padding-block: var(--space-8); color: var(--muted); font-size: var(--text-sm); }
+
+.ds-badge { display:inline-flex; align-items:center; gap:var(--space-1);
+  padding: 2px var(--space-2); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); font-weight: 600; }
+.ds-badge--success { color: var(--success); background: color-mix(in oklab, var(--success), transparent 90%); }
+.ds-badge--warn { color: var(--warn); background: color-mix(in oklab, var(--warn), transparent 90%); }
+.ds-badge--danger { color: var(--danger); background: color-mix(in oklab, var(--danger), transparent 90%); }
+
+.ds-brand-mark { color: var(--brand); }
+
+@media (prefers-reduced-motion: reduce) { .ds-btn { transition: none; } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   4. PROPOSED EXTENSIONS — [DEFAULT - adjustable] upstream candidates.
+      NOT in design_system today; names follow the .ds-* convention and are
+      pending OPEN THREADY-DES-11/12. Thready-domain composites use .thready-*.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Buttons: destructive variant + disabled + loading */
+.ds-btn--danger { background: var(--danger); color: #ffffff; }
+.ds-btn--danger:hover  { background: color-mix(in oklab, var(--danger), black 10%); }
+.ds-btn--danger:active { background: color-mix(in oklab, var(--danger), black 16%); }
+.ds-btn--danger:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger), transparent 70%); }
+.ds-btn[disabled], .ds-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; pointer-events: none; }
+.ds-btn--loading { position: relative; pointer-events: none; }
+.ds-btn .ds-spinner { width: 14px; height: 14px; border-width: 2px;
+  border-color: color-mix(in oklab, currentColor, transparent 70%); border-top-color: currentColor; }
+
+/* Forced state helpers (demo only — replicate :hover / :focus-visible) */
+.demo-hover.ds-btn--primary   { background: var(--accent-hover); }
+.demo-hover.ds-btn--secondary { background: var(--surface-warm); }
+.demo-hover.ds-btn--ghost     { background: color-mix(in oklab, var(--accent), transparent 90%); }
+.demo-hover.ds-btn--danger    { background: color-mix(in oklab, var(--danger), black 10%); }
+.demo-focus { outline: none !important; box-shadow: var(--focus-ring) !important; }
+.demo-focus.ds-btn--danger { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger), transparent 70%) !important; }
+.demo-focus.ds-input, .ds-field .demo-focus { border-color: var(--accent) !important; }
+
+/* Form field scaffold: label + control + hint/error */
+.ds-field { display: flex; flex-direction: column; gap: var(--space-2); font-family: var(--font-body); }
+.ds-field__label { font-size: var(--text-sm); font-weight: 600; color: var(--fg); }
+.ds-field__hint  { font-size: var(--text-xs); color: var(--muted); }
+.ds-field__error { font-size: var(--text-xs); color: var(--danger); font-weight: 600; }
+.ds-field--error .ds-input, .ds-field--error .ds-select select { border-color: var(--danger); }
+.ds-field--error .ds-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger), transparent 70%); }
+.ds-field--disabled { opacity: .55; }
+.ds-input[disabled] { background: var(--surface-warm); cursor: not-allowed; }
+
+/* Select */
+.ds-select { position: relative; }
+.ds-select select {
+  appearance: none; width: 100%;
+  font: var(--text-base)/1.4 var(--font-body); color: var(--fg);
+  background: var(--surface) var(--lib-chevron) no-repeat right var(--space-3) center / 16px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-8) var(--space-3) var(--space-4); cursor: pointer;
+}
+.ds-select select:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
+.ds-select select[disabled] { background-color: var(--surface-warm); cursor: not-allowed; }
+
+/* Checkbox */
+.ds-check { appearance: none; width: 18px; height: 18px; margin: 0; flex: none;
+  border: 1.5px solid var(--border-strong); border-radius: 4px; background: var(--surface);
+  cursor: pointer; transition: background-color var(--motion-fast) var(--ease-standard); }
+.ds-check:checked { background: var(--accent) var(--lib-check) no-repeat center / 14px; border-color: var(--accent); }
+.ds-check:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-check[disabled] { opacity: .5; cursor: not-allowed; }
+.ds-choice { display: inline-flex; align-items: center; gap: var(--space-2);
+  font: var(--text-sm)/1.4 var(--font-body); color: var(--fg); cursor: pointer; }
+.ds-choice--error .ds-check, .ds-choice--error .ds-radio { border-color: var(--danger); }
+
+/* Radio */
+.ds-radio { appearance: none; width: 18px; height: 18px; margin: 0; flex: none;
+  border: 1.5px solid var(--border-strong); border-radius: 50%; background: var(--surface);
+  cursor: pointer; transition: border var(--motion-fast) var(--ease-standard); }
+.ds-radio:checked { border: 5.5px solid var(--accent); }
+.ds-radio:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-radio[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Switch */
+.ds-switch { display: inline-flex; align-items: center; gap: var(--space-2);
+  font: var(--text-sm)/1.4 var(--font-body); color: var(--fg); cursor: pointer; }
+.ds-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ds-switch__track { width: 38px; height: 22px; flex: none; border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--muted), transparent 55%); position: relative;
+  transition: background-color var(--motion-fast) var(--ease-standard); }
+.ds-switch__track::after { content: ""; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%; background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .25);
+  transition: transform var(--motion-fast) var(--ease-standard); }
+.ds-switch input:checked + .ds-switch__track { background: var(--accent); }
+.ds-switch input:checked + .ds-switch__track::after { transform: translateX(16px); }
+.ds-switch input:focus-visible + .ds-switch__track { box-shadow: var(--focus-ring); }
+.ds-switch input[disabled] + .ds-switch__track { opacity: .5; cursor: not-allowed; }
+.ds-switch--error .ds-switch__track { box-shadow: 0 0 0 1.5px var(--danger); }
+
+/* Table (sortable + paginated) */
+.ds-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.ds-table { width: 100%; border-collapse: collapse; font: var(--text-sm)/1.45 var(--font-body); color: var(--fg); min-width: 720px; }
+.ds-table th, .ds-table td { text-align: left; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+.ds-table thead th { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--surface-warm); }
+.ds-table tbody tr:last-child td { border-bottom: none; }
+.ds-table tbody tr:hover, .ds-table tbody tr.demo-hover { background: var(--surface-warm); }
+.ds-table tbody tr[aria-selected="true"] { background: color-mix(in oklab, var(--accent), transparent 90%); }
+.ds-table .ds-sort { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-1);
+  font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+.ds-table .ds-sort:focus-visible { box-shadow: var(--focus-ring); border-radius: 4px; }
+.ds-table .ds-sort .arr { font-size: 10px; opacity: .4; }
+.ds-table th[aria-sort="ascending"] .arr.up, .ds-table th[aria-sort="descending"] .arr.down { opacity: 1; color: var(--accent); }
+.ds-table__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--muted); background: var(--surface); }
+.ds-table td.num, .ds-table th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Hashtag chip (Thready composite: direct vs AI-indirect) */
+.thready-tag { display: inline-flex; align-items: center; gap: 2px;
+  font: 500 var(--text-xs)/1 var(--font-mono); padding: 4px 10px; border-radius: var(--radius-pill);
+  border: 1px solid transparent; }
+.thready-tag--direct { background: var(--brand); color: var(--brand-ink); }
+.thready-tag--indirect { background: transparent; color: var(--muted); border-color: var(--border-strong); }
+.thready-tag--interactive { cursor: pointer; }
+.thready-tag--interactive:hover, .thready-tag--interactive.demo-hover { box-shadow: var(--elev-ring); }
+.thready-tag--interactive:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.thready-tag .x { all: unset; cursor: pointer; font-size: 11px; line-height: 1; padding: 0 0 0 4px; }
+.thready-tag .x:focus-visible { box-shadow: var(--focus-ring); border-radius: 2px; }
+
+/* Processing-state chip (Thready composite: pipeline step states) */
+.thready-chip { display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 3px var(--space-2); border-radius: var(--radius-pill);
+  font: 600 var(--text-xs)/1.2 var(--font-body); border: 1px solid transparent; }
+.thready-chip--pending    { color: var(--muted); border-color: var(--border-strong); }
+.thready-chip--processing { color: var(--accent); background: color-mix(in oklab, var(--accent), transparent 90%); }
+.thready-chip--done       { color: var(--success); background: color-mix(in oklab, var(--success), transparent 90%); }
+.thready-chip--failed     { color: var(--danger); background: color-mix(in oklab, var(--danger), transparent 90%); }
+.thready-chip--retrying   { color: var(--warn); background: color-mix(in oklab, var(--warn), transparent 90%); }
+.thready-chip--retrying .rot { display: inline-block; animation: ds-spin 1.2s linear infinite; }
+.thready-chip .retry { all: unset; cursor: pointer; text-decoration: underline; font-weight: 600; }
+.thready-chip .retry:focus-visible { box-shadow: var(--focus-ring); border-radius: 2px; }
+.ds-badge--neutral { color: var(--muted); background: color-mix(in oklab, var(--muted), transparent 88%); }
+
+/* Sidebar nav */
+.ds-sidebar { display: flex; flex-direction: column; gap: 2px; width: 220px;
+  padding: var(--space-3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  font: var(--text-sm)/1.4 var(--font-body); }
+.ds-sidebar__item { display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  color: var(--muted); text-decoration: none; border-inline-start: 3px solid transparent; }
+.ds-sidebar__item:hover, .ds-sidebar__item.demo-hover { background: var(--surface-warm); color: var(--fg); }
+.ds-sidebar__item[aria-current="page"] { background: color-mix(in oklab, var(--accent), transparent 92%);
+  color: var(--accent); border-inline-start-color: var(--accent); font-weight: 600; }
+.ds-sidebar__item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-sidebar__count { margin-inline-start: auto; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+
+/* Tabs */
+.ds-tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--border); font-family: var(--font-body); }
+.ds-tab { all: unset; cursor: pointer; padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm); color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ds-tab:hover, .ds-tab.demo-hover { color: var(--fg); }
+.ds-tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.ds-tab:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.ds-tab[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+
+/* Breadcrumbs */
+.ds-breadcrumbs { font: var(--text-sm)/1.4 var(--font-body); }
+.ds-breadcrumbs ol { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; }
+.ds-breadcrumbs li { display: flex; align-items: center; gap: var(--space-2); }
+.ds-breadcrumbs li + li::before { content: "/"; color: var(--border-strong); }
+.ds-breadcrumbs [aria-current="page"] { color: var(--fg); font-weight: 600; }
+
+/* Dialog / modal */
+.ds-dialog { background: var(--surface); color: var(--fg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 0; max-width: 440px; width: 100%;
+  box-shadow: var(--elev-raised); font-family: var(--font-body); }
+.ds-dialog::backdrop { background: color-mix(in oklab, #020817, transparent 45%); }
+.ds-dialog__head { display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-5) var(--space-6) 0; }
+.ds-dialog__title { font: 600 var(--text-lg)/var(--leading-tight) var(--font-display); margin: 0; }
+.ds-dialog__close { all: unset; cursor: pointer; color: var(--muted); font-size: var(--text-lg);
+  padding: var(--space-1); border-radius: var(--radius-sm); line-height: 1; }
+.ds-dialog__close:hover { color: var(--fg); background: var(--surface-warm); }
+.ds-dialog__close:focus-visible { box-shadow: var(--focus-ring); }
+.ds-dialog__body { padding: var(--space-4) var(--space-6); font-size: var(--text-sm); color: var(--muted); line-height: var(--leading-body); }
+.ds-dialog__foot { display: flex; justify-content: flex-end; gap: var(--space-3); padding: 0 var(--space-6) var(--space-5); }
+.lib-dialog-stage { position: relative; border-radius: var(--radius-md); overflow: hidden;
+  background: color-mix(in oklab, #020817, transparent 45%); padding: var(--space-8); display: flex; justify-content: center; }
+
+/* Toast + inline alert */
+.ds-alert { display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm);
+  font: var(--text-sm)/1.45 var(--font-body); border: 1px solid transparent; }
+.ds-alert__icon { flex: none; font-weight: 700; }
+.ds-alert--info    { color: var(--fg); background: var(--surface-warm); border-color: var(--border); }
+.ds-alert--info    .ds-alert__icon { color: var(--accent); }
+.ds-alert--success { color: var(--success); background: color-mix(in oklab, var(--success), transparent 92%); border-color: color-mix(in oklab, var(--success), transparent 70%); }
+.ds-alert--warn    { color: var(--warn); background: color-mix(in oklab, var(--warn), transparent 92%); border-color: color-mix(in oklab, var(--warn), transparent 70%); }
+.ds-alert--danger  { color: var(--danger); background: color-mix(in oklab, var(--danger), transparent 92%); border-color: color-mix(in oklab, var(--danger), transparent 70%); }
+.ds-toast { display: flex; align-items: center; gap: var(--space-3);
+  background: var(--surface); color: var(--fg); border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--accent); border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4); box-shadow: var(--elev-raised);
+  font: var(--text-sm)/1.4 var(--font-body); max-width: 380px; }
+.ds-toast--success { border-inline-start-color: var(--success); }
+.ds-toast--warn    { border-inline-start-color: var(--warn); }
+.ds-toast--danger  { border-inline-start-color: var(--danger); }
+.ds-toast__action { all: unset; cursor: pointer; color: var(--accent); font-weight: 600; }
+.ds-toast__action:hover { text-decoration: underline; }
+.ds-toast__action:focus-visible { box-shadow: var(--focus-ring); border-radius: 4px; }
+.lib-toasts { position: fixed; bottom: var(--space-6); right: var(--space-6); display: flex;
+  flex-direction: column; gap: var(--space-3); z-index: 60; }
+
+/* Progress */
+.ds-progress { width: 100%; height: 8px; border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--muted), transparent 80%); overflow: hidden; position: relative; }
+.ds-progress__fill { height: 100%; border-radius: inherit; background: var(--accent);
+  transition: width var(--motion-base) var(--ease-standard); }
+.ds-progress--indeterminate::after { content: ""; position: absolute; inset-block: 0; width: 34%;
+  border-radius: inherit; background: var(--accent); animation: ds-slide 1.2s var(--ease-standard) infinite; }
+@keyframes ds-slide { from { inset-inline-start: -34%; } to { inset-inline-start: 100%; } }
+
+/* Spinners */
+.ds-spinner { width: 22px; height: 22px; flex: none; border-radius: 50%;
+  border: 2.5px solid color-mix(in oklab, var(--accent), transparent 75%);
+  border-top-color: var(--accent); animation: ds-spin .8s linear infinite; }
+.ds-spinner--sm { width: 14px; height: 14px; border-width: 2px; }
+.ds-spinner--lg { width: 34px; height: 34px; border-width: 3px; }
+.ds-spinner--helix { animation: ds-spin 1.4s linear infinite; display: block; }
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+
+/* Avatar */
+.ds-avatar { display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: color-mix(in oklab, var(--accent), transparent 85%); color: var(--accent);
+  font: 600 var(--text-sm)/1 var(--font-body); position: relative; }
+.ds-avatar--xs { width: 22px; height: 22px; font-size: 10px; }
+.ds-avatar--sm { width: 28px; height: 28px; font-size: var(--text-xs); }
+.ds-avatar--lg { width: 52px; height: 52px; font-size: var(--text-lg); }
+.ds-avatar--brand { background: var(--brand); color: var(--brand-ink); }
+.ds-avatar__dot { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px;
+  border-radius: 50%; border: 2px solid var(--surface); background: var(--muted); }
+.ds-avatar__dot--online { background: var(--success); }
+.ds-avatar-group { display: inline-flex; }
+.ds-avatar-group .ds-avatar { border: 2px solid var(--surface); margin-inline-start: -8px; }
+.ds-avatar-group .ds-avatar:first-child { margin-inline-start: 0; }
+
+/* Empty state */
+.ds-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  text-align: center; padding: var(--space-8) var(--space-6);
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-md); font-family: var(--font-body); }
+.ds-empty__icon { color: var(--muted); }
+.ds-empty__title { font: 600 var(--text-base)/var(--leading-tight) var(--font-display); color: var(--fg); margin: 0; }
+.ds-empty__reason { font-size: var(--text-sm); color: var(--muted); margin: 0; max-width: 34ch; }
+
+/* Skeleton */
+.ds-skeleton { position: relative; overflow: hidden; border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--fg), transparent 92%); }
+.ds-skeleton::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--bg), transparent 40%), transparent);
+  animation: ds-shimmer 1.4s var(--ease-standard) infinite; }
+@keyframes ds-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.ds-skeleton--line { height: 12px; }
+.ds-skeleton--circle { border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-spinner, .ds-spinner--helix, .thready-chip--retrying .rot { animation: none; }
+  .ds-progress--indeterminate::after { animation: none; inset-inline-start: 33%; }
+  .ds-skeleton::after { animation: none; display: none; }
+}
+
+/* Pagination */
+.ds-pagination { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--font-body); }
+.ds-page { all: unset; cursor: pointer; min-width: 32px; height: 32px; display: inline-flex;
+  align-items: center; justify-content: center; padding: 0 var(--space-2);
+  border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--fg); }
+.ds-page:hover, .ds-page.demo-hover { background: var(--surface-warm); }
+.ds-page:focus-visible { box-shadow: var(--focus-ring); }
+.ds-page[aria-current="page"] { background: var(--accent); color: var(--accent-on); font-weight: 600; }
+.ds-page[disabled], .ds-page[aria-disabled="true"] { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.ds-pagination__gap { color: var(--muted); padding: 0 var(--space-1); }
+
+/* Tooltip (CSS-only, hover + focus) */
+.ds-tip { position: relative; }
+.ds-tip::after { content: attr(data-tip); position: absolute; z-index: 30;
+  bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: var(--fg); color: var(--bg); font: var(--text-xs)/1.3 var(--font-body);
+  padding: 5px 9px; border-radius: 6px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--motion-fast) var(--ease-standard); }
+.ds-tip::before { content: ""; position: absolute; z-index: 30; bottom: calc(100% + 3px); left: 50%;
+  transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--fg);
+  opacity: 0; transition: opacity var(--motion-fast) var(--ease-standard); pointer-events: none; }
+.ds-tip:hover::after, .ds-tip:focus-visible::after, .ds-tip.demo-show::after,
+.ds-tip:hover::before, .ds-tip:focus-visible::before, .ds-tip.demo-show::before { opacity: 1; }
+.ds-tip--bottom::after { bottom: auto; top: calc(100% + 8px); }
+.ds-tip--bottom::before { bottom: auto; top: calc(100% + 3px); border-top-color: transparent; border-bottom-color: var(--fg); }
+.ds-iconbtn { all: unset; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: var(--radius-sm); color: var(--muted); }
+.ds-iconbtn:hover { background: var(--surface-warm); color: var(--fg); }
+.ds-iconbtn:focus-visible { box-shadow: var(--focus-ring); }
+
+/* Thready stat-card composite */
+.thready-stat { display: flex; flex-direction: column; gap: var(--space-1); min-width: 150px; }
+.thready-stat__label { font: 600 var(--text-xs)/1.2 var(--font-body); text-transform: uppercase;
+  letter-spacing: .05em; color: var(--muted); }
+.thready-stat__value { font: 700 var(--text-2xl)/var(--leading-tight) var(--font-display);
+  letter-spacing: var(--tracking-display); color: var(--fg); font-variant-numeric: tabular-nums; }
+.thready-stat__delta { font: var(--text-xs)/1.2 var(--font-body); color: var(--success); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   5. LIBRARY CHROME (.lib-*) — this page's own scaffolding, NOT design system
+   ════════════════════════════════════════════════════════════════════════ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: var(--text-base)/var(--leading-body) var(--font-body);
+  transition: background-color var(--motion-base) var(--ease-standard); }
+.lib-header { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--bg), transparent 8%);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.lib-header__inner { display: flex; align-items: center; gap: var(--space-4);
+  padding-block: var(--space-3); flex-wrap: wrap; }
+.lib-logo { display: flex; align-items: center; gap: var(--space-2); font: 700 var(--text-lg)/1 var(--font-display); }
+.lib-nav { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: var(--text-xs); margin-inline-start: auto; }
+.lib-nav a { color: var(--muted); text-decoration: none; padding: 4px 6px; border-radius: 6px; }
+.lib-nav a:hover { color: var(--fg); background: var(--surface-warm); }
+.lib-theme-btn { margin-inline-start: var(--space-2); }
+h1 { font: 700 var(--text-2xl)/var(--leading-tight) var(--font-display); letter-spacing: var(--tracking-display); margin: var(--space-8) 0 var(--space-2); }
+.lib-sub { color: var(--muted); font-size: var(--text-sm); max-width: 72ch; margin: 0 0 var(--space-4); }
+.lib-section { padding-block: var(--space-8); border-top: 1px solid var(--border); }
+.lib-section h2 { font: 700 var(--text-xl)/var(--leading-tight) var(--font-display); margin: 0 0 var(--space-1); scroll-margin-top: 90px; }
+.lib-prov { font-size: var(--text-xs); color: var(--muted); margin: 0 0 var(--space-5); }
+.lib-prov .v { color: var(--success); font-weight: 700; }
+.lib-prov .p { color: var(--warn); font-weight: 700; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-4); }
+.lib-grid--wide { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.lib-cell { display: flex; flex-direction: column; gap: var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: var(--space-5); background: var(--surface); }
+.lib-demo { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; min-height: 44px; }
+.lib-demo--col { flex-direction: column; align-items: stretch; }
+.lib-cap { font: var(--text-xs)/1.4 var(--font-mono); color: var(--muted); border-top: 1px dashed var(--border); padding-top: var(--space-2); margin-top: auto; }
+.lib-block { display: flex; flex-direction: column; gap: var(--space-4); }
+.lib-row { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: flex-start; }
+.lib-h3 { font: 600 var(--text-base)/1.3 var(--font-display); margin: var(--space-5) 0 var(--space-3); }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header class="lib-header">
+  <div class="ds-container lib-header__inner">
+    <span class="lib-logo">
+      <!-- helix motif mark (decorative, --brand / --brand-2) -->
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M15 4 C38 14 12 32 33 44" fill="none" stroke="var(--brand)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M33 4 C10 14 36 32 15 44" fill="none" stroke="var(--brand-2)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      Thready<span style="color:var(--muted);font-weight:400;">&nbsp;· component library</span>
+    </span>
+    <nav class="lib-nav" aria-label="Component groups">
+      <a href="#buttons">Buttons</a><a href="#inputs">Inputs</a><a href="#cards">Cards</a>
+      <a href="#tables">Tables</a><a href="#badges-chips">Badges &amp; chips</a>
+      <a href="#navigation">Navigation</a><a href="#dialogs">Dialogs</a>
+      <a href="#toasts-alerts">Toasts</a><a href="#progress">Progress</a>
+      <a href="#avatars">Avatars</a><a href="#empty-states">Empty</a>
+      <a href="#skeletons">Skeletons</a><a href="#pagination">Pagination</a>
+      <a href="#tooltips">Tooltips</a>
+    </nav>
+    <button class="ds-btn ds-btn--secondary lib-theme-btn" id="theme-toggle" aria-live="polite">Theme: system</button>
+  </div>
+</header>
+
+<main class="ds-container">
+  <h1>Helix Thready — Living Component Library</h1>
+  <p class="lib-sub">
+    Every component in every state, on the Thready theme (base <code>#B6E376</code>, accessible accent
+    <code>#446E12</code> light / <code>#B6E376</code> dark, teal secondary <code>#ABDDC9</code>/<code>#B7EBD6</code>).
+    Toggle the theme (top right) to audit light and dark — the toggle stamps
+    <code>data-theme</code> exactly as the shared <code>ThemeService</code> does. Sections marked
+    <strong style="color:var(--success)">VERIFIED</strong> reproduce shipped
+    <code>vasic-digital/design_system</code> CSS verbatim; sections marked
+    <strong style="color:var(--warn)">PROPOSED</strong> are <code>[DEFAULT — adjustable]</code>
+    upstream candidates. See <a class="ds-link" href="./platform-map.md">platform-map.md</a> and
+    <a class="ds-link" href="./README.md">README.md</a>.
+  </p>
+
+  <!-- ══════════════════════════ BUTTONS ══════════════════════════ -->
+  <section class="lib-section" id="buttons" aria-labelledby="h-buttons">
+    <h2 id="h-buttons">Buttons</h2>
+    <p class="lib-prov"><span class="v">VERIFIED</span> <code>.ds-btn</code> + <code>--primary/--secondary/--ghost</code> (design_system components.css) ·
+      <span class="p">PROPOSED</span> <code>--danger</code>, disabled, loading. Hover/focus cells force the real pseudo-state styles.</p>
+    <div class="lib-grid">
+      <!-- primary -->
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--primary">Add channel</button></div><div class="lib-cap">primary · default</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--primary demo-hover">Add channel</button></div><div class="lib-cap">primary · hover</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--primary demo-focus">Add channel</button></div><div class="lib-cap">primary · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--primary" disabled>Add channel</button></div><div class="lib-cap">primary · disabled</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--primary ds-btn--loading" aria-busy="true"><span class="ds-spinner" aria-hidden="true"></span>Archiving…</button></div><div class="lib-cap">primary · loading (aria-busy)</div></div>
+      <!-- secondary -->
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--secondary">Export thread</button></div><div class="lib-cap">secondary · default</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--secondary demo-hover">Export thread</button></div><div class="lib-cap">secondary · hover</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--secondary demo-focus">Export thread</button></div><div class="lib-cap">secondary · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--secondary" disabled>Export thread</button></div><div class="lib-cap">secondary · disabled</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--secondary ds-btn--loading" aria-busy="true"><span class="ds-spinner" aria-hidden="true"></span>Exporting…</button></div><div class="lib-cap">secondary · loading</div></div>
+      <!-- ghost -->
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--ghost">View replies</button></div><div class="lib-cap">ghost · default</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--ghost demo-hover">View replies</button></div><div class="lib-cap">ghost · hover</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--ghost demo-focus">View replies</button></div><div class="lib-cap">ghost · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--ghost" disabled>View replies</button></div><div class="lib-cap">ghost · disabled</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--ghost ds-btn--loading" aria-busy="true"><span class="ds-spinner" aria-hidden="true"></span>Loading…</button></div><div class="lib-cap">ghost · loading</div></div>
+      <!-- destructive (proposed) -->
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--danger">Delete channel</button></div><div class="lib-cap">destructive · default (proposed)</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--danger demo-hover">Delete channel</button></div><div class="lib-cap">destructive · hover</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--danger demo-focus">Delete channel</button></div><div class="lib-cap">destructive · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--danger" disabled>Delete channel</button></div><div class="lib-cap">destructive · disabled</div></div>
+      <div class="lib-cell"><div class="lib-demo"><button class="ds-btn ds-btn--danger ds-btn--loading" aria-busy="true"><span class="ds-spinner" aria-hidden="true"></span>Deleting…</button></div><div class="lib-cap">destructive · loading</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ INPUTS ══════════════════════════ -->
+  <section class="lib-section" id="inputs" aria-labelledby="h-inputs">
+    <h2 id="h-inputs">Inputs &amp; form controls</h2>
+    <p class="lib-prov"><span class="v">VERIFIED</span> <code>.ds-input</code> ·
+      <span class="p">PROPOSED</span> <code>.ds-select</code>, <code>.ds-check</code>, <code>.ds-radio</code>, <code>.ds-switch</code>, <code>.ds-field</code> scaffold (label/hint/error). Errors use <code>--danger</code> + <code>aria-describedby</code>.</p>
+
+    <h3 class="lib-h3">Text</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-t1">Channel name</label>
+        <input class="ds-input" id="in-t1" placeholder="e.g. Helix Announcements">
+        <span class="ds-field__hint">Shown in the sidebar and search results.</span>
+      </div><div class="lib-cap">text · default + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-t2">Channel name</label>
+        <input class="ds-input demo-focus" id="in-t2" value="Release Radar">
+      </div><div class="lib-cap">text · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error">
+        <label class="ds-field__label" for="in-t3">Invite link</label>
+        <input class="ds-input" id="in-t3" value="t.me/+abc" aria-invalid="true" aria-describedby="in-t3-err">
+        <span class="ds-field__error" id="in-t3-err">Link expired — request a fresh invite from the channel admin.</span>
+      </div><div class="lib-cap">text · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--disabled">
+        <label class="ds-field__label" for="in-t4">Account ID</label>
+        <input class="ds-input" id="in-t4" value="acc_a1b2c3d4" disabled>
+      </div><div class="lib-cap">text · disabled</div></div>
+    </div>
+
+    <h3 class="lib-h3">Select</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-s1">Messenger</label>
+        <div class="ds-select"><select class="" id="in-s1"><option>Telegram</option><option>WhatsApp</option><option>Viber</option><option>Signal</option></select></div>
+      </div><div class="lib-cap">select · default</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-s2">Messenger</label>
+        <div class="ds-select"><select class="demo-focus" id="in-s2"><option>Telegram</option></select></div>
+      </div><div class="lib-cap">select · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error">
+        <label class="ds-field__label" for="in-s3">Messenger</label>
+        <div class="ds-select"><select id="in-s3" aria-invalid="true" aria-describedby="in-s3-err"><option>— choose —</option></select></div>
+        <span class="ds-field__error" id="in-s3-err">Pick the messenger this channel lives on.</span>
+      </div><div class="lib-cap">select · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--disabled">
+        <label class="ds-field__label" for="in-s4">Messenger</label>
+        <div class="ds-select"><select id="in-s4" disabled><option>Telegram</option></select></div>
+      </div><div class="lib-cap">select · disabled</div></div>
+    </div>
+
+    <h3 class="lib-h3">Checkbox</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <label class="ds-choice"><input type="checkbox" class="ds-check" checked> Archive media assets</label>
+        <label class="ds-choice"><input type="checkbox" class="ds-check"> Include system replies</label>
+      </div><div class="lib-cap">checkbox · checked / unchecked</div></div>
+      <div class="lib-cell"><div class="lib-demo"><label class="ds-choice"><input type="checkbox" class="ds-check demo-focus" checked> Archive media assets</label></div><div class="lib-cap">checkbox · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error">
+        <label class="ds-choice ds-choice--error"><input type="checkbox" class="ds-check" aria-invalid="true" aria-describedby="in-c3-err"> Accept the retention policy</label>
+        <span class="ds-field__error" id="in-c3-err">Required before archiving starts.</span>
+      </div><div class="lib-cap">checkbox · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <label class="ds-choice" style="opacity:.55"><input type="checkbox" class="ds-check" checked disabled> Archive media assets</label>
+        <label class="ds-choice" style="opacity:.55"><input type="checkbox" class="ds-check" disabled> Include system replies</label>
+      </div><div class="lib-cap">checkbox · disabled</div></div>
+    </div>
+
+    <h3 class="lib-h3">Radio — search mode</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col" role="radiogroup" aria-label="Search mode">
+        <label class="ds-choice"><input type="radio" name="mode1" class="ds-radio" checked> Semantic</label>
+        <label class="ds-choice"><input type="radio" name="mode1" class="ds-radio"> Keyword</label>
+        <label class="ds-choice"><input type="radio" name="mode1" class="ds-radio"> Hybrid</label>
+      </div><div class="lib-cap">radio · default (group)</div></div>
+      <div class="lib-cell"><div class="lib-demo"><label class="ds-choice"><input type="radio" class="ds-radio demo-focus" checked> Semantic</label></div><div class="lib-cap">radio · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error" role="radiogroup" aria-label="Search scope">
+        <label class="ds-choice ds-choice--error"><input type="radio" name="mode3" class="ds-radio" aria-invalid="true"> Posts</label>
+        <label class="ds-choice ds-choice--error"><input type="radio" name="mode3" class="ds-radio" aria-invalid="true"> Replies</label>
+        <span class="ds-field__error">Choose at least one scope.</span>
+      </div><div class="lib-cap">radio · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <label class="ds-choice" style="opacity:.55"><input type="radio" name="mode4" class="ds-radio" checked disabled> Semantic</label>
+        <label class="ds-choice" style="opacity:.55"><input type="radio" name="mode4" class="ds-radio" disabled> Keyword</label>
+      </div><div class="lib-cap">radio · disabled</div></div>
+    </div>
+
+    <h3 class="lib-h3">Switch</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <label class="ds-switch"><input type="checkbox" role="switch" checked><span class="ds-switch__track" aria-hidden="true"></span>Auto-reply</label>
+        <label class="ds-switch"><input type="checkbox" role="switch"><span class="ds-switch__track" aria-hidden="true"></span>Nightly re-index</label>
+      </div><div class="lib-cap">switch · on / off</div></div>
+      <div class="lib-cell"><div class="lib-demo"><label class="ds-switch"><input type="checkbox" role="switch" class="demo-sw-focus" checked><span class="ds-switch__track demo-focus" aria-hidden="true"></span>Auto-reply</label></div><div class="lib-cap">switch · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error">
+        <label class="ds-switch ds-switch--error"><input type="checkbox" role="switch" aria-invalid="true" aria-describedby="in-sw-err"><span class="ds-switch__track" aria-hidden="true"></span>Auto-reply</label>
+        <span class="ds-field__error" id="in-sw-err">Sign in the messenger account first (Settings › Messengers).</span>
+      </div><div class="lib-cap">switch · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo"><label class="ds-switch" style="opacity:.55"><input type="checkbox" role="switch" checked disabled><span class="ds-switch__track" aria-hidden="true"></span>Auto-reply</label></div><div class="lib-cap">switch · disabled</div></div>
+    </div>
+
+    <h3 class="lib-h3">Date</h3>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-d1">Archive since</label>
+        <input type="date" class="ds-input" id="in-d1" value="2026-07-01">
+        <span class="ds-field__hint">Older posts are fetched on demand.</span>
+      </div><div class="lib-cap">date · default + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field">
+        <label class="ds-field__label" for="in-d2">Archive since</label>
+        <input type="date" class="ds-input demo-focus" id="in-d2" value="2026-07-01">
+      </div><div class="lib-cap">date · focus-visible</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--error">
+        <label class="ds-field__label" for="in-d3">Archive since</label>
+        <input type="date" class="ds-input" id="in-d3" value="2027-01-01" aria-invalid="true" aria-describedby="in-d3-err">
+        <span class="ds-field__error" id="in-d3-err">Date is in the future — pick today or earlier.</span>
+      </div><div class="lib-cap">date · error + hint</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col ds-field ds-field--disabled">
+        <label class="ds-field__label" for="in-d4">Archive since</label>
+        <input type="date" class="ds-input" id="in-d4" value="2026-07-01" disabled>
+      </div><div class="lib-cap">date · disabled</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ CARDS ══════════════════════════ -->
+  <section class="lib-section" id="cards" aria-labelledby="h-cards">
+    <h2 id="h-cards">Cards</h2>
+    <p class="lib-prov"><span class="v">VERIFIED</span> <code>.ds-card</code> + <code>--raised</code> ·
+      <span class="p">PROPOSED</span> <code>thready-stat</code> KPI composite, interactive thread-row card.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-card"><strong style="font-family:var(--font-display)">Helix Announcements</strong>
+          <p style="margin:8px 0 0;color:var(--muted);font-size:var(--text-sm)">Telegram · 4 812 posts archived · last sync 2 min ago</p></div>
+      </div><div class="lib-cap">ds-card · default</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-card ds-card--raised"><strong style="font-family:var(--font-display)">Release Radar</strong>
+          <p style="margin:8px 0 0;color:var(--muted);font-size:var(--text-sm)">WhatsApp · 1 034 posts · processing backlog 3</p></div>
+      </div><div class="lib-cap">ds-card--raised · elevated</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-card ds-card--raised thready-stat">
+          <span class="thready-stat__label">Posts archived</span>
+          <span class="thready-stat__value">4 812</span>
+          <span class="thready-stat__delta">▲ 128 this week</span>
+        </div>
+      </div><div class="lib-cap">thready-stat · KPI tile (Dashboard)</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-card" role="button" tabindex="0" aria-expanded="false" style="cursor:pointer;background:var(--surface-warm)">
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+            <span style="font-weight:600">Thready 0.4.0 released — changelog inside</span>
+            <span class="ds-badge ds-badge--success">processed</span>
+          </div>
+          <p style="margin:8px 0 0;color:var(--muted);font-size:var(--text-sm)">↩ 24 replies ·
+            <span class="thready-tag thready-tag--direct">#release</span>
+            <span class="thready-tag thready-tag--indirect">#thready<span class="visually-hidden"> (derived)</span></span></p>
+        </div>
+      </div><div class="lib-cap">thready-thread-row · hover/selected (role=button, aria-expanded)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ TABLES ══════════════════════════ -->
+  <section class="lib-section" id="tables" aria-labelledby="h-tables">
+    <h2 id="h-tables">Tables — sortable &amp; paginated</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-table</code> — click a header to sort (live), page controls below page the rows (live).
+      Rows show hover + <code>aria-selected</code>; numeric cells use <code>--font-mono</code> tabular figures.</p>
+    <div class="ds-table-wrap">
+      <table class="ds-table" id="posts-table" aria-describedby="posts-table-cap">
+        <caption id="posts-table-cap" class="visually-hidden">Archived posts, sortable and paginated</caption>
+        <thead><tr>
+          <th data-sort="text" aria-sort="none"><button class="ds-sort">Post <span class="arr up">▲</span><span class="arr down">▼</span></button></th>
+          <th data-sort="text" aria-sort="none"><button class="ds-sort">Channel <span class="arr up">▲</span><span class="arr down">▼</span></button></th>
+          <th>Tags</th>
+          <th data-sort="text" aria-sort="none"><button class="ds-sort">Status <span class="arr up">▲</span><span class="arr down">▼</span></button></th>
+          <th class="num" data-sort="num" aria-sort="none"><button class="ds-sort">↩ Replies <span class="arr up">▲</span><span class="arr down">▼</span></button></th>
+          <th data-sort="text" aria-sort="none"><button class="ds-sort">Updated <span class="arr up">▲</span><span class="arr down">▼</span></button></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Thready 0.4.0 released — changelog inside</td><td>Helix Announcements</td>
+            <td><span class="thready-tag thready-tag--direct">#release</span></td>
+            <td><span class="ds-badge ds-badge--success">processed</span></td><td class="num" data-num="24">24</td><td>2026-07-21</td></tr>
+          <tr aria-selected="true"><td>Weekly digest: search quality improvements</td><td>Release Radar</td>
+            <td><span class="thready-tag thready-tag--direct">#digest</span></td>
+            <td><span class="thready-chip thready-chip--processing"><span class="ds-spinner ds-spinner--sm" aria-hidden="true"></span>63%</span></td><td class="num" data-num="7">7</td><td>2026-07-22</td></tr>
+          <tr><td>Incident 2026-07-18: media convert backlog</td><td>Ops War-Room</td>
+            <td><span class="thready-tag thready-tag--indirect">#infra<span class="visually-hidden"> (derived)</span></span></td>
+            <td><span class="ds-badge ds-badge--danger">failed</span></td><td class="num" data-num="41">41</td><td>2026-07-18</td></tr>
+          <tr class="demo-hover"><td>Community Q&amp;A thread — ask us anything</td><td>Helix Announcements</td>
+            <td><span class="thready-tag thready-tag--direct">#community</span></td>
+            <td><span class="ds-badge ds-badge--neutral">queued</span></td><td class="num" data-num="122">122</td><td>2026-07-20</td></tr>
+          <tr><td>White-label onboarding guide v2</td><td>Release Radar</td>
+            <td><span class="thready-tag thready-tag--direct">#docs</span></td>
+            <td><span class="ds-badge ds-badge--success">processed</span></td><td class="num" data-num="3">3</td><td>2026-07-15</td></tr>
+          <tr><td>Media pipeline: HLS viewer beta feedback</td><td>Ops War-Room</td>
+            <td><span class="thready-tag thready-tag--indirect">#media<span class="visually-hidden"> (derived)</span></span></td>
+            <td><span class="thready-chip thready-chip--retrying"><span class="rot" aria-hidden="true">⟳</span>retrying</span></td><td class="num" data-num="15">15</td><td>2026-07-19</td></tr>
+        </tbody>
+      </table>
+      <div class="ds-table__foot">
+        <span id="table-range">Rows 1–4 of 6</span>
+        <nav class="ds-pagination" aria-label="Posts pages" id="table-pager">
+          <button class="ds-page" data-page="prev" aria-label="Previous page" disabled>‹</button>
+          <button class="ds-page" data-page="1" aria-current="page">1</button>
+          <button class="ds-page" data-page="2">2</button>
+          <button class="ds-page" data-page="next" aria-label="Next page">›</button>
+        </nav>
+      </div>
+    </div>
+    <p class="lib-cap" style="border:none;margin-top:var(--space-3)">states shown: sortable (aria-sort none/asc/desc) · row hover · row selected · paginated footer</p>
+  </section>
+
+  <!-- ══════════════════════════ BADGES & CHIPS ══════════════════════════ -->
+  <section class="lib-section" id="badges-chips" aria-labelledby="h-badges">
+    <h2 id="h-badges">Badges &amp; chips</h2>
+    <p class="lib-prov"><span class="v">VERIFIED</span> <code>.ds-badge</code> + <code>--success/--warn/--danger</code> ·
+      <span class="p">PROPOSED</span> <code>--neutral</code>, <code>thready-tag</code> (hashtag direct/indirect), <code>thready-chip</code> (processing states).</p>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="ds-badge ds-badge--success">processed</span>
+        <span class="ds-badge ds-badge--warn">degraded</span>
+        <span class="ds-badge ds-badge--danger">failed</span>
+        <span class="ds-badge ds-badge--neutral">queued</span>
+      </div><div class="lib-cap">ds-badge · semantic set (+ neutral proposed)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="thready-tag thready-tag--direct">#release</span>
+        <span class="thready-tag thready-tag--direct">#helix</span>
+        <span class="thready-tag thready-tag--indirect ds-tip" tabindex="0" data-tip="Derived by analysis — not in the original post">#golang<span class="visually-hidden"> (derived)</span></span>
+      </div><div class="lib-cap">hashtag chip · direct (brand fill) vs indirect (outline + derived tooltip)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <button class="thready-tag thready-tag--direct thready-tag--interactive">#search</button>
+        <button class="thready-tag thready-tag--direct thready-tag--interactive demo-hover">#search</button>
+        <button class="thready-tag thready-tag--direct thready-tag--interactive demo-focus">#search</button>
+      </div><div class="lib-cap">hashtag chip · interactive: default / hover / focus (filter-on-click)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="thready-tag thready-tag--indirect">#infra<button class="x" aria-label="Remove filter #infra">✕</button></span>
+        <span class="thready-tag thready-tag--indirect">#media<button class="x" aria-label="Remove filter #media">✕</button></span>
+      </div><div class="lib-cap">filter chip · removable (search filters)</div></div>
+      <div class="lib-cell" style="grid-column:1/-1"><div class="lib-demo">
+        <span class="thready-chip thready-chip--pending">◷ pending</span>
+        <span class="thready-chip thready-chip--processing"><span class="ds-spinner ds-spinner--sm" aria-hidden="true"></span>processing 63%</span>
+        <span class="thready-chip thready-chip--done">✓ done</span>
+        <span class="thready-chip thready-chip--failed">⚠ failed · <button class="retry">retry</button></span>
+        <span class="thready-chip thready-chip--retrying"><span class="rot" aria-hidden="true">⟳</span> retrying 2/3</span>
+      </div><div class="lib-cap">processing-state chips · pending / processing / done / failed (+focusable retry) / retrying — pipeline: download → convert → analyze → research → reply</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ NAVIGATION ══════════════════════════ -->
+  <section class="lib-section" id="navigation" aria-labelledby="h-nav">
+    <h2 id="h-nav">Navigation</h2>
+    <p class="lib-prov"><span class="v">VERIFIED</span> <code>.ds-nav</code> topbar pattern ·
+      <span class="p">PROPOSED</span> <code>.ds-sidebar</code>, <code>.ds-tabs</code>, <code>.ds-breadcrumbs</code>.</p>
+    <div class="lib-block">
+      <div>
+        <nav class="ds-nav" aria-label="Topbar demo">
+          <span class="lib-logo" style="font-size:var(--text-base)">
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M15 4 C38 14 12 32 33 44" fill="none" stroke="var(--brand)" stroke-width="4" stroke-linecap="round"/>
+              <path d="M33 4 C10 14 36 32 15 44" fill="none" stroke="var(--brand-2)" stroke-width="4" stroke-linecap="round"/>
+            </svg>Thready</span>
+          <span class="ds-nav__links">
+            <a class="ds-nav__link" href="#navigation" aria-current="page">Dashboard</a>
+            <a class="ds-nav__link" href="#navigation">Channels</a>
+            <a class="ds-nav__link" href="#navigation">Search</a>
+            <a class="ds-nav__link" href="#navigation">Assets</a>
+            <a class="ds-nav__link" href="#navigation">Settings</a>
+          </span>
+          <span style="display:flex;align-items:center;gap:var(--space-3)">
+            <span class="ds-badge ds-badge--neutral mono">acct: Helix Dev</span>
+            <span class="ds-avatar ds-avatar--sm">MV<span class="ds-avatar__dot ds-avatar__dot--online" aria-hidden="true"></span></span>
+          </span>
+        </nav>
+        <p class="lib-cap" style="border:none">ds-nav · topbar: brand mark + links (aria-current) + account switcher + avatar</p>
+      </div>
+      <div class="lib-row">
+        <div>
+          <nav class="ds-sidebar" aria-label="Sidebar demo">
+            <a class="ds-sidebar__item" href="#navigation" aria-current="page">▤ Dashboard</a>
+            <a class="ds-sidebar__item" href="#navigation">▷ Channels <span class="ds-sidebar__count">12</span></a>
+            <a class="ds-sidebar__item demo-hover" href="#navigation">☰ Threads <span class="ds-sidebar__count">4 812</span></a>
+            <a class="ds-sidebar__item" href="#navigation">⌕ Search</a>
+            <a class="ds-sidebar__item" href="#navigation">▣ Assets <span class="ds-sidebar__count">1.2 TB</span></a>
+            <a class="ds-sidebar__item" href="#navigation" style="opacity:.45;pointer-events:none" aria-disabled="true">⚙ Admin (RBAC)</a>
+          </nav>
+          <p class="lib-cap" style="border:none">ds-sidebar · active / hover / count / RBAC-disabled</p>
+        </div>
+        <div style="flex:1;min-width:280px">
+          <div class="ds-tabs" role="tablist" aria-label="Post detail tabs">
+            <button class="ds-tab" role="tab" aria-selected="true">Thread</button>
+            <button class="ds-tab" role="tab" aria-selected="false">Pipeline</button>
+            <button class="ds-tab demo-hover" role="tab" aria-selected="false">Assets</button>
+            <button class="ds-tab" role="tab" aria-selected="false" aria-disabled="true">Research (soon)</button>
+          </div>
+          <p class="lib-cap" style="border:none">ds-tabs · selected / default / hover / disabled</p>
+          <nav class="ds-breadcrumbs" aria-label="Breadcrumb" style="margin-top:var(--space-5)">
+            <ol>
+              <li><a class="ds-link" href="#navigation">Channels</a></li>
+              <li><a class="ds-link" href="#navigation">Helix Announcements</a></li>
+              <li><span aria-current="page">Thready 0.4.0 released</span></li>
+            </ol>
+          </nav>
+          <p class="lib-cap" style="border:none">ds-breadcrumbs · trail + aria-current page</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ DIALOGS ══════════════════════════ -->
+  <section class="lib-section" id="dialogs" aria-labelledby="h-dialogs">
+    <h2 id="h-dialogs">Dialogs / modals</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-dialog</code> on native <code>&lt;dialog&gt;</code> —
+      focus-trapped, <code>Esc</code> closes, destructive action is always <code>--danger</code> (never brand).</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-dialog-stage">
+        <div class="ds-dialog" role="dialog" aria-modal="true" aria-labelledby="dlg1-t">
+          <div class="ds-dialog__head"><h3 class="ds-dialog__title" id="dlg1-t">Remove channel?</h3>
+            <button class="ds-dialog__close" aria-label="Close">✕</button></div>
+          <div class="ds-dialog__body">“Ops War-Room” and its 1 217 archived posts stay searchable for 30 days, then are purged. Media assets are detached immediately.</div>
+          <div class="ds-dialog__foot">
+            <button class="ds-btn ds-btn--secondary">Cancel</button>
+            <button class="ds-btn ds-btn--danger">Remove channel</button>
+          </div>
+        </div>
+      </div><div class="lib-cap">ds-dialog · destructive confirm (static render with backdrop)</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <button class="ds-btn ds-btn--primary" id="open-dialog">Open live dialog</button>
+        <dialog class="ds-dialog" id="live-dialog" aria-labelledby="dlg2-t">
+          <div class="ds-dialog__head"><h3 class="ds-dialog__title" id="dlg2-t">Add channel</h3>
+            <button class="ds-dialog__close" data-close aria-label="Close">✕</button></div>
+          <div class="ds-dialog__body">
+            <div class="ds-field"><label class="ds-field__label" for="dlg-name">Channel name</label>
+              <input class="ds-input" id="dlg-name" placeholder="e.g. Helix Announcements"></div>
+          </div>
+          <div class="ds-dialog__foot">
+            <button class="ds-btn ds-btn--secondary" data-close>Cancel</button>
+            <button class="ds-btn ds-btn--primary" data-close>Add channel</button>
+          </div>
+        </dialog>
+      </div><div class="lib-cap">ds-dialog · live &lt;dialog&gt; (showModal, ::backdrop, Esc closes)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ TOASTS / ALERTS ══════════════════════════ -->
+  <section class="lib-section" id="toasts-alerts" aria-labelledby="h-toasts">
+    <h2 id="h-toasts">Toasts &amp; alerts</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>thready-toast</code> / <code>.ds-alert</code> —
+      <code>role="status"</code> (polite) for info/success, <code>role="alert"</code> (assertive) for danger; a toast is never the only channel for a critical error.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-alert ds-alert--info" role="status"><span class="ds-alert__icon">ℹ</span>Semantic search is warming up — results may briefly use keyword ranking.</div>
+        <div class="ds-alert ds-alert--success" role="status"><span class="ds-alert__icon">✓</span>Channel “Release Radar” archived — 1 034 posts indexed.</div>
+      </div><div class="lib-cap">ds-alert · info / success (role=status)</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-alert ds-alert--warn" role="status"><span class="ds-alert__icon">⚠</span>Degraded: hash-embedder active, similarity scores hidden.</div>
+        <div class="ds-alert ds-alert--danger" role="alert"><span class="ds-alert__icon">⨯</span>Convert step failed on 3 posts — <a class="ds-link" href="#progress">view pipeline</a>.</div>
+      </div><div class="lib-cap">ds-alert · warn (status) / danger (role=alert)</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div class="ds-toast ds-toast--success" role="status"><span>✓ Reply posted to “Community Q&amp;A”.</span><button class="ds-toast__action">View</button></div>
+        <div class="ds-toast ds-toast--danger" role="alert"><span>⚠ Retry failed — step <code>convert</code>.</span><button class="ds-toast__action">Retry</button></div>
+      </div><div class="lib-cap">ds-toast · success + danger, with action</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <button class="ds-btn ds-btn--secondary" id="spawn-toast">Spawn live toast</button>
+      </div><div class="lib-cap">ds-toast · live (auto-dismiss 4 s, pauses on hover)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ PROGRESS ══════════════════════════ -->
+  <section class="lib-section" id="progress" aria-labelledby="h-progress">
+    <h2 id="h-progress">Progress &amp; spinners</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-progress</code>, <code>.ds-spinner</code> (+ helix-motif) —
+      <code>role="progressbar"</code> with <code>aria-valuenow</code>; all animation gated on <code>prefers-reduced-motion</code>.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--muted)"><span>download</span><span class="mono">63%</span></div>
+        <div class="ds-progress" role="progressbar" aria-label="Download progress" aria-valuenow="63" aria-valuemin="0" aria-valuemax="100"><div class="ds-progress__fill" style="width:63%"></div></div>
+      </div><div class="lib-cap">progress · determinate (pipeline step)</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--muted)"><span>analyze</span><span class="mono">…</span></div>
+        <div class="ds-progress ds-progress--indeterminate" role="progressbar" aria-label="Analyzing"></div>
+      </div><div class="lib-cap">progress · indeterminate</div></div>
+      <div class="lib-cell"><div class="lib-demo lib-demo--col">
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs)"><span style="color:var(--danger);font-weight:600">convert — failed</span></div>
+        <div class="ds-progress" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100" aria-label="Convert progress, failed"><div class="ds-progress__fill" style="width:38%;background:var(--danger)"></div></div>
+        <button class="ds-btn ds-btn--ghost" style="align-self:flex-start;padding:var(--space-2) var(--space-3)">⟳ Retry step</button>
+      </div><div class="lib-cap">progress · failed + retry affordance (thready-progress)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="ds-spinner ds-spinner--sm" role="status" aria-label="Loading"></span>
+        <span class="ds-spinner" role="status" aria-label="Loading"></span>
+        <span class="ds-spinner ds-spinner--lg" role="status" aria-label="Loading"></span>
+      </div><div class="lib-cap">spinner · sm / md / lg (ring)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <svg class="ds-spinner--helix" width="48" height="48" viewBox="0 0 48 48" role="status" aria-label="Processing thread">
+          <path d="M15 5 C38 15 10 33 33 43" fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M33 5 C10 15 38 33 15 43" fill="none" stroke="var(--brand-2)" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="19" y1="12" x2="29" y2="12" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="17" y1="24" x2="31" y2="24" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="19" y1="36" x2="29" y2="36" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:var(--text-sm);color:var(--muted)">helix-motif spinner — two strands (<code>--accent</code> + <code>--brand-2</code>) + rungs</span>
+      </div><div class="lib-cap">spinner · helix motif (brand loading state)</div></div>
+      <div class="lib-cell" style="grid-column:1/-1"><div class="lib-demo lib-demo--col" role="list" aria-label="Processing pipeline">
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center">
+          <span class="thready-chip thready-chip--done" role="listitem" aria-label="download: done">✓ download</span><span style="color:var(--border-strong)">→</span>
+          <span class="thready-chip thready-chip--done" role="listitem" aria-label="convert: done">✓ convert</span><span style="color:var(--border-strong)">→</span>
+          <span class="thready-chip thready-chip--processing" role="listitem" aria-label="analyze: running, 63 percent"><span class="ds-spinner ds-spinner--sm" aria-hidden="true"></span>analyze 63%</span><span style="color:var(--border-strong)">→</span>
+          <span class="thready-chip thready-chip--pending" role="listitem" aria-label="research: queued">◷ research</span><span style="color:var(--border-strong)">→</span>
+          <span class="thready-chip thready-chip--pending" role="listitem" aria-label="reply: queued">◷ reply</span>
+        </div>
+      </div><div class="lib-cap">thready-processing-pipeline · ordered steps with per-step state (precedence: download &gt; convert &gt; analyze &gt; research &gt; reply)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ AVATARS ══════════════════════════ -->
+  <section class="lib-section" id="avatars" aria-labelledby="h-avatars">
+    <h2 id="h-avatars">Avatars</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-avatar</code> — initials fallback, presence dot, stacked group.</p>
+    <div class="lib-grid">
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="ds-avatar ds-avatar--xs">MV</span>
+        <span class="ds-avatar ds-avatar--sm">MV</span>
+        <span class="ds-avatar">MV</span>
+        <span class="ds-avatar ds-avatar--lg">MV</span>
+      </div><div class="lib-cap">avatar · xs / sm / md / lg (initials fallback)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="ds-avatar">HA<span class="ds-avatar__dot ds-avatar__dot--online" aria-hidden="true"></span><span class="visually-hidden">online</span></span>
+        <span class="ds-avatar">RR<span class="ds-avatar__dot" aria-hidden="true"></span><span class="visually-hidden">offline</span></span>
+        <span class="ds-avatar ds-avatar--brand">T</span>
+      </div><div class="lib-cap">avatar · online / offline dot · brand (account mark)</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <span class="ds-avatar-group" aria-label="5 participants">
+          <span class="ds-avatar ds-avatar--sm">MV</span>
+          <span class="ds-avatar ds-avatar--sm">AK</span>
+          <span class="ds-avatar ds-avatar--sm">JD</span>
+          <span class="ds-avatar ds-avatar--sm" style="background:var(--surface-warm);color:var(--muted)">+2</span>
+        </span>
+      </div><div class="lib-cap">avatar · stacked group (thread participants)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ EMPTY STATES ══════════════════════════ -->
+  <section class="lib-section" id="empty-states" aria-labelledby="h-empty">
+    <h2 id="h-empty">Empty states</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>thready-empty</code> — never a blank pane: icon + one-line reason + primary action.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="ds-empty">
+        <svg class="ds-empty__icon" width="40" height="40" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M15 5 C38 15 10 33 33 43" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+          <path d="M33 5 C10 15 38 33 15 43" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".5"/></svg>
+        <h3 class="ds-empty__title">No channels yet</h3>
+        <p class="ds-empty__reason">Connect a messenger channel and Thready archives every thread automatically.</p>
+        <button class="ds-btn ds-btn--primary">Add your first channel</button>
+      </div><div class="lib-cap">empty · first-run (primary action)</div></div>
+      <div class="lib-cell"><div class="ds-empty">
+        <span class="ds-empty__icon" style="font-size:28px">⌕</span>
+        <h3 class="ds-empty__title">No results for “quantum viber”</h3>
+        <p class="ds-empty__reason">Try hybrid mode, widen the scope to replies, or drop a filter chip.</p>
+        <button class="ds-btn ds-btn--secondary">Switch to hybrid mode</button>
+      </div><div class="lib-cap">empty · no search results (hint + secondary action)</div></div>
+      <div class="lib-cell"><div class="ds-empty" style="border-color:color-mix(in oklab, var(--danger), transparent 50%)">
+        <span class="ds-empty__icon" style="font-size:28px;color:var(--danger)">⚠</span>
+        <h3 class="ds-empty__title">Couldn’t load the thread</h3>
+        <p class="ds-empty__reason">The archive service didn’t respond (504). Your data is safe.</p>
+        <button class="ds-btn ds-btn--ghost">⟳ Retry</button>
+      </div><div class="lib-cap">error state · page-level with retry (thready-error)</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ SKELETONS ══════════════════════════ -->
+  <section class="lib-section" id="skeletons" aria-labelledby="h-skeletons">
+    <h2 id="h-skeletons">Skeleton loaders</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-skeleton</code> — shown only after ~150 ms (no flash);
+      shimmer disabled under <code>prefers-reduced-motion</code>.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-demo lib-demo--col" aria-hidden="true">
+        <div class="ds-skeleton ds-skeleton--line" style="width:80%"></div>
+        <div class="ds-skeleton ds-skeleton--line" style="width:95%"></div>
+        <div class="ds-skeleton ds-skeleton--line" style="width:60%"></div>
+      </div><div class="lib-cap">skeleton · text lines</div></div>
+      <div class="lib-cell"><div class="lib-demo" aria-hidden="true">
+        <div class="ds-skeleton ds-skeleton--circle" style="width:36px;height:36px"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div class="ds-skeleton ds-skeleton--line" style="width:50%"></div>
+          <div class="ds-skeleton ds-skeleton--line" style="width:85%"></div>
+        </div>
+      </div><div class="lib-cap">skeleton · thread-row (avatar + excerpt)</div></div>
+      <div class="lib-cell"><div class="ds-card" aria-hidden="true" style="display:flex;flex-direction:column;gap:10px">
+        <div class="ds-skeleton ds-skeleton--line" style="width:40%;height:10px"></div>
+        <div class="ds-skeleton" style="width:55%;height:28px"></div>
+        <div class="ds-skeleton ds-skeleton--line" style="width:30%;height:8px"></div>
+      </div><div class="lib-cap">skeleton · stat-card</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ PAGINATION ══════════════════════════ -->
+  <section class="lib-section" id="pagination" aria-labelledby="h-pagination">
+    <h2 id="h-pagination">Pagination</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-pagination</code> — current page uses <code>aria-current="page"</code> on the accent fill.</p>
+    <div class="lib-grid lib-grid--wide">
+      <div class="lib-cell"><div class="lib-demo">
+        <nav class="ds-pagination" aria-label="Threads pages">
+          <button class="ds-page" aria-label="Previous page" disabled>‹</button>
+          <button class="ds-page" aria-current="page">1</button>
+          <button class="ds-page">2</button>
+          <button class="ds-page demo-hover">3</button>
+          <span class="ds-pagination__gap" aria-hidden="true">…</span>
+          <button class="ds-page">12</button>
+          <button class="ds-page" aria-label="Next page">›</button>
+        </nav>
+      </div><div class="lib-cap">pagination · current / default / hover / disabled-prev / ellipsis</div></div>
+      <div class="lib-cell"><div class="lib-demo">
+        <nav class="ds-pagination" aria-label="Threads pages, focus state">
+          <button class="ds-page" aria-label="Previous page">‹</button>
+          <button class="ds-page">4</button>
+          <button class="ds-page demo-focus" aria-current="page">5</button>
+          <button class="ds-page">6</button>
+          <button class="ds-page" aria-label="Next page">›</button>
+        </nav>
+        <label class="ds-choice" style="gap:var(--space-2)">Rows
+          <span class="ds-select" style="width:84px"><select aria-label="Rows per page"><option>25</option><option>50</option><option>100</option></select></span>
+        </label>
+      </div><div class="lib-cap">pagination · focus-visible on current + page-size select</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ TOOLTIPS ══════════════════════════ -->
+  <section class="lib-section" id="tooltips" aria-labelledby="h-tooltips">
+    <h2 id="h-tooltips">Tooltips</h2>
+    <p class="lib-prov"><span class="p">PROPOSED</span> <code>.ds-tip</code> — CSS-only, shows on hover <em>and</em> keyboard focus; on every non-obvious control.</p>
+    <div class="lib-grid">
+      <div class="lib-cell" style="overflow:visible"><div class="lib-demo" style="padding-top:var(--space-8)">
+        <button class="ds-iconbtn ds-tip demo-show" data-tip="Re-run the processing pipeline" aria-label="Re-run the processing pipeline">⟳</button>
+      </div><div class="lib-cap">tooltip · top placement (forced visible)</div></div>
+      <div class="lib-cell" style="overflow:visible"><div class="lib-demo" style="padding-bottom:var(--space-8)">
+        <button class="ds-iconbtn ds-tip ds-tip--bottom demo-show" data-tip="Download original media" aria-label="Download original media">⬇</button>
+      </div><div class="lib-cap">tooltip · bottom placement (forced visible)</div></div>
+      <div class="lib-cell" style="overflow:visible"><div class="lib-demo">
+        <button class="ds-iconbtn ds-tip" data-tip="Copy post permalink" aria-label="Copy post permalink">⧉</button>
+        <span style="font-size:var(--text-sm);color:var(--muted)">hover or Tab-focus me</span>
+      </div><div class="lib-cap">tooltip · interactive (hover / focus-visible)</div></div>
+      <div class="lib-cell" style="overflow:visible"><div class="lib-demo" style="padding-top:var(--space-8)">
+        <span class="thready-tag thready-tag--indirect ds-tip demo-show" tabindex="0" data-tip="Derived by analysis — not in the original post">#kubernetes…<span class="visually-hidden"> (derived)</span></span>
+      </div><div class="lib-cap">tooltip · on truncated indirect hashtag</div></div>
+    </div>
+  </section>
+
+  <footer class="ds-footer" style="margin-top:var(--space-8)">
+    <div style="display:flex;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+      <span>Made with <span style="color:var(--ds-heart)" aria-label="love">♥</span> by Helix Development.</span>
+      <span class="mono" style="font-size:var(--text-xs)">theme: thready · tokens: design_system core + thready.css · rev 1 (2026-07-22)</span>
+    </div>
+  </footer>
+</main>
+
+<div class="lib-toasts" role="region" aria-live="polite" aria-label="Notifications" id="toast-region"></div>
+
+<script>
+/* Theme toggle — mirrors design_system ThemeService: cycles system → light → dark,
+   stamps data-theme on <html>, persists to localStorage 'thready-theme'. */
+(function () {
+  var KEY = 'thready-theme';
+  var btn = document.getElementById('theme-toggle');
+  var order = ['system', 'light', 'dark'];
+  function apply(choice) {
+    var root = document.documentElement;
+    if (choice === 'system') { root.removeAttribute('data-theme'); }
+    else { root.setAttribute('data-theme', choice); }
+    btn.textContent = 'Theme: ' + choice;
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  var current = order.indexOf(saved) >= 0 ? saved : 'system';
+  apply(current);
+  btn.addEventListener('click', function () {
+    current = order[(order.indexOf(current) + 1) % order.length];
+    try { localStorage.setItem(KEY, current); } catch (e) {}
+    apply(current);
+  });
+})();
+
+/* Sortable table */
+(function () {
+  var table = document.getElementById('posts-table');
+  if (!table) return;
+  var tbody = table.tBodies[0];
+  table.querySelectorAll('th[data-sort]').forEach(function (th) {
+    th.querySelector('.ds-sort').addEventListener('click', function () {
+      var idx = Array.prototype.indexOf.call(th.parentNode.children, th);
+      var kind = th.getAttribute('data-sort');
+      var dir = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+      table.querySelectorAll('th[aria-sort]').forEach(function (h) { h.setAttribute('aria-sort', 'none'); });
+      th.setAttribute('aria-sort', dir);
+      var rows = Array.prototype.slice.call(tbody.rows);
+      rows.sort(function (a, b) {
+        var av, bv;
+        if (kind === 'num') {
+          av = parseFloat(a.cells[idx].getAttribute('data-num') || a.cells[idx].textContent) || 0;
+          bv = parseFloat(b.cells[idx].getAttribute('data-num') || b.cells[idx].textContent) || 0;
+          return dir === 'ascending' ? av - bv : bv - av;
+        }
+        av = a.cells[idx].textContent.trim().toLowerCase();
+        bv = b.cells[idx].textContent.trim().toLowerCase();
+        return dir === 'ascending' ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      page(1); // re-page after sort
+    });
+  });
+
+  /* Pagination (page size 4) */
+  var SIZE = 4;
+  var pager = document.getElementById('table-pager');
+  var range = document.getElementById('table-range');
+  var currentPage = 1;
+  function page(n) {
+    var rows = Array.prototype.slice.call(tbody.rows);
+    var pages = Math.ceil(rows.length / SIZE);
+    currentPage = Math.min(Math.max(1, n), pages);
+    rows.forEach(function (r, i) {
+      r.style.display = (i >= (currentPage - 1) * SIZE && i < currentPage * SIZE) ? '' : 'none';
+    });
+    var from = (currentPage - 1) * SIZE + 1;
+    var to = Math.min(currentPage * SIZE, rows.length);
+    range.textContent = 'Rows ' + from + '–' + to + ' of ' + rows.length;
+    pager.querySelectorAll('.ds-page').forEach(function (b) {
+      var p = b.getAttribute('data-page');
+      if (p === 'prev') { b.disabled = currentPage === 1; }
+      else if (p === 'next') { b.disabled = currentPage === pages; }
+      else {
+        if (parseInt(p, 10) === currentPage) { b.setAttribute('aria-current', 'page'); }
+        else { b.removeAttribute('aria-current'); }
+      }
+    });
+  }
+  pager.addEventListener('click', function (e) {
+    var b = e.target.closest('.ds-page'); if (!b || b.disabled) return;
+    var p = b.getAttribute('data-page');
+    if (p === 'prev') page(currentPage - 1);
+    else if (p === 'next') page(currentPage + 1);
+    else page(parseInt(p, 10));
+  });
+  page(1);
+})();
+
+/* Live dialog */
+(function () {
+  var dlg = document.getElementById('live-dialog');
+  var open = document.getElementById('open-dialog');
+  if (!dlg || !open) return;
+  open.addEventListener('click', function () { dlg.showModal(); });
+  dlg.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { dlg.close(); });
+  });
+})();
+
+/* Live toast — auto-dismiss 4s, pause on hover */
+(function () {
+  var region = document.getElementById('toast-region');
+  var spawn = document.getElementById('spawn-toast');
+  if (!spawn) return;
+  var n = 0;
+  spawn.addEventListener('click', function () {
+    n++;
+    var t = document.createElement('div');
+    t.className = 'ds-toast ds-toast--success';
+    t.setAttribute('role', 'status');
+    t.innerHTML = '<span>✓ Post #' + (4812 + n) + ' archived from “Helix Announcements”.</span>';
+    var x = document.createElement('button');
+    x.className = 'ds-toast__action'; x.textContent = 'Dismiss';
+    x.addEventListener('click', function () { t.remove(); });
+    t.appendChild(x);
+    region.appendChild(t);
+    var timer = setTimeout(function () { t.remove(); }, 4000);
+    t.addEventListener('mouseenter', function () { clearTimeout(timer); });
+    t.addEventListener('mouseleave', function () { timer = setTimeout(function () { t.remove(); }, 2500); });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — TUI Screen Designs</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — TUI Screen Designs</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#what-this-directory-is" id="toc-what-this-directory-is">1.
+What this directory is</a></li>
+<li><a href="#catalogue" id="toc-catalogue">2. Catalogue</a></li>
+<li><a href="#conventions-the-artifacts-follow"
+id="toc-conventions-the-artifacts-follow">3. Conventions the artifacts
+follow</a></li>
+<li><a href="#open-items" id="toc-open-items">4. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — TUI Screen Designs (Catalogue)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/tui/README.md
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./tui-screens.html, ./lipgloss-theme.md, ../../wireframes.md (§5),
+                    ../../design-system.md (§7), ../../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>Initial catalogue: styled terminal mockups (5 screens) + Lipgloss
+theme mapping</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>Gap closure vs. wireframes §5: +5 screens (Login, Channel detail,
+Add-Channel form, Assets, Skills) + in-artifact screen index; minted
+<code>THREADY-DES-TUI-01/-02</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-this-directory-is">1. What this directory is</h2>
+<p>The Thready TUI is <strong>Bubble Tea + Cobra + Lipgloss</strong>,
+structured after the <strong>verified in-house pattern</strong>
+<code>helix_track/llms_verifier/llm-verifier/tui</code> (app model →
+screen models → Lipgloss-styled views + notifications/live pane)
+<code>[VERIFIED — wireframes.md §5]</code>. This directory holds the
+styled visual realization of the TUI wireframes:</p>
+<ul>
+<li><strong><a href="./tui-screens.html">tui-screens.html</a></strong> —
+a self-contained artifact (no CDNs) rendering ten 80-column terminal
+mockups in monospace with an <strong>ANSI-16 palette mapped from the
+brand tokens</strong>: exact box-drawing alignment, Bubble Tea
+composition labels (<strong>list + viewport + statusbar</strong> per
+screen, plus textinput/choice/spinner/progress where a screen is a
+form), the verified keybinding rail (wireframes §5.1), and realistic
+Thready data (#ml-papers / #films / Max auth-warning, download 63 %,
+scores 0.94/0.91/0.88). The full §5 state machine is now covered (Login
+through Skills); an in-artifact index links every screen. Page chrome
+supports light + dark via <code>[data-theme="dark"]</code>; the terminal
+surface stays on the dark palette — “the TUI defaults to the terminal’s
+dark surface” (design-system §7).</li>
+<li><strong><a href="./lipgloss-theme.md">lipgloss-theme.md</a></strong>
+— the normative brand-token → <code>lipgloss.Color</code> mapping
+(truecolor → ANSI-256 → ANSI-16), role styles re-binding the verified
+llm-verifier style roles to tokens,
+<code>CompleteColor</code>/<code>AdaptiveColor</code> options — every
+value marked <strong>VERIFIED</strong> vs <strong>ASSUMED</strong>.</li>
+</ul>
+<h2 id="catalogue">2. Catalogue</h2>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 31%" />
+<col style="width: 18%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen (in tui-screens.html)</th>
+<th>Bubble Tea composition</th>
+<th>Ground truth</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 · Dashboard</td>
+<td>key-hint rail + live viewport (WS/SSE) + threads list +
+statusbar</td>
+<td>wireframes §5 layout, §5.1 keys</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td>2 · Channels</td>
+<td>list (inverse-accent selection) + statusbar</td>
+<td>wireframes §3.4 data re-laid; §5 nav state machine</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td>3 · Thread view (Post detail)</td>
+<td>root header + pipeline/replies viewports + statusbar</td>
+<td>wireframes §5.3; ux-flows §3.1 (409 idempotent retry)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td>4 · Search</td>
+<td>textinput + mode/scope + scored list + statusbar</td>
+<td>wireframes §5.3; ux-flows §4 (degraded-embedder banner)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td>5 · Processing queue</td>
+<td>job list with progress cells + statusbar</td>
+<td><strong>derived</strong> — Dashboard queue pane (§3.3) +
+processing-event contract; the §5 wireframes fold the queue into the
+Dashboard</td>
+<td><code>[DEFAULT — adjustable]</code></td>
+</tr>
+<tr>
+<td>6 · Login</td>
+<td>textinput ×2 (endpoint/token) + auth-mode choice + spinner +
+statusbar</td>
+<td>wireframes §5 (<code>Login → Dashboard</code>); token/config from
+CLI §4.1 (<code>THREADY_ENDPOINT</code>/<code>THREADY_TOKEN</code>,
+keychain-first); pending/failure machine mirrors ux-flows §2.1</td>
+<td>grounded; device-code option
+<code>[OPEN: THREADY-DES-TUI-02]</code></td>
+</tr>
+<tr>
+<td>7 · Channel detail</td>
+<td>list (threads, ● unread) + viewport (scroll rule) + statusbar</td>
+<td>wireframes §5.3 + §3.5 (thread list re-laid); header state chip per
+§3.4; Max ⚠ auth-warning variant</td>
+<td>grounded; Max adapter <code>[GAP: 5.1]</code></td>
+</tr>
+<tr>
+<td>8 · Add-Channel form</td>
+<td>horizontal choice (platform) + textinput ×2 + progress +
+statusbar</td>
+<td>wireframes §3.4 five-step wizard as a TUI prompt sequence; ux-flows
+§2 journey + status-code table; instructive inline validation
+(§1.3)</td>
+<td>grounded; Max path <code>[GAP: 5.1]</code></td>
+</tr>
+<tr>
+<td>9 · Assets</td>
+<td>list (type/name/size/source table, inverse-accent selection) +
+preview viewport + statusbar</td>
+<td>wireframes §3.8 re-laid; Asset-Service-only links (§7.1); Selected
+style per lipgloss-theme §4</td>
+<td>grounded; inline preview
+<code>[OPEN: THREADY-DES-TUI-01]</code></td>
+</tr>
+<tr>
+<td>10 · Skills</td>
+<td>list (<code>[x]</code>/<code>[ ]</code> toggle) + detail viewport +
+statusbar</td>
+<td>wireframes §3.9 + the web skills-manager vocabulary (atomic →
+composite → umbrella; Research v3 / Movies v5 / Notes v1)</td>
+<td>grounded; engine <code>[GAP: 4.1]</code>, OCR
+<code>[GAP: 2.6]</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="conventions-the-artifacts-follow">3. Conventions the artifacts
+follow</h2>
+<ul>
+<li><strong>Keys are the verified map</strong> (wireframes §5.1:
+<code>ctrl+c/q</code>, <code>1–4</code>/<code>F1–F4</code>,
+<code>h/l</code>, <code>tab</code>, <code>j/k</code>,
+<code>enter/space</code>, <code>f</code>/<code>/</code>,
+<code>r/R</code>, <code>esc</code>, <code>?</code>), with the Thready
+domain keys (<code>c/a/k/n/p</code>) layered non-collidingly; every key
+is echoed in the statusbar/help rail.</li>
+<li><strong>Honesty is rendered, not footnoted:</strong> the Max channel
+shows its ⚠ auth stub state <code>[GAP: 5.1]</code>; Search renders the
+mandated HashEmbedder degradation banner with scores hidden
+<code>[GAP: 2.1]</code>; the failed queue job shows the max-5-retries
+dead-letter and the idempotent <code>[r]etry</code> (second press ⇒
+<code>409 already running</code>, ux-flows §3.1).</li>
+<li><strong>Palette provenance:</strong> all hex values are the verified
+<code>thready.css</code> dark tokens; all ANSI-16 index picks are
+ASSUMED nearest-color mappings pending terminal verification
+(<code>[OPEN: THREADY-DES-17]</code>, see lipgloss-theme.md §5/§8).</li>
+<li>The footer ♥ is <code>U+2665</code> tinted with the Lipgloss
+<code>Accent</code> (brand-assets §8); the Helix Development attribution
+line is locked.</li>
+</ul>
+<h2 id="open-items">4. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-17]</code> — ANSI degradation decisions
+(pinned <code>CompleteColor</code> vs automatic; border glyph color;
+optional light-terminal adaptive palette) — details in <a
+href="./lipgloss-theme.md#8-open-items">lipgloss-theme.md §8</a>.</li>
+<li><code>[OPEN: THREADY-DES-TUI-01]</code> — <strong>inline asset
+preview</strong> (screen 9): terminal image/video rendering is
+protocol-dependent (kitty graphics / iTerm2 inline images / sixel) and
+absent on plain terminals; decide whether the preview pane renders
+pixels where the protocol allows or stays metadata + open/stream
+everywhere. The mockup ships the honest metadata-only stub.</li>
+<li><code>[OPEN: THREADY-DES-TUI-02]</code> — <strong>TUI sign-in
+method</strong> (screen 6): ground truth pins the scoped-token path (CLI
+§4.1 <code>THREADY_TOKEN</code>/keychain); the device-code frame is a
+proposed interactive option mirroring the ux-flows §2.1 pending/failure
+machine — confirm with the product whether it ships or the TUI stays
+token-only.</li>
+<li>The dedicated <strong>Processing queue</strong> screen is a derived
+composition (<code>[DEFAULT — adjustable]</code>); confirm with the
+product whether it ships as its own screen or stays folded into the
+Dashboard.</li>
+<li>The palette <strong>generator</strong> (tokens → Go) is a tracked
+workable item of the design-system area (THREADY-DES-DS-01 /
+token-bridge, design-system §9); nothing here claims it exists yet.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

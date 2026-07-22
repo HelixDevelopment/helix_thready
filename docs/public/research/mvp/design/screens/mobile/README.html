@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Mobile Screen Designs</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Mobile Screen Designs</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#what-this-directory-is" id="toc-what-this-directory-is">1.
+What this directory is</a></li>
+<li><a href="#catalogue" id="toc-catalogue">2. Catalogue</a></li>
+<li><a href="#conventions-the-artifacts-follow"
+id="toc-conventions-the-artifacts-follow">3. Conventions the artifacts
+follow</a></li>
+<li><a href="#open-items" id="toc-open-items">4. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Mobile Screen Designs (Catalogue)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/mobile/README.md
+  Status          : Draft — v0.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ../../wireframes.md, ../../design-system.md, ../../theming.md,
+                    ../../ux-flows.md, ../../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>Initial catalogue: 7 device-framed screen artifacts (390×844),
+Android/iOS chrome toggle, HarmonyOS/Aurora port notes, light+dark</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>+4 artifacts closing the §6 IA gaps: Channels tab root, Add-Channel
+bottom sheet, Assets grid, full-screen Media viewer; §6 coverage
+reconciled; minted <code>THREADY-DES-SCR-MOB-01/-02/-03</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-this-directory-is">1. What this directory is</h2>
+<p>Device-framed, <strong>self-contained HTML artifacts</strong> (no
+CDNs, no external assets — 11 screens) rendering the Thready mobile
+screens at <strong>390×844 in a rounded phone bezel</strong>, populated
+with the exact realistic fixture data used across the design docs
+(channels
+<code>#ml-papers</code>/<code>#films</code>/<code>Max: dev-notes</code>,
+the diffusion-paper thread, the download-63% pipeline,
+<code>alice@acme.io</code>/<code>bob@…</code> RBAC rows, 128 channels /
+1,204 posts / 17 processing / 42.1 TB stats). They are the
+<strong>mid-fidelity realization</strong> of the mobile wireframes (<a
+href="../../wireframes.md#6-mobile-wireframes">wireframes.md §6</a>);
+the low-fi structural contract stays authoritative, and high-fi Figma
+work remains in <a href="../../prototypes.md">prototypes.md</a>
+<code>[OPEN: THREADY-DES-09]</code>.</p>
+<p>Every artifact:</p>
+<ul>
+<li><strong>Inlines the Thready tokens verbatim</strong> from <a
+href="../../design-system.md#3-token-architecture">design-system.md
+§3.1/§3.2</a> (<code>#B6E376</code> brand,
+<code>#446E12</code>/<code>#ABDDC9</code>/<code>#B7EBD6</code> accents,
+<code>#020817</code>/<code>#F8FAFC</code> fg,
+<code>#475569</code>/<code>#94A3B8</code> neutrals; Space Grotesk /
+Hanken Grotesk / JetBrains Mono <strong>with system fallbacks
+only</strong> — fonts are not embedded, matching the no-CDN/self-hosting
+posture).</li>
+<li>Supports <strong>light + dark</strong> via the exact shipped
+mechanism: <code>@media (prefers-color-scheme: dark)</code> default +
+explicit <code>:root[data-theme="dark"]</code> override (<a
+href="../../theming.md#2-light--dark-resolution">theming.md §2</a>),
+with a Light/System/Dark control on the page.</li>
+<li>Carries an <strong>Android (Material 3 / Compose) ↔︎ iOS (SwiftUI)
+chrome toggle</strong> switching status bar (punch-hole vs. Dynamic
+Island), app-bar/back pattern (← + predictive back
+vs. <code>‹ Title</code> + edge swipe), navigation bar (M3 80dp
+pill-indicator bar vs. 49pt tab bar + home indicator), and gesture
+area.</li>
+<li>Documents <strong>HarmonyOS (ArkTS)</strong> and <strong>Aurora OS
+(Qt Quick)</strong> as <strong>native ports of the same layouts</strong>
+in a per-screen notes panel — both clients are <code>helix_shims</code>
+<strong>skeletons</strong> <code>[GAP: 8.5]</code>; the notes never
+claim they are build-ready.</li>
+</ul>
+<h2 id="catalogue">2. Catalogue</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 22%" />
+<col style="width: 38%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Screen</th>
+<th>Ground truth</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./home-feed.html">home-feed.html</a></td>
+<td>Home tab — live activity + processing status + recent threads</td>
+<td>wireframes §6 (Home), §3.3 (data), ux-flows §3 (events)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./channels.html">channels.html</a></td>
+<td>Channels tab root — subscribed-channels list, per-channel state
+chips (healthy / syncing / ⚠ auth / paused), M3 FAB vs. iOS nav-bar add
+action</td>
+<td>wireframes §6 (<code>T2 → CHLIST</code>), §3.4 (row contract), §6.2
+(gestures)</td>
+<td>grounded; unread pills
+<code>[OPEN: THREADY-DES-SCR-MOB-01]</code></td>
+</tr>
+<tr>
+<td><a href="./add-channel.html">add-channel.html</a></td>
+<td>Add-Channel bottom sheet — source picker, account/sign-in, link +
+Resolve with hint/error/processing states, step gating</td>
+<td>wireframes §6 (<code>CHLIST → CHADD</code>), §3.4 (wizard +
+validation table), §1.3; ux-flows §2/§2.1</td>
+<td>grounded; Max <code>[GAP: 5.1]</code>; WhatsApp
+<code>[OPEN: THREADY-DES-SCR-MOB-03]</code></td>
+</tr>
+<tr>
+<td><a href="./channel-threads.html">channel-threads.html</a></td>
+<td>Channel detail — thread list (complete posts)</td>
+<td>wireframes §3.5 + §6, §6.2 gestures</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./post-detail.html">post-detail.html</a></td>
+<td>Post detail — tags, replies, pipeline, assets, Reprocess</td>
+<td>wireframes §3.6 + §6; ux-flows §3/§3.1</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./search.html">search.html</a></td>
+<td>Search — semantic/keyword/hybrid, scope, scored results</td>
+<td>wireframes §3.7 + §6; ux-flows §4</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./assets-grid.html">assets-grid.html</a></td>
+<td>Assets tab root — masonry media grid with type badges, filter chips,
+empty-state variant</td>
+<td>wireframes §6 (<code>T4 → ASSETS</code>), §3.8 (library vocabulary),
+§1.1 (empty), §6.2</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./media-viewer.html">media-viewer.html</a></td>
+<td>Full-screen media player / asset viewer — video / image-zoom /
+audio-waveform / doc variants + pipeline-provenance overlay</td>
+<td>wireframes §6 (<code>POST → PLAYER</code>,
+<code>ASSETS → PLAYER</code>), §3.8 (stream Range/HLS), §3.6, §6.2
+(zoom)</td>
+<td>grounded; share/save-to-device
+<code>[OPEN: THREADY-DES-SCR-MOB-02]</code></td>
+</tr>
+<tr>
+<td><a href="./notifications.html">notifications.html</a></td>
+<td>Notifications centre over Event Bus events</td>
+<td><strong>derived</strong> — events are ground truth (ux-flows §2/§3);
+the surface is not in the §6 tab map</td>
+<td><code>[OPEN: THREADY-DES-15]</code></td>
+</tr>
+<tr>
+<td><a href="./account.html">account.html</a></td>
+<td>Account — profile, multi-Account switcher, RBAC admin, sign out</td>
+<td>wireframes §6 (More) + §3.10; ux-flows §5</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><a href="./settings.html">settings.html</a></td>
+<td>Settings — theme/language, effective branding, messengers,
+security</td>
+<td>wireframes §6 + §3.11; theming §2/§8</td>
+<td>grounded</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coverage vs. the §6 IA (reconciled, Rev 2).</strong> Every
+node of the wireframes §6 navigation map now has an artifact: Home → <a
+href="./home-feed.html">home-feed</a>; Channels → <a
+href="./channels.html">channels</a> → <a
+href="./add-channel.html">add-channel</a> sheet / <a
+href="./channel-threads.html">channel-threads</a> → <a
+href="./post-detail.html">post-detail</a> → <a
+href="./media-viewer.html">media-viewer</a>; Search → <a
+href="./search.html">search</a>; Assets → <a
+href="./assets-grid.html">assets-grid</a> → media-viewer; More → <a
+href="./account.html">account</a> / <a
+href="./settings.html">settings</a>. Nothing promised by §6 is missing
+on disk. The one surface <strong>beyond</strong> §6 remains <a
+href="./notifications.html">notifications.html</a>, a derived proposal
+<code>[OPEN: THREADY-DES-15]</code>.</p>
+<h2 id="conventions-the-artifacts-follow">3. Conventions the artifacts
+follow</h2>
+<ul>
+<li><strong>Never fake:</strong> every stub/scaffold dependency is
+flagged on-screen or in the notes panel — Max adapter
+<code>[GAP: 5.1]</code>, dispatch engine <code>[GAP: 4.1]</code>, MeTube
+webhook <code>[GAP: 6.5]</code>, OCR <code>[GAP: 2.6]</code>,
+HashEmbedder <code>[GAP: 2.1]</code> (search shows the mandated degraded
+banner), <code>Security-KMP</code> secure-storage stub
+<code>[GAP: 7.3]</code> and <code>UI-Components-KMP</code>
+<code>[GAP: 8.4]</code> (both <strong>mobile release gates</strong>,
+wireframes §6.2).</li>
+<li><strong>Interaction states</strong> follow the uniform legend of
+wireframes §1.1 (default / loading / skeleton / empty / error / disabled
+/ success); artifacts render the <em>default</em> state and annotate the
+others inline where a screen has a notable one (offline freeze, degraded
+search, 409 “already running”).</li>
+<li><strong>Errors are <code>--danger</code>, never
+<code>--accent</code>;</strong> indirect (AI-derived) tags render dashed
+vs. solid direct hashtags; the Helix Development attribution is locked
+where it appears.</li>
+<li>Bezel/status-bar cosmetics (clock values
+<code>14:02</code>/<code>9:41</code>, battery glyphs, island/punch-hole
+dimensions) are illustrative chrome, <code>[DEFAULT — adjustable]</code>
+— not token-governed.</li>
+</ul>
+<h2 id="open-items">4. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-15]</code> — <strong>Notifications
+centre</strong>: confirm whether mobile gets a dedicated notifications
+surface (and push delivery preferences) or stays with the Home live feed
+only; the wireframes §6 IA does not include one. Until decided, <a
+href="./notifications.html">notifications.html</a> is a derived proposal
+over the verified event contract.</li>
+<li><code>[OPEN: THREADY-DES-04]</code> — Cyrillic subsets (ru /
+sr-Cyrl) of the three faces; affects every screen’s text rendering.</li>
+<li><code>[OPEN: THREADY-DES-06]</code> — whether Account Admins may
+edit their own branding; settings.html keeps branding read-only on
+mobile until resolved.</li>
+<li><code>[OPEN: THREADY-DES-09]</code> — high-fidelity Figma frames
+refine these artifacts in <a
+href="../../prototypes.md">prototypes.md</a>.</li>
+<li><code>[OPEN: THREADY-DES-SCR-MOB-01]</code> — <strong>unread “N new”
+pills</strong> on the Channels list rows (<a
+href="./channels.html">channels.html</a>) are not in the §6/§3.4 ground
+truth; they are a <code>[DEFAULT — adjustable]</code> proposal derived
+from <code>post.received</code> events since last visit. Confirm whether
+mobile shows unread counts at all, and the reset rule (on open vs. on
+scroll-past).</li>
+<li><code>[OPEN: THREADY-DES-SCR-MOB-02]</code> — <strong>media viewer ⇪
+Share / ⭳ Save-to-device</strong> (<a
+href="./media-viewer.html">media-viewer.html</a>): no ground-truth
+export path exists — §3.8’s “re-download” is a server-side re-fetch for
+broken links, and the desktop precedent
+(<code>[OPEN: THREADY-DES-16]</code>, <a
+href="../desktop/README.md">desktop README §3.4</a>) already left
+local-media paths undecided. Both actions are specified disabled until
+product resolves the export path.</li>
+<li><code>[OPEN: THREADY-DES-SCR-MOB-03]</code> — <strong>WhatsApp as a
+third Add-Channel source</strong> (<a
+href="./add-channel.html">add-channel.html</a>): requested, but absent
+from the verified source set (wireframes §3.4: Telegram/Max; ux-flows §2
+env contract <code>TG_*</code>/<code>MAX_*</code>). Rendered as a
+disabled tile until the decision matrix adds an adapter; never shown as
+selectable.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

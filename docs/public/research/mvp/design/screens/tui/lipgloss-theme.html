@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — TUI Lipgloss Theme</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — TUI Lipgloss Theme</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#provenance-rules" id="toc-provenance-rules">1. Provenance
+rules</a></li>
+<li><a href="#token-color-map" id="toc-token-color-map">2. Token → color
+map</a></li>
+<li><a href="#palette-package-go" id="toc-palette-package-go">3. Palette
+package (Go)</a></li>
+<li><a href="#role-styles-verified-bindings-tokenized"
+id="toc-role-styles-verified-bindings-tokenized">4. Role styles
+(verified bindings, tokenized)</a></li>
+<li><a href="#degradation-truecolor-ansi-256-ansi-16"
+id="toc-degradation-truecolor-ansi-256-ansi-16">5. Degradation:
+truecolor → ANSI-256 → ANSI-16</a></li>
+<li><a href="#light-terminal-adaptive-option"
+id="toc-light-terminal-adaptive-option">6. Light-terminal / adaptive
+option</a></li>
+<li><a href="#white-label-re-tinting" id="toc-white-label-re-tinting">7.
+White-label re-tinting</a></li>
+<li><a href="#open-items" id="toc-open-items">8. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — TUI Lipgloss Theme (brand tokens → Lipgloss styles)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/tui/lipgloss-theme.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./tui-screens.html, ./README.md, ../../design-system.md (§7),
+                    ../../wireframes.md (§5.1–5.3), ../../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · screens)</td>
+<td>Initial: token→<code>lipgloss.Color</code> map with VERIFIED/ASSUMED
+provenance, ANSI-256/16 degradation, role styles, adaptive option</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-provenance-rules">1. Provenance rules</a></li>
+<li><a href="#2-token--color-map">2. Token → color map</a></li>
+<li><a href="#3-palette-package-go">3. Palette package (Go)</a></li>
+<li><a href="#4-role-styles-verified-bindings-tokenized">4. Role styles
+(verified bindings, tokenized)</a></li>
+<li><a href="#5-degradation-truecolor--ansi-256--ansi-16">5.
+Degradation: truecolor → ANSI-256 → ANSI-16</a></li>
+<li><a href="#6-light-terminal--adaptive-option">6. Light-terminal /
+adaptive option</a></li>
+<li><a href="#7-white-label-re-tinting">7. White-label
+re-tinting</a></li>
+<li><a href="#8-open-items">8. Open items</a></li>
+</ul>
+<h2 id="provenance-rules">1. Provenance rules</h2>
+<p>Per the no-bluff bar (<code>CONVENTIONS.md §7</code>), every value
+below is tagged:</p>
+<ul>
+<li><strong>VERIFIED</strong> — the hex value comes verbatim from
+<code>tokens/themes/thready.css</code> (<a
+href="../../design-system.md#32-the-thready-brand-theme">design-system.md
+§3.2</a>, itself <code>[VERIFIED — IN-HOUSE: design_system]</code>), or
+the style-role pattern comes from the inspected in-house Bubble Tea
+program <code>helix_track/llms_verifier/llm-verifier/tui</code> (<a
+href="../../wireframes.md#52-lipgloss-style-bindings">wireframes.md
+§5.2</a>).</li>
+<li><strong>ASSUMED</strong> — a mapping judgment made here (nearest
+ANSI-256/16 index, light-terminal adaptive pairing,
+<code>CompleteColor</code> usage) that ground truth does not pin down.
+Assumed values MUST be re-verified at integration (run Lipgloss’s own
+degradation and eyeball on a 16-color terminal).</li>
+<li>The Go palette <em>shape</em> below follows the generated-bindings
+sample in <a
+href="../../design-system.md#7-per-platform-fan-out">design-system.md
+§7</a>, which is itself <code>[DEFAULT — adjustable]</code> — the
+palette is <strong>generated from <code>thready.css</code></strong>,
+never hand-kept.</li>
+</ul>
+<p>The TUI defaults to the <strong>dark</strong> theme values (“the TUI
+defaults to the terminal’s dark surface”, design-system §7
+<code>[VERIFIED — the generated sample uses the dark palette]</code>).</p>
+<h2 id="token-color-map">2. Token → color map</h2>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 11%" />
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>CSS token</th>
+<th>Truecolor (dark)</th>
+<th>Truecolor provenance</th>
+<th>ANSI-256</th>
+<th>ANSI-16</th>
+<th>Mapping provenance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accent / selection bg</td>
+<td><code>--accent</code></td>
+<td><code>#B6E376</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>150</code></td>
+<td><code>10</code> bright-green</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Accent ink (on accent)</td>
+<td><code>--accent-on</code></td>
+<td><code>#0A0F04</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>16</code></td>
+<td><code>0</code> black</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Foreground</td>
+<td><code>--fg</code></td>
+<td><code>#F8FAFC</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>255</code></td>
+<td><code>15</code> bright-white</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Muted / help / meta</td>
+<td><code>--muted</code></td>
+<td><code>#94A3B8</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>103</code></td>
+<td><code>7</code> white</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Border / statusbar bg</td>
+<td><code>--border</code></td>
+<td><code>#1E293B</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>236</code></td>
+<td><code>8</code> bright-black</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Strong boundary</td>
+<td><code>--border-strong</code></td>
+<td><code>#64748B</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>102</code></td>
+<td><code>8</code> bright-black</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Success</td>
+<td><code>--success</code></td>
+<td><code>#16A34A</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>35</code></td>
+<td><code>2</code> green</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Warn</td>
+<td><code>--warn</code></td>
+<td><code>#EAB308</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>178</code></td>
+<td><code>11</code> bright-yellow</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Danger</td>
+<td><code>--danger</code></td>
+<td><code>#EF4444</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>203</code></td>
+<td><code>9</code> bright-red</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Brand (decorative)</td>
+<td><code>--brand</code></td>
+<td><code>#B6E376</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>150</code></td>
+<td><code>10</code> bright-green</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Brand-2 / titles</td>
+<td><code>--brand-2</code></td>
+<td><code>#B7EBD6</code></td>
+<td><strong>VERIFIED</strong> (Logo.png median, dark)</td>
+<td><code>152</code></td>
+<td><code>14</code> bright-cyan</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Background</td>
+<td><code>--bg</code></td>
+<td><code>#020817</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>232</code></td>
+<td><code>0</code> black (terminal default)</td>
+<td>ASSUMED</td>
+</tr>
+<tr>
+<td>Surface-warm</td>
+<td><code>--surface-warm</code></td>
+<td><code>#1E293B</code></td>
+<td><strong>VERIFIED</strong></td>
+<td><code>236</code></td>
+<td><code>8</code> bright-black</td>
+<td>ASSUMED</td>
+</tr>
+</tbody>
+</table>
+<p>Light-theme counterparts (<code>--accent #446E12</code>,
+<code>--fg #020817</code>, <code>--muted #475569</code>, …) are equally
+<strong>VERIFIED</strong> from the same theme file and are used only by
+the adaptive option in §6.</p>
+<h2 id="palette-package-go">3. Palette package (Go)</h2>
+<p>Generated from <code>tokens/themes/thready.css</code> by the
+token-export step (OpenDesign <code>tokensToJson</code> → codegen,
+design-system §7). Hex values <strong>VERIFIED</strong>; the code shape
+extends the design-system §7 sample
+<code>[DEFAULT — adjustable]</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Package theme is GENERATED from tokens/themes/thready.css — do not edit by hand.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Dark palette: the TUI defaults to the terminal&#39;s dark surface (design-system §7).</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> theme</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;github.com/charmbracelet/lipgloss&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Accent      <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#B6E376&quot;</span><span class="op">)</span> <span class="co">// --accent (dark)          [VERIFIED]</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    AccentOn    <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#0A0F04&quot;</span><span class="op">)</span> <span class="co">// --accent-on              [VERIFIED]</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    Fg          <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#F8FAFC&quot;</span><span class="op">)</span> <span class="co">// --fg                     [VERIFIED]</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    Muted       <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#94A3B8&quot;</span><span class="op">)</span> <span class="co">// --muted                  [VERIFIED]</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    BorderColor <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#1E293B&quot;</span><span class="op">)</span> <span class="co">// --border                 [VERIFIED]</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    BorderHard  <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#64748B&quot;</span><span class="op">)</span> <span class="co">// --border-strong          [VERIFIED]</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    Success     <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#16A34A&quot;</span><span class="op">)</span> <span class="co">// --success                [VERIFIED]</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Warn        <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#EAB308&quot;</span><span class="op">)</span> <span class="co">// --warn                   [VERIFIED]</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    DangerColor <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#EF4444&quot;</span><span class="op">)</span> <span class="co">// --danger                 [VERIFIED]</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    Brand2      <span class="op">=</span> lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#B7EBD6&quot;</span><span class="op">)</span> <span class="co">// --brand-2 (dark median)  [VERIFIED]</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h2 id="role-styles-verified-bindings-tokenized">4. Role styles
+(verified bindings, tokenized)</h2>
+<p>The role set is the <strong>verified</strong> binding table of
+wireframes §5.2 — the in-house reference builds exactly these roles with
+raw ANSI indices (<code>"205"</code>, <code>"39"</code>,
+<code>"240"</code>, <code>"62"</code>, <code>"241"</code>
+<code>[VERIFIED — llm-verifier app.go]</code>); Thready re-binds them to
+the generated palette:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// tui/theme_bindings.go — roles VERIFIED (llm-verifier pattern); values from §3.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Title   <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Accent<span class="op">).</span>Bold<span class="op">(</span><span class="ot">true</span><span class="op">)</span>      <span class="co">// was Color(&quot;205&quot;)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Header  <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Brand2<span class="op">).</span>Bold<span class="op">(</span><span class="ot">true</span><span class="op">)</span>      <span class="co">// pane titles (Thready addition, ASSUMED)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    NavOn   <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Accent<span class="op">)</span>                 <span class="co">// active tab   (was &quot;39&quot;)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    NavOff  <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Muted<span class="op">)</span>                  <span class="co">// inactive tab (was &quot;240&quot;)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Border  <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>BorderForeground<span class="op">(</span>BorderColor<span class="op">)</span>      <span class="co">// header/footer border (was &quot;62&quot;)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    Help    <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Muted<span class="op">)</span>                  <span class="co">// key hints    (was &quot;241&quot;)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    Danger  <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>DangerColor<span class="op">)</span>            <span class="co">// failed steps / retry</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    Ok      <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Success<span class="op">)</span>                <span class="co">// ✓ processed  (ASSUMED addition)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Warning <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Warn<span class="op">)</span>                   <span class="co">// ⚠ auth / degraded (ASSUMED addition)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Selection + button: accent fill with accent-on ink — mirrors design-system §7 Button [DEFAULT — adjustable].</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    Selected  <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>AccentOn<span class="op">).</span>Background<span class="op">(</span>Accent<span class="op">)</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    Button    <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>AccentOn<span class="op">).</span>Background<span class="op">(</span>Accent<span class="op">).</span>Padding<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">2</span><span class="op">).</span>Bold<span class="op">(</span><span class="ot">true</span><span class="op">)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    StatusBar <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Muted<span class="op">).</span>Background<span class="op">(</span>lipgloss<span class="op">.</span>Color<span class="op">(</span><span class="st">&quot;#1E293B&quot;</span><span class="op">))</span> <span class="co">// --surface-warm dark</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    Heart     <span class="op">=</span> lipgloss<span class="op">.</span>NewStyle<span class="op">().</span>Foreground<span class="op">(</span>Accent<span class="op">)</span> <span class="co">// ♥ U+2665 in the locked footer (brand-assets §8)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h2 id="degradation-truecolor-ansi-256-ansi-16">5. Degradation:
+truecolor → ANSI-256 → ANSI-16</h2>
+<p>Ground truth says only: “Under a non-truecolor terminal the tokens
+degrade to the nearest 256-color; border <em>styles</em> (not just
+color) keep boundaries legible” (wireframes §5.2
+<code>[VERIFIED]</code>). Two implementation options — both
+<strong>ASSUMED</strong> until tested on a 16-color terminal:</p>
+<ol type="1">
+<li><strong>Automatic (default):</strong>
+<code>lipgloss.Color("#B6E376")</code> — Lipgloss/termenv degrades to
+the nearest supported color per the terminal’s advertised profile. Zero
+code, but the ANSI-16 result is not pinned.</li>
+<li><strong>Pinned (recommended for the 16-color floor):</strong>
+<code>lipgloss.CompleteColor</code> fixes every profile explicitly,
+using the §2 table:</li>
+</ol>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ASSUMED — pin the degradation so a 16-color terminal gets a deliberate palette, not a guess.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> AccentC <span class="op">=</span> lipgloss<span class="op">.</span>CompleteColor<span class="op">{</span>TrueColor<span class="op">:</span> <span class="st">&quot;#B6E376&quot;</span><span class="op">,</span> ANSI256<span class="op">:</span> <span class="st">&quot;150&quot;</span><span class="op">,</span> ANSI<span class="op">:</span> <span class="st">&quot;10&quot;</span><span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> MutedC  <span class="op">=</span> lipgloss<span class="op">.</span>CompleteColor<span class="op">{</span>TrueColor<span class="op">:</span> <span class="st">&quot;#94A3B8&quot;</span><span class="op">,</span> ANSI256<span class="op">:</span> <span class="st">&quot;103&quot;</span><span class="op">,</span> ANSI<span class="op">:</span> <span class="st">&quot;7&quot;</span><span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> DangerC <span class="op">=</span> lipgloss<span class="op">.</span>CompleteColor<span class="op">{</span>TrueColor<span class="op">:</span> <span class="st">&quot;#EF4444&quot;</span><span class="op">,</span> ANSI256<span class="op">:</span> <span class="st">&quot;203&quot;</span><span class="op">,</span> ANSI<span class="op">:</span> <span class="st">&quot;9&quot;</span><span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// … full set per the §2 table.</span></span></code></pre></div>
+<p>Legibility caveat (also noted in <a
+href="./tui-screens.html">tui-screens.html</a>): the true
+<code>--border</code> <code>#1E293B</code> is nearly invisible on the
+<code>#020817</code> terminal background (~1.3:1). That is consistent
+with the web rule that borders are subtle, but on ANSI-16 terminals the
+border maps to <code>8</code> bright-black, which typically renders ≈
+<code>#475569</code>-ish — <em>more</em> visible than truecolor. The
+mockups draw box glyphs with that ANSI-8 approximation for legibility.
+If truecolor borders prove illegible in practice, promote box glyphs to
+<code>--border-strong</code> <code>#64748B</code> — tracked as
+<code>[OPEN: THREADY-DES-17]</code>.</p>
+<h2 id="light-terminal-adaptive-option">6. Light-terminal / adaptive
+option</h2>
+<p>Ground truth fixes the <strong>dark</strong> default; nothing forbids
+a light terminal. <strong>ASSUMED</strong> option using the
+equally-verified light token values:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ASSUMED — adaptive pairing from the same theme file (light values are VERIFIED tokens).</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> AccentA <span class="op">=</span> lipgloss<span class="op">.</span>AdaptiveColor<span class="op">{</span>Light<span class="op">:</span> <span class="st">&quot;#446E12&quot;</span><span class="op">,</span> Dark<span class="op">:</span> <span class="st">&quot;#B6E376&quot;</span><span class="op">}</span> <span class="co">// --accent light/dark</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> FgA     <span class="op">=</span> lipgloss<span class="op">.</span>AdaptiveColor<span class="op">{</span>Light<span class="op">:</span> <span class="st">&quot;#020817&quot;</span><span class="op">,</span> Dark<span class="op">:</span> <span class="st">&quot;#F8FAFC&quot;</span><span class="op">}</span> <span class="co">// --fg</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> MutedA  <span class="op">=</span> lipgloss<span class="op">.</span>AdaptiveColor<span class="op">{</span>Light<span class="op">:</span> <span class="st">&quot;#475569&quot;</span><span class="op">,</span> Dark<span class="op">:</span> <span class="st">&quot;#94A3B8&quot;</span><span class="op">}</span> <span class="co">// --muted</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> DangerA <span class="op">=</span> lipgloss<span class="op">.</span>AdaptiveColor<span class="op">{</span>Light<span class="op">:</span> <span class="st">&quot;#DC2626&quot;</span><span class="op">,</span> Dark<span class="op">:</span> <span class="st">&quot;#EF4444&quot;</span><span class="op">}</span> <span class="co">// --danger</span></span></code></pre></div>
+<p>Adopting this is a product decision (the TUI currently ships
+dark-only) — fold into <code>[OPEN: THREADY-DES-17]</code>.</p>
+<h2 id="white-label-re-tinting">7. White-label re-tinting</h2>
+<p>Because the palette is generated from the same token source as every
+other surface, a per-Account white-label re-tints the TUI without
+touching Go: the resolver emits a regenerated Lipgloss palette from the
+effective brand, read at login from
+<code>GET /v1/accounts/{id}/branding</code> (theming §8
+<code>[VERIFIED — stated mechanism]</code>). Only
+<code>Accent</code>/<code>AccentOn</code>/<code>Brand2</code> change;
+neutrals and semantics stay fixed, so <code>--danger</code> can never be
+masked by a brand color (theming §10.2).</p>
+<h2 id="open-items">8. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-17]</code> — TUI degradation decisions: (a)
+automatic vs. pinned <code>CompleteColor</code> ANSI-16 mapping (all §2
+ANSI columns are ASSUMED nearest-color picks);
+<ol start="2" type="a">
+<li>border glyph color under truecolor (<code>--border</code>
+vs. <code>--border-strong</code>); (c) whether to ship the
+light-terminal adaptive palette (§6). Verify on real 16-color and
+truecolor terminals.</li>
+</ol></li>
+<li>The generated-palette codegen step itself is part of
+<code>THREADY-DES-DS-01</code> / the token-bridge workable items
+(design-system §9) — this file specifies its TUI output, it does not
+claim the generator exists.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

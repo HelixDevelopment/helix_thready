@@ -1,0 +1,303 @@
+<!--
+  Title           : Helix Thready — Mobile Screen: Home Feed
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/mobile/home-feed.html
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./README.md, ../../wireframes.md (§6), ../../design-system.md (§3),
+                    ../../theming.md, ../../ux-flows.md
+  Ground truth    : wireframes.md §6 (Home tab), §3.3 (Dashboard data), ux-flows.md §3 (events)
+-->
+<title>Thready Mobile — Home Feed</title>
+<style>
+  /* == Thready tokens — inlined verbatim from design-system.md §3.1/§3.2 (self-contained, no CDN) == */
+  :root{
+    --font-display:"Space Grotesk","Space Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Hanken Grotesk","Hanken Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:9999px;
+    --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);
+    --brand:#b6e376;--brand-2:#abddc9;--brand-ink:#0a0f04;
+    --bg:#ffffff;--surface:#ffffff;--surface-warm:#f1f5f9;
+    --fg:#020817;--muted:#475569;--border:#e2e8f0;--border-strong:#64748b;
+    --accent:#446e12;--accent-on:#ffffff;
+    --success:#166534;--warn:#854d0e;--danger:#dc2626;
+    --elev-ring:0 0 0 1px var(--border);
+    --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+      --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+      --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+      --accent:#b6e376;--accent-on:#0a0f04;
+      --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+    }
+  }
+  :root[data-theme="dark"]{
+    --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+    --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+    --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+    --accent:#b6e376;--accent-on:#0a0f04;
+    --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:light dark}
+  body{font-family:var(--font-body);background:var(--surface-warm);color:var(--fg);min-height:100vh;
+       padding:var(--space-6);transition:background var(--motion-base) var(--ease-standard)}
+  .page-head{max-width:1000px;margin:0 auto var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-3);
+             align-items:center;justify-content:space-between}
+  .page-head h1{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:-.01em}
+  .page-head .sub{color:var(--muted);font-size:var(--text-sm);flex-basis:100%}
+  .controls{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+  .seg button{border:0;background:transparent;color:var(--muted);font:500 var(--text-sm) var(--font-body);
+              padding:6px 14px;cursor:pointer;transition:background var(--motion-fast) var(--ease-standard)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+  .seg button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .stage{display:flex;flex-wrap:wrap;gap:var(--space-8);justify-content:center;align-items:flex-start;max-width:1000px;margin:0 auto}
+  /* ---- device frame: 390×844 phone, rounded bezel ---- */
+  .device{width:414px;padding:12px;border-radius:56px;background:#10141c;box-shadow:0 24px 60px rgba(2,8,23,.35);flex:0 0 auto}
+  .screen{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--bg);
+          display:flex;flex-direction:column;font-size:var(--text-sm)}
+  .only-ios,.only-android{display:contents}
+  .device[data-chrome="android"] .only-ios{display:none!important}
+  .device[data-chrome="ios"] .only-android{display:none!important}
+  .statusbar{position:relative;display:flex;align-items:center;justify-content:space-between;
+             padding:0 26px;font:600 13px var(--font-body);color:var(--fg);background:var(--surface);flex:0 0 auto}
+  .device[data-chrome="ios"] .statusbar{height:54px}
+  .device[data-chrome="ios"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:122px;height:34px;border-radius:20px;background:#04070d}
+  .device[data-chrome="android"] .statusbar{height:36px;font-weight:500;font-size:12px}
+  .device[data-chrome="android"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:13px;height:13px;border-radius:50%;background:#04070d}
+  .appbar{position:relative;display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-4);
+          border-bottom:1px solid var(--border);background:var(--surface);flex:0 0 auto}
+  .device[data-chrome="android"] .appbar{height:56px}
+  .device[data-chrome="ios"] .appbar{height:52px;justify-content:center}
+  .appbar .title{font-family:var(--font-display);font-weight:600;font-size:var(--text-base)}
+  .appbar .back{font-size:var(--text-lg);line-height:1;text-decoration:none;cursor:pointer}
+  .device[data-chrome="ios"] .appbar .back{position:absolute;left:14px;color:var(--accent);font-weight:500;font-size:var(--text-base)}
+  .device[data-chrome="android"] .appbar .back{color:var(--fg)}
+  .appbar .actions{margin-left:auto;display:flex;gap:var(--space-4);color:var(--muted);font-size:17px}
+  .device[data-chrome="ios"] .appbar .actions{position:absolute;right:16px;margin-left:0;color:var(--accent)}
+  .content{flex:1;overflow:hidden;padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);background:var(--bg)}
+  .tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--border);background:var(--surface)}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+       color:var(--muted);font-size:11px;font-weight:500}
+  .tab .ic{font-size:17px;line-height:1.2}
+  .tab[aria-current="page"]{color:var(--accent);font-weight:600}
+  .device[data-chrome="android"] .tabbar{height:80px;padding:8px 0}
+  .device[data-chrome="android"] .tab[aria-current="page"] .ic{background:color-mix(in oklab,var(--accent),transparent 82%);
+       padding:3px 18px;border-radius:var(--radius-pill)}
+  .device[data-chrome="ios"] .tabbar{height:54px}
+  .gesture{flex:0 0 auto;background:var(--surface);display:flex;align-items:center;justify-content:center}
+  .device[data-chrome="ios"] .gesture{height:28px}
+  .device[data-chrome="ios"] .gesture::after{content:"";width:134px;height:5px;border-radius:3px;background:var(--fg);opacity:.85}
+  .device[data-chrome="android"] .gesture{height:16px}
+  .device[data-chrome="android"] .gesture::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--muted);opacity:.55}
+  /* ---- shared content components (realize .ds-* / thready-* composites) ---- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+  .card h3{font:600 11px var(--font-display);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:var(--space-2)}
+  .row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--border)}
+  .row:last-child{border-bottom:0;padding-bottom:2px}
+  .row .grow{flex:1;min-width:0}
+  .row .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .m{font-size:var(--text-xs);color:var(--muted);margin-top:2px;display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+  .chip{font:500 10px var(--font-mono);padding:2px 8px;border-radius:var(--radius-pill);
+        background:color-mix(in oklab,var(--accent),transparent 88%);color:var(--accent);white-space:nowrap}
+  .chip.indirect{background:transparent;border:1px dashed var(--border-strong);color:var(--muted)}
+  .badge{font:600 10px var(--font-body);padding:2px 8px;border-radius:var(--radius-pill);white-space:nowrap}
+  .badge.ok{background:color-mix(in oklab,var(--success),transparent 88%);color:var(--success)}
+  .badge.run{background:color-mix(in oklab,var(--accent),transparent 88%);color:var(--accent)}
+  .badge.q{background:var(--surface-warm);color:var(--muted)}
+  .badge.err{background:color-mix(in oklab,var(--danger),transparent 88%);color:var(--danger)}
+  .badge.warn{background:color-mix(in oklab,var(--warn),transparent 85%);color:var(--warn)}
+  .bar{height:6px;border-radius:3px;background:var(--surface-warm);overflow:hidden;flex:1}
+  .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+  .mono{font-family:var(--font-mono)}
+  .mut{color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:500 var(--text-sm) var(--font-body);
+       border-radius:var(--radius-sm);padding:10px 16px;border:1px solid transparent;cursor:pointer}
+  .btn.primary{background:var(--accent);color:var(--accent-on)}
+  .btn.ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+  .conn{display:flex;align-items:center;gap:var(--space-2);font:600 11px var(--font-body);color:var(--success);
+        padding:4px 0 0}
+  .conn::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2)}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);text-align:center}
+  .stat b{display:block;font:600 var(--text-lg) var(--font-display);letter-spacing:-.01em}
+  .stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  /* ---- platform notes ---- */
+  .notes{max-width:1000px;margin:var(--space-8) auto 0;display:grid;
+         grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4)}
+  .note{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)}
+  .note h2{font:600 var(--text-sm) var(--font-display);margin-bottom:var(--space-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .note ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .note .tag{font:600 10px var(--font-mono);padding:2px 6px;border-radius:4px;background:var(--surface-warm);color:var(--muted)}
+  .note .tag.gap{color:var(--warn)}
+  .foot{max-width:1000px;margin:var(--space-8) auto 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+
+<header class="page-head">
+  <h1>Thready Mobile — Home Feed</h1>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Theme">
+      <button data-theme-btn="light"  onclick="setTheme('light')">Light</button>
+      <button data-theme-btn="system" onclick="setTheme('system')">System</button>
+      <button data-theme-btn="dark"   onclick="setTheme('dark')">Dark</button>
+    </div>
+    <div class="seg" role="group" aria-label="Platform chrome">
+      <button data-chrome-btn="android" onclick="setChrome('android')">Android · Material 3</button>
+      <button data-chrome-btn="ios"     onclick="setChrome('ios')">iOS · SwiftUI</button>
+    </div>
+  </div>
+  <p class="sub">Home tab — live activity feed + processing status. Ground truth: wireframes.md §6 (mobile IA + Home layout),
+     §3.3 (Dashboard data), ux-flows.md §3 (processing events). Theme mechanism: <code>[data-theme="dark"]</code> +
+     <code>prefers-color-scheme</code>, exactly as <code>thready.css</code> (design-system §3.2).</p>
+</header>
+
+<main class="stage">
+  <div class="device" data-chrome="android">
+    <div class="screen">
+      <div class="statusbar">
+        <span><span class="only-android">14:02</span><span class="only-ios">9:41</span></span>
+        <span aria-hidden="true">▲ ▂▄▆ ▮ 87%</span>
+      </div>
+      <div class="appbar">
+        <span class="title">Thready</span>
+        <span class="actions"><span title="Notifications">🔔</span><span title="Theme">☾</span><span title="Language">🌐</span></span>
+      </div>
+      <div class="content">
+        <div class="conn">live · WS/SSE connected</div>
+        <div class="stats">
+          <div class="stat"><b>128</b><span>Channels</span></div>
+          <div class="stat"><b>1,204</b><span>Posts today</span></div>
+          <div class="stat"><b>17</b><span>Processing</span></div>
+          <div class="stat"><b>42.1<small style="font-size:11px"> TB</small></b><span>Assets</span></div>
+        </div>
+        <div class="card">
+          <h3>Live activity</h3>
+          <div class="row">
+            <span class="badge ok">✓</span>
+            <div class="grow"><div class="t">#ml-papers · Research post processed</div>
+              <div class="m">research.md generated · semantic-indexed</div></div>
+            <span class="mut mono" style="font-size:11px">2s</span>
+          </div>
+          <div class="row">
+            <span class="badge run">⭮</span>
+            <div class="grow"><div class="t">#films · Video download</div>
+              <div class="m"><span class="bar" style="min-width:120px"><i style="width:63%"></i></span> 63% · MeTube/Boba</div></div>
+            <span class="mut mono" style="font-size:11px">9s</span>
+          </div>
+          <div class="row">
+            <span class="badge ok">✓</span>
+            <div class="grow"><div class="t">#comics · OCR complete</div>
+              <div class="m">analyze step · VisionEngine</div></div>
+            <span class="mut mono" style="font-size:11px">34s</span>
+          </div>
+          <div class="row">
+            <span class="badge err">⚠</span>
+            <div class="grow"><div class="t">#films · convert step failed</div>
+              <div class="m">dead-lettered after 5 retries</div></div>
+            <button class="btn ghost" style="padding:4px 12px;font-size:12px">Retry</button>
+          </div>
+        </div>
+        <div class="card" style="flex:1;overflow:hidden">
+          <h3>Recent threads</h3>
+          <div class="row">
+            <div class="grow"><div class="t">#ml-papers · “New paper on diffusion…”</div>
+              <div class="m">↩ 12 <span class="chip">#Research</span><span class="chip">#TODO</span></div></div>
+            <span class="badge ok">✓ processed</span>
+          </div>
+          <div class="row">
+            <div class="grow"><div class="t mono" style="font-size:12px">#films · magnet:?xt=urn:btih:9f6a…</div>
+              <div class="m">↩ 3 <span class="chip">#Movie</span><span class="chip">#ToDownload</span></div></div>
+            <span class="badge run">⭮ 63%</span>
+          </div>
+          <div class="row">
+            <div class="grow"><div class="t mono" style="font-size:12px">#ml-papers · https://youtu.be/dQw4…</div>
+              <div class="m">↩ 0 <span class="chip indirect">#Video (indirect)</span></div></div>
+            <span class="badge q">◷ queued</span>
+          </div>
+          <div class="row">
+            <div class="grow"><div class="t">#nlp · “Dense retrieval at scale…”</div>
+              <div class="m">↩ 5 <span class="chip">#Research</span></div></div>
+            <span class="badge ok">✓ processed</span>
+          </div>
+          <p class="mut" style="font-size:11px;margin-top:var(--space-2)">↓ pull to refresh · re-syncs feed (wireframes §6.2)</p>
+        </div>
+      </div>
+      <nav class="tabbar" aria-label="Primary">
+        <span class="tab" aria-current="page"><span class="ic">▤</span>Home</span>
+        <span class="tab"><span class="ic">#</span>Channels</span>
+        <span class="tab"><span class="ic">🔍</span>Search</span>
+        <span class="tab"><span class="ic">⬒</span>Assets</span>
+        <span class="tab"><span class="ic">•••</span>More</span>
+      </nav>
+      <div class="gesture"></div>
+    </div>
+  </div>
+
+  <section class="notes" style="margin:0;max-width:480px;grid-template-columns:1fr">
+    <div class="note">
+      <h2>🤖 Android — Jetpack Compose / Material 3 <span class="tag">chrome shown by default</span></h2>
+      <ul>
+        <li>Status bar: left-aligned clock, punch-hole camera; edge-to-edge with transparent status bar.</li>
+        <li>Top app bar (M3 <code>TopAppBar</code>): title leading, actions trailing; scroll-away behavior.</li>
+        <li>Navigation: M3 <code>NavigationBar</code> (80dp), active pill indicator behind the icon.</li>
+        <li>Back: predictive back gesture + system back; no in-bar back on tab roots.</li>
+        <li>Theme: <code>ThreadyColors</code> from the KMP token bridge + <code>isSystemInDarkTheme()</code>; TalkBack via <code>semantics{}</code>; type in <code>sp</code>. <span class="tag gap">[GAP: 8.4 UI-Components-KMP scaffold]</span></li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2> iOS — SwiftUI <span class="tag">toggle above</span></h2>
+      <ul>
+        <li>Status bar: Dynamic Island cutout, 9:41 clock left, indicators right.</li>
+        <li>Navigation bar: centered title (<code>NavigationStack</code>); tab roots have no back control.</li>
+        <li>Tab bar: 49pt + home-indicator gesture area; edge-swipe back on pushed screens.</li>
+        <li>Theme: bridge <code>Color</code> + <code>@Environment(\.colorScheme)</code>; VoiceOver via <code>accessibilityLabel</code>; Dynamic Type.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>⛰ HarmonyOS — ArkTS native port <span class="tag gap">SCAFFOLD [GAP: 8.5]</span></h2>
+      <ul>
+        <li>Same layout realized in ArkUI declarative components (<code>Tabs</code>/<code>List</code>/<code>Column</code>); bottom <code>Tabs</code> bar mirrors this five-tab IA.</li>
+        <li>System back gesture/key maps to the same back stack; Barrier-Free a11y kit carries the labels; system dark mode + font scale honored (wireframes §6.1 table).</li>
+        <li>Client is a <code>helix_shims</code> skeleton — design-complete here, not build-ready.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>🐦 Aurora OS — Qt Quick native port <span class="tag gap">SCAFFOLD [GAP: 8.5]</span></h2>
+      <ul>
+        <li>Same layout in Qt Quick/Silica: page stack + bottom tab strip; Silica ambience tints from the Thready token bridge.</li>
+        <li>Aurora edge-swipe back = the shared back pattern; Qt Accessibility + Qt font scaling per wireframes §6.1.</li>
+        <li>Client is a <code>helix_shims</code> skeleton — design-complete here, not build-ready.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Honesty / states</h2>
+      <ul>
+        <li>Data shown is the exact ground-truth fixture set (wireframes §3.3/§6): 128 channels, 1,204 posts today, 17 processing, 42.1&nbsp;TB; live events are <code>processing.progress/completed/failed</code> over WS/SSE.</li>
+        <li>Offline: banner degrades to <em>reconnecting/offline</em>, progress bars freeze at last value, reads render cached snapshot “stale · updated 3m ago” (wireframes §6.2).</li>
+        <li>Release gates: <span class="tag gap">[GAP: 7.3 Security-KMP]</span> secure storage stub; <span class="tag gap">[GAP: 8.5]</span> HarmonyOS/Aurora skeletons.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<p class="foot">Made with ♥ by Helix Development · Thready mobile screen designs · light+dark via <code>[data-theme="dark"]</code></p>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function press(group,val){document.querySelectorAll('[data-'+group+'-btn]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(b.getAttribute('data-'+group+'-btn')===val));});}
+  window.setTheme=function(t){if(t==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',t);}press('theme',t);};
+  window.setChrome=function(c){document.querySelectorAll('.device').forEach(function(d){d.setAttribute('data-chrome',c);});press('chrome',c);};
+  press('theme','system');press('chrome','android');
+})();
+</script>

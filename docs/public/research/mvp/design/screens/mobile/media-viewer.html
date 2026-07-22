@@ -1,0 +1,279 @@
+<!--
+  Title           : Helix Thready — Mobile Screen: Media Player / Asset Viewer
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/mobile/media-viewer.html
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./README.md, ./assets-grid.html, ./post-detail.html, ../../wireframes.md,
+                    ../../design-system.md (§3), ../../theming.md, ../desktop/README.md (DES-16)
+  Ground truth    : wireframes.md §6 (POST → PLAYER, ASSETS → PLAYER), §3.8 (stream Range/HLS ·
+                    OpenSeekable · renditions · sensitive lock · Asset-Service links §7.1),
+                    §3.6 (pipeline stages that produced each asset), §6.2 (pinch / double-tap zoom)
+-->
+<title>Thready Mobile — Media Viewer</title>
+<style>
+  /* == Thready tokens — inlined verbatim from design-system.md §3.1/§3.2 (self-contained, no CDN) == */
+  :root{
+    --font-display:"Space Grotesk","Space Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Hanken Grotesk","Hanken Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:9999px;
+    --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);
+    --brand:#b6e376;--brand-2:#abddc9;--brand-ink:#0a0f04;
+    --bg:#ffffff;--surface:#ffffff;--surface-warm:#f1f5f9;
+    --fg:#020817;--muted:#475569;--border:#e2e8f0;--border-strong:#64748b;
+    --accent:#446e12;--accent-on:#ffffff;
+    --success:#166534;--warn:#854d0e;--danger:#dc2626;
+    --elev-ring:0 0 0 1px var(--border);
+    --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+      --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+      --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+      --accent:#b6e376;--accent-on:#0a0f04;
+      --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+    }
+  }
+  :root[data-theme="dark"]{
+    --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+    --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+    --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+    --accent:#b6e376;--accent-on:#0a0f04;
+    --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:light dark}
+  body{font-family:var(--font-body);background:var(--surface-warm);color:var(--fg);min-height:100vh;
+       padding:var(--space-6);transition:background var(--motion-base) var(--ease-standard)}
+  .page-head{max-width:1000px;margin:0 auto var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-3);
+             align-items:center;justify-content:space-between}
+  .page-head h1{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:-.01em}
+  .page-head .sub{color:var(--muted);font-size:var(--text-sm);flex-basis:100%}
+  .controls{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+  .seg button{border:0;background:transparent;color:var(--muted);font:500 var(--text-sm) var(--font-body);
+              padding:6px 14px;cursor:pointer;transition:background var(--motion-fast) var(--ease-standard)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+  .seg button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .stage{display:flex;flex-wrap:wrap;gap:var(--space-8);justify-content:center;align-items:flex-start;max-width:1000px;margin:0 auto}
+  /* ---- device frame: 390×844 phone, rounded bezel ---- */
+  .device{width:414px;padding:12px;border-radius:56px;background:#10141c;box-shadow:0 24px 60px rgba(2,8,23,.35);flex:0 0 auto}
+  /* Immersive viewer: the media stage is letterboxed on #020817 in BOTH themes — the value is the
+     tokens.css dark --bg (media letterboxing is conventionally dark); ink over it is #F8FAFC, the
+     tokens.css dark --fg. Constant by design, [DEFAULT — adjustable]; chrome around it stays theme-bound. */
+  .screen{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:#020817;
+          display:flex;flex-direction:column;font-size:var(--text-sm)}
+  .only-ios,.only-android{display:contents}
+  .device[data-chrome="android"] .only-ios{display:none!important}
+  .device[data-chrome="ios"] .only-android{display:none!important}
+  .statusbar{position:relative;display:flex;align-items:center;justify-content:space-between;
+             padding:0 26px;font:600 13px var(--font-body);color:#f8fafc;background:#020817;flex:0 0 auto}
+  .device[data-chrome="ios"] .statusbar{height:54px}
+  .device[data-chrome="ios"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:122px;height:34px;border-radius:20px;background:#04070d}
+  .device[data-chrome="android"] .statusbar{height:36px;font-weight:500;font-size:12px}
+  .device[data-chrome="android"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:13px;height:13px;border-radius:50%;background:#04070d}
+  .vbar{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-4);height:52px;color:#f8fafc;flex:0 0 auto}
+  .vbar .back{font-size:var(--text-lg);cursor:pointer}
+  .device[data-chrome="ios"] .vbar .back{color:var(--brand);font-size:var(--text-base);font-weight:500}
+  .vbar .title{font:600 13px var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .vbar .actions{display:flex;gap:var(--space-4);font-size:17px}
+  .vbar .actions button{background:none;border:0;color:#f8fafc;font-size:17px;cursor:pointer}
+  .vbar .actions button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .vstage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;color:#f8fafc;overflow:hidden}
+  .vmeta{flex:0 0 auto;padding:var(--space-3) var(--space-4);color:#94a3b8;font-size:11px;line-height:1.6;
+         border-top:1px solid #1e293b}
+  .vmeta b{color:#f8fafc;font-weight:600}
+  .vctl{flex:0 0 auto;padding:var(--space-2) var(--space-4) var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+  .scrub{display:flex;align-items:center;gap:var(--space-2);color:#94a3b8;font:500 10px var(--font-mono)}
+  .scrub .track{flex:1;height:4px;border-radius:2px;background:#1e293b;position:relative}
+  .scrub .track i{position:absolute;left:0;top:0;bottom:0;width:63%;background:var(--brand);border-radius:2px}
+  .scrub .track em{position:absolute;left:63%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;
+                   border-radius:50%;background:var(--brand)}
+  .vbtns{display:flex;align-items:center;justify-content:center;gap:var(--space-6)}
+  .vbtns button{background:none;border:0;color:#f8fafc;font-size:20px;cursor:pointer;line-height:1}
+  .vbtns button.big{font-size:30px}
+  .vbtns button:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm)}
+  .gesture{flex:0 0 auto;background:#020817;display:flex;align-items:center;justify-content:center}
+  .device[data-chrome="ios"] .gesture{height:28px}
+  .device[data-chrome="ios"] .gesture::after{content:"";width:134px;height:5px;border-radius:3px;background:#f8fafc;opacity:.85}
+  .device[data-chrome="android"] .gesture{height:16px}
+  .device[data-chrome="android"] .gesture::after{content:"";width:108px;height:4px;border-radius:2px;background:#94a3b8;opacity:.55}
+  /* ---- variant layers (Video / Image / Audio / Doc) ---- */
+  .v{display:none!important}
+  .device[data-variant="video"] .v-video{display:flex!important}
+  .device[data-variant="image"] .v-image{display:flex!important}
+  .device[data-variant="audio"] .v-audio{display:flex!important}
+  .device[data-variant="doc"]   .v-doc{display:flex!important}
+  .device[data-variant="video"] span.v-video,.device[data-variant="image"] span.v-image,
+  .device[data-variant="audio"] span.v-audio,.device[data-variant="doc"] span.v-doc{display:contents!important}
+  .frame169{width:100%;aspect-ratio:16/9;background:#1e293b;display:flex;align-items:center;justify-content:center;
+            font-size:44px;position:relative}
+  .zoombox{width:78%;aspect-ratio:3/4;background:#1e293b;border-radius:var(--radius-sm);display:flex;align-items:center;
+           justify-content:center;font-size:44px;position:relative;transform:scale(1.06)}
+  .zoomchip{position:absolute;top:10px;right:10px;font:600 10px var(--font-mono);padding:2px 8px;
+            border-radius:var(--radius-pill);background:#1e293b;color:#f8fafc}
+  .bigwave{display:flex;align-items:center;gap:3px;height:120px}
+  .bigwave i{width:4px;border-radius:2px;background:#64748b}
+  .bigwave i.played{background:var(--brand)}
+  .docpage{width:74%;aspect-ratio:3/4;background:#f8fafc;border-radius:var(--radius-sm);padding:18px 16px;
+           display:flex;flex-direction:column;gap:7px}
+  .docpage i{height:5px;border-radius:2px;background:#64748b;opacity:.45}
+  .docpage i.h{height:9px;background:#020817;opacity:.8;width:62%}
+  .tagchip{font:500 10px var(--font-mono);padding:2px 8px;border-radius:var(--radius-pill);
+           background:#1e293b;color:var(--brand);white-space:nowrap}
+  /* ---- platform notes ---- */
+  .notes{max-width:1000px;margin:var(--space-8) auto 0;display:grid;
+         grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4)}
+  .note{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)}
+  .note h2{font:600 var(--text-sm) var(--font-display);margin-bottom:var(--space-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .note ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .note .tag{font:600 10px var(--font-mono);padding:2px 6px;border-radius:4px;background:var(--surface-warm);color:var(--muted)}
+  .note .tag.gap{color:var(--warn)}
+  .mono{font-family:var(--font-mono)}
+  .foot{max-width:1000px;margin:var(--space-8) auto 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+
+<header class="page-head">
+  <h1>Thready Mobile — Media Player / Asset Viewer</h1>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Theme">
+      <button data-theme-btn="light"  onclick="setTheme('light')">Light</button>
+      <button data-theme-btn="system" onclick="setTheme('system')">System</button>
+      <button data-theme-btn="dark"   onclick="setTheme('dark')">Dark</button>
+    </div>
+    <div class="seg" role="group" aria-label="Platform chrome">
+      <button data-chrome-btn="android" onclick="setChrome('android')">Android · Material 3</button>
+      <button data-chrome-btn="ios"     onclick="setChrome('ios')">iOS · SwiftUI</button>
+    </div>
+    <div class="seg" role="group" aria-label="Asset variant">
+      <button data-variant-btn="video" onclick="setVariant('video')">Video</button>
+      <button data-variant-btn="image" onclick="setVariant('image')">Image</button>
+      <button data-variant-btn="audio" onclick="setVariant('audio')">Audio</button>
+      <button data-variant-btn="doc"   onclick="setVariant('doc')">Doc</button>
+    </div>
+  </div>
+  <p class="sub">Full-screen player/viewer — wireframes §6 (<code>POST → PLAYER</code> and <code>ASSETS → PLAYER</code>).
+     Four asset variants (toggle above) over the same overlay chrome: source post · channel · producing pipeline stage
+     (§3.6). Streaming is the verified §3.8 read path (Range/HLS · <code>OpenSeekable</code>, links via the Asset
+     Service only, §7.1); pinch / double-tap zoom per §6.2. No tab bar — this surface is pushed full-screen.</p>
+</header>
+
+<main class="stage">
+  <div class="device" data-chrome="android" data-variant="video">
+    <div class="screen">
+      <div class="statusbar">
+        <span><span class="only-android">14:02</span><span class="only-ios">9:41</span></span>
+        <span aria-hidden="true">▲ ▂▄▆ ▮ 87%</span>
+      </div>
+      <div class="vbar">
+        <span class="back"><span class="only-android">←</span><span class="only-ios">‹ Back</span></span>
+        <span class="title">
+          <span class="v v-video">video-web.mp4</span><span class="v v-image">cover.jpg</span><span class="v v-audio">nocturne-op9-2.flac</span><span class="v v-doc">deep-work.pdf</span>
+        </span>
+        <span class="actions">
+          <button title="Share — [OPEN: THREADY-DES-SCR-MOB-02]" aria-label="Share (path unresolved)">⇪</button>
+          <button title="Save to device — [OPEN: THREADY-DES-SCR-MOB-02]" aria-label="Save to device (path unresolved)">⭳</button>
+        </span>
+      </div>
+      <div class="vstage">
+        <div class="v v-video frame169">▶
+          <span class="zoomchip">HLS · auto 1080p</span></div>
+        <div class="v v-image zoombox">🖼
+          <span class="zoomchip">2.0× · pinch / double-tap (§6.2)</span></div>
+        <div class="v v-audio bigwave" aria-hidden="true">
+          <i class="played" style="height:24px"></i><i class="played" style="height:52px"></i><i class="played" style="height:38px"></i><i class="played" style="height:74px"></i><i class="played" style="height:46px"></i><i class="played" style="height:90px"></i><i class="played" style="height:60px"></i><i class="played" style="height:34px"></i><i class="played" style="height:70px"></i><i class="played" style="height:44px"></i><i style="height:82px"></i><i style="height:52px"></i><i style="height:28px"></i><i style="height:64px"></i><i style="height:40px"></i><i style="height:86px"></i><i style="height:56px"></i><i style="height:30px"></i><i style="height:48px"></i><i style="height:22px"></i></div>
+        <div class="v v-doc docpage" aria-hidden="true">
+          <i class="h"></i><i style="width:96%"></i><i style="width:88%"></i><i style="width:92%"></i><i style="width:70%"></i>
+          <i style="width:0;height:6px;background:none"></i>
+          <i style="width:94%"></i><i style="width:90%"></i><i style="width:83%"></i><i style="width:41%"></i></div>
+      </div>
+      <div class="vmeta">
+        <span class="v v-video"><b>Source:</b> p_9f21 “New paper on diffusion…” · #ml-papers ·
+          <span class="tagchip">#Video</span> <b>· Extracted by:</b> download (MeTube/Boba) → convert
+          (<span class="mono">…-web</span> rendition, §3.6) · raw sibling: video.mp4 (2.1 GB)</span>
+        <span class="v v-image"><b>Source:</b> p_5c02 · #comics · <span class="tagchip">#Comics</span>
+          <b>· Extracted by:</b> analyze (VisionEngine OCR ✓ — text extracted, searchable)</span>
+        <span class="v v-audio"><b>Source:</b> p_8b19 · #audiobooks · <span class="tagchip">#Music</span>
+          <b>· Extracted by:</b> download · 38 MB FLAC · streamed via <span class="mono">OpenSeekable</span> Range</span>
+        <span class="v v-doc"><b>Source:</b> p_31de · #books · <span class="tagchip">#Books</span>
+          <b>· Extracted by:</b> download · 🔒 sensitive — encrypted at rest, served decrypted only through the
+          Asset Service (§3.8/§7) · page 12 / 304</span>
+      </div>
+      <div class="vctl">
+        <div class="scrub v v-video v-audio">
+          <span class="v v-video">07:57</span><span class="v v-audio">3:07</span>
+          <span class="track" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="63" tabindex="0"><i></i><em></em></span>
+          <span class="v v-video">12:38</span><span class="v v-audio">4:57</span>
+        </div>
+        <div class="vbtns">
+          <button title="Back 10s" class="v v-video v-audio">⟲10</button>
+          <button class="big v v-video v-audio" title="Play / pause">⏸</button>
+          <button title="Forward 10s" class="v v-video v-audio">⟳10</button>
+          <button title="Mute" class="v v-video v-audio">🔇</button>
+          <button title="Zoom to fit" class="v v-image v-doc">⛶</button>
+        </div>
+      </div>
+      <div class="gesture"></div>
+    </div>
+  </div>
+
+  <section class="notes" style="margin:0;max-width:480px;grid-template-columns:1fr">
+    <div class="note">
+      <h2>Chrome variants — immersive full-screen</h2>
+      <ul>
+        <li><b>Android (Compose/M3):</b> edge-to-edge; controls auto-hide on tap; ← / predictive back pops to
+            Post detail or Assets grid.</li>
+        <li><b>iOS (SwiftUI):</b> <code>‹ Back</code> + edge-swipe pop; controls in a fading overlay
+            (<code>AVPlayer</code>-style); home indicator stays.</li>
+        <li>The letterbox stays <span class="mono">#020817</span> (tokens.css dark <span class="mono">--bg</span>)
+            in both themes — deliberate immersive constant <span class="tag">[DEFAULT — adjustable]</span>;
+            surrounding page chrome remains theme-bound.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>⛰ HarmonyOS — ArkTS · 🐦 Aurora — Qt Quick <span class="tag gap">SCAFFOLD [GAP: 8.5]</span></h2>
+      <ul>
+        <li>ArkUI <code>Video</code>/<code>Image</code> components + AVSession for background audio;
+            system back closes the viewer.</li>
+        <li>Qt Multimedia (<code>MediaPlayer</code>/<code>VideoOutput</code>) under Silica chrome; edge-swipe back.</li>
+        <li>Both clients are <code>helix_shims</code> skeletons — design-complete here, not build-ready.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Honesty / actions</h2>
+      <ul>
+        <li><b>Verified:</b> streaming playback via the Asset Service — Range/<code>OpenSeekable</code> + HLS/DASH
+            (§3.8); client links resolve through the Asset Service, never raw paths (§7.1); the 🔒 sensitive state
+            gates encrypted assets (§7); pinch / double-tap zoom (§6.2).</li>
+        <li><b>Unresolved:</b> ⇪ Share and ⭳ Save-to-device have <b>no ground-truth backend path</b> — §3.8’s
+            “re-download” is a server-side re-fetch for broken links, not a device export, and the desktop precedent
+            (<a href="../desktop/README.md">desktop README §3.4</a>, <span class="tag">[OPEN: THREADY-DES-16]</span>)
+            already established that no local-media path is decided. Both actions are specified as disabled until
+            resolved <span class="tag gap">[OPEN: THREADY-DES-SCR-MOB-02]</span> — never a fake export UI.</li>
+        <li>States: playing (shown) · buffering spinner on the stage · stream error → <span class="mono">--danger</span>
+            banner + retry · offline → “stream unavailable offline” (no fake cached playback; §6.2 freeze rule).</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<p class="foot">Made with ♥ by Helix Development · Thready mobile screen designs · light+dark via <code>[data-theme="dark"]</code></p>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function press(group,val){document.querySelectorAll('[data-'+group+'-btn]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(b.getAttribute('data-'+group+'-btn')===val));});}
+  window.setTheme=function(t){if(t==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',t);}press('theme',t);};
+  window.setChrome=function(c){document.querySelectorAll('.device').forEach(function(d){d.setAttribute('data-chrome',c);});press('chrome',c);};
+  window.setVariant=function(v){document.querySelectorAll('.device').forEach(function(d){d.setAttribute('data-variant',v);});press('variant',v);};
+  press('theme','system');press('chrome','android');press('variant','video');
+})();
+</script>

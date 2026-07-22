@@ -1,0 +1,290 @@
+<!--
+  Title           : Helix Thready — Mobile Screen: Assets Grid (tab root)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/screens/mobile/assets-grid.html
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · screens)
+  Related         : ./README.md, ./media-viewer.html, ../../wireframes.md, ../../design-system.md (§3),
+                    ../../theming.md, ../web/assets-browser.html
+  Ground truth    : wireframes.md §6 (Assets tab → ASSETS grid → PLAYER), §3.8 (Assets library:
+                    types, renditions, sensitive lock, Asset-Service links), §1.1 (empty state),
+                    §6.2 (tap tag chip filters)
+-->
+<title>Thready Mobile — Assets Grid</title>
+<style>
+  /* == Thready tokens — inlined verbatim from design-system.md §3.1/§3.2 (self-contained, no CDN) == */
+  :root{
+    --font-display:"Space Grotesk","Space Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Hanken Grotesk","Hanken Grotesk Variable",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:9999px;
+    --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);
+    --brand:#b6e376;--brand-2:#abddc9;--brand-ink:#0a0f04;
+    --bg:#ffffff;--surface:#ffffff;--surface-warm:#f1f5f9;
+    --fg:#020817;--muted:#475569;--border:#e2e8f0;--border-strong:#64748b;
+    --accent:#446e12;--accent-on:#ffffff;
+    --success:#166534;--warn:#854d0e;--danger:#dc2626;
+    --elev-ring:0 0 0 1px var(--border);
+    --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+      --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+      --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+      --accent:#b6e376;--accent-on:#0a0f04;
+      --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+    }
+  }
+  :root[data-theme="dark"]{
+    --brand:#b6e376;--brand-2:#b7ebd6;--brand-ink:#0a0f04;
+    --bg:#020817;--surface:#020817;--surface-warm:#1e293b;
+    --fg:#f8fafc;--muted:#94a3b8;--border:#1e293b;--border-strong:#64748b;
+    --accent:#b6e376;--accent-on:#0a0f04;
+    --success:#16a34a;--warn:#eab308;--danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{color-scheme:light dark}
+  body{font-family:var(--font-body);background:var(--surface-warm);color:var(--fg);min-height:100vh;
+       padding:var(--space-6);transition:background var(--motion-base) var(--ease-standard)}
+  .page-head{max-width:1000px;margin:0 auto var(--space-6);display:flex;flex-wrap:wrap;gap:var(--space-3);
+             align-items:center;justify-content:space-between}
+  .page-head h1{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:-.01em}
+  .page-head .sub{color:var(--muted);font-size:var(--text-sm);flex-basis:100%}
+  .controls{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+  .seg button{border:0;background:transparent;color:var(--muted);font:500 var(--text-sm) var(--font-body);
+              padding:6px 14px;cursor:pointer;transition:background var(--motion-fast) var(--ease-standard)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+  .seg button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .stage{display:flex;flex-wrap:wrap;gap:var(--space-8);justify-content:center;align-items:flex-start;max-width:1000px;margin:0 auto}
+  /* ---- device frame: 390×844 phone, rounded bezel ---- */
+  .device{width:414px;padding:12px;border-radius:56px;background:#10141c;box-shadow:0 24px 60px rgba(2,8,23,.35);flex:0 0 auto}
+  .screen{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--bg);
+          display:flex;flex-direction:column;font-size:var(--text-sm)}
+  .only-ios,.only-android{display:contents}
+  .device[data-chrome="android"] .only-ios{display:none!important}
+  .device[data-chrome="ios"] .only-android{display:none!important}
+  .statusbar{position:relative;display:flex;align-items:center;justify-content:space-between;
+             padding:0 26px;font:600 13px var(--font-body);color:var(--fg);background:var(--surface);flex:0 0 auto}
+  .device[data-chrome="ios"] .statusbar{height:54px}
+  .device[data-chrome="ios"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:122px;height:34px;border-radius:20px;background:#04070d}
+  .device[data-chrome="android"] .statusbar{height:36px;font-weight:500;font-size:12px}
+  .device[data-chrome="android"] .statusbar::after{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);
+             width:13px;height:13px;border-radius:50%;background:#04070d}
+  .appbar{position:relative;display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-4);
+          border-bottom:1px solid var(--border);background:var(--surface);flex:0 0 auto}
+  .device[data-chrome="android"] .appbar{height:56px}
+  .device[data-chrome="ios"] .appbar{height:52px;justify-content:center}
+  .appbar .title{font-family:var(--font-display);font-weight:600;font-size:var(--text-base)}
+  .appbar .actions{margin-left:auto;display:flex;gap:var(--space-4);color:var(--muted);font-size:17px}
+  .device[data-chrome="ios"] .appbar .actions{position:absolute;right:16px;margin-left:0;color:var(--accent)}
+  .content{flex:1;overflow:hidden;padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);background:var(--bg)}
+  .tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--border);background:var(--surface)}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+       color:var(--muted);font-size:11px;font-weight:500}
+  .tab .ic{font-size:17px;line-height:1.2}
+  .tab[aria-current="page"]{color:var(--accent);font-weight:600}
+  .device[data-chrome="android"] .tabbar{height:80px;padding:8px 0}
+  .device[data-chrome="android"] .tab[aria-current="page"] .ic{background:color-mix(in oklab,var(--accent),transparent 82%);
+       padding:3px 18px;border-radius:var(--radius-pill)}
+  .device[data-chrome="ios"] .tabbar{height:54px}
+  .gesture{flex:0 0 auto;background:var(--surface);display:flex;align-items:center;justify-content:center}
+  .device[data-chrome="ios"] .gesture{height:28px}
+  .device[data-chrome="ios"] .gesture::after{content:"";width:134px;height:5px;border-radius:3px;background:var(--fg);opacity:.85}
+  .device[data-chrome="android"] .gesture{height:16px}
+  .device[data-chrome="android"] .gesture::after{content:"";width:108px;height:4px;border-radius:2px;background:var(--muted);opacity:.55}
+  /* ---- shared content components ---- */
+  .chip{font:500 10px var(--font-mono);padding:2px 8px;border-radius:var(--radius-pill);
+        background:color-mix(in oklab,var(--accent),transparent 88%);color:var(--accent);white-space:nowrap}
+  .badge{font:600 10px var(--font-body);padding:2px 8px;border-radius:var(--radius-pill);white-space:nowrap}
+  .badge.ok{background:color-mix(in oklab,var(--success),transparent 88%);color:var(--success)}
+  .badge.err{background:color-mix(in oklab,var(--danger),transparent 88%);color:var(--danger)}
+  .badge.q{background:var(--surface-warm);color:var(--muted)}
+  .mono{font-family:var(--font-mono)}
+  .mut{color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:500 var(--text-sm) var(--font-body);
+       border-radius:var(--radius-sm);padding:10px 16px;border:1px solid transparent;cursor:pointer}
+  .btn.ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+  .btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  /* ---- screen-specific: filter chips + masonry tiles ---- */
+  .filters{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .fchip{font:500 12px var(--font-body);padding:6px 12px;border-radius:var(--radius-pill);border:1px solid var(--border);
+         background:var(--surface);color:var(--muted);cursor:pointer}
+  .fchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-on);border-color:transparent}
+  .fchip:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .masonry{columns:2;column-gap:var(--space-3);flex:1;overflow:hidden}
+  .tile{break-inside:avoid;margin-bottom:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);
+        overflow:hidden;background:var(--surface);cursor:pointer}
+  .tile:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+  .thumb{position:relative;display:flex;align-items:center;justify-content:center;background:var(--surface-warm);
+         color:var(--muted);font-size:26px}
+  .thumb .type{position:absolute;top:6px;left:6px;font:600 9px var(--font-mono);padding:2px 6px;border-radius:4px;
+               background:color-mix(in oklab,#020817,transparent 25%);color:#f8fafc}
+  .thumb .flag{position:absolute;top:6px;right:6px;font-size:10px}
+  .tmeta{padding:var(--space-2) var(--space-3)}
+  .tmeta .n{font:500 12px var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tmeta .d{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
+  .wave{display:flex;align-items:flex-end;gap:2px;height:34px}
+  .wave i{width:3px;background:var(--accent);border-radius:1px}
+  .doclines{width:70%;display:flex;flex-direction:column;gap:4px}
+  .doclines i{height:4px;border-radius:2px;background:var(--border-strong);opacity:.5}
+  .empty{border:1px dashed var(--border-strong);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);
+         text-align:center;color:var(--muted);font-size:12px}
+  /* ---- platform notes ---- */
+  .notes{max-width:1000px;margin:var(--space-8) auto 0;display:grid;
+         grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4)}
+  .note{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)}
+  .note h2{font:600 var(--text-sm) var(--font-display);margin-bottom:var(--space-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .note ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .note .tag{font:600 10px var(--font-mono);padding:2px 6px;border-radius:4px;background:var(--surface-warm);color:var(--muted)}
+  .note .tag.gap{color:var(--warn)}
+  .foot{max-width:1000px;margin:var(--space-8) auto 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+
+<header class="page-head">
+  <h1>Thready Mobile — Assets Grid (tab root)</h1>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Theme">
+      <button data-theme-btn="light"  onclick="setTheme('light')">Light</button>
+      <button data-theme-btn="system" onclick="setTheme('system')">System</button>
+      <button data-theme-btn="dark"   onclick="setTheme('dark')">Dark</button>
+    </div>
+    <div class="seg" role="group" aria-label="Platform chrome">
+      <button data-chrome-btn="android" onclick="setChrome('android')">Android · Material 3</button>
+      <button data-chrome-btn="ios"     onclick="setChrome('ios')">iOS · SwiftUI</button>
+    </div>
+  </div>
+  <p class="sub">Assets tab — wireframes §6 (<code>T4 → ASSETS grid → PLAYER</code>) rendering the §3.8 media library
+     as a touch masonry grid. Same fixture assets and vocabulary as <a href="../web/assets-browser.html">the web
+     Assets browser</a> (renditions, OCR, sensitive lock, broken-link re-download). A tile opens the full-screen
+     <a href="./media-viewer.html">media viewer</a>.</p>
+</header>
+
+<main class="stage">
+  <div class="device" data-chrome="android">
+    <div class="screen">
+      <div class="statusbar">
+        <span><span class="only-android">14:02</span><span class="only-ios">9:41</span></span>
+        <span aria-hidden="true">▲ ▂▄▆ ▮ 87%</span>
+      </div>
+      <div class="appbar">
+        <span class="title">Assets</span>
+        <span class="actions"><span title="Grid view (active)">▦</span><span title="List view">☰</span></span>
+      </div>
+      <div class="content">
+        <div class="filters" role="group" aria-label="Filter assets by type">
+          <button class="fchip" aria-pressed="true">All</button>
+          <button class="fchip" aria-pressed="false">Video</button>
+          <button class="fchip" aria-pressed="false">Image</button>
+          <button class="fchip" aria-pressed="false">Audio</button>
+          <button class="fchip" aria-pressed="false">Docs</button>
+          <button class="fchip" aria-pressed="false">Generated</button>
+        </div>
+        <p class="mut" style="font-size:11px">18,402 assets · 42.1 TB · links resolve through the Asset Service, never raw paths (§7.1)</p>
+        <div class="masonry">
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:86px"><span class="type">video · rendition</span>▶</div>
+            <div class="tmeta"><div class="n">video-web.mp4</div>
+              <div class="d">streamable rendition · 640 MB<br>p_9f21 · #ml-papers</div></div>
+          </div>
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:64px"><span class="type">image</span><span class="flag" title="OCR complete">🔎</span>🖼</div>
+            <div class="tmeta"><div class="n">cover.jpg</div>
+              <div class="d">1.2 MB · OCR ✓ (text extracted)<br>p_5c02 · #comics</div></div>
+          </div>
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:110px"><span class="type">video</span>▶</div>
+            <div class="tmeta"><div class="n">heat-1995.mkv</div>
+              <div class="d">2.8 GB · <span class="chip" style="font-size:9px">#Movie</span><br>p_77aa · #films<br>
+                <span class="badge err" style="font-size:9px">⚠ broken link</span> → re-download (REST)</div></div>
+          </div>
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:64px"><span class="type">audio</span>
+              <span class="wave" aria-hidden="true"><i style="height:8px"></i><i style="height:16px"></i><i style="height:26px"></i><i style="height:12px"></i><i style="height:22px"></i><i style="height:30px"></i><i style="height:14px"></i><i style="height:20px"></i><i style="height:9px"></i><i style="height:24px"></i><i style="height:15px"></i></span></div>
+            <div class="tmeta"><div class="n">nocturne-op9-2.flac</div>
+              <div class="d">38 MB · <span class="chip" style="font-size:9px">#Music</span><br>p_8b19 · #audiobooks</div></div>
+          </div>
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:96px"><span class="type">document</span><span class="flag" title="sensitive — encrypted at rest">🔒</span>
+              <span class="doclines" aria-hidden="true"><i style="width:100%"></i><i style="width:86%"></i><i style="width:93%"></i><i style="width:64%"></i></span></div>
+            <div class="tmeta"><div class="n">deep-work.pdf</div>
+              <div class="d">4.4 MB · author: C. Newport · 🔒 sensitive<br>p_31de · #books</div></div>
+          </div>
+          <div class="tile" tabindex="0">
+            <div class="thumb" style="height:56px"><span class="type">generated</span>▤</div>
+            <div class="tmeta"><div class="n">research.md</div>
+              <div class="d">generated doc · 48 KB · semantic-indexed<br>p_9f21 · #ml-papers</div></div>
+          </div>
+        </div>
+        <div class="empty" aria-label="Empty state variant (annotated)">
+          <b>Empty-state variant</b> (filter Audio + #films): “No assets match these filters.”<br>
+          <button class="btn ghost" style="padding:4px 12px;font-size:12px;margin-top:6px">Clear filters</button>
+          <span class="mut" style="display:block;font-size:10px;margin-top:4px">per the §1.1 interaction-state legend</span>
+        </div>
+        <p class="mut" style="font-size:11px">tap tile → full-screen viewer · tap tag chip → filter by tag (wireframes §6.2)</p>
+      </div>
+      <nav class="tabbar" aria-label="Primary">
+        <span class="tab"><span class="ic">▤</span>Home</span>
+        <span class="tab"><span class="ic">#</span>Channels</span>
+        <span class="tab"><span class="ic">🔍</span>Search</span>
+        <span class="tab" aria-current="page"><span class="ic">⬒</span>Assets</span>
+        <span class="tab"><span class="ic">•••</span>More</span>
+      </nav>
+      <div class="gesture"></div>
+    </div>
+  </div>
+
+  <section class="notes" style="margin:0;max-width:480px;grid-template-columns:1fr">
+    <div class="note">
+      <h2>🤖 Android · Compose /  iOS · SwiftUI <span class="tag">tab root</span></h2>
+      <ul>
+        <li>Android: <code>LazyVerticalStaggeredGrid</code> (masonry); filter chips are M3 <code>FilterChip</code>s;
+            grid/list toggle in the top app bar.</li>
+        <li>iOS: <code>LazyVGrid</code>/compositional layout; toggle + filters as trailing toolbar items; tiles push
+            the full-screen viewer with edge-swipe pop.</li>
+        <li>Thumbnails load through Asset Service URLs only (§7.1) with skeleton placeholders while fetching (§1.1).</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>⛰ HarmonyOS — ArkTS · 🐦 Aurora — Qt Quick <span class="tag gap">SCAFFOLD [GAP: 8.5]</span></h2>
+      <ul>
+        <li>ArkUI <code>WaterFlow</code> realizes the masonry; Barrier-Free labels mirror the tile semantics.</li>
+        <li>Silica <code>SilicaGridView</code>; filters via pulley menu; Qt font scaling per wireframes §6.1.</li>
+        <li>Both clients are <code>helix_shims</code> skeletons — design-complete here, not build-ready.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Honesty / states</h2>
+      <ul>
+        <li>Fixture assets and metadata are identical to <code>screens/web/assets-browser.html</code>
+            (18,402 assets · 42.1 TB): renditions (raw + <span class="mono">…-web</span>), OCR ✓ via VisionEngine
+            <span class="tag gap">[GAP: 2.6 OCR]</span>, 🔒 sensitive (encrypted, §7), ⚠ broken physical link with the
+            server-side <b>re-download</b> REST action (§3.8) — re-download refetches on the server; it is <b>not</b>
+            a save-to-device path (see <a href="./media-viewer.html">media-viewer.html</a>
+            <span class="tag gap">[OPEN: THREADY-DES-SCR-MOB-02]</span>).</li>
+        <li>States: default (shown) · skeleton while thumbnails hydrate · empty (annotated variant above) ·
+            offline renders the cached grid “stale · updated 3m ago” (§6.2).</li>
+        <li>There is <b>no upload/ingest affordance</b> — assets originate from channel processing only; local-file
+            ingest is undecided (<span class="tag">[OPEN: THREADY-DES-16]</span>, desktop README §3.4 precedent).</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<p class="foot">Made with ♥ by Helix Development · Thready mobile screen designs · light+dark via <code>[data-theme="dark"]</code></p>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function press(group,val){document.querySelectorAll('[data-'+group+'-btn]').forEach(function(b){
+    b.setAttribute('aria-pressed',String(b.getAttribute('data-'+group+'-btn')===val));});}
+  window.setTheme=function(t){if(t==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',t);}press('theme',t);};
+  window.setChrome=function(c){document.querySelectorAll('.device').forEach(function(d){d.setAttribute('data-chrome',c);});press('chrome',c);};
+  press('theme','system');press('chrome','android');
+})();
+</script>

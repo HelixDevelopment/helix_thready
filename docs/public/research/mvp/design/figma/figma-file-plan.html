@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Figma File Plan (&quot;Thready — Design Library&quot;)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Figma File Plan ("Thready — Design
+Library")</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#ground-truth-non-negotiables"
+id="toc-ground-truth-non-negotiables">1. Ground truth &amp;
+non-negotiables</a></li>
+<li><a href="#file-level-conventions" id="toc-file-level-conventions">2.
+File-level conventions</a></li>
+<li><a href="#page-1-cover" id="toc-page-1-cover">3. Page 1 —
+Cover</a></li>
+<li><a href="#page-2-foundations" id="toc-page-2-foundations">4. Page 2
+— Foundations</a></li>
+<li><a href="#page-3-components-14-sets"
+id="toc-page-3-components-14-sets">5. Page 3 — Components (14
+sets)</a></li>
+<li><a href="#page-4-screens-web-14-frames-1440w"
+id="toc-page-4-screens-web-14-frames-1440w">6. Page 4 — Screens · Web
+(14 frames, 1440w)</a></li>
+<li><a href="#page-5-screens-mobile-8-frames-390w"
+id="toc-page-5-screens-mobile-8-frames-390w">7. Page 5 — Screens ·
+Mobile (8 frames, 390w)</a></li>
+<li><a href="#page-6-screens-desktop-tui"
+id="toc-page-6-screens-desktop-tui">8. Page 6 — Screens · Desktop +
+TUI</a></li>
+<li><a href="#page-7-platform-overrides"
+id="toc-page-7-platform-overrides">9. Page 7 — Platform
+overrides</a></li>
+<li><a href="#page-8-prototype-wiring"
+id="toc-page-8-prototype-wiring">10. Page 8 — Prototype wiring</a></li>
+<li><a href="#build-order-plugin-api-execution-notes"
+id="toc-build-order-plugin-api-execution-notes">11. Build order &amp;
+Plugin-API execution notes</a></li>
+<li><a href="#acceptance-checklist" id="toc-acceptance-checklist">12.
+Acceptance checklist</a></li>
+<li><a href="#open-items" id="toc-open-items">13. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Figma File Plan ("Thready — Design Library")
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/figma/figma-file-plan.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design · figma)
+  Related         : ./README.md, ./figma-variables.json, ../opendesign/tokens.css,
+                    ../opendesign/DESIGN.md, ../library/README.md, ../library/platform-map.md,
+                    ../screens/web/README.md, ../screens/mobile/README.md,
+                    ../screens/desktop/README.md, ../screens/tui/README.md,
+                    ../ux-flows.md, ../motion/motion.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design · figma)</td>
+<td>Initial 8-page blueprint: foundations, 14 component sets with
+variant axes, web/mobile/desktop/TUI screen frames, platform overrides,
+prototype wiring, Plugin-API build order. Every value traced to
+<code>tokens.css</code> / <code>DESIGN.md</code> / <code>library/</code>
+/ <code>screens/</code> — nothing invented</td>
+</tr>
+</tbody>
+</table>
+<p>The page-by-page blueprint of the <strong>“Thready — Design
+Library”</strong> Figma file, precise enough for an agent with Figma
+Plugin API access (Figma MCP <code>use_figma</code>) to execute
+mechanically. The Figma file <strong>does not exist yet</strong> —
+building it is <code>[OPEN: THREADY-DES-FIG-01]</code>. Until then this
+plan plus <a
+href="./figma-variables.json"><code>figma-variables.json</code></a>
+<em>is</em> the deliverable.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-ground-truth--non-negotiables">1. Ground truth &amp;
+non-negotiables</a></li>
+<li><a href="#2-file-level-conventions">2. File-level
+conventions</a></li>
+<li><a href="#3-page-1--cover">3. Page 1 — Cover</a></li>
+<li><a href="#4-page-2--foundations">4. Page 2 — Foundations</a></li>
+<li><a href="#5-page-3--components-14-sets">5. Page 3 — Components (14
+sets)</a></li>
+<li><a href="#6-page-4--screens--web-14-frames-1440w">6. Page 4 —
+Screens · Web (14 frames, 1440w)</a></li>
+<li><a href="#7-page-5--screens--mobile-8-frames-390w">7. Page 5 —
+Screens · Mobile (8 frames, 390w)</a></li>
+<li><a href="#8-page-6--screens--desktop--tui">8. Page 6 — Screens ·
+Desktop + TUI</a></li>
+<li><a href="#9-page-7--platform-overrides">9. Page 7 — Platform
+overrides</a></li>
+<li><a href="#10-page-8--prototype-wiring">10. Page 8 — Prototype
+wiring</a></li>
+<li><a href="#11-build-order--plugin-api-execution-notes">11. Build
+order &amp; Plugin-API execution notes</a></li>
+<li><a href="#12-acceptance-checklist">12. Acceptance checklist</a></li>
+<li><a href="#13-open-items">13. Open items</a></li>
+</ul>
+<h2 id="ground-truth-non-negotiables">1. Ground truth &amp;
+non-negotiables</h2>
+<ul>
+<li><strong>Tokens:</strong> <a
+href="../opendesign/tokens.css"><code>../opendesign/tokens.css</code></a>
+is canonical; the Figma Variables in <a
+href="./figma-variables.json"><code>figma-variables.json</code></a>
+carry it verbatim
+<code>[VERIFIED — generated 1:1, hex → r/g/b floats]</code>.
+<strong>Never restate a hex inline in Figma</strong> — bind
+fills/strokes/radii/gaps/font-sizes to variables; anything unbindable
+gets an annotation naming its token.</li>
+<li><strong>Brand contract:</strong> <a
+href="../opendesign/DESIGN.md"><code>../opendesign/DESIGN.md</code></a>
+— brand is decorative, accent is interactive, semantic is state;
+<code>--danger</code> never masked by brand; one brand-gradient focal
+element per screen; locked footer <em>“Made with ♥ by Helix
+Development”</em> on every screen.</li>
+<li><strong>Component inventory:</strong> <a
+href="../library/README.md"><code>../library/README.md</code></a> — 14
+groups, ~38 components, ≈118 component-state cells;
+<code>components.html</code> is the visual source the Figma components
+must reproduce, not reinterpret.</li>
+<li><strong>Screens:</strong> the
+<code>../screens/{web,mobile,desktop,tui}/</code> HTML artifacts are the
+mid/high-fi source of every frame — copy their <strong>realistic Thready
+data</strong> (no lorem ipsum) and their honest gap banners
+(<code>[GAP: 5.1]</code> Max stub, <code>[GAP: 2.1]</code> degraded
+search, etc.).</li>
+<li><strong>No invented values</strong>
+<code>[CONSTITUTION §11.4.6]</code> — if a needed value is missing, flag
+it and use the nearest token.</li>
+</ul>
+<h2 id="file-level-conventions">2. File-level conventions</h2>
+<ul>
+<li><strong>File name:</strong> <code>Thready — Design Library</code>.
+<strong>Pages</strong> exactly as numbered below (Figma page names:
+<code>1 · Cover</code>, <code>2 · Foundations</code>,
+<code>3 · Components</code>, <code>4 · Screens — Web</code>,
+<code>5 · Screens — Mobile</code>,
+<code>6 · Screens — Desktop + TUI</code>,
+<code>7 · Platform Overrides</code>,
+<code>8 · Prototype Wiring</code>).</li>
+<li><strong>Modes:</strong> collection <code>Thready / Color</code> has
+modes <strong>Light</strong> and <strong>Dark</strong>; components are
+built once and previewed in both by section frames with an explicit mode
+override (light section = Light mode, dark section = Dark mode).
+Collection <code>Thready / Structure</code> is single-mode.</li>
+<li><strong>Frame naming:</strong> <code>web/&lt;screen&gt;</code>,
+<code>mobile/&lt;screen&gt;/&lt;android|ios&gt;</code>,
+<code>desktop/shell</code>, <code>tui/&lt;screen&gt;</code>,
+<code>overrides/&lt;platform&gt;</code> — stable names, referenced by
+the prototype wiring.</li>
+<li><strong>Fonts:</strong> Space Grotesk (display, 600–700), Hanken
+Grotesk (body, 400–500; buttons 500, badges 600), JetBrains Mono
+(code/metadata, tabular figures) <code>[VERIFIED — DESIGN.md §3]</code>.
+Availability check + substitution rule in §11 step 2.</li>
+<li><strong>Elevation &amp; focus (effect styles,</strong> because
+shadows are not variables<strong>):</strong> <code>elev/ring</code> =
+inner-shadow-like 1px stroke or drop shadow <code>0 0 0 1px</code> in
+<code>border</code>; <code>elev/raised</code> = drop shadow
+<code>0 2px 8px</code> of <code>fg</code> at <strong>8% opacity</strong>
+(faithful translation of
+<code>color-mix(in oklab, var(--fg), transparent 92%)</code>);
+<code>focus/ring</code> = <code>0 0 0 3px</code> of <code>accent</code>
+at <strong>30% opacity</strong> (<code>transparent 70%</code>)
+<code>[VERIFIED formulas — tokens.css]</code>. Effect colors bind to the
+<code>fg</code>/<code>border</code>/<code>accent</code> variables so
+both modes resolve correctly.</li>
+<li><strong>Not carried as variables (deliberate,</strong> mirrors
+<code>figma-variables.json</code> <code>_meta</code><strong>):</strong>
+B-slot aliases
+<code>fg-2</code>/<code>meta</code>/<code>border-soft</code>;
+<code>accent-hover</code>/<code>accent-active</code> (oklab mixes —
+baked into hover-state variants per mode with an annotation naming the
+formula); <code>ease-standard</code> (prototype easing setting
+<code>cubic-bezier(0.2, 0, 0, 1)</code>); section rhythm 80/48/32 and
+gutters 24/16/12 (layout annotations on screen frames);
+<code>tracking-display</code> −0.01em (text styles).</li>
+</ul>
+<h2 id="page-1-cover">3. Page 1 — Cover</h2>
+<p>One frame <code>cover</code> (1440×1024):</p>
+<ul>
+<li>Brand mark from <a
+href="../assets/logo-mark.svg"><code>../assets/logo-mark.svg</code></a>
+(import the SVG — never redraw), title <strong>Thready — Design
+Library</strong> in Space Grotesk 700 / <code>text-3xl</code> 48,
+tagline <em>“read your threads, smarter”</em>
+<code>[VERIFIED — DESIGN.md §1 Voice &amp; tone]</code> in Hanken
+Grotesk / <code>text-lg</code>.</li>
+<li>The brand gradient <code>brand → brand-2</code> as the single
+decorative focal element (one per screen — contract rule).</li>
+<li>Status block (JetBrains Mono, <code>text-sm</code>): file status
+<strong>Draft v0.1</strong>, source-of-truth pointers (this plan +
+<code>tokens.css</code>), the build date, and — if §11 step 2
+substituted any font — the <strong>red substitution notice</strong> (see
+§11).</li>
+<li>Locked footer lockup: <em>“Made with ♥ by Helix Development”</em>,
+heart bound to <code>ds-heart</code>.</li>
+</ul>
+<h2 id="page-2-foundations">4. Page 2 — Foundations</h2>
+<p>Five section frames, each duplicated Light/Dark via mode override
+where color-bearing:</p>
+<ol type="1">
+<li><p><strong><code>foundations/variables</code></strong> — two
+auto-layout tables rendering the imported collections:
+<code>Thready / Color</code> (16 variables × Light/Dark swatches + hex
+labels sourced from the variable values, not typed by hand) and
+<code>Thready / Structure</code> (25 variables: 8 spacing, 4 radius, 8
+text sizes, 2 leadings, 2 motion durations, container-max). Note under
+the table: <code>ds-heart</code> is an <strong>alias → accent</strong>;
+<code>fg-2</code>/<code>meta</code>/<code>border-soft</code> are CSS
+B-slot aliases not imported.</p></li>
+<li><p><strong><code>foundations/type</code></strong> — the type ramp in
+the three faces. Text styles to create (names
+<code>[DEFAULT — adjustable]</code>, values
+<code>[VERIFIED — tokens.css]</code>):</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Style</th>
+<th>Face / weight</th>
+<th>Size (variable)</th>
+<th>Line-height</th>
+<th>Tracking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>display/4xl</code></td>
+<td>Space Grotesk 700</td>
+<td><code>text-4xl</code> 64</td>
+<td>120% (<code>leading-tight</code> 1.2)</td>
+<td>−1% (−0.01em)</td>
+</tr>
+<tr>
+<td><code>display/3xl</code></td>
+<td>Space Grotesk 700</td>
+<td><code>text-3xl</code> 48</td>
+<td>120%</td>
+<td>−1%</td>
+</tr>
+<tr>
+<td><code>heading/2xl</code></td>
+<td>Space Grotesk 600</td>
+<td><code>text-2xl</code> 32</td>
+<td>120%</td>
+<td>−1%</td>
+</tr>
+<tr>
+<td><code>heading/xl</code></td>
+<td>Space Grotesk 600</td>
+<td><code>text-xl</code> 24</td>
+<td>120%</td>
+<td>−1%</td>
+</tr>
+<tr>
+<td><code>title/lg</code></td>
+<td>Space Grotesk 600</td>
+<td><code>text-lg</code> 20</td>
+<td>120%</td>
+<td>−1%</td>
+</tr>
+<tr>
+<td><code>body/base</code></td>
+<td>Hanken Grotesk 400</td>
+<td><code>text-base</code> 16</td>
+<td>150% (<code>leading-body</code> 1.5)</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>body/medium</code></td>
+<td>Hanken Grotesk 500</td>
+<td><code>text-base</code> 16</td>
+<td>150%</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>small/sm</code></td>
+<td>Hanken Grotesk 400</td>
+<td><code>text-sm</code> 14</td>
+<td>150%</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>caption/xs</code></td>
+<td>Hanken Grotesk 400</td>
+<td><code>text-xs</code> 12</td>
+<td>150%</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>mono/base</code></td>
+<td>JetBrains Mono 400</td>
+<td><code>text-base</code> 16</td>
+<td>150%</td>
+<td>0 (tabular figures ON)</td>
+</tr>
+<tr>
+<td><code>mono/sm</code></td>
+<td>JetBrains Mono 400</td>
+<td><code>text-sm</code> 14</td>
+<td>150%</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Line-height ratios 1.5/1.2 are stored as unitless floats in the
+Structure collection but MUST be applied as <strong>percentages</strong>
+in text styles (Figma has no unitless line-height).</p></li>
+<li><p><strong><code>foundations/color-roles</code></strong> — the role
+grid from DESIGN.md §2 with the measured contrast annotations: accent
+<strong>6.03:1</strong> on white (light) / <strong>13.56:1</strong> on
+<code>#020817</code> (dark), brand <strong>1.47:1</strong>
+(decorative-only warning), <code>accent</code>≠<code>danger</code>
+contract note <code>[VERIFIED — DESIGN.md §2]</code>.</p></li>
+<li><p><strong><code>foundations/elevation</code></strong> — three cards
+demonstrating <code>elev/flat</code> (none), <code>elev/ring</code>
+(preferred in dark), <code>elev/raised</code>, plus the
+<code>focus/ring</code> demo; formulas printed verbatim.</p></li>
+<li><p><strong><code>foundations/motion</code></strong> — spec board:
+<code>motion-fast</code> <strong>150ms</strong> (hover/press),
+<code>motion-base</code> <strong>200ms</strong> (enter/exit), easing
+<code>cubic-bezier(0.2, 0, 0, 1)</code>; all motion honors
+<code>prefers-reduced-motion</code>
+<code>[VERIFIED — tokens.css]</code>. Reference (annotation, not embed —
+Figma can’t play Lottie): the shipped Lottie set in <a
+href="../motion/README.md"><code>../motion/</code></a>
+(<code>helix-spinner</code>, <code>processing-pulse</code>,
+<code>success-check</code>, <code>error-cross</code>,
+<code>thread-sync</code>, <code>transition-fade-slide</code>).</p></li>
+</ol>
+<h2 id="page-3-components-14-sets">5. Page 3 — Components (14 sets)</h2>
+<p>The 14 groups of <a
+href="../library/README.md"><code>../library/README.md</code></a>
+(anchors <code>#buttons</code> … <code>#tooltips</code>), each as a
+Figma <strong>component set</strong> with variant properties. Visual
+truth is <code>../library/components.html</code>; state styling (hover
+mixes, focus ring, disabled at reduced opacity, error =
+<code>danger</code>) follows <code>DESIGN.md §4</code> and the shipped
+<code>.ds-btn</code> CSS.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Group (library anchor)</th>
+<th>Component set(s)</th>
+<th>Variant properties</th>
+<th>Cells</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Buttons <code>#buttons</code></td>
+<td><code>Button</code></td>
+<td><code>variant</code> = primary / secondary / ghost / destructive;
+<code>state</code> = default / hover / focus / disabled / loading</td>
+<td><strong>20</strong>
+<code>[VERIFIED count — library README]</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Inputs <code>#inputs</code></td>
+<td><code>Input</code></td>
+<td><code>control</code> = text / select / checkbox / radio / switch /
+date; <code>state</code> = default(+hint) / focus / error(+hint) /
+disabled</td>
+<td><strong>24</strong>
+<code>[VERIFIED count — library README]</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cards <code>#cards</code></td>
+<td><code>Card</code> [<code>elevation</code> = flat / ring / raised];
+<code>StatCard</code> (thready-stat KPI); <code>ThreadRow</code>
+[<code>state</code> = default / hover / focus]</td>
+<td>axes at left</td>
+<td>7</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Tables <code>#tables</code></td>
+<td><code>TableHeaderCell</code> [<code>sort</code> = none / asc /
+desc]; <code>TableRow</code> [<code>state</code> = default / hover];
+<code>Table</code> (composite incl. pagination strip) ×2</td>
+<td>axes at left</td>
+<td>7</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Badges &amp; chips <code>#badges-chips</code></td>
+<td><code>Badge</code> [<code>tone</code> = success / warn / danger /
+neutral]; <code>TagChip</code> [<code>origin</code> = direct / indirect
+“(derived)”]; <code>ProcessingChip</code> [<code>state</code> = pending
+/ processing / done / failed(+retry) / retrying]</td>
+<td>axes at left</td>
+<td>11</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Navigation <code>#navigation</code></td>
+<td><code>Topbar</code>; <code>Sidebar</code> [<code>state</code> =
+expanded / collapsed]; <code>SidebarItem</code> [<code>state</code> =
+default / active / hover]; <code>Tab</code> [<code>state</code> =
+default / active / focus]; <code>Breadcrumbs</code></td>
+<td>axes at left</td>
+<td>10</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Dialogs <code>#dialogs</code></td>
+<td><code>Dialog</code></td>
+<td><code>kind</code> = standard / destructive-confirm</td>
+<td>2</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Toasts &amp; alerts <code>#toasts-alerts</code></td>
+<td><code>Alert</code> [<code>tone</code> = success / warn / danger];
+<code>Toast</code> [<code>role</code> = status / alert]</td>
+<td>axes at left</td>
+<td>5</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Progress <code>#progress</code></td>
+<td><code>ProgressBar</code> [<code>state</code> = determinate /
+indeterminate / failed]; <code>SpinnerRing</code>;
+<code>SpinnerHelix</code> (helix-motif)</td>
+<td>axes at left</td>
+<td>5</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Avatars <code>#avatars</code></td>
+<td><code>Avatar</code> [<code>size</code> = sm / md / lg;
+<code>presence</code> = none / online]; <code>AvatarGroup</code></td>
+<td>axes at left</td>
+<td>7</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Empty states <code>#empty-states</code></td>
+<td><code>EmptyState</code></td>
+<td><code>kind</code> = empty / error(+retry)</td>
+<td>2</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Skeletons <code>#skeletons</code></td>
+<td><code>Skeleton</code></td>
+<td><code>shape</code> = text-row / card</td>
+<td>2</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Pagination <code>#pagination</code></td>
+<td><code>PaginationItem</code> [<code>state</code> = default / current
+/ disabled]; <code>Pagination</code> (composite
+<code>‹ 1 [2] 3 ›</code>)</td>
+<td>axes at left</td>
+<td>4</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Tooltips <code>#tooltips</code></td>
+<td><code>Tooltip</code></td>
+<td><code>trigger</code> = hover / focus</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Count reconciliation (honest):</strong> rows 1–2 are the
+library’s own verified counts (20 + 24). The remaining axes are derived
+from the exhibits listed in the library README; this plan enumerates
+<strong>108 static variant cells</strong> against the library’s
+<strong>≈118 state cells</strong> — the delta is <em>behavioral</em>
+states (live table sorting/paging, toast auto-dismiss + hover-pause,
+<code>&lt;dialog&gt;</code> open/close, theme cycling) that are
+interactions, not static variants. The builder MUST reconcile the
+finished sets against <code>components.html</code> exhibit-by-exhibit
+and record the final per-group counts on the page. The 14 sets fold the
+library’s ~38 distinct components into variant axes
+(e.g. <code>Input</code> folds 6 controls), so set-count ≠
+component-count by design. Component API names remain
+<code>[OPEN: THREADY-DES-11]</code>; upstream-vs-Thready split
+<code>[OPEN: THREADY-DES-12]</code>.</p>
+<p><strong>Page layout:</strong> one section frame per group, Light
+column + Dark column (mode override), each cell labeled
+<code>variant · state</code> in <code>mono/sm</code>. Both-mode preview
+target ≈ 2 × cells.</p>
+<h2 id="page-4-screens-web-14-frames-1440w">6. Page 4 — Screens · Web
+(14 frames, 1440w)</h2>
+<p>One frame per artifact in <a
+href="../screens/web/README.md"><code>../screens/web/</code></a>,
+<strong>1440×auto</strong>, content copied from the HTML (same realistic
+data, same state banners), composed from Page-3 instances. Layout
+constants: <code>container-max</code> 1200 centered, 24px desktop
+gutters, 80px section rhythm (annotated, not variables).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Frame</th>
+<th>Source artifact</th>
+<th>Screen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>web/login</code></td>
+<td><code>login.html</code></td>
+<td>Login / MFA</td>
+</tr>
+<tr>
+<td><code>web/dashboard</code></td>
+<td><code>dashboard.html</code></td>
+<td>Dashboard (stats 128 / 1,204 / 17 / 42.1 TB, live activity,
+queue)</td>
+</tr>
+<tr>
+<td><code>web/channels</code></td>
+<td><code>channels.html</code></td>
+<td>Channels list + Add-Channel wizard modal</td>
+</tr>
+<tr>
+<td><code>web/thread-explorer</code></td>
+<td><code>thread-explorer.html</code></td>
+<td>Channel detail / thread list</td>
+</tr>
+<tr>
+<td><code>web/post-detail</code></td>
+<td><code>post-detail.html</code></td>
+<td>Post detail / processing pipeline</td>
+</tr>
+<tr>
+<td><code>web/search</code></td>
+<td><code>search.html</code></td>
+<td>Search (semantic/keyword/hybrid, scores 0.94/0.91/0.88)</td>
+</tr>
+<tr>
+<td><code>web/assets-browser</code></td>
+<td><code>assets-browser.html</code></td>
+<td>Assets grid/list + detail drawer</td>
+</tr>
+<tr>
+<td><code>web/skills-manager</code></td>
+<td><code>skills-manager.html</code></td>
+<td>Skills / Recipes + skill graph</td>
+</tr>
+<tr>
+<td><code>web/research-viewer</code></td>
+<td><code>research-viewer.html</code></td>
+<td>Generated research doc</td>
+</tr>
+<tr>
+<td><code>web/accounts-admin</code></td>
+<td><code>accounts-admin.html</code></td>
+<td>Admin — Accounts / Users &amp; roles / Audit</td>
+</tr>
+<tr>
+<td><code>web/billing</code></td>
+<td><code>billing.html</code></td>
+<td>Billing &amp; usage (amounts stay <code>—</code> placeholders
+<code>[OPEN: THREADY-DES-SCR-01]</code>)</td>
+</tr>
+<tr>
+<td><code>web/settings</code></td>
+<td><code>settings.html</code></td>
+<td>Settings — Prefs / Branding white-label (AA meter) / Messengers</td>
+</tr>
+<tr>
+<td><code>web/events-monitor</code></td>
+<td><code>events-monitor.html</code></td>
+<td>Events monitor (live tail)</td>
+</tr>
+<tr>
+<td><code>web/index</code></td>
+<td><code>index.html</code></td>
+<td>Prototype shell / gallery (becomes the Page-8 hub frame)</td>
+</tr>
+</tbody>
+</table>
+<p>Each frame ships Light; a Dark duplicate
+(<code>web/&lt;screen&gt;/dark</code>) is generated for the four
+journey-critical screens (dashboard, post-detail, search, settings) —
+full dark duplication of all 14 is deferred to the build
+<code>[DEFAULT — adjustable]</code>.</p>
+<h2 id="page-5-screens-mobile-8-frames-390w">7. Page 5 — Screens ·
+Mobile (8 frames, 390w)</h2>
+<p>Frames at <strong>390×844</strong> from <a
+href="../screens/mobile/README.md"><code>../screens/mobile/</code></a>.
+Each screen gets <strong>two platform-annotation variants</strong> —
+<code>mobile/&lt;screen&gt;/android</code> (Material 3 chrome:
+punch-hole status bar, ← + predictive back, 80dp pill-indicator nav bar)
+and <code>mobile/&lt;screen&gt;/ios</code> (Dynamic Island,
+<code>‹ Title</code> + edge swipe, 49pt tab bar + home indicator) —
+mirroring the artifacts’ chrome toggle. 8 screens × 2 = 16 frames.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Frame base</th>
+<th>Source artifact</th>
+<th>Screen</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mobile/home-feed</code></td>
+<td><code>home-feed.html</code></td>
+<td>Home — live activity + processing + threads</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>mobile/channels-list</code></td>
+<td>— <strong>no HTML artifact</strong></td>
+<td>Channels tab list (<code>#ml-papers</code> ✓ / <code>#films</code> ⭮
+/ <code>Max: dev-notes</code> ⚠)</td>
+<td><strong>derived</strong> from wireframes §6 IA (<code>CHLIST</code>
+node) + <code>channel-threads.html</code> chrome
+<code>[DEFAULT — adjustable]</code>
+<code>[OPEN: THREADY-DES-FIG-03]</code></td>
+</tr>
+<tr>
+<td><code>mobile/channel-threads</code></td>
+<td><code>channel-threads.html</code></td>
+<td>Channel detail — thread list</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>mobile/post-detail</code></td>
+<td><code>post-detail.html</code></td>
+<td>Post detail — tags, pipeline, Reprocess</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>mobile/search</code></td>
+<td><code>search.html</code></td>
+<td>Search — modes, scope, scored results</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>mobile/notifications</code></td>
+<td><code>notifications.html</code></td>
+<td>Notifications centre</td>
+<td>derived surface <code>[OPEN: THREADY-DES-15]</code></td>
+</tr>
+<tr>
+<td><code>mobile/account</code></td>
+<td><code>account.html</code></td>
+<td>Account — switcher, RBAC, sign out</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>mobile/settings</code></td>
+<td><code>settings.html</code></td>
+<td>Settings — theme/language, branding (read-only
+<code>[OPEN: THREADY-DES-06]</code>), messengers</td>
+<td>grounded</td>
+</tr>
+</tbody>
+</table>
+<p>Honesty banners carried into the frames: <code>Security-KMP</code>
+<code>[GAP: 7.3]</code> and <code>UI-Components-KMP</code>
+<code>[GAP: 8.4]</code> are mobile <strong>release gates</strong>; Max
+adapter <code>[GAP: 5.1]</code>; degraded search
+<code>[GAP: 2.1]</code>.</p>
+<h2 id="page-6-screens-desktop-tui">8. Page 6 — Screens · Desktop +
+TUI</h2>
+<ul>
+<li><strong><code>desktop/shell</code></strong> — one
+<strong>1440×900</strong> frame from <a
+href="../screens/desktop/README.md"><code>../screens/desktop/desktop-shell.html</code></a>:
+Tauri window, per-OS title-bar strip (macOS traffic lights / Windows
+caption buttons / Linux CSD), native menu map, wrapped Dashboard
+(instance of <code>web/dashboard</code> content), tray popover mock +
+native notification mock both labeled
+<code>[OPEN: THREADY-DES-08]</code>, file-drop overlay (media-file case
+labeled <code>[OPEN: THREADY-DES-16]</code>).</li>
+<li><strong>Five TUI frames</strong> from <a
+href="../screens/tui/README.md"><code>../screens/tui/tui-screens.html</code></a>,
+each a <strong>mono-text 80-column</strong> frame: JetBrains Mono
+16/120%, fixed width 800px (80ch ≈ 768px + padding
+<code>[DEFAULT — adjustable]</code>), <strong>dark palette only</strong>
+— the TUI defaults to the terminal’s dark surface (design-system §7);
+box-drawing text pasted verbatim from the artifact so alignment
+survives.</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Frame</th>
+<th>TUI screen</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tui/dashboard</code></td>
+<td>1 · Dashboard (key rail + live viewport + threads + statusbar)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>tui/channels</code></td>
+<td>2 · Channels (inverse-accent selection)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>tui/thread-view</code></td>
+<td>3 · Thread view / Post detail (409 idempotent retry)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>tui/search</code></td>
+<td>4 · Search (degraded-embedder banner <code>[GAP: 2.1]</code>)</td>
+<td>grounded</td>
+</tr>
+<tr>
+<td><code>tui/processing-queue</code></td>
+<td>5 · Processing queue</td>
+<td>derived <code>[DEFAULT — adjustable]</code></td>
+</tr>
+</tbody>
+</table>
+<p>ANSI-16 mappings on these frames are annotations from <a
+href="../screens/tui/lipgloss-theme.md"><code>../screens/tui/lipgloss-theme.md</code></a>
+and stay ASSUMED pending terminal verification
+<code>[OPEN: THREADY-DES-17]</code>.</p>
+<h2 id="page-7-platform-overrides">9. Page 7 — Platform overrides</h2>
+<p>Six annotation frames (<code>overrides/&lt;platform&gt;</code>), each
+a callout board sourced from <a
+href="../library/platform-map.md"><code>../library/platform-map.md</code></a>
+§2/§4 and design-system §7 — the per-platform customization deltas plus
+the <strong>honest scaffold status</strong> (never claim a scaffold
+works):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Frame</th>
+<th>Content highlights</th>
+<th>Status callout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>overrides/android</code></td>
+<td>Compose realizations (<code>TopAppBar</code>, <code>Snackbar</code>,
+<code>DatePickerDialog</code>…), focus → ripple, native date sheet,
+<code>ANIMATOR_DURATION_SCALE</code> reduced-motion</td>
+<td><code>UI-Components-KMP</code> = utilities-only scaffold,
+<strong>foreign (Yole) palette</strong> <code>[GAP: 8.4]</code> — all
+widget cells ASSUMED</td>
+</tr>
+<tr>
+<td><code>overrides/ios</code></td>
+<td>SwiftUI mappings (<code>Picker</code> instead of radio groups —
+documented divergence; <code>.redacted</code> skeletons;
+<code>UIAccessibility.isReduceMotionEnabled</code>)</td>
+<td>no in-house SwiftUI package — column entirely ASSUMED
+<code>[OPEN: THREADY-DES-LIB-02]</code></td>
+</tr>
+<tr>
+<td><code>overrides/harmonyos</code></td>
+<td>ArkTS mappings (<code>promptAction.showToast</code>,
+<code>Toggle(Switch)</code> accent track)</td>
+<td>native via <code>helix_shims</code>, uninspected
+<code>[GAP: 8.5]</code> <code>[OPEN: THREADY-DES-LIB-03]</code></td>
+</tr>
+<tr>
+<td><code>overrides/aurora</code></td>
+<td>Qt/QML mappings (<code>TableView</code>,
+<code>BusyIndicator</code>), layered icon JSON</td>
+<td><code>helix_design</code> = <strong>empty scaffold</strong>
+<code>[GAP: 8.2/8.3]</code>; density buckets
+<code>[OPEN: THREADY-DES-05]</code></td>
+</tr>
+<tr>
+<td><code>overrides/desktop</code></td>
+<td>Tauri chrome, accelerators additive to verified web keys,
+close-to-tray, offline cache contract</td>
+<td>tray/notifications scope <code>[OPEN: THREADY-DES-08]</code></td>
+</tr>
+<tr>
+<td><code>overrides/tui</code></td>
+<td>Lipgloss role styles, <code>[r]etry</code> key binding,
+dimmed+<code>~</code> indirect tags, braille helix spinner</td>
+<td>pattern VERIFIED (llms_verifier); Thready style set PROPOSED; ANSI
+picks ASSUMED <code>[OPEN: THREADY-DES-17]</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="page-8-prototype-wiring">10. Page 8 — Prototype wiring</h2>
+<p>The four <a href="../ux-flows.md"><code>../ux-flows.md</code></a>
+journeys, mirroring the working shell
+<code>../screens/web/index.html</code> §4. Hub frame:
+<code>web/index</code>. Default transition: <strong>Smart Animate, 200ms
+(<code>motion-base</code>), easing
+<code>cubic-bezier(0.2, 0, 0, 1)</code></strong>; overlays (wizard
+modal, drawers) open as Figma overlays with <strong>Dissolve 150ms
+(<code>motion-fast</code>)</strong>; mobile back = swipe-right gesture
+on iOS variants, back-hotspot on Android variants.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Journey (ux-flows §)</th>
+<th>Frame chain (trigger = ON_CLICK on the named hotspot)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 · Add channel (§2 + §2.1)</td>
+<td><code>web/login</code> [Sign in] → <code>web/dashboard</code> [Add
+channel] → <code>web/channels</code> [+ Add] ⇒ overlay wizard steps 1–4
+(incl. messenger sign-in sub-flow §2.1 as nested overlay) →
+<code>web/thread-explorer</code> (backfilling 54/128 state)</td>
+</tr>
+<tr>
+<td>2 · Process post + Reprocess (§3 + §3.1)</td>
+<td><code>web/dashboard</code> [thread row] →
+<code>web/thread-explorer</code> [post] → <code>web/post-detail</code>
+[pipeline step] → <code>web/events-monitor</code> [research.md] →
+<code>web/research-viewer</code> [assets] →
+<code>web/assets-browser</code>; back on <code>web/post-detail</code>:
+[Reprocess] ⇒ confirm overlay → 202 state; second click ⇒ 409 toast
+state</td>
+</tr>
+<tr>
+<td>3 · Search (§4)</td>
+<td><code>web/search</code> [result 0.94 · post] →
+<code>web/post-detail</code>; [doc result] →
+<code>web/research-viewer</code></td>
+</tr>
+<tr>
+<td>4 · Manage account (§5)</td>
+<td><code>web/accounts-admin</code> [Billing] → <code>web/billing</code>
+[Settings] → <code>web/settings</code> (branding editor: [Save] wired to
+the 422-AA-gate state, then success)</td>
+</tr>
+</tbody>
+</table>
+<p>Error/degraded states are wired as <strong>variant swaps inside the
+frame</strong> (e.g. search → degraded-embedder banner), not separate
+journeys. Endpoint/event names on annotations stay
+<code>[DEFAULT — adjustable]</code> until
+<code>[OPEN: THREADY-DES-10]</code> closes.</p>
+<h2 id="build-order-plugin-api-execution-notes">11. Build order &amp;
+Plugin-API execution notes</h2>
+<p>Execute strictly in this order — later steps consume earlier
+ones:</p>
+<ol type="1">
+<li><strong>Create the file</strong>
+<code>Thready — Design Library</code> (Figma MCP
+<code>figma-create-new-file</code>, or manually — see <a
+href="./README.md"><code>README.md</code></a> path B).</li>
+<li><strong>Fonts preflight.</strong>
+<code>figma.listAvailableFontsAsync()</code>; require <em>Space
+Grotesk</em>, <em>Hanken Grotesk</em>, <em>JetBrains Mono</em>. If Space
+Grotesk or Hanken Grotesk is unavailable → substitute
+<strong>Inter</strong> <code>[OPERATOR-specified fallback]</code>; if
+JetBrains Mono is unavailable → substitute <strong>Roboto Mono</strong>
+<code>[DEFAULT — adjustable]</code>. <strong>Every substitution is
+flagged, never silent:</strong> red notice on the Cover,
+<code>(SUBSTITUTED)</code> suffix on affected text-style descriptions,
+and a line in the build log.</li>
+<li><strong>Variables.</strong> Import <a
+href="./figma-variables.json"><code>figma-variables.json</code></a>:
+strip <code>_</code>-prefixed keys, then replay via Plugin API —
+<code>figma.variables.createVariableCollection("Thready / Color")</code>
+(rename default mode → Light, <code>addMode("Dark")</code>),
+<code>createVariableCollection("Thready / Structure")</code> (default
+mode → Value), then per variable
+<code>createVariable(name, collection, type)</code> +
+<code>setValueForMode(...)</code> per mode +
+<code>scopes</code>/<code>description</code>/<code>codeSyntax</code>
+from the JSON; <code>ds-heart</code> set with
+<code>figma.variables.createVariableAlias(accent)</code> in both modes.
+(The REST bulk endpoint <code>POST /v1/files/{key}/variables</code>
+accepts the file as-is but requires an Enterprise token — see
+README.)</li>
+<li><strong>Styles.</strong> Text styles (§4 table, sizes bound to
+<code>text-*</code> variables) and effect styles
+(<code>elev/ring</code>, <code>elev/raised</code>,
+<code>focus/ring</code> — colors bound to variables).</li>
+<li><strong>Page 2 Foundations</strong> frames (§4).</li>
+<li><strong>Page 3 Components</strong> — one group per
+<code>use_figma</code> call (14 calls minimum; payload limits): build
+set → bind every fill/stroke/radius/gap/font-size to a variable → verify
+against <code>components.html</code> → label cells.</li>
+<li><strong>Pages 4–6 Screens</strong> — one page per
+<code>use_figma</code> call, screens composed from Page-3 instances;
+explicit Dark mode override on dark sections; realistic data copied from
+the HTML artifacts.</li>
+<li><strong>Page 7 Platform overrides</strong> annotation frames.</li>
+<li><strong>Page 8 Prototype wiring</strong> —
+<code>setReactionsAsync</code> per the §10 table (Smart Animate 200ms /
+Dissolve 150ms, easing <code>cubic-bezier(0.2, 0, 0, 1)</code>).</li>
+<li><strong>Acceptance pass</strong> (§12) + record the run in this
+file’s revision table and close/update
+<code>[OPEN: THREADY-DES-FIG-01]</code>.</li>
+</ol>
+<p><strong>Standing rules for the executing agent:</strong> one page per
+<code>use_figma</code> call; never hard-code a hex — bind a variable or
+annotate the token name; never redraw brand assets — import the SVGs
+from <code>../assets/</code>; when anything cannot be reproduced (font,
+Lottie, live behavior), annotate the limitation on-canvas rather than
+approximating silently.</p>
+<h2 id="acceptance-checklist">12. Acceptance checklist</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />41 variables imported (16 color ×
+Light/Dark incl. <code>ds-heart</code> alias, 25 structure) — values
+diff clean against <code>tokens.css</code> (script-diff hex ↔︎ r/g/b
+floats).</label></li>
+<li><label><input type="checkbox" />11 text styles + 3 effect styles
+created; substitutions (if any) flagged on Cover.</label></li>
+<li><label><input type="checkbox" />14 component sets built; per-group
+cell counts recorded and reconciled vs <code>components.html</code>
+(plan enumerates 108 static cells; library counts ≈118 incl. behavioral
+states).</label></li>
+<li><label><input type="checkbox" />Frames: 1 cover + 5 foundations + 14
+web + 16 mobile (8 × android/ios) + 1 desktop + 5 TUI + 6
+overrides.</label></li>
+<li><label><input type="checkbox" />4 prototype journeys wired per §10;
+transitions 200ms/150ms on
+<code>cubic-bezier(0.2,0,0,1)</code>.</label></li>
+<li><label><input type="checkbox" />Contrast annotations present (6.03:1
+/ 13.56:1 / 1.47:1); <code>danger</code> never
+brand-tinted.</label></li>
+<li><label><input type="checkbox" />Honesty markers rendered on-canvas:
+<code>[GAP: 5.1]</code> Max, <code>[GAP: 2.1]</code> degraded search,
+<code>[GAP: 8.4]</code>/<code>[GAP: 7.3]</code> mobile gates,
+<code>[OPEN: THREADY-DES-08/15/16/17]</code>.</label></li>
+<li><label><input type="checkbox" />Locked footer <em>“Made with ♥ by
+Helix Development”</em> on the cover and every screen frame, heart bound
+to <code>ds-heart</code>.</label></li>
+</ul>
+<h2 id="open-items">13. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-FIG-01]</code> — <strong>the Figma file
+does not exist yet</strong>; this plan is the executable blueprint.
+Requires Figma MCP OAuth (or manual path). Owner: design · figma.</li>
+<li><code>[OPEN: THREADY-DES-FIG-02]</code> — variables import path
+decision: Plugin API replay (any plan) vs REST bulk
+<code>POST /v1/files/{key}/variables</code> (Enterprise-only
+token).</li>
+<li><code>[OPEN: THREADY-DES-FIG-03]</code> —
+<code>mobile/channels-list</code> has no mid-fi HTML artifact; the frame
+is derived from wireframes §6 IA and must be back-ported into
+<code>../screens/mobile/</code> (or the frame count revised) once the
+screens area rules on it.</li>
+<li>Inherited, affecting this file: <code>[OPEN: THREADY-DES-04]</code>
+(Cyrillic subsets — affects Figma font choice for ru/sr-Cyrl frames),
+<code>[OPEN: THREADY-DES-09]</code> (these frames ARE the hi-fi pass —
+closing it happens by executing this plan),
+<code>[OPEN: THREADY-DES-11/12]</code> (component names),
+<code>[OPEN: THREADY-DES-13]</code> (PenPot mirror role),
+<code>[OPEN: THREADY-DES-02]</code> (PenPot/Lottie bridges are separate
+deliverables, not Figma work).</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

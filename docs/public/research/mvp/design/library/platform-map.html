@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Component Reusability Platform Map</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Component Reusability Platform
+Map</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#scope-verification-method"
+id="toc-scope-verification-method">1. Scope &amp; verification
+method</a></li>
+<li><a href="#per-repo-verification-results"
+id="toc-per-repo-verification-results">2. Per-repo verification
+results</a>
+<ul>
+<li><a href="#platform-fan-out-diagram"
+id="toc-platform-fan-out-diagram">2.1 Platform fan-out
+(diagram)</a></li>
+</ul></li>
+<li><a href="#the-matrix" id="toc-the-matrix">3. The matrix</a></li>
+<li><a href="#per-component-platform-customization-notes"
+id="toc-per-component-platform-customization-notes">4. Per-component
+platform customization notes</a></li>
+<li><a href="#verified-vs.-assumed-summary"
+id="toc-verified-vs.-assumed-summary">5. Verified vs. assumed
+summary</a></li>
+<li><a href="#open-items" id="toc-open-items">6. Open items</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Component Reusability Platform Map
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/library/platform-map.md
+  Status          : Draft — v0.1
+  Revision        : 1 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design)
+  Related         : ./README.md, ./components.html, ./components-sheet.svg,
+                    ../component-library.md, ../design-system.md, ../theming.md,
+                    ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design)</td>
+<td>Initial matrix: every library component × 8 platform realizations;
+<code>.ds-*</code> names re-verified at source via <code>gh</code>
+(design_system, UI-Components-React, UI-Components-KMP, helix_design
+trees fetched 2026-07-22); per-component customization notes;
+VERIFIED/ASSUMED discipline</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · library)</td>
+<td>Second verification pass (<code>gh</code>, file contents): React
+<code>Button.tsx</code> styling confirmed <strong>not
+token-bound</strong> (hard-coded Tailwind palette); KMP
+<code>Theme.kt</code> confirmed branded for another product (Yole,
+Material-red) — both recorded in §2; platform fan-out diagram added
+(§2.1 + <code>diagrams/platform-fanout.mmd</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--verification-method">1. Scope &amp; verification
+method</a></li>
+<li><a href="#2-per-repo-verification-results">2. Per-repo verification
+results</a>
+<ul>
+<li><a href="#21-platform-fan-out-diagram">2.1 Platform fan-out
+(diagram)</a></li>
+</ul></li>
+<li><a href="#3-the-matrix">3. The matrix</a></li>
+<li><a href="#4-per-component-platform-customization-notes">4.
+Per-component platform customization notes</a></li>
+<li><a href="#5-verified-vs-assumed-summary">5. Verified vs. assumed
+summary</a></li>
+<li><a href="#6-open-items">6. Open items</a></li>
+</ul>
+<h2 id="scope-verification-method">1. Scope &amp; verification
+method</h2>
+<p>This map records, for every component in the living library (<a
+href="./components.html">components.html</a>), how it is realized on
+each target platform of the decision matrix: <strong>Angular</strong>
+(<code>.ds-*</code> from <code>vasic-digital/design_system</code>),
+<strong>React</strong> (<code>UI-Components-React</code>),
+<strong>Compose</strong> (<code>UI-Components-KMP</code>),
+<strong>Flutter</strong> (<code>helix_design</code>),
+<strong>SwiftUI</strong>, <strong>ArkTS</strong> (HarmonyOS),
+<strong>Qt</strong> (Aurora), and <strong>TUI</strong> (Bubble Tea +
+Lipgloss).</p>
+<p><strong>Markers</strong> (per CONVENTIONS §7 — no bluff):</p>
+<ul>
+<li><strong>VERIFIED</strong> — the named class/file exists; checked on
+<strong>2026-07-22</strong> by fetching the repo tree/content via
+<code>gh api</code> (<code>vasic-digital/design_system</code>,
+<code>vasic-digital/UI-Components-React</code>,
+<code>vasic-digital/UI-Components-KMP</code>,
+<code>vasic-digital/helix_design</code>) or by reading the local clone
+(<code>helix_track/llms_verifier/llm-verifier/tui/*.go</code> imports
+<code>charmbracelet/lipgloss</code>).</li>
+<li><strong>PROPOSED</strong> — a <code>[DEFAULT — adjustable]</code>
+name/realization this design area proposes (upstream-contribution
+candidate); the CSS exists <strong>only</strong> in
+<code>components.html</code>, not upstream.</li>
+<li><strong>ASSUMED</strong> — the platform package (or the widget
+inside it) does not exist or could not be verified; the cell records the
+<em>intended</em> native mapping. Nothing in an ASSUMED cell may be
+claimed to work <code>[GAP: 8.2/8.3/8.4/8.5/8.6]</code>.</li>
+</ul>
+<h2 id="per-repo-verification-results">2. Per-repo verification
+results</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo / source</th>
+<th>What was verified (2026-07-22)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vasic-digital/design_system</code> →
+<code>components/css/components.css</code></td>
+<td>Complete <code>.ds-*</code> set at HEAD (106 lines):
+<code>.ds-container</code>, <code>.ds-section</code>,
+<code>.ds-btn</code> (+<code>--primary/--secondary/--ghost</code>,
+<code>:hover/:active/:focus-visible</code>, reduced-motion),
+<code>.ds-card</code> (+<code>--raised</code>), <code>.ds-input</code>,
+<code>.ds-link</code>, <code>.ds-nav</code>
+(+<code>__links/__link</code>, <code>aria-current</code>),
+<code>.ds-footer</code>, <code>.ds-badge</code>
+(+<code>--success/--warn/--danger</code>),
+<code>.ds-brand-mark</code></td>
+<td><strong>VERIFIED</strong> — production-usable web foundation
+<code>[GAP: 8.1]</code></td>
+</tr>
+<tr>
+<td><code>vasic-digital/design_system</code> →
+<code>components/angular/*</code></td>
+<td><code>theme.service.ts</code>, <code>i18n.service.ts</code>,
+<code>theme-toggle.component.ts</code>,
+<code>language-picker.component.ts</code>, <code>ds.config.ts</code>
+present at HEAD</td>
+<td><strong>VERIFIED</strong></td>
+</tr>
+<tr>
+<td><code>vasic-digital/UI-Components-React</code> →
+<code>src/components/*</code></td>
+<td>Component files at HEAD: <code>Avatar</code>, <code>Badge</code>,
+<code>Button</code>, <code>Card</code>, <code>EmptyState</code>,
+<code>ErrorBoundary</code>, <code>Input</code>,
+<code>LoadingSpinner</code>, <code>Progress</code>, <code>Select</code>,
+<code>Switch</code>, <code>Tabs</code>, <code>Textarea</code>
+(<code>.tsx</code>, each with a test). <code>Button.tsx</code>
+<strong>content</strong> inspected: variants
+<code>primary\|secondary\|outline\|ghost\|destructive</code>, sizes
+<code>sm\|md\|lg</code>, a <code>loading</code> spinner prop — but
+<code>variantClasses</code> hard-codes a Tailwind palette
+(<code>bg-blue-600</code>, gray neutrals,
+<code>focus-visible:ring-blue-500</code>); <strong>no design-system
+token is referenced</strong></td>
+<td><strong>VERIFIED files; VERIFIED not token-bound</strong> — the
+package is <code>SCAFFOLD/FLAGGED</code> <code>[GAP: 8.6]</code>: the
+blocking work is the token bridge (re-bind variants to
+<code>tailwind-v4.css</code> / <code>var(--accent)</code>, map
+<code>destructive → --danger</code>), then re-audit</td>
+</tr>
+<tr>
+<td><code>vasic-digital/UI-Components-KMP</code> →
+<code>src/commonMain/kotlin/digital/vasic/uicomponents/*</code></td>
+<td>Only <code>Theme.kt</code>, <code>Animations.kt</code>,
+<code>Accessibility.kt</code> (+ tests). <strong>No widget components
+exist.</strong> <code>Theme.kt</code> <strong>content</strong>
+inspected: <code>object YoleColors</code> with
+<code>BrandPrimary = Color(0xFFD32F2F)</code> (Material Red 700) — the
+palette belongs to <strong>another product (“Yole”)</strong>, not
+Thready, and references no design-system token</td>
+<td><strong>VERIFIED as utilities-only scaffold,
+foreign-branded</strong> <code>[GAP: 8.4]</code> — every widget cell
+below is ASSUMED; a <code>ThreadyColors</code> token-bridge codegen must
+replace the hand-kept palette before any use</td>
+</tr>
+<tr>
+<td><code>vasic-digital/helix_design</code></td>
+<td>Tree at HEAD contains only <code>README.md</code>, agent config
+(<code>CLAUDE.md</code>, <code>AGENTS.md</code>, …),
+<code>upstreams/*.sh</code>. <strong>No Flutter/Qt packages at
+all.</strong></td>
+<td><strong>VERIFIED as empty scaffold</strong>
+<code>[GAP: 8.2/8.3]</code> — every Flutter/Qt cell is ASSUMED</td>
+</tr>
+<tr>
+<td>TUI pattern (local clone)</td>
+<td><code>helix_track/llms_verifier/llm-verifier/tui/{app.go,notifications.go}</code>
+import <code>charmbracelet/lipgloss</code>; <code>screens/</code> +
+<code>cmd/tui</code> exist</td>
+<td><strong>VERIFIED pattern</strong> — Thready styles themselves are
+PROPOSED (generated from the token export, design-system.md §7)</td>
+</tr>
+<tr>
+<td>SwiftUI package</td>
+<td>No in-house SwiftUI UI package is named in the decision matrix or
+found under <code>vasic-digital</code></td>
+<td><strong>ASSUMED</strong> entire column
+<code>[OPEN: THREADY-DES-LIB-02]</code></td>
+</tr>
+<tr>
+<td>ArkTS / Qt (Aurora)</td>
+<td>Only reachable via native clients + <code>helix_shims</code> per
+ground truth; <code>helix_shims</code> interface not inspected</td>
+<td><strong>ASSUMED</strong> entire columns <code>[GAP: 8.5]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="platform-fan-out-diagram">2.1 Platform fan-out (diagram)</h3>
+<figure class="mermaid-figure">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 2038px; background-color: white;" viewBox="0 0 2038 433" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#000000;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#552222;}#my-svg .error-text{fill:#552222;stroke:#552222;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#666;stroke:#666;}#my-svg .marker.cross{stroke:#666;}#my-svg svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#my-svg p{margin:0;}#my-svg .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#000000;}#my-svg .cluster-label text{fill:#333;}#my-svg .cluster-label span{color:#333;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#000000;color:#000000;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#eee;stroke:#999;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#my-svg .arrowheadPath{fill:#333333;}#my-svg .edgePath .path{stroke:#666;stroke-width:1px;}#my-svg .flowchart-link{stroke:#666;fill:none;}#my-svg .edgeLabel{background-color:white;text-align:center;}#my-svg .edgeLabel p{background-color:white;}#my-svg .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#my-svg .cluster text{fill:#333;}#my-svg .cluster span{color:#333;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:white;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:white;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:white;fill:white;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#999;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#999;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M900,67.332L771.583,78.243C643.167,89.154,386.333,110.977,257.917,128.322C129.5,145.667,129.5,158.533,129.5,164.967L129.5,171.4" id="my-svg-L_TOK_NG_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_NG_0" data-points="W3sieCI6OTAwLCJ5Ijo2Ny4zMzE1Mzg4NzA2MDEwNH0seyJ4IjoxMjkuNSwieSI6MTMyLjgwMDAwMzA1MTc1Nzh9LHsieCI6MTI5LjUsInkiOjE3NS40MDAwMDE1MjU4Nzg5fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M900,72.088L820.833,82.206C741.667,92.325,583.333,112.563,504.167,126.181C425,139.8,425,146.8,425,150.3L425,153.8" id="my-svg-L_TOK_RE_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_RE_0" data-points="W3sieCI6OTAwLCJ5Ijo3Mi4wODc1NDQ0NzcwMjY2MX0seyJ4Ijo0MjUsInkiOjEzMi44MDAwMDMwNTE3NTc4fSx7IngiOjQyNSwieSI6MTU3LjgwMDAwMzA1MTc1Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M900,87.382L871.5,94.952C843,102.521,786,117.661,757.5,128.73C729,139.8,729,146.8,729,150.3L729,153.8" id="my-svg-L_TOK_KMP_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_KMP_0" data-points="W3sieCI6OTAwLCJ5Ijo4Ny4zODE5MTcwMjAxMDc4NH0seyJ4Ijo3MjksInkiOjEzMi44MDAwMDMwNTE3NTc4fSx7IngiOjcyOSwieSI6MTU3LjgwMDAwMzA1MTc1Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1011,107.8L1011,111.967C1011,116.133,1011,124.467,1011,138C1011,151.533,1011,170.267,1011,179.633L1011,189" id="my-svg-L_TOK_FLU_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_FLU_0" data-points="W3sieCI6MTAxMSwieSI6MTA3LjgwMDAwMzA1MTc1NzgxfSx7IngiOjEwMTEsInkiOjEzMi44MDAwMDMwNTE3NTc4fSx7IngiOjEwMTEsInkiOjE5My4wMDAwMDM4MTQ2OTcyN31d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1122,87.646L1150.083,95.171C1178.167,102.697,1234.333,117.749,1262.417,133.174C1290.5,148.6,1290.5,164.4,1290.5,172.3L1290.5,180.2" id="my-svg-L_TOK_QT_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_QT_0" data-points="W3sieCI6MTEyMiwieSI6ODcuNjQ1NjE5MzA1Mzg3MTZ9LHsieCI6MTI5MC41LCJ5IjoxMzIuODAwMDAzMDUxNzU3OH0seyJ4IjoxMjkwLjUsInkiOjE4NC4yMDAwMDQ1Nzc2MzY3Mn1d" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M729,292.8L729,296.967C729,301.133,729,309.467,729,317.133C729,324.8,729,331.8,729,335.3L729,338.8" id="my-svg-L_KMP_SWI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_KMP_SWI_0" data-points="W3sieCI6NzI5LCJ5IjoyOTIuODAwMDAzMDUxNzU3OH0seyJ4Ijo3MjksInkiOjMxNy44MDAwMDMwNTE3NTc4fSx7IngiOjcyOSwieSI6MzQyLjgwMDAwMzA1MTc1Nzh9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1122,72.136L1200.833,82.247C1279.667,92.357,1437.333,112.579,1516.167,131.973C1595,151.367,1595,169.933,1595,179.217L1595,188.5" id="my-svg-L_TOK_ARK_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_ARK_0" data-points="W3sieCI6MTEyMiwieSI6NzIuMTM2MTMxOTUyODg2NzF9LHsieCI6MTU5NSwieSI6MTMyLjgwMDAwMzA1MTc1Nzh9LHsieCI6MTU5NSwieSI6MTkyLjUwMDAwMzgxNDY5NzI3fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M1122,67.241L1251.833,78.168C1381.667,89.094,1641.333,110.947,1771.167,128.224C1901,145.5,1901,158.2,1901,164.55L1901,170.9" id="my-svg-L_TOK_TUI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_TOK_TUI_0" data-points="W3sieCI6MTEyMiwieSI6NjcuMjQxNDYyMzkwMzQyNDZ9LHsieCI6MTkwMSwieSI6MTMyLjgwMDAwMzA1MTc1Nzh9LHsieCI6MTkwMSwieSI6MTc0LjkwMDAwMTUyNTg3ODl9XQ==" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/><path d="M129.5,275.2L129.5,282.3C129.5,289.4,129.5,303.6,129.5,315.667C129.5,327.733,129.5,337.667,129.5,342.633L129.5,347.6" id="my-svg-L_NG_TAURI_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_NG_TAURI_0" data-points="W3sieCI6MTI5LjUsInkiOjI3NS4yMDAwMDQ1Nzc2MzY3fSx7IngiOjEyOS41LCJ5IjozMTcuODAwMDAzMDUxNzU3OH0seyJ4IjoxMjkuNSwieSI6MzUxLjYwMDAwMjI4ODgxODM2fV0=" data-look="classic" marker-end="url(#my-svg_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_TOK_NG_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_RE_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_KMP_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_FLU_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_QT_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_KMP_SWI_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_ARK_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_TOK_TUI_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g><g class="edgeLabel"><g class="label" data-id="L_NG_TAURI_0" transform="translate(0, 0)"><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"/></text></g></g><g><rect class="background" style="stroke: none"/></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-TOK-0" data-look="classic" transform="translate(1011, 57.900001525878906)"><rect class="basic label-container" style="" x="-111" y="-49.900001525878906" width="222" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">tokens:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> core.css</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">themes/thready.css</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">canonical</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CSS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> custom</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">properties</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-NG-2" data-look="classic" transform="translate(129.5, 225.3000030517578)"><rect class="basic label-container" style="" x="-121.5" y="-49.900001525878906" width="243" height="99.80000305175781"/><g class="label" style="" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Angular</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 19/22</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> +</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> CSS</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">.ds-*</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> primitives</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> VERIFIED</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">+</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> .thready-*</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> composites</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">PROPOSED</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-RE-4" data-look="classic" transform="translate(425, 225.3000030517578)"><rect class="basic label-container" style="" x="-124" y="-67.5" width="248" height="135"/><g class="label" style="" transform="translate(0, -52.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">React:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UI-Components-React</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">13</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> components</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> VERIFIED</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">at</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HEAD</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">token</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> bridge</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> MISSING</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="5.4em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(hard-coded</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Tailwind)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-KMP-6" data-look="classic" transform="translate(729, 225.3000030517578)"><rect class="basic label-container" style="" x="-130" y="-67.5" width="260" height="135"/><g class="label" style="" transform="translate(0, -52.5)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Compose/KMP:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">UI-Components-KMP</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Theme+Animations+Access</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ibility</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> utils</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> only</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">zero</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> widgets;</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Yole</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> palette,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="5.4em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">not</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Thready</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-FLU-8" data-look="classic" transform="translate(1011, 225.3000030517578)"><rect class="basic label-container" style="" x="-102" y="-32.29999923706055" width="204" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Flutter:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> helix_design</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">EMPTY</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scaffold</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-QT-10" data-look="classic" transform="translate(1290.5, 225.3000030517578)"><rect class="basic label-container" style="" x="-127.5" y="-41.099998474121094" width="255" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Qt</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Aurora:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> helix_design</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Qt</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">arm</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">EMPTY</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> scaffold</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-SWI-12" data-look="classic" transform="translate(729, 383.9000015258789)"><rect class="basic label-container" style="" x="-124.5" y="-41.099998474121094" width="249" height="82.19999694824219"/><g class="label" style="" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">SwiftUI</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> iOS</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">via</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Compose</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Multiplatform</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(thin</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> shims</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ASSUMED)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-ARK-14" data-look="classic" transform="translate(1595, 225.3000030517578)"><rect class="basic label-container" style="" x="-127" y="-32.79999923706055" width="254" height="65.5999984741211"/><g class="label" style="" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ArkTS</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> /</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> HarmonyOS</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">via</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> helix_shims</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ASSUMED</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TUI-16" data-look="classic" transform="translate(1901, 225.3000030517578)"><rect class="basic label-container" style="" x="-129" y="-50.400001525878906" width="258" height="100.80000305175781"/><g class="label" style="" transform="translate(0, -35.400001525878906)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">TUI:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Lipgloss</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> style</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> set</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Bubble</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Tea</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> pattern</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">VERIFIED</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(helix_track</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> llms_verifier</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tui)</tspan></tspan></text></g></g></g><g class="node default" id="my-svg-flowchart-TAURI-18" data-look="classic" transform="translate(129.5, 383.9000015258789)"><rect class="basic label-container" style="" x="-121.5" y="-32.29999923706055" width="243" height="64.5999984741211"/><g class="label" style="" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background" style="stroke: none"/><text y="-10.1" style=""><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Tauri</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> 2</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> desktop</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">wraps</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> Angular</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> web</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> UI</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg>
+</figure>
+<blockquote>
+<p>Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source:
+<code>diagrams/platform-fanout.mmd</code> (rendered sibling:
+<code>diagrams/platform-fanout.svg</code>).</p>
+</blockquote>
+<p><strong>Explanation (for readers/models that cannot see the
+diagram).</strong> A single node sits at the top: the canonical token
+source, <code>tokens/core.css</code> plus
+<code>tokens/themes/thready.css</code> — the CSS custom properties
+specified in <a
+href="../design-system.md#3-token-architecture">design-system.md §3</a>.
+Eight arrows fan out of it, one per platform column of the matrix in §3.
+The <strong>Angular/CSS</strong> arrow is the production-usable path:
+the verified <code>.ds-*</code> primitives plus the proposed
+<code>.thready-*</code> composites; the <strong>Tauri 2 desktop</strong>
+node hangs off it because the desktop client wraps the same Angular web
+UI and needs no separate component work. The <strong>React</strong>
+arrow points at <code>UI-Components-React</code>, which really ships
+thirteen components but styles them with a hard-coded Tailwind palette —
+its missing piece is the token bridge, not the components. The
+<strong>Compose/KMP</strong> arrow points at
+<code>UI-Components-KMP</code>, which ships three utility files (theme,
+animations, accessibility) branded for another product and no widgets;
+the <strong>SwiftUI</strong> node hangs off KMP because the sanctioned
+iOS path is Compose Multiplatform (or thin SwiftUI shims), not a
+hand-built SwiftUI kit. The <strong>Flutter</strong> and
+<strong>Qt/Aurora</strong> arrows point at <code>helix_design</code>, an
+empty scaffold — both are plans, not code. The <strong>ArkTS</strong>
+arrow is the HarmonyOS path through <code>helix_shims</code>, also a
+plan. The <strong>TUI</strong> arrow maps the token palette onto a
+Lipgloss style set following the verified in-house Bubble Tea pattern.
+Because every arrow starts at the same token file, a theme or
+white-label swap re-tints every platform without touching structure.</p>
+<h2 id="the-matrix">3. The matrix</h2>
+<p>Column legend — <strong>NG</strong>: Angular (Web/Desktop-Tauri,
+primary <code>[OPERATOR]</code>); <strong>RE</strong>: React
+(<code>UI-Components-React</code>); <strong>CM</strong>: Compose
+Multiplatform (<code>UI-Components-KMP</code>); <strong>FL</strong>:
+Flutter (<code>helix_design</code>); <strong>SW</strong>: SwiftUI;
+<strong>AR</strong>: ArkTS; <strong>QT</strong>: Qt/QML (Aurora);
+<strong>TU</strong>: TUI (Bubble Tea + Lipgloss). Cell = realization +
+marker (✅ VERIFIED · ⭘ PROPOSED · △ ASSUMED).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>NG Angular <code>.ds-*</code></th>
+<th>RE React</th>
+<th>CM Compose</th>
+<th>FL Flutter</th>
+<th>SW SwiftUI</th>
+<th>AR ArkTS</th>
+<th>QT Qt/QML</th>
+<th>TU TUI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container / section</td>
+<td><code>.ds-container</code>, <code>.ds-section</code> ✅</td>
+<td>layout div + tokens △</td>
+<td><code>Column</code> + <code>ThreadySpacing</code> △</td>
+<td><code>Padding</code>/<code>Container</code> △</td>
+<td><code>VStack</code> + spacing △</td>
+<td><code>Column</code> △</td>
+<td><code>ColumnLayout</code> △</td>
+<td>Lipgloss <code>Width</code>/<code>Margin</code> ⭘</td>
+</tr>
+<tr>
+<td>Button primary/secondary/ghost</td>
+<td><code>.ds-btn</code> + <code>--primary/--secondary/--ghost</code>
+✅</td>
+<td><code>Button.tsx</code> ✅(file) <code>[GAP: 8.6]</code></td>
+<td><code>Button</code>/<code>OutlinedButton</code>/<code>TextButton</code>
+△</td>
+<td><code>FilledButton</code>/<code>OutlinedButton</code>/<code>TextButton</code>
+△</td>
+<td><code>Button</code> + <code>.buttonStyle</code> △</td>
+<td><code>Button</code> △</td>
+<td><code>Button</code> + QML style △</td>
+<td>Lipgloss bold accent-bg style ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Button destructive</td>
+<td><code>.ds-btn--danger</code> ⭘</td>
+<td><code>Button</code> variant prop △</td>
+<td><code>Button(colors=error)</code> △</td>
+<td><code>FilledButton</code> error colors △</td>
+<td><code>Button(role: .destructive)</code> △</td>
+<td><code>Button</code> warn style △</td>
+<td><code>Button</code> danger palette △</td>
+<td>danger-fg style ⭘</td>
+</tr>
+<tr>
+<td>Button loading/disabled</td>
+<td><code>[disabled]</code> + <code>.ds-btn--loading</code> ⭘</td>
+<td><code>Button</code> + <code>LoadingSpinner.tsx</code> ✅(files)</td>
+<td><code>enabled=false</code> + <code>CircularProgressIndicator</code>
+△</td>
+<td><code>onPressed:null</code> + spinner △</td>
+<td><code>.disabled()</code> + <code>ProgressView</code> △</td>
+<td><code>enabled</code> + <code>LoadingProgress</code> △</td>
+<td><code>enabled</code> + <code>BusyIndicator</code> △</td>
+<td>dim style + spinner frame ⭘</td>
+</tr>
+<tr>
+<td>Input (text)</td>
+<td><code>.ds-input</code> ✅</td>
+<td><code>Input.tsx</code> / <code>Textarea.tsx</code> ✅(files)</td>
+<td><code>OutlinedTextField</code> △</td>
+<td><code>TextField</code> + <code>InputDecoration</code> △</td>
+<td><code>TextField</code> △</td>
+<td><code>TextInput</code> △</td>
+<td><code>TextField</code> △</td>
+<td><code>textinput</code> bubble ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Select</td>
+<td><code>.ds-select</code> ⭘</td>
+<td><code>Select.tsx</code> ✅(file)</td>
+<td><code>ExposedDropdownMenuBox</code> △</td>
+<td><code>DropdownButtonFormField</code> △</td>
+<td><code>Picker(.menu)</code> △</td>
+<td><code>Select</code> △</td>
+<td><code>ComboBox</code> △</td>
+<td>list picker ⭘</td>
+</tr>
+<tr>
+<td>Checkbox</td>
+<td><code>.ds-check</code> ⭘</td>
+<td>native + tokens △</td>
+<td><code>Checkbox</code> △</td>
+<td><code>Checkbox</code> △</td>
+<td><code>Toggle(.checkbox)</code> (macOS) / custom △</td>
+<td><code>Checkbox</code> △</td>
+<td><code>CheckBox</code> △</td>
+<td><code>[x]</code> glyph row ⭘</td>
+</tr>
+<tr>
+<td>Radio</td>
+<td><code>.ds-radio</code> ⭘</td>
+<td>native + tokens △</td>
+<td><code>RadioButton</code> △</td>
+<td><code>Radio</code> △</td>
+<td><code>Picker(.inline)</code> △</td>
+<td><code>Radio</code> △</td>
+<td><code>RadioButton</code> △</td>
+<td><code>(•)</code> glyph row ⭘</td>
+</tr>
+<tr>
+<td>Switch</td>
+<td><code>.ds-switch</code> ⭘</td>
+<td><code>Switch.tsx</code> ✅(file)</td>
+<td><code>Switch</code> △</td>
+<td><code>Switch.adaptive</code> △</td>
+<td><code>Toggle</code> △</td>
+<td><code>Toggle(Switch)</code> △</td>
+<td><code>Switch</code> △</td>
+<td><code>on/off</code> colored token ⭘</td>
+</tr>
+<tr>
+<td>Date</td>
+<td><code>.ds-input[type=date]</code> ⭘</td>
+<td>native + tokens △</td>
+<td><code>DatePickerDialog</code> △</td>
+<td><code>showDatePicker</code> △</td>
+<td><code>DatePicker</code> △</td>
+<td><code>DatePickerDialog</code> △</td>
+<td><code>Calendar</code> popup △</td>
+<td><code>YYYY-MM-DD</code> masked input ⭘</td>
+</tr>
+<tr>
+<td>Field (label/hint/error)</td>
+<td><code>.ds-field</code> scaffold ⭘</td>
+<td>wrapper + aria △</td>
+<td><code>supportingText</code>/<code>isError</code> △</td>
+<td><code>InputDecoration(errorText)</code> △</td>
+<td><code>.overlay</code> hint text △</td>
+<td>form hint slot △</td>
+<td>label + error <code>Text</code> △</td>
+<td>inline <code>!</code> line ⭘</td>
+</tr>
+<tr>
+<td>Card</td>
+<td><code>.ds-card</code> + <code>--raised</code> ✅</td>
+<td><code>Card.tsx</code> ✅(file)</td>
+<td><code>Card</code>/<code>ElevatedCard</code> △</td>
+<td><code>Card</code> △</td>
+<td><code>GroupBox</code>/custom container △</td>
+<td><code>Column</code> + border △</td>
+<td><code>Frame</code>/QML rect △</td>
+<td>bordered box ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Stat card (<code>thready-stat</code>)</td>
+<td>composite on <code>.ds-card</code> ⭘</td>
+<td>composite on <code>Card</code> △</td>
+<td>composite △</td>
+<td>composite △</td>
+<td>composite △</td>
+<td>composite △</td>
+<td>composite △</td>
+<td>big-figure box ⭘</td>
+</tr>
+<tr>
+<td>Table (sortable/paginated)</td>
+<td><code>.ds-table</code> + <code>aria-sort</code> ⭘</td>
+<td>table + tokens △</td>
+<td><code>LazyColumn</code> + header row △</td>
+<td><code>PaginatedDataTable</code> △</td>
+<td><code>Table</code> (macOS) / <code>List</code> △</td>
+<td><code>List</code> + header △</td>
+<td><code>TableView</code> △</td>
+<td><code>bubbles/table</code> ⭘</td>
+</tr>
+<tr>
+<td>Badge (semantic)</td>
+<td><code>.ds-badge--success/warn/danger</code> ✅
+(+<code>--neutral</code> ⭘)</td>
+<td><code>Badge.tsx</code> ✅(file)</td>
+<td>tinted <code>Surface</code> chip △</td>
+<td><code>Chip</code>/<code>Container</code> tint △</td>
+<td><code>Text</code> + capsule bg △</td>
+<td><code>Badge</code> △</td>
+<td>pill <code>Rectangle</code> △</td>
+<td>glyph <code>✓⚠⨯◷</code> + color ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Hashtag chip (direct/indirect)</td>
+<td><code>thready-tag</code> ⭘</td>
+<td>chip on <code>Badge</code> △</td>
+<td><code>AssistChip</code> (brand vs outline) △</td>
+<td><code>Chip</code> variants △</td>
+<td>capsule <code>Text</code> variants △</td>
+<td><code>Chip</code> △</td>
+<td>pill + outline △</td>
+<td><code>#tag</code> tinted span ⭘</td>
+</tr>
+<tr>
+<td>Processing chip (pending/processing/done/failed/retrying)</td>
+<td><code>thready-chip</code> (5 states) ⭘</td>
+<td>composite <code>Badge</code>+<code>LoadingSpinner</code> △</td>
+<td>chip + <code>CircularProgressIndicator</code> △</td>
+<td>chip + spinner △</td>
+<td>capsule + <code>ProgressView</code> △</td>
+<td>chip + progress △</td>
+<td>pill + <code>BusyIndicator</code> △</td>
+<td>glyph + spinner frames ⭘</td>
+</tr>
+<tr>
+<td>Topbar nav</td>
+<td><code>.ds-nav</code> + <code>__links/__link</code> ✅</td>
+<td>header + tokens △</td>
+<td><code>TopAppBar</code> △</td>
+<td><code>AppBar</code> △</td>
+<td><code>NavigationStack</code> toolbar △</td>
+<td><code>Navigation</code> title bar △</td>
+<td><code>ToolBar</code> △</td>
+<td>header line ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Sidebar</td>
+<td><code>.ds-sidebar</code> ⭘</td>
+<td>nav list △</td>
+<td><code>NavigationDrawer</code>/<code>NavigationRail</code> △</td>
+<td><code>NavigationRail</code>/<code>Drawer</code> △</td>
+<td><code>NavigationSplitView</code> sidebar △</td>
+<td><code>SideBarContainer</code> △</td>
+<td><code>Drawer</code> △</td>
+<td>left pane list ⭘</td>
+</tr>
+<tr>
+<td>Tabs</td>
+<td><code>.ds-tabs</code>/<code>.ds-tab</code> ⭘</td>
+<td><code>Tabs.tsx</code> ✅(file)</td>
+<td><code>TabRow</code> △</td>
+<td><code>TabBar</code> △</td>
+<td><code>TabView</code>/<code>Picker(.segmented)</code> △</td>
+<td><code>Tabs</code> △</td>
+<td><code>TabBar</code> △</td>
+<td>numbered tab line ⭘</td>
+</tr>
+<tr>
+<td>Breadcrumbs</td>
+<td><code>.ds-breadcrumbs</code> ⭘</td>
+<td>ol + tokens △</td>
+<td><code>Row</code> of text buttons △</td>
+<td><code>Row</code> of <code>TextButton</code> △</td>
+<td><code>HStack</code> links △</td>
+<td>text row △</td>
+<td><code>Row</code> of links △</td>
+<td><code>a › b › c</code> line ⭘</td>
+</tr>
+<tr>
+<td>Dialog / modal</td>
+<td><code>.ds-dialog</code> on <code>&lt;dialog&gt;</code> ⭘</td>
+<td>portal + tokens △</td>
+<td><code>AlertDialog</code> △</td>
+<td><code>showDialog</code>/<code>AlertDialog</code> △</td>
+<td><code>.sheet</code>/<code>.alert</code> △</td>
+<td><code>CustomDialog</code> △</td>
+<td><code>Dialog</code> △</td>
+<td>centered overlay box ⭘</td>
+</tr>
+<tr>
+<td>Toast / alert</td>
+<td><code>thready-toast</code> + <code>.ds-alert</code> ⭘</td>
+<td>region + tokens △</td>
+<td><code>Snackbar</code>/<code>SnackbarHost</code> △</td>
+<td><code>SnackBar</code> △</td>
+<td>custom overlay / <code>.alert</code> △</td>
+<td><code>promptAction.showToast</code> △</td>
+<td>overlay <code>Popup</code> △</td>
+<td><code>notifications.go</code> pane ✅ (pattern)</td>
+</tr>
+<tr>
+<td>Progress bar (det./indet./failed+retry)</td>
+<td><code>.ds-progress</code> ⭘</td>
+<td><code>Progress.tsx</code> ✅(file)</td>
+<td><code>LinearProgressIndicator</code> △</td>
+<td><code>LinearProgressIndicator</code> △</td>
+<td><code>ProgressView(value:)</code> △</td>
+<td><code>Progress</code> △</td>
+<td><code>ProgressBar</code> △</td>
+<td><code>▓▓░</code> bar + <code>[r]etry</code> ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Spinner (ring)</td>
+<td><code>.ds-spinner</code> ⭘</td>
+<td><code>LoadingSpinner.tsx</code> ✅(file)</td>
+<td><code>CircularProgressIndicator</code> △</td>
+<td><code>CircularProgressIndicator</code> △</td>
+<td><code>ProgressView()</code> △</td>
+<td><code>LoadingProgress</code> △</td>
+<td><code>BusyIndicator</code> △</td>
+<td><code>bubbles/spinner</code> frames ⭘</td>
+</tr>
+<tr>
+<td>Helix-motif spinner</td>
+<td>inline SVG (2 strands + rungs) ⭘</td>
+<td>same SVG component △</td>
+<td><code>Canvas</code> bezier strands △</td>
+<td><code>CustomPainter</code> △</td>
+<td><code>Canvas</code>/<code>Path</code> shape △</td>
+<td><code>Canvas</code> drawing △</td>
+<td>QML <code>Canvas</code>/<code>Shape</code> △</td>
+<td>braille/ASCII helix frames <code>⠋⠙⠸…</code> ⭘</td>
+</tr>
+<tr>
+<td>Avatar (sizes/status/group)</td>
+<td><code>.ds-avatar</code> ⭘</td>
+<td><code>Avatar.tsx</code> ✅(file)</td>
+<td><code>Box</code> circle + initials △</td>
+<td><code>CircleAvatar</code> △</td>
+<td><code>Circle</code> + initials overlay △</td>
+<td><code>Image</code>/circle text △</td>
+<td>rounded <code>Rectangle</code> △</td>
+<td><code>(MV)</code> initials token ⭘</td>
+</tr>
+<tr>
+<td>Empty state</td>
+<td><code>thready-empty</code> ⭘</td>
+<td><code>EmptyState.tsx</code> ✅(file)</td>
+<td>centered <code>Column</code> composite △</td>
+<td>centered <code>Column</code> △</td>
+<td><code>ContentUnavailableView</code> △</td>
+<td>empty composite △</td>
+<td>centered composite △</td>
+<td>centered text + action key ⭘</td>
+</tr>
+<tr>
+<td>Error state (page + retry)</td>
+<td><code>thready-error</code> on <code>thready-empty</code> ⭘</td>
+<td><code>ErrorBoundary.tsx</code> ✅(file)</td>
+<td>error composite △</td>
+<td>error composite △</td>
+<td>error view △</td>
+<td>error composite △</td>
+<td>error composite △</td>
+<td>danger text + <code>[r]etry</code> ⭘</td>
+</tr>
+<tr>
+<td>Skeleton loader</td>
+<td><code>.ds-skeleton</code> ⭘</td>
+<td>shimmer div △</td>
+<td>Modifier shimmer / placeholder △</td>
+<td>shimmer container △</td>
+<td><code>.redacted(reason: .placeholder)</code> △</td>
+<td>opacity-pulse rows △</td>
+<td>animated rects △</td>
+<td><code>…</code> placeholder (no shimmer) ⭘</td>
+</tr>
+<tr>
+<td>Pagination</td>
+<td><code>.ds-pagination</code> ⭘</td>
+<td>button row △</td>
+<td>button <code>Row</code> △</td>
+<td>button <code>Row</code> △</td>
+<td><code>HStack</code> buttons △</td>
+<td>button row △</td>
+<td><code>Row</code> of buttons △</td>
+<td><code>‹ 1 [2] 3 ›</code> line ⭘</td>
+</tr>
+<tr>
+<td>Tooltip</td>
+<td><code>.ds-tip</code> (hover+focus) ⭘</td>
+<td>title/popover + tokens △</td>
+<td><code>PlainTooltip</code> △</td>
+<td><code>Tooltip</code> widget △</td>
+<td><code>.help()</code> (macOS) / popover △</td>
+<td><code>Popup</code> hint △</td>
+<td><code>ToolTip</code> △</td>
+<td>status-bar hint line ⭘</td>
+</tr>
+<tr>
+<td>Link</td>
+<td><code>.ds-link</code> ✅</td>
+<td>anchor + tokens △</td>
+<td><code>ClickableText</code> △</td>
+<td><code>TextButton</code>-styled text △</td>
+<td><code>Link</code> △</td>
+<td><code>Span</code> + click △</td>
+<td><code>Text</code> + <code>MouseArea</code> △</td>
+<td>underlined accent text ⭘</td>
+</tr>
+<tr>
+<td>Footer (attribution)</td>
+<td><code>.ds-footer</code> ✅ + <code>FooterComponent</code> ✅</td>
+<td>footer + tokens △</td>
+<td>bottom bar text △</td>
+<td>bottom text △</td>
+<td>bottom <code>Text</code> △</td>
+<td>bottom text △</td>
+<td>status text △</td>
+<td>bottom line ⭘ (pattern ✅)</td>
+</tr>
+<tr>
+<td>Theme toggle</td>
+<td><code>ds-theme-toggle</code> (Angular cmp) ✅</td>
+<td>toggle + <code>data-theme</code> stamp △</td>
+<td><code>isSystemInDarkTheme()</code> + pref △</td>
+<td><code>ThemeMode</code> setting △</td>
+<td><code>preferredColorScheme</code> △</td>
+<td>dark-mode config △</td>
+<td>palette swap △</td>
+<td>terminal palette (dark default) ⭘</td>
+</tr>
+<tr>
+<td>Language picker</td>
+<td><code>ds-language-picker</code> (Angular cmp) ✅</td>
+<td>select + i18n dict △</td>
+<td>locale dropdown △</td>
+<td><code>Locale</code> selector △</td>
+<td><code>Picker</code> + <code>Locale</code> △</td>
+<td>locale select △</td>
+<td><code>ComboBox</code> △</td>
+<td><code>lang:</code> selector ⭘ (i18n.go pattern ✅)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reading rule.</strong> A ✅ in RE means the <strong>file
+exists at HEAD</strong> — it does <em>not</em> override the
+<code>SCAFFOLD/FLAGGED</code> status of the whole package
+<code>[GAP: 8.6]</code>; re-audit before use. NG ✅ cells are shipped,
+production-usable CSS/Angular code. Every CM/FL/SW/AR/QT cell is ASSUMED
+because the packages are verified scaffolds or unverified: they name the
+intended native widget so the token-bridge codegen (design-system.md §7)
+has a target, nothing more.</p>
+<h2 id="per-component-platform-customization-notes">4. Per-component
+platform customization notes</h2>
+<ul>
+<li><strong>Buttons.</strong> Web keeps the verified
+<code>:focus-visible</code> <code>--focus-ring</code>; Compose/Flutter
+map it to their own focus indication (<code>Modifier.focusable</code>
+ripple, <code>FocusNode</code> highlight) rather than a literal 3px
+ring. TUI: primary = accent background + <code>--accent-on</code> ink
+(<code>lipgloss.Style.Bold</code>), ghost = accent foreground only;
+disabled = <code>--muted</code> fg. Destructive stays
+<code>--danger</code> on <strong>every</strong> platform — brand color
+must never mask an error <code>[VERIFIED rule — THEMES.md]</code>.</li>
+<li><strong>Inputs.</strong> Native pickers win on mobile: date uses the
+platform sheet (Compose <code>DatePickerDialog</code>, SwiftUI
+<code>DatePicker</code>, Flutter <code>showDatePicker</code>) — the web
+<code>input[type=date]</code> look is <em>not</em> replicated. Error
+semantics travel as a triple (border/danger tint, message text,
+<code>aria-invalid</code>/<code>isError</code>/<code>errorText</code>)
+so the AA meter and form validation read identically.</li>
+<li><strong>Select / radio / switch.</strong> iOS convention prefers
+<code>Picker</code> over radio groups — the SwiftUI cell for “radio” is
+an inline picker by design (documented divergence, same semantics).
+ArkTS <code>Toggle(ToggleType.Switch)</code> and Qt <code>Switch</code>
+take the accent track color from the token bridge.</li>
+<li><strong>Table.</strong> Sorting is a header-owned state
+(<code>aria-sort</code> on web, <code>sortAscending</code> in Flutter’s
+<code>PaginatedDataTable</code>, column click in Qt
+<code>TableView</code>). On phones the table collapses to thread-row
+cards (wireframes pattern) — Compose/Flutter/SwiftUI ship the card list,
+not a squeezed table. TUI uses <code>bubbles/table</code> with Lipgloss
+header style.</li>
+<li><strong>Hashtag chip.</strong> The direct/indirect distinction must
+never be color-only: web appends the visually-hidden “(derived)”,
+Compose/Flutter/SwiftUI append it to the
+semantics/<code>Semantics</code> label, TUI renders indirect tags dimmed
+<strong>and</strong> suffixed <code>~</code>. Direct chips use
+<code>--brand</code> fill + <code>--brand-ink</code>; indirect use
+outline + <code>--muted</code>.</li>
+<li><strong>Processing chips / pipeline.</strong> The five states
+(pending/processing/done/failed/retrying) and the precedence caption are
+a cross-platform parity contract (component-library.md §7): every
+platform exposes a keyboard-focusable (or key-bound, TUI
+<code>[r]</code>) idempotent retry on <code>failed</code>.</li>
+<li><strong>Dialogs.</strong> Mobile prefers native alert/sheet;
+Esc/back-gesture dismissal maps per platform. The destructive action
+keeps <code>--danger</code> and is never the default-focused
+control.</li>
+<li><strong>Toasts.</strong> Web uses <code>role=status/alert</code>
+live regions; Compose <code>SnackbarHost</code>, Flutter
+<code>ScaffoldMessenger</code>, ArkTS
+<code>promptAction.showToast</code>, TUI the verified
+<code>notifications.go</code> pane. A toast is never the only channel
+for a critical error (also inline) — all platforms.</li>
+<li><strong>Helix-motif spinner.</strong> Vector strands
+(<code>--accent</code> + <code>--brand-2</code>) rotate on capable
+platforms; the TUI substitutes a frame-cycled braille helix;
+<code>prefers-reduced-motion</code> (and its platform equivalents:
+<code>UIAccessibility.isReduceMotionEnabled</code>, Android
+<code>ANIMATOR_DURATION_SCALE</code>) freezes it to a static glyph.</li>
+<li><strong>Skeletons.</strong> Shimmer is web/Compose/Flutter; SwiftUI
+uses <code>.redacted</code>; TUI uses static <code>…</code> placeholders
+(a terminal shimmer is noise). All appear only after ~150 ms (no
+flash).</li>
+<li><strong>Tooltips.</strong> Touch platforms have no hover:
+Compose/Flutter/ArkTS show tooltips on long-press, SwiftUI on pointer
+hover (iPadOS) — hints that matter must also exist as visible helper
+text.</li>
+<li><strong>Theme &amp; brand axes.</strong> Every platform consumes the
+same two axes (theming.md): mode (light/dark/system) via the platform’s
+dark-mode API, brand via the generated token binding (Lipgloss palette,
+<code>ThreadyColors</code>, etc.) fetched from
+<code>/v1/accounts/{id}/branding</code>.</li>
+</ul>
+<h2 id="verified-vs.-assumed-summary">5. Verified vs. assumed
+summary</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>VERIFIED cells</th>
+<th>PROPOSED cells</th>
+<th>ASSUMED cells</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Angular <code>.ds-*</code></td>
+<td>10 of 36 component rows ride verbatim shipped CSS/Angular
+(<code>container/section</code>, <code>btn</code> ×3 variants,
+<code>card</code>, <code>input</code>, <code>link</code>,
+<code>nav</code>, <code>footer</code>, <code>badge</code> ×3,
+<code>brand-mark</code>, <code>theme-toggle</code>,
+<code>language-picker</code>)</td>
+<td>26 rows are PROPOSED extensions authored in
+<code>components.html</code></td>
+<td>0</td>
+<td>file content fetched</td>
+</tr>
+<tr>
+<td>React</td>
+<td>13 component files verified at HEAD (<code>Avatar</code>,
+<code>Badge</code>, <code>Button</code>, <code>Card</code>,
+<code>EmptyState</code>, <code>ErrorBoundary</code>, <code>Input</code>,
+<code>LoadingSpinner</code>, <code>Progress</code>, <code>Select</code>,
+<code>Switch</code>, <code>Tabs</code>, <code>Textarea</code>) — file
+existence only, package <code>FLAGGED</code>
+<code>[GAP: 8.6]</code></td>
+<td>—</td>
+<td>all remaining rows (table, dialog, toast, tooltip, pagination,
+checkbox, radio, date, breadcrumbs, sidebar, chips…)</td>
+<td>tree fetched</td>
+</tr>
+<tr>
+<td>Compose (KMP)</td>
+<td><code>Theme.kt</code>/<code>Animations.kt</code>/<code>Accessibility.kt</code>
+utilities exist (theme bridge target)</td>
+<td>—</td>
+<td><strong>all widget rows</strong> — no components exist
+<code>[GAP: 8.4]</code></td>
+<td>tree fetched</td>
+</tr>
+<tr>
+<td>Flutter (helix_design)</td>
+<td>repo exists but is an <strong>empty scaffold</strong>
+(verified)</td>
+<td>—</td>
+<td><strong>all rows</strong> <code>[GAP: 8.2/8.3]</code></td>
+<td>tree fetched</td>
+</tr>
+<tr>
+<td>SwiftUI</td>
+<td>—</td>
+<td>—</td>
+<td><strong>all rows</strong> — no in-house package located
+<code>[OPEN: THREADY-DES-LIB-02]</code></td>
+<td>search</td>
+</tr>
+<tr>
+<td>ArkTS</td>
+<td>—</td>
+<td>—</td>
+<td><strong>all rows</strong> (native via <code>helix_shims</code>,
+uninspected) <code>[GAP: 8.5]</code></td>
+<td>ground truth</td>
+</tr>
+<tr>
+<td>Qt/QML</td>
+<td>—</td>
+<td>—</td>
+<td><strong>all rows</strong> (native via <code>helix_shims</code>,
+uninspected) <code>[GAP: 8.5]</code></td>
+<td>ground truth</td>
+</tr>
+<tr>
+<td>TUI (Lipgloss)</td>
+<td>Bubble Tea + Lipgloss pattern verified in local
+<code>helix_track</code> clone (incl. <code>notifications.go</code>,
+<code>i18n.go</code>)</td>
+<td>Thready style set (generated from token export) — all rows PROPOSED
+on the verified pattern</td>
+<td>—</td>
+<td>local clone read</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bottom line (matches the ground-truth honesty rule):</strong>
+only the <strong>Angular web layer</strong> and the <strong>TUI
+pattern</strong> are grounded in verified, usable in-house code today.
+React has verified files but a flagged package. Compose, Flutter,
+SwiftUI, ArkTS and Qt columns are intent, not capability.</p>
+<h2 id="open-items">6. Open items</h2>
+<ul>
+<li><code>[OPEN: THREADY-DES-11]</code> (inherited) — final public
+API/class names for all PROPOSED <code>.ds-*</code> extensions and
+<code>thready-*</code> composites must be agreed with the web team
+before upstreaming.</li>
+<li><code>[OPEN: THREADY-DES-12]</code> (inherited) — decide which
+PROPOSED components (select, switch, table, dialog, toast, progress,
+spinner, avatar, skeleton, pagination, tooltip, tabs, breadcrumbs,
+sidebar) are generic enough to contribute upstream to
+<code>design_system</code> vs. keep in Thready.</li>
+<li><code>[OPEN: THREADY-DES-LIB-01]</code> — the React column must be
+re-audited component-by-component (<code>[GAP: 8.6]</code>): confirm
+each verified file actually implements the states in this library
+(hover/focus/disabled/loading/error) before any React surface consumes
+it.</li>
+<li><code>[OPEN: THREADY-DES-LIB-02]</code> — no in-house SwiftUI
+package exists or is named anywhere in the decision matrix; decide
+whether iOS ships via KMP/Compose (current plan) making the SwiftUI
+column moot, or a SwiftUI package becomes a <code>[BUILD-NEW]</code>
+item.</li>
+<li><code>[OPEN: THREADY-DES-LIB-03]</code> — the
+<code>helix_shims</code> interface for ArkTS/Qt was not inspected
+(<code>[GAP: 8.5]</code>); the AR/QT cells need re-verification once the
+shim contracts exist.</li>
+<li><code>[OPEN: THREADY-DES-LIB-04]</code> — the token-bridge codegen
+(CSS → Lipgloss / <code>ThreadyColors</code> / Flutter theme) referenced
+by every non-web cell does not exist yet; tracked as THREADY-DES-KMP-01
+/ -FLUT-01 / -TUI-01 in <a
+href="../component-library.md#10-build-backlog--gaps">component-library.md
+§10</a>.</li>
+</ul>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

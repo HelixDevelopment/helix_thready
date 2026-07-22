@@ -1,0 +1,1109 @@
+{
+  "_meta": {
+    "title": "Helix Thready — Figma Variables (canonical token set)",
+    "classification": "PUBLIC",
+    "location": "docs/public/research/mvp/design/figma/figma-variables.json",
+    "status": "Draft — v0.1",
+    "revision": "1 (2026-07-22)",
+    "author": "Helix Thready documentation swarm (design · figma)",
+    "source_of_truth": "../opendesign/tokens.css — every hex value is carried verbatim; r/g/b floats are hex/255 rounded to 6 decimals; nothing is invented [CONSTITUTION 11.4.6]",
+    "format": "Figma Variables REST API bulk-change shape (POST /v1/files/{file_key}/variables) with temporary ids; the same structure maps 1:1 onto the Plugin API (figma.variables.createVariableCollection / createVariable / setValueForMode / addMode)",
+    "consumption_notes": [
+      "Keys prefixed with '_' (this _meta block and per-entry _hex comments) are documentation only — strip them before POSTing: jq 'del(._meta) | walk(if type == \"object\" then del(._hex) else . end)'",
+      "The REST endpoint requires an Enterprise-plan token; on any other plan, replay the same structure through the Plugin API (Figma MCP `use_figma`) or a variables-import plugin — see ./README.md.",
+      "ds-heart is a VARIABLE_ALIAS to accent in both modes, mirroring tokens.css `--ds-heart: var(--accent)`.",
+      "NOT carried as variables (by design, documented in figma-file-plan.md section 4): B-slot aliases fg-2/meta/border-soft (pure aliases), accent-hover/accent-active and elev-raised/focus-ring (CSS color-mix() formulas — baked into component styles per mode), ease-standard (cubic bezier, prototype setting), section rhythm + gutters (frame layout annotations), font families (Figma text styles, not variables), tracking-display (text styles)."
+    ]
+  },
+  "variableCollections": [
+    {
+      "action": "CREATE",
+      "id": "c:thready-color",
+      "name": "Thready / Color",
+      "initialModeId": "m:light"
+    },
+    {
+      "action": "CREATE",
+      "id": "c:thready-structure",
+      "name": "Thready / Structure",
+      "initialModeId": "m:value"
+    }
+  ],
+  "variableModes": [
+    {
+      "action": "UPDATE",
+      "id": "m:light",
+      "name": "Light",
+      "variableCollectionId": "c:thready-color"
+    },
+    {
+      "action": "CREATE",
+      "id": "m:dark",
+      "name": "Dark",
+      "variableCollectionId": "c:thready-color"
+    },
+    {
+      "action": "UPDATE",
+      "id": "m:value",
+      "name": "Value",
+      "variableCollectionId": "c:thready-structure"
+    }
+  ],
+  "variables": [
+    {
+      "action": "CREATE",
+      "id": "v:color/brand",
+      "name": "brand",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "description": "Brand chartreuse/lime — DECORATIVE ONLY, never body text (1.47:1 on white). Light #B6E376 / Dark #B6E376. [VERIFIED — tokens.css --brand]",
+      "codeSyntax": {
+        "WEB": "var(--brand)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/brand-2",
+      "name": "brand-2",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "description": "Brand secondary mint/teal — decorative only. Light #ABDDC9 (eyedrop mean) / Dark #B7EBD6 (brighter mint median). [VERIFIED — tokens.css --brand-2]",
+      "codeSyntax": {
+        "WEB": "var(--brand-2)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/brand-ink",
+      "name": "brand-ink",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "description": "Readable ink on a --brand fill (13.15:1). Light #0A0F04 / Dark #0A0F04. [VERIFIED — tokens.css --brand-ink]",
+      "codeSyntax": {
+        "WEB": "var(--brand-ink)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/bg",
+      "name": "bg",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "description": "Page background. Light #FFFFFF / Dark #020817. [VERIFIED — tokens.css --bg]",
+      "codeSyntax": {
+        "WEB": "var(--bg)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/surface",
+      "name": "surface",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "description": "Surface (cards, panels). Light #FFFFFF / Dark #020817. [VERIFIED — tokens.css --surface]",
+      "codeSyntax": {
+        "WEB": "var(--surface)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/surface-warm",
+      "name": "surface-warm",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "FRAME_FILL",
+        "SHAPE_FILL"
+      ],
+      "description": "Warm/tertiary surface. Light #F1F5F9 / Dark #1E293B. [VERIFIED — tokens.css --surface-warm]",
+      "codeSyntax": {
+        "WEB": "var(--surface-warm)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/fg",
+      "name": "fg",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "description": "Foreground/ink. Light #020817 / Dark #F8FAFC. [VERIFIED — tokens.css --fg]",
+      "codeSyntax": {
+        "WEB": "var(--fg)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/muted",
+      "name": "muted",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "description": "Muted/secondary text. Light #475569 / Dark #94A3B8. [VERIFIED — tokens.css --muted]",
+      "codeSyntax": {
+        "WEB": "var(--muted)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/border",
+      "name": "border",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "description": "Hairline border. Light #E2E8F0 / Dark #1E293B. [VERIFIED — tokens.css --border]",
+      "codeSyntax": {
+        "WEB": "var(--border)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/border-strong",
+      "name": "border-strong",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "description": "Load-bearing boundary (>=3:1 non-text contrast). Light #64748B / Dark #64748B. [VERIFIED — tokens.css --border-strong (C-extension)]",
+      "codeSyntax": {
+        "WEB": "var(--border-strong)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/accent",
+      "name": "accent",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "description": "Interactive/text-safe accent, AA-pinned. Light #446E12 (6.03:1 on white) / Dark #B6E376 (13.56:1 on #020817). [VERIFIED — tokens.css --accent]",
+      "codeSyntax": {
+        "WEB": "var(--accent)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/accent-on",
+      "name": "accent-on",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "description": "Label ink on an accent fill. Light #FFFFFF / Dark #0A0F04. [VERIFIED — tokens.css --accent-on]",
+      "codeSyntax": {
+        "WEB": "var(--accent-on)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/success",
+      "name": "success",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "ALL_FILLS"
+      ],
+      "description": "Semantic success — state, never decoration. Light #166534 / Dark #16A34A. [VERIFIED — tokens.css --success]",
+      "codeSyntax": {
+        "WEB": "var(--success)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/warn",
+      "name": "warn",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "ALL_FILLS"
+      ],
+      "description": "Semantic warn — state, never decoration. Light #854D0E / Dark #EAB308. [VERIFIED — tokens.css --warn]",
+      "codeSyntax": {
+        "WEB": "var(--warn)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/danger",
+      "name": "danger",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "ALL_FILLS"
+      ],
+      "description": "Semantic danger — separate token from accent BY CONTRACT (brand color can never mask an error). Light #DC2626 / Dark #EF4444. [VERIFIED — tokens.css --danger]",
+      "codeSyntax": {
+        "WEB": "var(--danger)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:color/ds-heart",
+      "name": "ds-heart",
+      "variableCollectionId": "c:thready-color",
+      "resolvedType": "COLOR",
+      "scopes": [
+        "ALL_FILLS"
+      ],
+      "description": "Footer slogan heart tint. ALIAS -> accent in both modes (tokens.css: --ds-heart: var(--accent)). Love-red alternative is [OPEN: THREADY-DES-03]. [VERIFIED — tokens.css --ds-heart (C-extension)]",
+      "codeSyntax": {
+        "WEB": "var(--ds-heart)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-1",
+      "name": "space-1",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 4px on the 4px base grid [VERIFIED — tokens.css --space-1].",
+      "codeSyntax": {
+        "WEB": "var(--space-1)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-2",
+      "name": "space-2",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 8px on the 4px base grid [VERIFIED — tokens.css --space-2].",
+      "codeSyntax": {
+        "WEB": "var(--space-2)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-3",
+      "name": "space-3",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 12px on the 4px base grid [VERIFIED — tokens.css --space-3].",
+      "codeSyntax": {
+        "WEB": "var(--space-3)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-4",
+      "name": "space-4",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 16px on the 4px base grid [VERIFIED — tokens.css --space-4].",
+      "codeSyntax": {
+        "WEB": "var(--space-4)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-5",
+      "name": "space-5",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 20px on the 4px base grid [VERIFIED — tokens.css --space-5].",
+      "codeSyntax": {
+        "WEB": "var(--space-5)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-6",
+      "name": "space-6",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 24px on the 4px base grid [VERIFIED — tokens.css --space-6].",
+      "codeSyntax": {
+        "WEB": "var(--space-6)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-8",
+      "name": "space-8",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 32px on the 4px base grid [VERIFIED — tokens.css --space-8].",
+      "codeSyntax": {
+        "WEB": "var(--space-8)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/space-12",
+      "name": "space-12",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Spacing 48px on the 4px base grid [VERIFIED — tokens.css --space-12].",
+      "codeSyntax": {
+        "WEB": "var(--space-12)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/radius-sm",
+      "name": "radius-sm",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "description": "Corner radius 8px — controls [VERIFIED — tokens.css --radius-sm].",
+      "codeSyntax": {
+        "WEB": "var(--radius-sm)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/radius-md",
+      "name": "radius-md",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "description": "Corner radius 12px — cards [VERIFIED — tokens.css --radius-md].",
+      "codeSyntax": {
+        "WEB": "var(--radius-md)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/radius-lg",
+      "name": "radius-lg",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "description": "Corner radius 16px — surfaces/sheets [VERIFIED — tokens.css --radius-lg].",
+      "codeSyntax": {
+        "WEB": "var(--radius-lg)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/radius-pill",
+      "name": "radius-pill",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "description": "Corner radius 9999px — chips [VERIFIED — tokens.css --radius-pill].",
+      "codeSyntax": {
+        "WEB": "var(--radius-pill)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-xs",
+      "name": "text-xs",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 12px [VERIFIED — tokens.css --text-xs].",
+      "codeSyntax": {
+        "WEB": "var(--text-xs)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-sm",
+      "name": "text-sm",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 14px [VERIFIED — tokens.css --text-sm].",
+      "codeSyntax": {
+        "WEB": "var(--text-sm)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-base",
+      "name": "text-base",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 16px [VERIFIED — tokens.css --text-base].",
+      "codeSyntax": {
+        "WEB": "var(--text-base)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-lg",
+      "name": "text-lg",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 20px [VERIFIED — tokens.css --text-lg].",
+      "codeSyntax": {
+        "WEB": "var(--text-lg)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-xl",
+      "name": "text-xl",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 24px [VERIFIED — tokens.css --text-xl].",
+      "codeSyntax": {
+        "WEB": "var(--text-xl)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-2xl",
+      "name": "text-2xl",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 32px [VERIFIED — tokens.css --text-2xl].",
+      "codeSyntax": {
+        "WEB": "var(--text-2xl)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-3xl",
+      "name": "text-3xl",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 48px [VERIFIED — tokens.css --text-3xl].",
+      "codeSyntax": {
+        "WEB": "var(--text-3xl)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/text-4xl",
+      "name": "text-4xl",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "description": "Type scale 64px [VERIFIED — tokens.css --text-4xl].",
+      "codeSyntax": {
+        "WEB": "var(--text-4xl)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/leading-body",
+      "name": "leading-body",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [],
+      "description": "Body line-height RATIO 1.5 [VERIFIED — tokens.css --leading-body]. Figma has no unitless line-height: apply as 150% in text styles; never bind this float directly to a px line-height. Scopes intentionally empty to prevent misuse.",
+      "codeSyntax": {
+        "WEB": "var(--leading-body)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/leading-tight",
+      "name": "leading-tight",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [],
+      "description": "Heading line-height RATIO 1.2 [VERIFIED — tokens.css --leading-tight]. Apply as 120% in text styles; never bind directly as px. Scopes intentionally empty.",
+      "codeSyntax": {
+        "WEB": "var(--leading-tight)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/motion-fast",
+      "name": "motion-fast",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [],
+      "description": "Motion duration, ms — hover/press, control state [VERIFIED — tokens.css --motion-fast: 150ms]. Documentation variable: Figma cannot bind durations; use 150ms in prototype Smart-Animate settings. All motion honors prefers-reduced-motion. Scopes intentionally empty.",
+      "codeSyntax": {
+        "WEB": "var(--motion-fast)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/motion-base",
+      "name": "motion-base",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [],
+      "description": "Motion duration, ms — enter/exit, disclosure [VERIFIED — tokens.css --motion-base: 200ms]. Use 200ms in prototype transitions; easing cubic-bezier(0.2, 0, 0, 1) (--ease-standard). Scopes intentionally empty.",
+      "codeSyntax": {
+        "WEB": "var(--motion-base)"
+      }
+    },
+    {
+      "action": "CREATE",
+      "id": "v:structure/container-max",
+      "name": "container-max",
+      "variableCollectionId": "c:thready-structure",
+      "resolvedType": "FLOAT",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "description": "Content container max width 1200px [VERIFIED — tokens.css --container-max].",
+      "codeSyntax": {
+        "WEB": "var(--container-max)"
+      }
+    }
+  ],
+  "variableModeValues": [
+    {
+      "variableId": "v:color/brand",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.713725,
+        "g": 0.890196,
+        "b": 0.462745,
+        "a": 1.0
+      },
+      "_hex": "#B6E376"
+    },
+    {
+      "variableId": "v:color/brand",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.713725,
+        "g": 0.890196,
+        "b": 0.462745,
+        "a": 1.0
+      },
+      "_hex": "#B6E376"
+    },
+    {
+      "variableId": "v:color/brand-2",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.670588,
+        "g": 0.866667,
+        "b": 0.788235,
+        "a": 1.0
+      },
+      "_hex": "#ABDDC9"
+    },
+    {
+      "variableId": "v:color/brand-2",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.717647,
+        "g": 0.921569,
+        "b": 0.839216,
+        "a": 1.0
+      },
+      "_hex": "#B7EBD6"
+    },
+    {
+      "variableId": "v:color/brand-ink",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.039216,
+        "g": 0.058824,
+        "b": 0.015686,
+        "a": 1.0
+      },
+      "_hex": "#0A0F04"
+    },
+    {
+      "variableId": "v:color/brand-ink",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.039216,
+        "g": 0.058824,
+        "b": 0.015686,
+        "a": 1.0
+      },
+      "_hex": "#0A0F04"
+    },
+    {
+      "variableId": "v:color/bg",
+      "modeId": "m:light",
+      "value": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "_hex": "#FFFFFF"
+    },
+    {
+      "variableId": "v:color/bg",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.007843,
+        "g": 0.031373,
+        "b": 0.090196,
+        "a": 1.0
+      },
+      "_hex": "#020817"
+    },
+    {
+      "variableId": "v:color/surface",
+      "modeId": "m:light",
+      "value": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "_hex": "#FFFFFF"
+    },
+    {
+      "variableId": "v:color/surface",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.007843,
+        "g": 0.031373,
+        "b": 0.090196,
+        "a": 1.0
+      },
+      "_hex": "#020817"
+    },
+    {
+      "variableId": "v:color/surface-warm",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.945098,
+        "g": 0.960784,
+        "b": 0.976471,
+        "a": 1.0
+      },
+      "_hex": "#F1F5F9"
+    },
+    {
+      "variableId": "v:color/surface-warm",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.117647,
+        "g": 0.160784,
+        "b": 0.231373,
+        "a": 1.0
+      },
+      "_hex": "#1E293B"
+    },
+    {
+      "variableId": "v:color/fg",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.007843,
+        "g": 0.031373,
+        "b": 0.090196,
+        "a": 1.0
+      },
+      "_hex": "#020817"
+    },
+    {
+      "variableId": "v:color/fg",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.972549,
+        "g": 0.980392,
+        "b": 0.988235,
+        "a": 1.0
+      },
+      "_hex": "#F8FAFC"
+    },
+    {
+      "variableId": "v:color/muted",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.278431,
+        "g": 0.333333,
+        "b": 0.411765,
+        "a": 1.0
+      },
+      "_hex": "#475569"
+    },
+    {
+      "variableId": "v:color/muted",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.580392,
+        "g": 0.639216,
+        "b": 0.721569,
+        "a": 1.0
+      },
+      "_hex": "#94A3B8"
+    },
+    {
+      "variableId": "v:color/border",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.886275,
+        "g": 0.909804,
+        "b": 0.941176,
+        "a": 1.0
+      },
+      "_hex": "#E2E8F0"
+    },
+    {
+      "variableId": "v:color/border",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.117647,
+        "g": 0.160784,
+        "b": 0.231373,
+        "a": 1.0
+      },
+      "_hex": "#1E293B"
+    },
+    {
+      "variableId": "v:color/border-strong",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.392157,
+        "g": 0.454902,
+        "b": 0.545098,
+        "a": 1.0
+      },
+      "_hex": "#64748B"
+    },
+    {
+      "variableId": "v:color/border-strong",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.392157,
+        "g": 0.454902,
+        "b": 0.545098,
+        "a": 1.0
+      },
+      "_hex": "#64748B"
+    },
+    {
+      "variableId": "v:color/accent",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.266667,
+        "g": 0.431373,
+        "b": 0.070588,
+        "a": 1.0
+      },
+      "_hex": "#446E12"
+    },
+    {
+      "variableId": "v:color/accent",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.713725,
+        "g": 0.890196,
+        "b": 0.462745,
+        "a": 1.0
+      },
+      "_hex": "#B6E376"
+    },
+    {
+      "variableId": "v:color/accent-on",
+      "modeId": "m:light",
+      "value": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "_hex": "#FFFFFF"
+    },
+    {
+      "variableId": "v:color/accent-on",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.039216,
+        "g": 0.058824,
+        "b": 0.015686,
+        "a": 1.0
+      },
+      "_hex": "#0A0F04"
+    },
+    {
+      "variableId": "v:color/success",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.086275,
+        "g": 0.396078,
+        "b": 0.203922,
+        "a": 1.0
+      },
+      "_hex": "#166534"
+    },
+    {
+      "variableId": "v:color/success",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.086275,
+        "g": 0.639216,
+        "b": 0.290196,
+        "a": 1.0
+      },
+      "_hex": "#16A34A"
+    },
+    {
+      "variableId": "v:color/warn",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.521569,
+        "g": 0.301961,
+        "b": 0.054902,
+        "a": 1.0
+      },
+      "_hex": "#854D0E"
+    },
+    {
+      "variableId": "v:color/warn",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.917647,
+        "g": 0.701961,
+        "b": 0.031373,
+        "a": 1.0
+      },
+      "_hex": "#EAB308"
+    },
+    {
+      "variableId": "v:color/danger",
+      "modeId": "m:light",
+      "value": {
+        "r": 0.862745,
+        "g": 0.14902,
+        "b": 0.14902,
+        "a": 1.0
+      },
+      "_hex": "#DC2626"
+    },
+    {
+      "variableId": "v:color/danger",
+      "modeId": "m:dark",
+      "value": {
+        "r": 0.937255,
+        "g": 0.266667,
+        "b": 0.266667,
+        "a": 1.0
+      },
+      "_hex": "#EF4444"
+    },
+    {
+      "variableId": "v:color/ds-heart",
+      "modeId": "m:light",
+      "value": {
+        "type": "VARIABLE_ALIAS",
+        "id": "v:color/accent"
+      },
+      "_hex": "alias -> accent (#446E12 light / #B6E376 dark)"
+    },
+    {
+      "variableId": "v:color/ds-heart",
+      "modeId": "m:dark",
+      "value": {
+        "type": "VARIABLE_ALIAS",
+        "id": "v:color/accent"
+      },
+      "_hex": "alias -> accent (#446E12 light / #B6E376 dark)"
+    },
+    {
+      "variableId": "v:structure/space-1",
+      "modeId": "m:value",
+      "value": 4
+    },
+    {
+      "variableId": "v:structure/space-2",
+      "modeId": "m:value",
+      "value": 8
+    },
+    {
+      "variableId": "v:structure/space-3",
+      "modeId": "m:value",
+      "value": 12
+    },
+    {
+      "variableId": "v:structure/space-4",
+      "modeId": "m:value",
+      "value": 16
+    },
+    {
+      "variableId": "v:structure/space-5",
+      "modeId": "m:value",
+      "value": 20
+    },
+    {
+      "variableId": "v:structure/space-6",
+      "modeId": "m:value",
+      "value": 24
+    },
+    {
+      "variableId": "v:structure/space-8",
+      "modeId": "m:value",
+      "value": 32
+    },
+    {
+      "variableId": "v:structure/space-12",
+      "modeId": "m:value",
+      "value": 48
+    },
+    {
+      "variableId": "v:structure/radius-sm",
+      "modeId": "m:value",
+      "value": 8
+    },
+    {
+      "variableId": "v:structure/radius-md",
+      "modeId": "m:value",
+      "value": 12
+    },
+    {
+      "variableId": "v:structure/radius-lg",
+      "modeId": "m:value",
+      "value": 16
+    },
+    {
+      "variableId": "v:structure/radius-pill",
+      "modeId": "m:value",
+      "value": 9999
+    },
+    {
+      "variableId": "v:structure/text-xs",
+      "modeId": "m:value",
+      "value": 12
+    },
+    {
+      "variableId": "v:structure/text-sm",
+      "modeId": "m:value",
+      "value": 14
+    },
+    {
+      "variableId": "v:structure/text-base",
+      "modeId": "m:value",
+      "value": 16
+    },
+    {
+      "variableId": "v:structure/text-lg",
+      "modeId": "m:value",
+      "value": 20
+    },
+    {
+      "variableId": "v:structure/text-xl",
+      "modeId": "m:value",
+      "value": 24
+    },
+    {
+      "variableId": "v:structure/text-2xl",
+      "modeId": "m:value",
+      "value": 32
+    },
+    {
+      "variableId": "v:structure/text-3xl",
+      "modeId": "m:value",
+      "value": 48
+    },
+    {
+      "variableId": "v:structure/text-4xl",
+      "modeId": "m:value",
+      "value": 64
+    },
+    {
+      "variableId": "v:structure/leading-body",
+      "modeId": "m:value",
+      "value": 1.5
+    },
+    {
+      "variableId": "v:structure/leading-tight",
+      "modeId": "m:value",
+      "value": 1.2
+    },
+    {
+      "variableId": "v:structure/motion-fast",
+      "modeId": "m:value",
+      "value": 150
+    },
+    {
+      "variableId": "v:structure/motion-base",
+      "modeId": "m:value",
+      "value": 200
+    },
+    {
+      "variableId": "v:structure/container-max",
+      "modeId": "m:value",
+      "value": 1200
+    }
+  ]
+}

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix Thready — Motion Package (Lottie catalogue)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../assets/doc.css" />
+</head>
+<body>
+<div class="rh-header">Helix Thready — Helix Development</div>
+<div class="rh-footer">Made with love <span class="heart">&#9829;</span> by Helix Development</div>
+<header id="title-block-header">
+<h1 class="title">Helix Thready — Motion Package (Lottie catalogue)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#inventory" id="toc-inventory">Inventory</a></li>
+<li><a href="#reduced-motion-fallbacks-static-svgs"
+id="toc-reduced-motion-fallbacks-static-svgs">Reduced-motion fallbacks
+(static SVGs)</a></li>
+<li><a href="#how-to-preview" id="toc-how-to-preview">How to
+preview</a></li>
+<li><a href="#color-provenance" id="toc-color-provenance">Color
+provenance</a></li>
+<li><a href="#how-these-were-authored"
+id="toc-how-these-were-authored">How these were authored</a></li>
+</ul>
+</nav>
+<!--
+  Title           : Helix Thready — Motion Package (Lottie catalogue)
+  Classification  : PUBLIC
+  Location        : docs/public/research/mvp/design/motion/README.md
+  Status          : Active — v1.1
+  Revision        : 2 (2026-07-22)
+  Author          : Helix Thready documentation swarm (design/motion)
+  Related         : ./motion.md, ./preview.html, ./motion-manifest.json,
+                    ../prototypes.md, ../design-system.md, ../ux-flows.md, ../../CONVENTIONS.md
+-->
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rev</th>
+<th>Date</th>
+<th>Author</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-22</td>
+<td>swarm (design/motion)</td>
+<td>Initial package: six hand-authored Lottie assets, motion spec,
+self-contained preview, manifest, validation record</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2026-07-22</td>
+<td>swarm (design · motion)</td>
+<td>Static <code>reducedMotionFallback</code> SVGs delivered (asset half
+of <code>THREADY-MOT-03</code> closed — see motion.md §8 for the
+narrowed remainder); manifest v2 names them per animation; preview gains
+a static-fallback / reduced-motion demonstration toggle</td>
+</tr>
+</tbody>
+</table>
+<p>This directory is the concrete <strong>motion deliverable</strong> of
+the design area — the “lots of Lottie animations” the request mandates
+(<a href="../prototypes.md#6-motion--transition-spec">prototypes.md
+§6</a>), realized as <strong>hand-authored vector Lottie</strong> (v5.x
+schema, shape layers only, no rasters, no design-tool export involved).
+It partially delivers the Lottie half of
+<code>[OPEN: THREADY-DES-02]</code>; see <a
+href="./motion.md#8-gaps--open-items">motion.md §8</a> for what remains
+open.</p>
+<p><strong>Upstream:</strong> <a
+href="../design-system.md#5-spacing-radius-elevation-motion">design-system.md
+§5</a> (motion tokens, reduced-motion rule), <a
+href="../prototypes.md#6-motion--transition-spec">prototypes.md §6</a>
+(choreography spec), <a href="../ux-flows.md">ux-flows.md</a> (the
+journeys each asset binds to). <strong>Downstream:</strong> app motion
+runtimes (<code>lottie-web</code> / <code>lottie-compose</code> /
+<code>lottie-ios</code>), the visual-regression bank
+(<code>[GAP: 9.3]</code>).</p>
+<h2 id="inventory">Inventory</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+<col style="width: 10%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>What it is</th>
+<th>Frames @ fps</th>
+<th>Loop</th>
+<th>Plays on</th>
+<th>Validation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a
+href="./helix-spinner.json"><code>helix-spinner.json</code></a></td>
+<td>The double-helix mark weaving/rotating (two phase-animated sine
+strands, lime + teal) — loading</td>
+<td>120 @ 60 (2 s)</td>
+<td>yes, seam-exact</td>
+<td>app boot, route loads, resolve waits</td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a
+href="./success-check.json"><code>success-check.json</code></a></td>
+<td>Lime disc pop + ink check drawn by trim-path + accent ring ping</td>
+<td>90 @ 60 (1.5 s)</td>
+<td>one-shot</td>
+<td><code>201</code> created, <code>200</code> saved,
+<code>processing.completed</code></td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a href="./error-cross.json"><code>error-cross.json</code></a></td>
+<td>Danger disc pop + snow cross drawn + shake + ring ping
+(<code>--danger</code>, never brand)</td>
+<td>90 @ 60 (1.5 s)</td>
+<td>one-shot</td>
+<td><code>processing.failed</code>, <code>422</code>/<code>403</code>,
+AA-fail</td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a
+href="./processing-pulse.json"><code>processing-pulse.json</code></a></td>
+<td>Breathing lime core + two staggered teal ripple rings —
+indeterminate work</td>
+<td>120 @ 60 (2 s)</td>
+<td>yes, seam-exact</td>
+<td>pipeline step running/queued, reprocess in flight</td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a href="./thread-sync.json"><code>thread-sync.json</code></a></td>
+<td>Messenger node ⇄ Thready node with dots shuttling along the thread —
+messenger sync</td>
+<td>120 @ 60 (2 s)</td>
+<td>yes, seam-exact</td>
+<td>channel backfill / live sync, session established</td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a
+href="./transition-fade-slide.json"><code>transition-fade-slide.json</code></a></td>
+<td>Shared-axis X fade+slide between two cards at real 300 ms timing,
+with segment markers</td>
+<td>90 @ 60 (1.5 s)</td>
+<td>one-shot</td>
+<td>route/page + wizard-step transitions (reference rendering)</td>
+<td>parse ✅ · structure ✅ · lottie-web render ✅</td>
+</tr>
+<tr>
+<td><a
+href="./spiral-static.svg"><code>spiral-static.svg</code></a></td>
+<td>Reduced-motion fallback for <code>helix-spinner</code> — the exact
+frame-15 poster state (interpolated strand paths + eased strand
+opacities from the Lottie keyframes)</td>
+<td>static</td>
+<td>—</td>
+<td><code>prefers-reduced-motion</code> swap</td>
+<td>xmllint ✅ · geometry derived from Lottie keyframes ✅</td>
+</tr>
+<tr>
+<td><a href="./check.svg"><code>check.svg</code></a></td>
+<td>Reduced-motion fallback for <code>success-check</code> — final frame
+89 (disc at rest, check fully drawn; invisible ring ping omitted)</td>
+<td>static</td>
+<td>—</td>
+<td><code>prefers-reduced-motion</code> swap</td>
+<td>xmllint ✅ · geometry derived from Lottie keyframes ✅</td>
+</tr>
+<tr>
+<td><a href="./cross-static.svg"><code>cross-static.svg</code></a></td>
+<td>Reduced-motion fallback for <code>error-cross</code> — final frame
+89 (disc at rest after shake, cross fully drawn; invisible ring ping
+omitted)</td>
+<td>static</td>
+<td>—</td>
+<td><code>prefers-reduced-motion</code> swap</td>
+<td>xmllint ✅ · geometry derived from Lottie keyframes ✅</td>
+</tr>
+<tr>
+<td><a href="./pulse-static.svg"><code>pulse-static.svg</code></a></td>
+<td>Reduced-motion fallback for <code>processing-pulse</code> — the
+exact frame-30 poster state (core at 114 %, both rings at their
+interpolated scale/opacity)</td>
+<td>static</td>
+<td>—</td>
+<td><code>prefers-reduced-motion</code> swap</td>
+<td>xmllint ✅ · geometry derived from Lottie keyframes ✅</td>
+</tr>
+<tr>
+<td><a href="./sync-static.svg"><code>sync-static.svg</code></a></td>
+<td>Reduced-motion fallback for <code>thread-sync</code> — the exact
+frame-30 poster state (nodes + thread, carrier dot at its eased x
+365.78)</td>
+<td>static</td>
+<td>—</td>
+<td><code>prefers-reduced-motion</code> swap</td>
+<td>xmllint ✅ · geometry derived from Lottie keyframes ✅</td>
+</tr>
+<tr>
+<td><a href="./motion.md"><code>motion.md</code></a></td>
+<td>The motion spec: tokens, interaction map, reduced-motion contract,
+runtime integration, honest validation record</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a
+href="./motion-manifest.json"><code>motion-manifest.json</code></a></td>
+<td>Runtime manifest v2 (ids, loop, poster frames, reduced-motion mode +
+per-animation <code>reducedMotionFallback</code> SVG, segment markers) —
+concrete form of the prototypes §6 excerpt</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>parse ✅</td>
+</tr>
+<tr>
+<td><a href="./preview.html"><code>preview.html</code></a></td>
+<td>Self-contained preview: vendored <strong>lottie-web 5.13.0</strong>
+(MIT) inline + the six JSONs embedded verbatim; theme toggle, per-asset
+scrub/replay, reduced-motion poster behavior, and a “Show static
+fallbacks” toggle (auto-engaged under
+<code>prefers-reduced-motion</code>) with the five fallback SVGs
+embedded inline. No CDN, zero network requests.</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>jsdom smoke test ✅ (re-run after fallback toggle) · Chromium
+light/dark/reduced-motion screenshots ✅ (rev 1 page)</td>
+</tr>
+<tr>
+<td><a
+href="./diagrams/motion-asset-map.mmd"><code>diagrams/motion-asset-map.mmd</code></a></td>
+<td>Mermaid source of the journey→asset map in motion.md §4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Validation meaning</strong> (full record: <a
+href="./motion.md#7-validation-record-honest">motion.md §7</a>):
+<em>parse</em> = <code>python3 json.load</code>; <em>structure</em> =
+required top-level keys (<code>v fr ip op w h layers</code>), 5.x
+schema, <code>ty: 4</code> shape layers only with non-empty
+<code>shapes</code>, monotonic keyframes, colors in [0, 1], empty
+<code>assets</code>, exact loop seams; <em>lottie-web render</em> =
+loaded and frame-seeked in lottie-web 5.13.0 (SVG renderer, headless
+under jsdom) producing real geometry, with animation-progression
+assertions (trim draws, transforms move, shapes morph). All six were
+additionally rendered in <strong>headless Chromium</strong> (real
+Blink/Skia compositor) as a multi-frame light+dark contact sheet and
+reviewed. <strong>Not</strong> verified: physical-display pixels,
+<code>lottie-compose</code>/<code>lottie-ios</code> runtimes — tracked
+<code>[OPEN: THREADY-MOT-01]</code>.</p>
+<h2 id="reduced-motion-fallbacks-static-svgs">Reduced-motion fallbacks
+(static SVGs)</h2>
+<p>Each playable animation names its static fallback in <a
+href="./motion-manifest.json"><code>motion-manifest.json</code></a>
+(<code>reducedMotionFallback</code>); the SVG renders the <strong>exact
+state the reduced-motion contract freezes on</strong> — the poster frame
+for the loopers, the final frame for the one-shots — with geometry taken
+from the Lottie keyframes (interpolated where the frame falls between
+keyframes; see each SVG’s header comment for the derivation).
+<code>transition-fade-slide</code> deliberately has
+<code>reducedMotionFallback: null</code> — its reduced-motion behavior
+is an <code>instant-cut</code>, no artwork exists on purpose. The
+<code>empty-channels.svg</code> fallback named in the prototypes §6
+excerpt belongs to the illustration-grade set that is still open under
+<code>[OPEN: THREADY-DES-02]</code> and is therefore intentionally
+absent.</p>
+<p><strong>Coloring <code>[DEFAULT — adjustable]</code>:</strong>
+fills/strokes are written as
+<code>style="fill: var(--brand, #B6E376)"</code> — the literal fallback
+values are the Lottie’s own baked Thready colors (dark-surface tuned, <a
+href="./motion.md#6-runtime-integration">motion.md §6</a>), so a
+standalone <code>&lt;img&gt;</code> load matches the animations exactly,
+while inlining the SVG into a token-bearing page themes it via
+<code>--brand</code>/<code>--brand-2</code>/<code>--brand-ink</code>/<code>--danger</code>
+— the SVG analogue of the documented load-time remap.
+<code>currentColor</code> was not usable: these are multi-color assets.
+The snow cross strokes in <code>cross-static.svg</code> stay literal
+<code>#F8FAFC</code> by design (must remain light-on-danger in both
+themes; no on-danger token exists).</p>
+<h2 id="how-to-preview">How to preview</h2>
+<p>Open <a href="./preview.html"><code>preview.html</code></a> in any
+browser — it is fully self-contained (player vendored inline; works
+offline). Or load any <code>.json</code> into a standard Lottie player.
+With <code>prefers-reduced-motion: reduce</code> active, the page swaps
+every slot to its static fallback SVG (the production behavior); the
+header’s “Show static fallbacks” / “Show animations” toggle demonstrates
+the swap in either mode, per the <a
+href="./motion.md#5-reduced-motion-contract-prefers-reduced-motion">motion.md
+§5</a> contract.</p>
+<h2 id="color-provenance">Color provenance</h2>
+<p>All colors are the Thready theme tokens (<a
+href="../design-system.md#32-the-thready-brand-theme">design-system.md
+§3.2</a>) in Lottie 0–1 RGBA form:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 14%" />
+<col style="width: 40%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Token</th>
+<th>Hex</th>
+<th>Lottie array</th>
+<th>Used in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--brand</code> (lime)</td>
+<td><code>#B6E376</code></td>
+<td><code>[0.714, 0.890, 0.463]</code></td>
+<td>spinner strand, check disc, pulse core, sync node/dot, incoming
+card</td>
+</tr>
+<tr>
+<td><code>--accent</code> light</td>
+<td><code>#446E12</code></td>
+<td><code>[0.267, 0.431, 0.071]</code></td>
+<td>success ring ping; light-theme remap target (<a
+href="./motion.md#6-runtime-integration">motion.md §6</a>)</td>
+</tr>
+<tr>
+<td><code>--brand-2</code> light (teal)</td>
+<td><code>#ABDDC9</code></td>
+<td><code>[0.671, 0.867, 0.788]</code></td>
+<td>spinner strand, ripple ring A, sync node/thread, outgoing card</td>
+</tr>
+<tr>
+<td><code>--brand-2</code> dark (teal)</td>
+<td><code>#B7EBD6</code></td>
+<td><code>[0.718, 0.922, 0.839]</code></td>
+<td>ripple ring B, sync return dot</td>
+</tr>
+<tr>
+<td><code>--brand-ink</code></td>
+<td><code>#0A0F04</code></td>
+<td><code>[0.039, 0.059, 0.016]</code></td>
+<td>check stroke on the lime disc (13.15:1 — the documented pairing,
+design-system §3.2)</td>
+</tr>
+<tr>
+<td>ink (<code>--fg</code> light)</td>
+<td><code>#020817</code></td>
+<td><code>[0.008, 0.031, 0.090]</code></td>
+<td>card text bars (at 30 % fill opacity)</td>
+</tr>
+<tr>
+<td>snow (<code>--fg</code> dark)</td>
+<td><code>#F8FAFC</code></td>
+<td><code>[0.973, 0.980, 0.988]</code></td>
+<td>cross strokes</td>
+</tr>
+<tr>
+<td><code>--danger</code> light</td>
+<td><code>#DC2626</code></td>
+<td><code>[0.863, 0.149, 0.149]</code></td>
+<td>error disc + ping — semantic error is never brand-colored (<a
+href="../design-system.md#6-accessibility-contract">design-system
+§6</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>The set is tuned for dark surfaces (lime <strong>is</strong> the dark
+accent); light-surface and white-label retinting is a documented
+load-time remap, <a href="./motion.md#6-runtime-integration">motion.md
+§6</a>.</p>
+<h2 id="how-these-were-authored">How these were authored</h2>
+<p>Hand-authored as Lottie JSON (no After Effects, no Figma plugin, no
+downloads) via a deterministic generator script that computes the
+geometry — sine-through-bezier strand keyframes with analytic tangents
+for the spinner, visibility-aware seam-exact keyframes for the loopers —
+and every eased keyframe carries the shipped token curve
+<code>--ease-standard cubic-bezier(0.2, 0, 0, 1)</code>
+<code>[VERIFIED — design-system §5]</code>. The validator that gated
+them (and caught two real seam defects during authoring) is part of the
+record in <a href="./motion.md#7-validation-record-honest">motion.md
+§7</a>.</p>
+<hr />
+<p><em>Made with love ♥ by Helix Development.</em></p>
+</body>
+</html>

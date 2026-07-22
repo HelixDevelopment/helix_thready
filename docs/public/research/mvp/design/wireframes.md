@@ -16,9 +16,11 @@
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: web portal IA + screen wireframes, CLI command tree, TUI layouts, mobile wireframes |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: fixed Add‑Channel flow anchor (`#2-add-channel`) |
 | 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: global interaction-state + keyboard model (§1.1–1.3); per-screen validation/state tables for Login, Dashboard, Add‑Channel, Post detail, Search, Branding; CLI global flags + exit-code + `--json`/`--output` contract (§4.1–4.3); **verified** TUI keybinding map + Lipgloss style bindings + channel/post/search TUI layouts (grounded in `helix_track/llms_verifier/.../tui`); per-platform mobile realization map (Compose/SwiftUI/ArkTS/Qt), gestures, offline/sync states; two new diagrams (mobile fan-out) |
+| 4 | 2026-07-22 | swarm (design · package critic) | Wired each wireframe surface to its **rendered high‑fidelity screen set** now on disk (new §0 map + Upstream/Downstream note): web → [`screens/web/`](./screens/web/README.md), TUI → [`screens/tui/`](./screens/tui/README.md), mobile → [`screens/mobile/`](./screens/mobile/README.md), desktop → [`screens/desktop/`](./screens/desktop/README.md). Wireframes remain the **structural contract**; the rendered screens are the fidelity realization. Sign‑off in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md). |
 
 ## Table of contents
 
+- [0. Upstream / Downstream & rendered screen sets](#0-upstream--downstream--rendered-screen-sets)
 - [1. Conventions & responsive breakpoints](#1-conventions--responsive-breakpoints)
   - [1.1 Interaction-state legend](#11-interaction-state-legend)
   - [1.2 Keyboard & focus model](#12-keyboard--focus-model)
@@ -49,13 +51,35 @@
   - [6.2 Gestures, offline & sync states](#62-gestures-offline--sync-states)
 - [7. Gaps & open items](#7-gaps--open-items)
 
+## 0. Upstream / Downstream & rendered screen sets
+
+**Upstream (this file consumes / must not contradict):** [component-library.md](./component-library.md)
+(the `.ds-*` components each block references), [theming.md](./theming.md) (light/dark + white‑label),
+[../api/index.md](../api/index.md) (endpoints/events the screens bind to), and
+[../architecture/index.md](../architecture/index.md) (entities the screens render). The token/brand
+source of truth is [design-system.md](./design-system.md) / [opendesign/](./opendesign/DESIGN.md).
+
+**Downstream (consumes this file):** every wireframe surface is now **realized as a rendered,
+self‑contained high‑fidelity screen set** on disk. The wireframes remain the **structural contract**
+(low‑fidelity, diff‑reviewable); the rendered screens are the fidelity realization and the source
+for the PNG/PDF/Figma‑IR exports. The [ux-flows.md](./ux-flows.md) journeys and the
+[prototypes.md](./prototypes.md#11-materialized-artifacts-on-disk) prototype are assembled from them.
+
+| Wireframe surface (this file) | Rendered screen set (downstream) |
+|-------------------------------|-----------------------------------|
+| §2–§3 Web portal | [`screens/web/`](./screens/web/README.md) — 13 screens + interactive `index.html` |
+| §5 TUI | [`screens/tui/`](./screens/tui/README.md) — `tui-screens.html` (Bubble Tea/Lipgloss) |
+| §6 Mobile | [`screens/mobile/`](./screens/mobile/README.md) — 11 device‑framed screens |
+| (Desktop shell) | [`screens/desktop/`](./screens/desktop/README.md) — `desktop-shell.html` (Tauri 2) |
+
 ## 1. Conventions & responsive breakpoints
 
 Wireframes are drawn as **monospace block layouts** (unambiguous in plain text and reviewable in
 diffs) plus **Mermaid** navigation/screen maps (each followed by the mandatory prose explanation
 and saved as a sibling `.mmd`). They are **low‑fidelity structure**, not final visuals — final
-visuals live in Figma ([prototypes.md](./prototypes.md)). Every block references design‑system
-components (`.ds-*`, see [component-library.md](./component-library.md)) and API endpoints/events
+visuals live in the rendered [`screens/`](./screens/web/README.md) sets and Figma
+([prototypes.md](./prototypes.md)). Every block references design‑system components (`.ds-*`, see
+[component-library.md](./component-library.md)) and API endpoints/events
 (see [../api/index.md](../api/index.md)).
 
 Breakpoints (from `core.css` container/gutter tokens): **phone** < 768px, **tablet** 768–1024px,
