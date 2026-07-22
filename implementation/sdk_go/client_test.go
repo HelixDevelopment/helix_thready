@@ -557,3 +557,167 @@ func TestAPIError_ErrorStringAndRetryable(t *testing.T) {
 		t.Errorf("not_found should not be Retryable")
 	}
 }
+
+// recordingRoundTripper is a stand-in transport that records whether it was
+// invoked (i.e. whether a request actually left the client) and the last request
+// it saw. It never touches the network, so a credential-bearing request that is
+// correctly refused before send registers zero calls here — proving the header
+// never went out.
+type recordingRoundTripper struct {
+	calls   int32
+	lastReq *http.Request
+}
+
+func (rt *recordingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	atomic.AddInt32(&rt.calls, 1)
+	rt.lastReq = req
+	// A benign 200 with a valid list envelope so a ListChannels that DOES send
+	// decodes cleanly.
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     make(http.Header),
+		Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+		Request:    req,
+	}, nil
+}
+
+// TestInsecureTransport_Policy is the security regression for
+// insecure-transport-default: a credential must never be attached to a plaintext
+// http request bound for a non-loopback host unless AllowInsecureHTTP is set.
+// https (any host) and http-to-loopback are always allowed. Each case uses a
+// recording transport so we can assert whether the request actually left the
+// client, not merely that it errored.
+func TestInsecureTransport_Policy(t *testing.T) {
+	const bearer = "tok-secret-xyz"
+	const apiKey = "sk-secret-xyz"
+
+	cases := []struct {
+		name          string
+		baseURL       string
+		accessToken   string
+		apiKey        string
+		allowInsecure bool
+		wantSent      bool   // did a request reach the transport?
+		wantHeader    string // header name expected on a sent request
+		wantValue     string // its value
+	}{
+		{
+			name:        "bearer_http_remote_refused",
+			baseURL:     "http://api.thready.test",
+			accessToken: bearer,
+			wantSent:    false,
+		},
+		{
+			name:     "apikey_http_remote_refused",
+			baseURL:  "http://api.thready.test",
+			apiKey:   apiKey,
+			wantSent: false,
+		},
+		{
+			name:        "bearer_http_loopback_allowed",
+			baseURL:     "http://127.0.0.1:8080",
+			accessToken: bearer,
+			wantSent:    true,
+			wantHeader:  "Authorization",
+			wantValue:   "Bearer " + bearer,
+		},
+		{
+			name:        "bearer_http_localhost_allowed",
+			baseURL:     "http://localhost:8080",
+			accessToken: bearer,
+			wantSent:    true,
+			wantHeader:  "Authorization",
+			wantValue:   "Bearer " + bearer,
+		},
+		{
+			name:        "bearer_https_remote_allowed",
+			baseURL:     "https://api.thready.test",
+			accessToken: bearer,
+			wantSent:    true,
+			wantHeader:  "Authorization",
+			wantValue:   "Bearer " + bearer,
+		},
+		{
+			name:          "bearer_http_remote_override_allowed",
+			baseURL:       "http://api.thready.test",
+			accessToken:   bearer,
+			allowInsecure: true,
+			wantSent:      true,
+			wantHeader:    "Authorization",
+			wantValue:     "Bearer " + bearer,
+		},
+		{
+			name:       "apikey_https_remote_allowed",
+			baseURL:    "https://api.thready.test",
+			apiKey:     apiKey,
+			wantSent:   true,
+			wantHeader: "X-API-Key",
+			wantValue:  apiKey,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rt := &recordingRoundTripper{}
+			c, err := New(Config{
+				BaseURL:           tc.baseURL,
+				AccessToken:       tc.accessToken,
+				APIKey:            tc.apiKey,
+				AllowInsecureHTTP: tc.allowInsecure,
+				HTTPClient:        &http.Client{Transport: rt},
+			})
+			if err != nil {
+				t.Fatalf("New: %v", err)
+			}
+
+			_, err = c.ListChannels(context.Background())
+
+			if tc.wantSent {
+				if err != nil {
+					t.Fatalf("ListChannels errored on an allowed transport: %v", err)
+				}
+				if n := atomic.LoadInt32(&rt.calls); n != 1 {
+					t.Fatalf("transport calls = %d, want 1 (request should have been sent)", n)
+				}
+				if got := rt.lastReq.Header.Get(tc.wantHeader); got != tc.wantValue {
+					t.Fatalf("%s header = %q, want %q", tc.wantHeader, got, tc.wantValue)
+				}
+				return
+			}
+
+			// Refused path: must be ErrInsecureTransport and nothing sent.
+			if !errors.Is(err, ErrInsecureTransport) {
+				t.Fatalf("err = %v, want ErrInsecureTransport", err)
+			}
+			if n := atomic.LoadInt32(&rt.calls); n != 0 {
+				t.Fatalf("transport calls = %d, want 0 (credential must NOT be sent over plaintext http to a remote host)", n)
+			}
+		})
+	}
+}
+
+// TestInsecureTransport_NoCredentialStillSends confirms the refusal is scoped to
+// credential-bearing requests: an unauthenticated call (e.g. Login before a
+// token exists) is unaffected and still goes out over remote http.
+func TestInsecureTransport_NoCredentialStillSends(t *testing.T) {
+	rt := &recordingRoundTripper{}
+	c, err := New(Config{
+		BaseURL:    "http://api.thready.test",
+		HTTPClient: &http.Client{Transport: rt},
+	})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if _, err := c.ListChannels(context.Background()); err != nil {
+		t.Fatalf("unauthenticated ListChannels errored: %v", err)
+	}
+	if n := atomic.LoadInt32(&rt.calls); n != 1 {
+		t.Fatalf("transport calls = %d, want 1 (no credential ⇒ no refusal)", n)
+	}
+	if got := rt.lastReq.Header.Get("Authorization"); got != "" {
+		t.Fatalf("Authorization = %q, want empty", got)
+	}
+	if got := rt.lastReq.Header.Get("X-API-Key"); got != "" {
+		t.Fatalf("X-API-Key = %q, want empty", got)
+	}
+}

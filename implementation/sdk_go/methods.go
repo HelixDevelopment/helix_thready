@@ -127,7 +127,9 @@ func (c *Client) SubscribeEvents(ctx context.Context) (<-chan Event, error) {
 	}
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
-	c.applyAuth(req)
+	if err := c.applyAuth(req); err != nil {
+		return nil, err
+	}
 
 	resp, err := c.streamClient().Do(req)
 	if err != nil {

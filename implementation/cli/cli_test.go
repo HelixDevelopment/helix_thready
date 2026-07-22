@@ -328,6 +328,99 @@ func TestLogin_MissingCredsIsUsageError(t *testing.T) {
 	}
 }
 
+const passwordWarning = "warning: --password on the command line is visible to other processes; prefer THREADY_PASSWORD"
+
+// TestLogin_PasswordFromEnv is the security regression for credential-exposure:
+// the password is taken from THREADY_PASSWORD (never argv) and, because no
+// --password flag is present, NO warning is emitted. The resolved password must
+// still reach the client.
+func TestLogin_PasswordFromEnv(t *testing.T) {
+	t.Setenv("THREADY_PASSWORD", "env-s3cret")
+	f := &fakeClient{}
+	code, out, errOut := run(t, f, "login", "--email", "me@example.com")
+
+	if code != exitOK {
+		t.Fatalf("exit = %d, want %d (stderr=%q)", code, exitOK, errOut)
+	}
+	if f.loginCalls != 1 {
+		t.Fatalf("Login called %d times, want 1", f.loginCalls)
+	}
+	if f.loginCreds.Password != "env-s3cret" {
+		t.Errorf("password = %q, want env-s3cret (THREADY_PASSWORD must reach the client)", f.loginCreds.Password)
+	}
+	if strings.Contains(errOut, passwordWarning) {
+		t.Errorf("no warning expected when using THREADY_PASSWORD, got stderr %q", errOut)
+	}
+	if !strings.Contains(out, "tok_ABC123") {
+		t.Errorf("token not printed: %q", out)
+	}
+}
+
+// TestLogin_PasswordFlagWarns confirms --password still works but emits the
+// stderr warning, and that the flag value reaches the client (no THREADY_PASSWORD
+// set here).
+func TestLogin_PasswordFlagWarns(t *testing.T) {
+	t.Setenv("THREADY_PASSWORD", "") // ensure env does not shadow the flag
+	f := &fakeClient{}
+	code, out, errOut := run(t, f, "login", "--email", "me@example.com", "--password", "flag-s3cret")
+
+	if code != exitOK {
+		t.Fatalf("exit = %d, want %d (stderr=%q)", code, exitOK, errOut)
+	}
+	if f.loginCalls != 1 {
+		t.Fatalf("Login called %d times, want 1", f.loginCalls)
+	}
+	if f.loginCreds.Password != "flag-s3cret" {
+		t.Errorf("password = %q, want flag-s3cret (the --password value must reach the client)", f.loginCreds.Password)
+	}
+	if !strings.Contains(errOut, passwordWarning) {
+		t.Errorf("stderr should carry the --password warning, got %q", errOut)
+	}
+	if !strings.Contains(out, "tok_ABC123") {
+		t.Errorf("token not printed: %q", out)
+	}
+}
+
+// TestLogin_EnvBeatsFlag pins the precedence: THREADY_PASSWORD wins over
+// --password, but the flag being present still triggers the warning (its value
+// is exposed in argv regardless of which one is used).
+func TestLogin_EnvBeatsFlag(t *testing.T) {
+	t.Setenv("THREADY_PASSWORD", "env-wins")
+	f := &fakeClient{}
+	code, _, errOut := run(t, f, "login", "--email", "me@example.com", "--password", "flag-loses")
+
+	if code != exitOK {
+		t.Fatalf("exit = %d, want %d (stderr=%q)", code, exitOK, errOut)
+	}
+	if f.loginCreds.Password != "env-wins" {
+		t.Errorf("password = %q, want env-wins (THREADY_PASSWORD must win)", f.loginCreds.Password)
+	}
+	if !strings.Contains(errOut, passwordWarning) {
+		t.Errorf("stderr should still warn while --password is present, got %q", errOut)
+	}
+}
+
+// TestLogin_MissingBothIsUsageError keeps the original behaviour: with neither
+// THREADY_PASSWORD nor --password, login is a usage error and never calls the
+// client.
+func TestLogin_MissingBothIsUsageError(t *testing.T) {
+	t.Setenv("THREADY_PASSWORD", "")
+	f := &fakeClient{}
+	code, _, errOut := run(t, f, "login", "--email", "me@example.com")
+	if code != exitUsage {
+		t.Fatalf("exit = %d, want %d", code, exitUsage)
+	}
+	if f.loginCalls != 0 {
+		t.Errorf("Login should not be called, got %d", f.loginCalls)
+	}
+	if !strings.Contains(errOut, "--password") {
+		t.Errorf("stderr should mention --password: %q", errOut)
+	}
+	if strings.Contains(errOut, passwordWarning) {
+		t.Errorf("no warning expected when --password absent, got %q", errOut)
+	}
+}
+
 func TestSkills_TableAndCall(t *testing.T) {
 	f := &fakeClient{}
 	code, out, _ := run(t, f, "skills")

@@ -1,6 +1,20 @@
 package thready
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+// ErrInsecureTransport is returned instead of attaching a credential (an
+// "Authorization: Bearer …" or "X-API-Key: …" header) to a request that would
+// travel over plaintext http to a NON-loopback host. Sending a bearer token or
+// API key in the clear to a remote origin would expose it to any on-path
+// observer, so the SDK refuses by default. https (any host) and http to a
+// loopback host (127.0.0.1, ::1, localhost) are always allowed; set
+// Config.AllowInsecureHTTP to opt out of the refusal on trusted networks.
+//
+// Recover it with errors.Is(err, ErrInsecureTransport).
+var ErrInsecureTransport = errors.New("thready: refusing to send credentials over plaintext http to a non-loopback host; use https or set Config.AllowInsecureHTTP")
 
 // Code is a stable, machine-readable error code. The values mirror the canonical
 // taxonomy served by the Helix Thready REST /v1 gateway (see the sibling

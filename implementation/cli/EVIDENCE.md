@@ -9,7 +9,8 @@ compile-checked against the real SDK with no network and no `go.sum`.
 ## Verdict
 
 **READY.** `go build`, `go vet`, `gofmt -l` are all clean, and the full test
-suite (21 test functions) is green under `-race`. The binary runs end-to-end.
+suite (25 test functions — 21 original + 4 security regressions; see "Security
+fix" at the end) is green under `-race`. The binary runs end-to-end.
 
 ## Honest scope note (how it is tested — the correct approach)
 
@@ -153,4 +154,91 @@ GOWORK=off go build ./...
 GOWORK=off go vet ./...
 GOWORK=off gofmt -l .
 GOWORK=off go test ./... -v -race -count=1
+```
+
+---
+
+## Security fix — credential-exposure & insecure-transport (2026-07-22)
+
+Two findings from a background security review were fixed. The second lives in
+`sdk_go` but the CLI wires the opt-out, so both are recorded here.
+
+### B — password on the command line (`cli.go` `cmdLogin`)
+
+**Finding.** `login --password <pw>` puts the password in `argv`, visible via
+`ps` / `/proc/<pid>/cmdline` and shell history.
+
+**Fix.** `cmdLogin` now reads the password from the `THREADY_PASSWORD` env var as
+the secure primary path. `--password` is kept for compatibility, but whenever a
+flag value is present the CLI prints to **stderr**:
+`warning: --password on the command line is visible to other processes; prefer THREADY_PASSWORD`.
+Precedence: `THREADY_PASSWORD` (when non-empty) wins; otherwise `--password`. The
+resolved password reaches the client; with neither set, the original usage error
+(`login requires --email and --password`) stands.
+
+### A — insecure transport opt-out (`cmd/thready/main.go`)
+
+The `sdk_go` client now refuses to send credentials over plaintext http to a
+remote host (returns `ErrInsecureTransport`; see the SDK's EVIDENCE). `main.go`
+reads `THREADY_ALLOW_INSECURE_HTTP` into `Config.AllowInsecureHTTP` and its doc
+comment recommends `https` for any remote gateway. The default loopback origin is
+unaffected.
+
+### New tests (`cli_test.go`)
+
+- `TestLogin_PasswordFromEnv` — `t.Setenv("THREADY_PASSWORD", …)`, no `--password`:
+  password reaches the client, **no** warning on stderr.
+- `TestLogin_PasswordFlagWarns` — `--password` used: warning on stderr **and** the
+  flag value reaches the client.
+- `TestLogin_EnvBeatsFlag` — both set: env value wins, warning still emitted.
+- `TestLogin_MissingBothIsUsageError` — neither set: usage error, client not
+  called, no warning.
+
+```
+=== RUN   TestLogin_PasswordFromEnv
+--- PASS: TestLogin_PasswordFromEnv (0.00s)
+=== RUN   TestLogin_PasswordFlagWarns
+--- PASS: TestLogin_PasswordFlagWarns (0.00s)
+=== RUN   TestLogin_EnvBeatsFlag
+--- PASS: TestLogin_EnvBeatsFlag (0.00s)
+=== RUN   TestLogin_MissingBothIsUsageError
+--- PASS: TestLogin_MissingBothIsUsageError (0.00s)
+```
+
+### Re-run of the full gate (`cd implementation/cli`, `replace ../sdk_go`)
+
+```
+$ GOWORK=off go build ./...    # exit 0, no output
+$ GOWORK=off go vet ./...      # exit 0, no output
+$ GOWORK=off gofmt -l .        # exit 0, empty output (gofmt-clean)
+$ GOWORK=off go test ./... -race -count=1
+ok  	digital.vasic.threadycli	1.013s
+?   	digital.vasic.threadycli/cmd/thready	[no test files]
+```
+
+**25 test functions (21 original + 4 new), all PASS, race detector clean.**
+
+### End-to-end binary (real SDK adapter path)
+
+```
+# A) remote http + token → SDK refuses to send the credential
+$ THREADY_BASE_URL=http://api.thready.example THREADY_TOKEN=tok-abc ./thready channels list
+thready: thready: refusing to send credentials over plaintext http to a non-loopback host; use https or set Config.AllowInsecureHTTP
+(exit 1)
+
+# B) --password → stderr warning, then attempts login (loopback unreachable)
+$ THREADY_BASE_URL=http://127.0.0.1:1 ./thready login --email a@b.c --password s3cret
+warning: --password on the command line is visible to other processes; prefer THREADY_PASSWORD
+thready: thready: POST /v1/auth/login: Post "http://127.0.0.1:1/v1/auth/login": dial tcp 127.0.0.1:1: connect: connection refused
+(exit 1)
+
+# C) THREADY_PASSWORD → no warning; login attempted
+$ THREADY_BASE_URL=http://127.0.0.1:1 THREADY_PASSWORD=env-s3cret ./thready login --email a@b.c
+thready: thready: POST /v1/auth/login: Post "http://127.0.0.1:1/v1/auth/login": dial tcp 127.0.0.1:1: connect: connection refused
+(exit 1)
+
+# D) remote http + token + THREADY_ALLOW_INSECURE_HTTP=1 → override lets it send (DNS lookup, not a refusal)
+$ THREADY_BASE_URL=http://api.thready.invalid THREADY_TOKEN=tok-abc THREADY_ALLOW_INSECURE_HTTP=1 ./thready channels list
+thready: thready: GET /v1/channels: Get "http://api.thready.invalid/v1/channels": dial tcp: lookup api.thready.invalid: no such host
+(exit 1)
 ```

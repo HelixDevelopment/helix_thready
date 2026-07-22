@@ -135,6 +135,80 @@ ok  	digital.vasic.threadysdk	1.037s	coverage: 78.5% of statements
 
 ## Verdict
 
-**READY** — builds, vets, is gofmt-clean, and all 18 race-enabled tests pass
-under `GOWORK=off`. The SDK is a self-contained, stdlib-only typed client
-verified against a contract-mock of the `/v1` surface.
+**READY** — builds, vets, is gofmt-clean, and all 20 race-enabled tests pass
+under `GOWORK=off` (the original 18 plus the 2 security regressions below). The
+SDK is a self-contained, stdlib-only typed client verified against a
+contract-mock of the `/v1` surface.
+
+---
+
+## Security fix — insecure-transport-default (2026-07-22)
+
+**Finding.** The client attached `Authorization: Bearer …` / `X-API-Key: …` to a
+request regardless of URL scheme, so with a plaintext-`http` base URL to a remote
+host the credential would be sent in the clear to any on-path observer.
+
+**Fix.** `Config.AllowInsecureHTTP bool` (default `false`) was added.
+`applyAuth` now enforces a transport policy *before* any send: when a credential
+is present and the request is plaintext `http` to a **non-loopback** host, it
+attaches **no header** and returns the new typed sentinel `ErrInsecureTransport`
+(recoverable via `errors.Is`). `https` (any host) and `http` to a loopback host
+(`127.0.0.1`, `::1`, `localhost`) are always allowed; `AllowInsecureHTTP: true`
+opts out of the refusal. Both call sites (`do()` and `SubscribeEvents`) return
+the error instead of sending. Files touched: `errors.go` (sentinel),
+`client.go` (`Config`/`Client` field, `applyAuth`→error, `transportAllowed`,
+`isLoopbackHost`), `methods.go` (`SubscribeEvents` call site).
+
+**New tests** (`client_test.go`), each using a recording `http.RoundTripper` so
+the assertion is whether a request actually left the client — not merely that it
+errored:
+
+- `TestInsecureTransport_Policy` (table-driven, 7 sub-cases):
+  - `bearer_http_remote_refused` → `ErrInsecureTransport`, **0 transport calls**
+    (header never sent);
+  - `apikey_http_remote_refused` → same for `X-API-Key`;
+  - `bearer_http_loopback_allowed`, `bearer_http_localhost_allowed` → sent, with
+    `Authorization: Bearer …`;
+  - `bearer_https_remote_allowed`, `apikey_https_remote_allowed` → sent;
+  - `bearer_http_remote_override_allowed` (`AllowInsecureHTTP: true`) → sent.
+- `TestInsecureTransport_NoCredentialStillSends` → an unauthenticated call over
+  remote http is unaffected (the refusal is scoped to credential-bearing
+  requests).
+
+```
+=== RUN   TestInsecureTransport_Policy
+=== RUN   TestInsecureTransport_Policy/bearer_http_remote_refused
+=== RUN   TestInsecureTransport_Policy/apikey_http_remote_refused
+=== RUN   TestInsecureTransport_Policy/bearer_http_loopback_allowed
+=== RUN   TestInsecureTransport_Policy/bearer_http_localhost_allowed
+=== RUN   TestInsecureTransport_Policy/bearer_https_remote_allowed
+=== RUN   TestInsecureTransport_Policy/bearer_http_remote_override_allowed
+=== RUN   TestInsecureTransport_Policy/apikey_https_remote_allowed
+--- PASS: TestInsecureTransport_Policy (0.00s)
+    --- PASS: TestInsecureTransport_Policy/bearer_http_remote_refused (0.00s)
+    --- PASS: TestInsecureTransport_Policy/apikey_http_remote_refused (0.00s)
+    --- PASS: TestInsecureTransport_Policy/bearer_http_loopback_allowed (0.00s)
+    --- PASS: TestInsecureTransport_Policy/bearer_http_localhost_allowed (0.00s)
+    --- PASS: TestInsecureTransport_Policy/bearer_https_remote_allowed (0.00s)
+    --- PASS: TestInsecureTransport_Policy/bearer_http_remote_override_allowed (0.00s)
+    --- PASS: TestInsecureTransport_Policy/apikey_https_remote_allowed (0.00s)
+=== RUN   TestInsecureTransport_NoCredentialStillSends
+--- PASS: TestInsecureTransport_NoCredentialStillSends (0.00s)
+```
+
+**Re-run of the full gate** (`cd implementation/sdk_go`):
+
+```
+$ GOWORK=off go build ./...    # exit 0, no output
+$ GOWORK=off go vet ./...      # exit 0, no output
+$ GOWORK=off gofmt -l .        # exit 0, empty output (gofmt-clean)
+$ GOWORK=off go test ./... -race -count=1
+ok  	digital.vasic.threadysdk	1.039s
+
+$ GOWORK=off go test ./... -race -count=1 -cover
+ok  	digital.vasic.threadysdk	1.040s	coverage: 80.2% of statements
+```
+
+**20 test functions (18 original + 2 new), all PASS, race detector clean.** The
+original 18 stay green because `httptest` servers listen on loopback (`127.0.0.1`
+over http), which the policy always permits.

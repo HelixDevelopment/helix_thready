@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,6 +51,13 @@ type Config struct {
 	// is deliberately NOT applied to the long-lived SubscribeEvents stream, which
 	// is bounded by the caller's context instead.
 	Timeout time.Duration
+	// AllowInsecureHTTP, when true, permits the SDK to attach the credential
+	// (bearer token or API key) even to a plaintext http request bound for a
+	// NON-loopback host. It defaults to false: with a remote http BaseURL the
+	// SDK refuses to send credentials and returns ErrInsecureTransport, rather
+	// than leaking them to on-path observers. Loopback-http and https are always
+	// allowed regardless of this flag. Enable it only on a trusted network.
+	AllowInsecureHTTP bool
 }
 
 // Client is a typed, concurrency-safe client for the Thready `/v1` API.
@@ -61,6 +69,8 @@ type Client struct {
 	maxRetries  int
 	backoffBase time.Duration
 	backoffMax  time.Duration
+
+	allowInsecureHTTP bool
 
 	mu          sync.RWMutex
 	accessToken string
@@ -81,13 +91,14 @@ func New(cfg Config) (*Client, error) {
 		hc = &http.Client{Timeout: timeout}
 	}
 	return &Client{
-		baseURL:     base,
-		apiKey:      cfg.APIKey,
-		httpClient:  hc,
-		maxRetries:  defaultMaxRetries,
-		backoffBase: defaultBackoffBase,
-		backoffMax:  defaultBackoffMax,
-		accessToken: cfg.AccessToken,
+		baseURL:           base,
+		apiKey:            cfg.APIKey,
+		httpClient:        hc,
+		maxRetries:        defaultMaxRetries,
+		backoffBase:       defaultBackoffBase,
+		backoffMax:        defaultBackoffMax,
+		allowInsecureHTTP: cfg.AllowInsecureHTTP,
+		accessToken:       cfg.AccessToken,
 	}, nil
 }
 
@@ -108,14 +119,53 @@ func (c *Client) setToken(tok string) {
 
 // applyAuth injects the credential: a bearer JWT when present, otherwise an
 // X-API-Key. Login (a public endpoint) works with neither set.
-func (c *Client) applyAuth(req *http.Request) {
-	if tok := c.AccessToken(); tok != "" {
+//
+// When a credential IS present, it first enforces the transport policy: the SDK
+// refuses to attach the header to a plaintext-http request bound for a
+// non-loopback host (returning ErrInsecureTransport and setting no header),
+// unless Config.AllowInsecureHTTP was set. This prevents leaking a bearer token
+// or API key in the clear. https and loopback-http are always allowed.
+func (c *Client) applyAuth(req *http.Request) error {
+	tok := c.AccessToken()
+	hasCredential := tok != "" || c.apiKey != ""
+	if hasCredential && !c.transportAllowed(req.URL) {
+		return ErrInsecureTransport
+	}
+	if tok != "" {
 		req.Header.Set("Authorization", "Bearer "+tok)
-		return
+		return nil
 	}
 	if c.apiKey != "" {
 		req.Header.Set("X-API-Key", c.apiKey)
 	}
+	return nil
+}
+
+// transportAllowed reports whether it is safe to attach a credential to a
+// request bound for u. https (or any non-http scheme) is always fine; plaintext
+// http is allowed only to a loopback host — or unconditionally when
+// AllowInsecureHTTP was explicitly opted into.
+func (c *Client) transportAllowed(u *url.URL) bool {
+	if c.allowInsecureHTTP {
+		return true
+	}
+	if u == nil || u.Scheme != "http" {
+		return true // https and other non-plaintext schemes are safe
+	}
+	return isLoopbackHost(u.Hostname())
+}
+
+// isLoopbackHost reports whether host refers to the local machine: the literal
+// "localhost", or any loopback IP (127.0.0.0/8, ::1). url.URL.Hostname() has
+// already stripped the port and any IPv6 brackets.
+func isLoopbackHost(host string) bool {
+	if host == "localhost" {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback()
+	}
+	return false
 }
 
 // RequestOption customises a single call.
@@ -189,7 +239,11 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 		if idempotencyKey != "" {
 			req.Header.Set("Idempotency-Key", idempotencyKey)
 		}
-		c.applyAuth(req)
+		// Enforce the credential-transport policy BEFORE any send: a refusal
+		// here means no header was attached and no request left the process.
+		if err := c.applyAuth(req); err != nil {
+			return err
+		}
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {

@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 )
@@ -94,16 +95,29 @@ func newFlagSet(name string, stderr io.Writer) (*flag.FlagSet, *bool) {
 func cmdLogin(ctx context.Context, client APIClient, args []string, stdout, stderr io.Writer) int {
 	fs, asJSON := newFlagSet("login", stderr)
 	email := fs.String("email", "", "account email")
-	password := fs.String("password", "", "account password")
+	passwordFlag := fs.String("password", "", "account password (INSECURE: visible in the process list; prefer the THREADY_PASSWORD env var)")
 	totp := fs.String("totp", "", "TOTP code (required for admin tiers)")
 	if _, err := parseInterspersed(fs, args); err != nil {
 		return exitUsage
 	}
-	if *email == "" || *password == "" {
+
+	// Resolve the password securely. The THREADY_PASSWORD env var is the
+	// preferred path: it is not exposed in argv (ps, /proc/<pid>/cmdline) or the
+	// shell history. A --password flag still works for compatibility, but a
+	// value passed there is visible to other processes, so we warn whenever one
+	// is present. Precedence: THREADY_PASSWORD wins when set; otherwise --password.
+	password := os.Getenv("THREADY_PASSWORD")
+	if *passwordFlag != "" {
+		fmt.Fprintln(stderr, "warning: --password on the command line is visible to other processes; prefer THREADY_PASSWORD")
+		if password == "" {
+			password = *passwordFlag
+		}
+	}
+	if *email == "" || password == "" {
 		return usageErr(stderr, "login requires --email and --password")
 	}
 
-	tp, err := client.Login(ctx, Credentials{Email: *email, Password: *password, TOTP: *totp})
+	tp, err := client.Login(ctx, Credentials{Email: *email, Password: password, TOTP: *totp})
 	if err != nil {
 		return fail(stderr, err)
 	}
