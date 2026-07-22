@@ -1,0 +1,47 @@
+# =============================================================================
+# Helix Thready rest_gateway — rootless-Podman-compatible image.
+#
+# Multi-stage: pinned Go toolchain builds a fully-static (CGO_ENABLED=0) binary,
+# which is copied into a distroless/static base that ships no shell, no libc,
+# and a built-in non-root user (uid 65532). Satisfies the Constitution's
+# rootless-Podman mandate (§11.4.161): the final image declares USER nonroot and
+# needs no root inside the container.
+#
+# Build context is expected to contain a `rest_gateway/` directory (the Go
+# module `digital.vasic.restgateway`). podman_smoke.sh stages that context so the
+# literal `podman build -t thready-gateway-smoke .` works.
+#
+# Registry references are fully qualified so an unqualified-short-name prompt can
+# never block a headless build.
+# =============================================================================
+
+# ---- Stage 1: build ---------------------------------------------------------
+FROM docker.io/library/golang:1.26 AS build
+
+WORKDIR /src
+# Only the gateway module is needed; it is stdlib-only (no module downloads).
+COPY rest_gateway/ ./rest_gateway/
+
+WORKDIR /src/rest_gateway
+ENV GOWORK=off \
+    CGO_ENABLED=0 \
+    GOOS=linux
+
+# -trimpath + -s -w keep the binary lean and reproducible. Static: no libc dep.
+RUN go build -trimpath -ldflags='-s -w' -o /out/gateway ./cmd/gateway \
+    && /out/gateway -h >/dev/null 2>&1 || true
+
+# ---- Stage 2: runtime (distroless, non-root) --------------------------------
+FROM gcr.io/distroless/static-debian12:nonroot
+
+# Copy just the static binary — nothing else lands in the final image.
+COPY --from=build /out/gateway /usr/local/bin/gateway
+
+# Documented listen port (overridable via GATEWAY_ADDR).
+ENV GATEWAY_ADDR=:8080
+EXPOSE 8080
+
+# distroless :nonroot == uid/gid 65532. No root process inside the container.
+USER 65532:65532
+
+ENTRYPOINT ["/usr/local/bin/gateway"]
