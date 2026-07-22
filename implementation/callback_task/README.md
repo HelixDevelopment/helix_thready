@@ -2,9 +2,17 @@
 
 `module digital.vasic.callbacktask` · Go 1.26 · **standard library only** · no external deps.
 
-The one canonical async-job contract applied uniformly across Helix Thready's
-3rd-party integrations (**Boba**, **MeTube**, **Download Manager**) so the
-Processing Engine consumes a **single completion shape** regardless of provider.
+The canonical async-**task** contract for Helix Thready. `callback_task` is the
+generic *task* envelope family, keyed on `{task_id, state: succeeded/failed}`.
+
+> **Two envelope families, one HMAC scheme.** `callback_task` is the generic-task
+> envelope (`{task_id, succeeded/failed}`). Download / job-completion sources
+> (**MeTube** via `metube_webhook`, **Boba** via `boba_adapter`) instead emit the
+> separate *job* envelope (`{job_id, success/failure}`, byte-identical between
+> those two modules). Both families sign the exact raw body with the **same**
+> `X-Thready-Signature` HMAC-SHA256 scheme, so a downstream receiver verifies
+> signatures identically and branches on `job_id` vs `task_id` to tell them apart.
+> There is deliberately **not** a single wire shape across every provider.
 
 Realizes:
 - `docs/public/research/mvp/development/build-new-subsystems.md` §2 — *Standardized

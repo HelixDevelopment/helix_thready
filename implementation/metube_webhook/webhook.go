@@ -31,10 +31,15 @@ const (
 	CompletionFailure CompletionState = "failure"
 )
 
-// Envelope is the stable outbound completion payload, matching the canonical
-// callback_task shape {job_id, state, progress, result_ref, error, ts}. Field
-// presence is stable (no omitempty) so the JSON shape — and therefore the HMAC
-// signature computed over it — is deterministic.
+// Envelope is the stable outbound job-completion payload
+// {job_id, state, progress, result_ref, error, ts} — byte-identical to
+// boba_adapter's envelope. This is the job-completion family (state is
+// success/failure); it is NOT the callback_task envelope, which is a separate
+// generic-task family keyed on {task_id, state: succeeded/failed}. Both families
+// sign the exact raw body with the same X-Thready-Signature HMAC-SHA256 scheme, so
+// a downstream receiver verifies signatures identically and branches on job_id vs
+// task_id. Field presence is stable (no omitempty) so the JSON shape — and
+// therefore the HMAC signature computed over it — is deterministic.
 type Envelope struct {
 	JobID     string          `json:"job_id"`
 	State     CompletionState `json:"state"`

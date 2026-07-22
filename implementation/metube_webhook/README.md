@@ -47,8 +47,14 @@ Recognized `status` values → normalized `JobState`:
 
 ## Webhook envelope (output)
 
-The outbound POST body matches the canonical `callback_task` completion shape
-`{job_id, state, progress, result_ref, error, ts}`:
+The outbound POST body is the **job-completion** envelope
+`{job_id, state, progress, result_ref, error, ts}` — **byte-identical to
+`boba_adapter`'s envelope**. This is the *job* family (`state` is
+`success`/`failure`); it is **not** the `callback_task` envelope, which is a
+separate *generic-task* family keyed on `{task_id, state: succeeded/failed}`. Both
+families sign the exact raw body with the **same** `X-Thready-Signature`
+HMAC-SHA256 scheme, so a downstream receiver verifies signatures identically and
+branches on `job_id` vs `task_id`.
 
 ```json
 {

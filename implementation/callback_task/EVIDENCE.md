@@ -201,3 +201,15 @@ recorded in `DeliveryFailures()` and surfaced to `WithDeliveryErrorHook`, proven
 `TestRegistryCapturesExhaustedDelivery`. The synchronous/blocking delivery
 constraint is documented in godoc + README. All 16 tests pass under `-race`;
 stdlib-only; no external dependencies.
+
+## Doc-accuracy note (cross-cutting review, docs only)
+
+Softened an overclaim: the package godoc (task.go) and README no longer promise
+"a single completion shape regardless of provider". Reality: `callback_task` is the
+generic **task** envelope (`{task_id, succeeded/failed}`); download/job-completion
+sources (`metube_webhook`, `boba_adapter`) emit the *job* envelope
+(`{job_id, success/failure}`) with the **same** `X-Thready-Signature` HMAC scheme —
+a downstream receiver branches on `job_id` vs `task_id`. **Comments/README only — no
+production logic changed.** Gate re-run after the edit (`GOWORK=off`):
+`go build`/`go vet`/`gofmt -l .` clean, `go test ./... -race -count=1` →
+`ok digital.vasic.callbacktask 1.028s` (16/16).

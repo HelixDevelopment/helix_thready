@@ -246,3 +246,74 @@ passthrough, and nil-secondary passthrough — is now exercised.
 **Verdict: READY.** Review finding resolved. Hybrid orchestration is fully
 covered by genuine interface-implementing test doubles with meaningful
 assertions; no existing test was deleted, skipped, or weakened.
+
+---
+
+## 8. Fix pass — `-race` capture (correcting the record)
+
+Captured: 2026-07-22 · Host: linux/amd64 · `go version go1.26.4-X:nodwarf5 linux/amd64`
+
+**Review finding:** Sections 4 and 7 above ran the suite with `-count=1` **without**
+`-race`, and the record implied this suite could not run under the race detector
+(because it shells out to the `tesseract` binary). That is not true — driving an
+external process is orthogonal to Go's race detector, which instruments only this
+module's own Go goroutines/memory. The suite **does** pass under `-race`. The real
+`-race` run is captured below to correct the record.
+
+Exact command (this module is stdlib-only; run with `GOWORK=off` per the standalone
+convention — `tesseract 5.3.0` + ImageMagick `convert` are on `PATH`, so the
+real-OCR assertions execute, none skipped):
+
+```
+$ cd implementation/ocr_adapter \
+    && GOWORK=off go build ./... && GOWORK=off go vet ./... && GOWORK=off gofmt -l . \
+    && GOWORK=off go test ./... -race -count=1 -v
+```
+
+Result:
+
+```
+=== RUN   TestHybrid_ConfidentPrimary_SecondaryNotInvoked
+--- PASS: TestHybrid_ConfidentPrimary_SecondaryNotInvoked (0.00s)
+=== RUN   TestHybrid_ConfidentPrimary_NoRegions_SecondaryNotInvoked
+--- PASS: TestHybrid_ConfidentPrimary_NoRegions_SecondaryNotInvoked (0.00s)
+=== RUN   TestHybrid_LowConfidencePrimary_FallsBackToSecondary
+--- PASS: TestHybrid_LowConfidencePrimary_FallsBackToSecondary (0.00s)
+=== RUN   TestHybrid_EmptyPrimary_FallsBackToSecondary
+--- PASS: TestHybrid_EmptyPrimary_FallsBackToSecondary (0.00s)
+=== RUN   TestHybrid_PrimaryError_FallsBackToSecondary
+--- PASS: TestHybrid_PrimaryError_FallsBackToSecondary (0.00s)
+=== RUN   TestHybrid_WeakPrimary_NilSecondary_Passthrough
+--- PASS: TestHybrid_WeakPrimary_NilSecondary_Passthrough (0.00s)
+=== RUN   TestTesseractRecognize_RealImage
+    tesseract_test.go:75: OCR FullText: "Helix Thready 42"
+--- PASS: TestTesseractRecognize_RealImage (0.20s)
+=== RUN   TestTesseractRecognize_TSVRegions
+    tesseract_test.go:104: parsed 3 word region(s)
+    tesseract_test.go:122: region[0] text="Helix" bbox={X:152 Y:41 Width:84 Height:30} conf=93.29
+    tesseract_test.go:122: region[1] text="Thready" bbox={X:250 Y:41 Width:144 Height:38} conf=91.06
+    tesseract_test.go:122: region[2] text="42" bbox={X:407 Y:42 Width:42 Height:28} conf=96.98
+--- PASS: TestTesseractRecognize_TSVRegions (0.20s)
+=== RUN   TestTesseractRecognize_MissingFile
+    tesseract_test.go:144: missing-file error (expected): ocr: image file not found: .../does_not_exist.png
+--- PASS: TestTesseractRecognize_MissingFile (0.00s)
+=== RUN   TestTesseractUnavailable
+--- PASS: TestTesseractUnavailable (0.00s)
+=== RUN   TestHybrid_PrimaryPath
+--- PASS: TestHybrid_PrimaryPath (0.21s)
+=== RUN   TestHybrid_NoPrimary
+--- PASS: TestHybrid_NoPrimary (0.00s)
+=== RUN   TestParseTSV_Unit
+--- PASS: TestParseTSV_Unit (0.00s)
+PASS
+ok  	digital.vasic.ocr	1.630s
+```
+
+- `GOWORK=off go build ./...` → **OK** (no output)
+- `GOWORK=off go vet ./...` → **OK** (no output)
+- `GOWORK=off gofmt -l .` → **OK** (no output; nothing unformatted)
+- `GOWORK=off go test ./... -race -count=1` → `ok digital.vasic.ocr 2.126s`
+
+**Totals under `-race`: 13 run · 13 passed · 0 failed · 0 skipped · 0 DATA RACE
+reports.** No test was deleted, skipped, or weakened. This suite is race-clean;
+the earlier "no `-race`" framing is superseded by this capture.

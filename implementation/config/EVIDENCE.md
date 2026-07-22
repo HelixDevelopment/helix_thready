@@ -169,3 +169,54 @@ string is **absent** from `Config.String()` while non-secret fields
 (`Thready`, `0.0.0.0:8443`) are **present** and the `***REDACTED***` mask
 appears. `TestLoad_RoundTripDocumentedProdExample` additionally asserts the DSN
 password never surfaces in `String()`. Both pass (see run above).
+
+## Redaction fix (cross-cutting review follow-up)
+
+**Finding (MUST-FIX):** `THREADY_NATS_URL` and `OTEL_EXPORTER_OTLP_ENDPOINT` were
+read into `Config` but **not** masked by `Redacted()`/`String()`, even though a
+`nats://user:pass@host` URL (and, symmetrically, an OTLP endpoint) can embed
+credentials. That contradicted the module's own redaction guarantee ("mask every
+secret ... credential-bearing DSNs/URLs").
+
+**Fix:** both fields are now added to the `Redacted()` mask set alongside the
+DB/redis/clickhouse URL masking (`config.go`), and their struct-field comments now
+flag them as secret. A new test, `TestConfig_RedactionHidesNATSAndOTLPCredentials`,
+loads a credential-bearing `nats://natsuser:natspw-DO-NOT-LEAK@nats:4222` and
+`https://otel-user:otelpw-DO-NOT-LEAK@otel:4317`, then asserts the raw URLs and
+their embedded passwords are **ABSENT** from `Config.String()`, that `Redacted()`
+masks both fields, and that the original `Config` is left un-mutated.
+
+Re-run of the full standalone gate after the fix (verbatim):
+
+```
+$ GOWORK=off go build ./...
+BUILD OK
+$ GOWORK=off go vet ./...
+VET OK
+$ GOWORK=off gofmt -l .
+(empty — every file is already gofmt-clean)
+$ GOWORK=off go test ./... -race -count=1
+ok  	digital.vasic.threadyconfig	1.018s
+```
+
+New test, verbose (both redaction tests):
+
+```
+$ GOWORK=off go test ./... -race -run 'TestConfig_Redaction' -v -count=1
+=== RUN   TestConfig_RedactionHidesSecrets
+--- PASS: TestConfig_RedactionHidesSecrets (0.00s)
+=== RUN   TestConfig_RedactionHidesNATSAndOTLPCredentials
+--- PASS: TestConfig_RedactionHidesNATSAndOTLPCredentials (0.00s)
+PASS
+ok  	digital.vasic.threadyconfig	1.014s
+```
+
+Suite is now **22 tests, 22 pass, 0 fail, 0 skip** (was 21; +1 redaction test),
+race-clean, coverage **89.7%**:
+
+```
+$ GOWORK=off go test ./... -cover -count=1
+ok  	digital.vasic.threadyconfig	0.003s	coverage: 89.7% of statements
+```
+
+No test was deleted, skipped, or weakened.

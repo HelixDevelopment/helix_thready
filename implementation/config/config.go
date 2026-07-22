@@ -225,7 +225,7 @@ type DownloadsConfig struct {
 // EventBusConfig holds the event-transport settings.
 type EventBusConfig struct {
 	Backend    string // THREADY_EVENTBUS_BACKEND
-	NATSURL    string // THREADY_NATS_URL
+	NATSURL    string // THREADY_NATS_URL (secret — may embed nats://user:pass@host credentials)
 	NATSStream string // THREADY_NATS_STREAM
 }
 
@@ -258,7 +258,7 @@ type AuthConfig struct {
 
 // ObservabilityConfig holds telemetry, retention and backup settings.
 type ObservabilityConfig struct {
-	OTLPEndpoint          string        // OTEL_EXPORTER_OTLP_ENDPOINT
+	OTLPEndpoint          string        // OTEL_EXPORTER_OTLP_ENDPOINT (secret — may embed scheme://user:pass@host credentials)
 	MetricsAddr           string        // THREADY_METRICS_ADDR
 	ClickHouseDSN         string        // THREADY_CLICKHOUSE_DSN (secret — contains credentials)
 	AuditRetention        time.Duration // THREADY_AUDIT_RETENTION
@@ -328,6 +328,8 @@ func (c *Config) Redacted() *Config {
 	r.Auth.JWTSecret = maskVal(c.Auth.JWTSecret)
 	r.Auth.APIKeyHashPepper = maskVal(c.Auth.APIKeyHashPepper)
 	r.Auth.EncryptionKey = maskVal(c.Auth.EncryptionKey)
+	r.EventBus.NATSURL = maskVal(c.EventBus.NATSURL)
+	r.Observability.OTLPEndpoint = maskVal(c.Observability.OTLPEndpoint)
 	r.Observability.ClickHouseDSN = maskVal(c.Observability.ClickHouseDSN)
 
 	if c.LLM.CloudProviderKeys != nil {

@@ -2,20 +2,24 @@
   Title           : Helix Thready — Implementation Phase Index
   Classification  : PUBLIC
   Location        : implementation/README.md
-  Status          : Active — v1.0
-  Revision        : 1 (2026-07-22)
+  Status          : Active — v1.1
+  Revision        : 3 (2026-07-22)
   Author          : Helix Thready documentation swarm (implementation)
   Related         : ../docs/public/research/mvp/index.md · ../docs/public/research/mvp/CONVENTIONS.md · ../docs/private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
 
 # Helix Thready — Implementation Phase Index
 
-This directory stages the **first wave of buildable code** for Helix Thready: 14
-self-contained, project-agnostic **Go modules**, each under `implementation/<name>/`
-with module path `digital.vasic.<X>`, staged here as a monorepo. Each module is a
-standalone Go module (its own `go.mod`, standard-library only) intended to be
-**promoted later to its own repository** under `vasic-digital` / `HelixDevelopment`
-per `[CONSTITUTION §11.4.28]` (decoupled submodules).
+This directory stages the **first wave of buildable code** for Helix Thready: 17
+self-contained, project-agnostic **Go modules** plus an `integration` capstone, each
+under `implementation/<name>/` with module path `digital.vasic.<X>` (the capstone is
+`thready.integration`), staged here as a monorepo. Each standalone module has its own
+`go.mod` (standard-library only) and is intended to be **promoted later to its own
+repository** under `vasic-digital` / `HelixDevelopment` per `[CONSTITUTION §11.4.28]`
+(decoupled submodules). A committed `go.work` workspace (force-added — `go.work` is
+normally gitignored) ties **fourteen** of the modules together for the end-to-end
+`integration` capstone; the three newest modules (`boba_adapter`, `config`, `sdk_go`)
+are not listed in the workspace and build standalone with `GOWORK=off`.
 
 Every module ships a `README.md` (contract + API) and an `EVIDENCE.md` (verbatim,
 reproducible `go build`/`go vet`/`gofmt`/`go test` capture with an honest verdict).
@@ -25,10 +29,12 @@ REAL-vs-stub column below is deliberately conservative.
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (implementation) | Initial index over the 14-module implementation wave |
+| 2 | 2026-07-22 | swarm (implementation) | Add `boba_adapter`, `config`, `sdk_go` (→ 17 standalone modules) + the `go.work` `integration` capstone; refresh the aggregate (329 test fns, 18 EVIDENCE.md, all stdlib-only) |
+| 3 | 2026-07-22 | swarm (implementation) | Cross-cutting review corrections: `ocr_adapter` recorded **race-clean** (→ **17/17** standalone suites green under `-race`, no exception); `config` redaction now masks `THREADY_NATS_URL` + `OTEL_EXPORTER_OTLP_ENDPOINT` (+1 test → 22, aggregate 330) |
 
 ## Table of contents
 
-- [1. The 14 modules](#1-the-14-modules)
+- [1. The modules (17 standalone + integration capstone)](#1-the-modules-17-standalone--integration-capstone)
   - [1.1 Summary table](#11-summary-table)
   - [1.2 Per-module REAL vs honest-stub detail](#12-per-module-real-vs-honest-stub-detail)
 - [2. Status summary](#2-status-summary)
@@ -43,16 +49,19 @@ confirmed new-submodule gap · `[GAP: id]` addresses a gap-register item ·
 
 ---
 
-## 1. The 14 modules
+## 1. The modules (17 standalone + integration capstone)
 
 ### 1.1 Summary table
+
+Rows 1–17 are the standalone, independently-promotable modules; the final row is the
+`go.work` **integration capstone** that composes the first fourteen of them.
 
 | # | Module · path | Purpose (one line) | Closes | Tests · `-race` | REAL vs honest `[BUILD-NEW]` stub |
 |---|---------------|--------------------|--------|-----------------|-----------------------------------|
 | 1 | **download_manager** · `digital.vasic.downloadmanager` | Multi-protocol download manager: job queue, worker pool, retry, progress/completion callbacks | `[GAP: 6.3]` | 14 · ✅ clean | **REAL:** HTTP(S) segmented + resumable + SHA-256 download; Manager (queue/state/retry/pause-resume). **STUB:** FTP/SMB/NFS/WebDav → `ErrNotImplemented` |
 | 2 | **callback_task** · `digital.vasic.callbacktask` | One canonical async-job contract (accept→run→status→HMAC webhook→retry→dead-letter) | `[GAP: 6.4]`/`[GAP: 6.5]` (ATM-030) | 16 · ✅ clean | **REAL:** task state machine, retry/backoff, work + delivery dead-lettering, HMAC-SHA256 webhook. **Pending:** non-blocking async delivery wrapper is the caller's (documented) |
 | 3 | **threadreader** · `digital.vasic.threadreader` | Messenger-agnostic thread assembly: root + organic replies, hashtag union | `[GAP: 5.1.3]` | 11 fn / 29 cases · ✅ clean | **REAL:** assembly/system-filter/hashtag pure core. **Pending:** live Telegram/Max sources (`MessageSource` is an in-memory fake here) |
-| 4 | **ocr_adapter** · `digital.vasic.ocr` | OCR engine for VisionEngine via the real `tesseract` CLI (hybrid seam) | `[GAP: 2.6]` | 13 · ⚠️ **no `-race`** | **REAL:** `TesseractProvider` (real tesseract 5.3.0 shell-out). **STUB:** `LLMVisionProvider` `[BUILD-NEW]` interface only, never faked |
+| 4 | **ocr_adapter** · `digital.vasic.ocr` | OCR engine for VisionEngine via the real `tesseract` CLI (hybrid seam) | `[GAP: 2.6]` | 13 · ✅ clean | **REAL:** `TesseractProvider` (real tesseract 5.3.0 shell-out). **STUB:** `LLMVisionProvider` `[BUILD-NEW]` interface only, never faked |
 | 5 | **user_service** · `digital.vasic.userservice` | Identity/access core: passwords, JWT, API keys, RBAC, TOTP | `[BUILD-NEW: User Service]` | 36 · ✅ clean | **REAL:** PBKDF2, JWT HS256/RS256 (rotation/revocation/alg-pin), API keys, RBAC, TOTP (RFC 6238/4226 vectors). **Pending:** REST handlers, JWKS, durable DB (in-memory stores), OAuth2 linking; Argon2id→stdlib PBKDF2 |
 | 6 | **event_bus_service** · `digital.vasic.eventbusservice` | In-process pub/sub: filters, sticky+invalidate, durable replay-from-cursor | `[BUILD-NEW: Event Bus]` | 13 · ✅ clean | **REAL:** pub/sub, glob+metadata filters, sticky, durable replay, async ordering, metrics. **Pending:** NATS JetStream durable transport (adapter seam); no retention/eviction window |
 | 7 | **semantic_search** · `digital.vasic.semsearch` | Lumen-style core: chunk→embed→cosine-KNN→boost→floor→merge→rank | `[GAP: 2.1]` | 19 · ✅ clean | **REAL:** Go-AST+Markdown chunker, deterministic feature-hashing embedder, in-memory cosine-KNN, scoring engine. **Pending:** `OpenAICompatEmbedder`→llama.cpp/HelixLLM `/v1/embeddings` (built, not integration-tested); pgvector store |
@@ -63,11 +72,14 @@ confirmed new-submodule gap · `[GAP: id]` addresses a gap-register item ·
 | 12 | **telegram_adapter** · `digital.vasic.telegramadapter` | Telegram thread-history adapter: `TGMessage` → `[]Post` | `[GAP: 5.1.1]` | 12 fn / 24 cases · ✅ clean | **REAL:** `MapMessages` (`TGMessage`→`Post`, reply/forward/media/forum-topic). **STUB:** live gotd/td MTProto connect/auth/fetch → `ErrNotImplemented` (promote Herald's `qaherald/internal/mtproto`) |
 | 13 | **metube_webhook** · `digital.vasic.metubewebhook` | Outbound completion-webhook shim over MeTube's poll-only API | `[GAP: 6.5]` | 21 · ✅ clean | **REAL:** ParseJobs, real HTTP poll source, terminal-transition detect, dedup, HMAC-signed retrying WebhookSink, Poller. **Pending:** native webhook in MeTube upstream (separate change); live edge = a running MeTube |
 | 14 | **rest_gateway** · `digital.vasic.restgateway` | `/v1` HTTP surface: routing, JWT, RBAC, idempotency, SSE, error envelope | `[BUILD-NEW]` (api/`openapi.yaml`) | 19 · ✅ clean | **REAL:** router, JWT HS256 (alg-pin), RBAC floor+scopes, Idempotency-Key, SSE, error envelope — over **in-memory** Services. **Pending:** wire Services to sibling modules (`go.work` step); prod JWT is RS256/EdDSA via JWKS; TOTP seeded; rate-limit out of scope |
+| 15 | **boba_adapter** · `digital.vasic.bobaadapter` | Normalize Boba's bespoke SSE/hook callbacks → the one shared HMAC completion envelope | `[GAP: 6.4]` | 26 fn / 28 cases · ✅ clean | **REAL:** `ParseSSE`/`ParseHookPayload` → normalized `BobaEvent`; shared `{job_id,state,progress,result_ref,error,ts}` envelope **byte-identical to `metube_webhook`**; `X-Thready-Signature` HMAC-SHA256 over raw body; per-result dedup (terminal-only); real `net/http` `SSEReader` + `HTTPHookRegistrar`; `WebhookSink` retry/back-off; full SSE→webhook chain. **Caveat:** Boba's JSON **field names** are `[inferred]` (lenient parser, one-line per field to correct), unverified on a live Boba build |
+| 16 | **config** · `digital.vasic.threadyconfig` | Typed, validated loader over the documented env-var reference; secret redaction | `[BUILD-NEW]` (configuration.md App. A) | 22 · ✅ clean · 89.7% cov | **REAL:** typed `Config` reading **162/162** documented vars (100% read; ~95 format-validated), aggregated `*MultiError`, env-sensitive defaults, required-in-prod + backend-conditional checks, secret redaction, `ParseDotEnv`. **Deferred (disclosed):** no `${VAR}` interpolation, cron *syntax* unparsed, 22 credential vars held in secret maps (read+redacted, not each format-checked) |
+| 17 | **sdk_go** · `digital.vasic.threadysdk` | Typed, stdlib-only Go client for the gateway's `/v1` control API | `[BUILD-NEW]` (api/`openapi.yaml`) | 18 · ✅ clean · 78.5% cov | **REAL:** typed `/v1` client (login, channels, threads, posts, reprocess, search, skills, SSE `SubscribeEvents`), auth injection (`Bearer` / `X-API-Key`), typed `*APIError` mapping, `Idempotency-Key` on unsafe POSTs, transparent idempotent-GET retries. **Scope:** tested against an `httptest` **contract-mock** of `/v1` (the correct SDK unit-test strategy), not a live gateway |
+| — | **integration** · `thready.integration` | `go.work` capstone: end-to-end pipeline composing the 14 workspace modules | capstone (`go.work`) | 4 · ✅ **GREEN** `-race` | **REAL:** composes the **actual** fourteen modules (imported via `../go.work`, not re-stubbed) into the real Thready pipeline — ingest→assemble→dispatch (idempotent claim)→download+store→OCR→index/search→events→HMAC callback→metering. `TestThreadyPipelineEndToEnd` + 3 compose tests. **No committed module required a change; zero cross-module defects** |
 
 > Test counts are the final headline number from each `EVIDENCE.md`. Where a suite
 > uses table subtests, both the top-level function count and the total case count
-> are shown (`fn / cases`). ✅ = suite green under Go's race detector (`-race`);
-> ⚠️ = see the ocr_adapter note in [§2](#2-status-summary).
+> are shown (`fn / cases`). ✅ = suite green under Go's race detector (`-race`).
 
 ### 1.2 Per-module REAL vs honest-stub detail
 
@@ -96,8 +108,9 @@ confirmed new-submodule gap · `[GAP: id]` addresses a gap-register item ·
    `tesseract 5.3.0` (FullText + TSV word regions). The `Hybrid` orchestrator's
    `LLMVisionProvider` second pass is a declared interface only — `[BUILD-NEW]`,
    deliberately unimplemented, invoked only if a genuine secondary is supplied (none
-   ships). **Note:** this is the one suite whose `EVIDENCE.md` runs `go test -count=1`
-   **without** `-race` (it drives an external binary); 13/13 green.
+   ships). It drives the external `tesseract` binary, but that is orthogonal to Go's
+   race detector: the suite is **race-clean**, 13/13 green under `-race` (see
+   `ocr_adapter/EVIDENCE.md` §8).
 
 5. **user_service** `[BUILD-NEW]` — Real crypto core: PBKDF2-HMAC-SHA256 passwords,
    JWT HS256+RS256 with rotation/revocation and algorithm pinning (rejects `alg:none`
@@ -174,25 +187,94 @@ confirmed new-submodule gap · `[GAP: id]` addresses a gap-register item ·
     step. Production JWT is RS256/EdDSA-via-JWKS (HS256 here for self-testability), TOTP
     is a seeded fixed code, and rate limiting lives in a separate edge module.
 
+15. **boba_adapter** `[GAP: 6.4]` — Boba-Base (`milos85vasic/Boba-Base`) *already*
+    emits callbacks (an SSE `result_found` stream + a `POST /api/v1/hooks` registration),
+    but its shape is bespoke. This module does **not** add callbacks to Boba — it
+    **normalizes** its existing terminal events into the one shared Helix Thready
+    completion envelope `{job_id,state,progress,result_ref,error,ts}` (**byte-identical to
+    `metube_webhook`**), signs it with `X-Thready-Signature: sha256=<hex>` (HMAC-SHA256
+    over the exact raw body), dedups per result id, and fires it via a retrying
+    `WebhookSink`. Real `net/http` `SSEReader` + `HTTPHookRegistrar`; a full
+    `httptest` SSE→webhook chain whose receiver **independently recomputes** the HMAC.
+    Honest caveat: Boba's callbacks are **verified to exist** but their concrete JSON
+    **field names** are `[inferred]` from its torrent-search domain (the parser is
+    lenient — several accepted spellings per field — so aligning to Boba's exact keys is
+    a one-line change that never touches normalize/sign/deliver).
+
+16. **config** `[BUILD-NEW]` — The typed, validated configuration loader; the single
+    grounding point for `configuration.md` Appendix A (the master env-var index of
+    **162** variables). `Load(getenv)` reads **162/162** documented vars into a
+    subsystem-grouped `Config`, applies the documented (environment-sensitive) defaults,
+    and returns **every** problem at once as a single `*MultiError` (~95 vars are
+    format-validated: enums, ints/floats, durations, URL-shapes, bools; production and
+    backend-conditional requirements enforced; JWT-secret / AES-key strength checked).
+    `Config.String()`/`Redacted()` **mask every secret** (tokens, keys, peppers, the
+    encryption key, credential-bearing DSNs/URLs, and the cloud/vision key maps).
+    Honest scope: `ParseDotEnv` returns values verbatim (no `${VAR}` interpolation), cron
+    *syntax* is stored-not-parsed, and the 22 credential vars live in secret maps (read +
+    redacted, not each individually format-checked). 22/22 tests, 89.7% coverage,
+    race-clean.
+
+17. **sdk_go** `[BUILD-NEW]` — A typed, stdlib-only Go client (`package thready`) for the
+    gateway's `/v1` control API. Typed request/response DTOs, auth injection
+    (`Authorization: Bearer …` after `Login`/access token, or `X-API-Key`, mutually
+    exclusive), a canonical `{"error":{…}}`→`*APIError` mapping recovered via
+    `errors.As`, an auto/overridable `Idempotency-Key` on unsafe POSTs, transparent
+    capped-backoff retries for idempotent GETs (POSTs never retried), and an SSE
+    `SubscribeEvents`. Correct-for-an-SDK test strategy: exercised against a
+    `net/http/httptest` **contract-mock** of `/v1` (asserting the exact method/path/
+    headers/body it sends and the typed value it decodes), **not** the live gateway.
+    18/18 race-enabled tests, 78.5% coverage.
+
+18. **integration** (`thready.integration`, capstone) — The proof that the fourteen
+    workspace modules **compose into the real end-to-end Thready pipeline** using the
+    *actual* modules (imported via the parent `../go.work`, `replace`-pinned to local
+    paths so the graph also resolves offline), not re-stubbed copies.
+    `TestThreadyPipelineEndToEnd` drives a realistic thread through real crypto/OCR/HTTP/
+    cosine/events/metering: `telegram_adapter`→`threadreader` (assemble + hashtags) →
+    `skill_dispatch` (precedence order + idempotent single-claim: a duplicate `Process`
+    runs each Skill exactly once) → `download_manager` (sha256-verified fetch) →
+    `asset_service` (content-addressed, tamper-caught) → `ocr_adapter` (real `tesseract`)
+    → `semantic_search` (real cosine retrieves the OCR chunk) → `event_bus_service`
+    (9 events replayed in order) → `callback_task` (HMAC independently recomputed) →
+    `metering` (invoice line asserted). Plus three compose tests
+    (`max_adapter`→assembler, `metube_webhook` completion, `rest_gateway` login
+    round-trip). **No committed module required a change**; the only friction was a
+    documented toolchain note (`go build ./...` at the non-module workspace root). 4/4
+    PASS under `-race -count=1`, stable under `-count=3`.
+
 ---
 
 ## 2. Status summary
 
-- **Total modules:** 14, each an independent Go module (`digital.vasic.<X>`, `go 1.26`).
-- **Total tests:** **260 top-level test functions** across the suite (**~303 cases**
-  counting table subtests), 0 failures. Per module: 14, 16, 11, 13, 36, 13, 19, 23, 19,
-  34, 10, 12, 21, 19.
-- **All stdlib-only:** every `go.mod` has **no `require` block** — zero third-party Go
-  dependencies. External *binaries* are used only where unavoidable (`ocr_adapter`
-  shells out to `tesseract`; its tests also use ImageMagick to synthesize images).
-- **Green under `-race`:** **13 of 14** module suites run and pass under Go's race
-  detector with `-count=1`. **Honest exception:** `ocr_adapter` runs `go test -count=1`
-  **without** `-race` because it drives the external `tesseract` process — 13/13 green,
-  but not under the race detector. Every other module is race-clean, and several
-  (download_manager, user_service, event_bus_service) additionally survive
+- **Total modules:** **17 standalone** Go modules (`digital.vasic.<X>`, `go 1.26`) **plus
+  the `integration` capstone** (`thready.integration`) — 18 `go.mod` in all.
+- **Total tests:** **330 top-level test functions** across the suite, **0 failures**. Per
+  standalone module (rows 1–17): 14, 16, 11, 13, 36, 13, 19, 23, 19, 34, 10, 12, 21, 19,
+  26, 22, 18; the capstone adds 4. Several suites layer table subtests on top (e.g.
+  `boba_adapter` 26 fn / 28 cases). (`config` gained a redaction test: 21 → 22.)
+- **All stdlib-only:** every standalone `go.mod` has **no `require` block** — zero
+  third-party Go dependencies. The only `require` anywhere is `integration/go.mod`, and
+  its requires are the **in-house sibling modules** it composes (pinned to local paths via
+  `replace`, so the graph resolves offline — still no third-party). External *binaries*
+  are used only where unavoidable (`ocr_adapter` shells out to `tesseract`; its tests also
+  use ImageMagick to synthesize images).
+- **Green under `-race`:** **17 of 17** standalone module suites run and pass under Go's
+  race detector with `-count=1`, and the **`integration` capstone is GREEN under `-race`**
+  (stable under `-count=3`). This **includes `ocr_adapter`**: although it drives the
+  external `tesseract` process, that is orthogonal to Go's race detector, and its suite is
+  race-clean (13/13 under `-race`; captured in `ocr_adapter/EVIDENCE.md` §8). Several
+  modules (download_manager, user_service, event_bus_service) additionally survive
   `-count=5..20` stability reruns.
 - **`go vet` / `gofmt`:** clean across all modules (each `EVIDENCE.md` captures it).
-- **Committed + pushed:** all 14 modules are committed and pushed to **GitHub, GitLab,
+- **EVIDENCE:** **18 `EVIDENCE.md`** files — one per standalone module plus the capstone —
+  each pasting verbatim, reproducible `build`/`vet`/`gofmt`/`test` output with an honest
+  verdict.
+- **`go.work`:** a committed workspace (force-added, since `go.work` is normally
+  gitignored) lists **fourteen** modules + `./integration` and ties them together for the
+  capstone. The three newest modules (`boba_adapter`, `config`, `sdk_go`) are **not** in
+  the workspace and build standalone with `GOWORK=off`.
+- **Committed + pushed:** all modules are committed and pushed to **GitHub, GitLab,
   and GitVerse**. GitFlic is blocked — see [§6](#6-upstream-status).
 
 ## 3. What's real vs pending
@@ -220,8 +302,17 @@ client) that are pending real credentials/services and are never faked:
   `download_manager` and `asset_service`, the reuse seam for `digital.vasic.filesystem`.
 - **A running MeTube** — the live poll target for `metube_webhook` (the shim and its
   HTTP source are real and tested against a mock).
-- **Service wiring** — `rest_gateway` serves over in-memory `Services`; connecting them
-  to the sibling domain modules is the `go.work` integration step below.
+- **Boba's exact callback keys** — `boba_adapter` already parses, normalizes, signs and
+  delivers Boba's callbacks, but Boba's concrete JSON **field names** are `[inferred]` (a
+  lenient parser accepts several spellings per field); confirming them against a live Boba
+  build is a one-line-per-field change that never touches the normalize/sign/deliver logic.
+- **A live gateway for the SDK** — `sdk_go` is verified against an `httptest`
+  contract-mock of `/v1` (the correct SDK unit-test strategy), not the running
+  `rest_gateway` process; `config` has no pending live edge (its core is fully real).
+- **Service wiring** — `rest_gateway` serves over in-memory `Services`; the committed
+  `go.work` + `integration` capstone now demonstrate the real modules composing end to
+  end, but wiring the gateway's own injected `Services` to the sibling domain modules in
+  production remains the next step.
 
 Also deliberately out of scope for this wave (documented, not claimed): OCR LLM-vision
 second pass, Asset Service HLS/DASH transcoder `[OPEN: ASSET-2]`, User Service
@@ -242,20 +333,40 @@ Example:
 cd implementation/asset_service && go test ./... -race -count=1
 ```
 
-**ocr_adapter exception** — omit `-race` (it drives the `tesseract` binary; requires
-`tesseract` and, for the test images, ImageMagick `convert` on `PATH`):
+**`GOWORK=off` for the three newest modules.** `boba_adapter`, `config` and `sdk_go` are
+**not** listed in the committed `go.work`, so every Go command for them must disable the
+workspace:
 
 ```bash
-cd implementation/ocr_adapter && go test ./... -count=1
+cd implementation/config && GOWORK=off go test ./... -race -count=1
 ```
 
-**go.work integration workspace.** The modules are decoupled by design (separate
-`go.mod` each), so there is **no** committed `go.work` yet. A `go.work` workspace is the
-planned mechanism that ties them together for cross-module integration — most concretely,
-to wire `rest_gateway`'s injected `Services` interfaces to the real domain modules
+**ocr_adapter tooling** — it drives the `tesseract` binary, so its tests require
+`tesseract` and, for the synthesized test images, ImageMagick `convert` on `PATH`.
+Driving an external process is orthogonal to Go's race detector, so the suite is
+race-clean and `-race` applies as for every other module:
+
+```bash
+cd implementation/ocr_adapter && go test ./... -race -count=1
+```
+
+**go.work integration workspace (committed).** A `go.work` workspace **is now committed**
+(force-added — `go.work` is normally gitignored) listing the fourteen composable modules
++ `./integration`; it ties them together so the `integration` capstone imports the *real*
+modules. Run the capstone from the workspace root:
+
+```bash
+cd implementation            # the go.work workspace root
+go work sync
+cd integration && go test ./... -race -count=1
+```
+
+`integration/go.mod` `replace`-pins its fourteen siblings to local paths, so the module
+graph also resolves offline. This is the concrete mechanism that will later wire
+`rest_gateway`'s injected `Services` interfaces to the real domain modules
 (`user_service`, `threadreader`, `semantic_search`, `skill_dispatch`, `asset_service`,
-`event_bus_service`, `metering`) instead of the in-memory implementations. That
-integration step is the next wave (see `rest_gateway/EVIDENCE.md`).
+`event_bus_service`, `metering`) instead of the in-memory implementations (see
+`integration/EVIDENCE.md`).
 
 ## 5. Promotion plan
 
@@ -269,10 +380,12 @@ repository** under `vasic-digital` / `HelixDevelopment`:
   policy (`§2.1`).
 - Project-prefixed release tags (`§11.4.151`) and no server-side CI (`§11.4.156`) apply
   as for every Helix repo.
-- The **decoupled / project-agnostic contract is preserved**: modules import no in-house
-  peers today (only documented reuse *seams*), so promotion is a move, not a rewrite.
-  Consumers depend on the promoted module path, and the `go.work` workspace stitches them
-  during integration and local development.
+- The **decoupled / project-agnostic contract is preserved**: each of the **17
+  standalone** modules imports no in-house peers today (only documented reuse *seams*), so
+  promotion is a move, not a rewrite. Consumers depend on the promoted module path, and
+  the `go.work` workspace stitches them during integration and local development. The
+  `integration` capstone is the workspace-only glue that composes real siblings (its
+  `go.mod` `require`s them via local `replace`); it is not itself promoted.
 
 ## 6. Upstream status
 

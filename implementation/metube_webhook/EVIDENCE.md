@@ -139,3 +139,14 @@ assertion. No test is skipped, deleted, or faked; no output was edited.
 MeTube and polls its existing poll-only API; it does not modify MeTube. Adding a
 native completion webhook to MeTube (milos85vasic/YT-DLP) upstream is a separate
 change and is out of scope for this module.
+
+## Doc-accuracy note (cross-cutting review, docs only)
+
+Corrected a misleading claim: the `Envelope` godoc (webhook.go) and README no
+longer say the payload matches "the canonical `callback_task` shape". Reality:
+metube's envelope is the **job-completion** family `{job_id, state:success/failure}`,
+**byte-identical to `boba_adapter`**; `callback_task` is a *separate* generic-task
+family (`{task_id, state:succeeded/failed}`) that only shares the same
+`X-Thready-Signature` HMAC-SHA256 scheme. **Comments/README only — no production
+logic changed.** Gate re-run after the edit (`GOWORK=off`): `go build`/`go vet`/
+`gofmt -l .` clean, `go test ./... -race -count=1` → `ok digital.vasic.metubewebhook 1.030s` (21/21).

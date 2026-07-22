@@ -396,6 +396,47 @@ func TestConfig_RedactionHidesSecrets(t *testing.T) {
 	}
 }
 
+// TestConfig_RedactionHidesNATSAndOTLPCredentials proves the two URL fields that
+// were previously left unmasked — THREADY_NATS_URL and OTEL_EXPORTER_OTLP_ENDPOINT
+// — are redacted, since both can embed scheme://user:pass@host credentials. The
+// raw credential-bearing values must be ABSENT from String() (and Redacted()).
+func TestConfig_RedactionHidesNATSAndOTLPCredentials(t *testing.T) {
+	const natsURL = "nats://natsuser:natspw-DO-NOT-LEAK@nats:4222"
+	const otlpURL = "https://otel-user:otelpw-DO-NOT-LEAK@otel:4317"
+	c, err := Load(envFunc(map[string]string{
+		"THREADY_EVENTBUS_BACKEND":    "nats",
+		"THREADY_NATS_URL":            natsURL,
+		"OTEL_EXPORTER_OTLP_ENDPOINT": otlpURL,
+	}))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	s := c.String()
+
+	// The raw URLs and their embedded passwords must be ABSENT from String().
+	for _, secret := range []string{natsURL, otlpURL, "natspw-DO-NOT-LEAK", "otelpw-DO-NOT-LEAK"} {
+		if strings.Contains(s, secret) {
+			t.Errorf("String() leaked credential %q:\n%s", secret, s)
+		}
+	}
+
+	// Redacted() masks both fields; the original Config is left intact.
+	r := c.Redacted()
+	if r.EventBus.NATSURL != redactedMask {
+		t.Errorf("Redacted().EventBus.NATSURL = %q, want mask", r.EventBus.NATSURL)
+	}
+	if r.Observability.OTLPEndpoint != redactedMask {
+		t.Errorf("Redacted().Observability.OTLPEndpoint = %q, want mask", r.Observability.OTLPEndpoint)
+	}
+	if c.EventBus.NATSURL != natsURL {
+		t.Errorf("Redacted() mutated the original: NATSURL = %q", c.EventBus.NATSURL)
+	}
+	if c.Observability.OTLPEndpoint != otlpURL {
+		t.Errorf("Redacted() mutated the original: OTLPEndpoint = %q", c.Observability.OTLPEndpoint)
+	}
+}
+
 // TestLoad_RoundTripDocumentedDevExample round-trips the Appendix B.1
 // development .env skeleton through ParseDotEnv -> Load.
 func TestLoad_RoundTripDocumentedDevExample(t *testing.T) {

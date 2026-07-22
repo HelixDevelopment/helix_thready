@@ -1,10 +1,16 @@
 // Package callbacktask is the Helix Thready standardized Callback/Task module.
 //
-// It defines one canonical async-job contract (accept task -> run async ->
+// It defines the canonical generic-TASK contract (accept task -> run async ->
 // status -> outbound HMAC-signed webhook on completion -> error -> retry with
-// back-off -> dead-letter) applied uniformly across the 3rd-party integrations
-// (Boba, MeTube, Download Manager) so the Processing Engine consumes a single
-// completion shape regardless of the underlying provider.
+// back-off -> dead-letter). Its envelope is the generic-task family, keyed on
+// {task_id, state: succeeded/failed}.
+//
+// This is NOT the only completion shape in Helix Thready. Download / job-
+// completion sources (MeTube via metube_webhook, Boba via boba_adapter) emit a
+// separate JOB envelope keyed on {job_id, state: success/failure} (byte-identical
+// between those two modules). Both families sign the exact raw body with the same
+// X-Thready-Signature HMAC-SHA256 scheme, so a downstream receiver verifies
+// signatures identically and branches on job_id vs task_id to tell them apart.
 //
 // It realizes the contract described in
 // docs/public/research/mvp/development/build-new-subsystems.md §2
