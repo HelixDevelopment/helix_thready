@@ -16,6 +16,7 @@
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: shared `.ds-*` primitives (verbatim), Thready composites, per‑platform adapters, states/anatomy, build backlog, testing |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: added a TDD reproduce‑first (RED) test for `thready-processing-pipeline`; added the mandated **Challenges** scenario‑bank test type (`[GAP: 9.3]`) + backlog item |
 | 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: verbatim primitives table completed against source (`--btn--secondary/--ghost`, `--elev-flat`, `--fg-2`/`--meta`/`--border-soft` aliases); component state-lifecycle diagram (§5b) + `.mmd`; **per-platform variant matrix for every composite** (§7.1 Angular/React/KMP/Flutter/TUI + status); five more component contracts (thread-row, hashtag-chip, search-bar, wizard, branding-editor, toast, §6.1); a11y name/role/keyboard per composite |
+| 4 | 2026-07-22 | swarm (design · review-fixes) | Consistency fix from the adversarial platform review: §7.1 retitled from "(all platforms)" to "(five realization tracks)" — the table has five columns (Qt shares the Flutter/`helix_design` track; SwiftUI and ArkTS have no build track), which the old title overstated; added an explicit pointer to the full 8-column matrix in library/platform-map.md §3. No cell content changed — no verification was fabricated |
 
 ## Table of contents
 
@@ -28,7 +29,7 @@
 - [6. Component contract (anatomy · props · states · a11y)](#6-component-contract-anatomy--props--states--a11y)
   - [6.1 Additional component contracts](#61-additional-component-contracts)
 - [7. Per‑platform adapters](#7-per-platform-adapters)
-  - [7.1 Per‑component variant matrix (all platforms)](#71-per-component-variant-matrix-all-platforms)
+  - [7.1 Per‑component variant matrix (five realization tracks)](#71-per-component-variant-matrix-five-realization-tracks)
 - [8. States, empty/skeleton/error](#8-states-emptyskeletonerror)
 - [9. Testing the library](#9-testing-the-library)
 - [10. Build backlog & gaps](#10-build-backlog--gaps)
@@ -365,11 +366,17 @@ The composites are specified once and realized per platform from the same tokens
 a11y semantics must match across platforms (a `processing-pipeline` behaves the same on Web, Compose
 and the TUI). Parity is enforced by the visual‑regression bank (§9) once CI lands `[GAP: 9.3]`.
 
-### 7.1 Per‑component variant matrix (all platforms)
+### 7.1 Per‑component variant matrix (five realization tracks)
 
-Each composite is realized per platform from the same tokens. The cell records the **realization
-mechanism** and honest **status**; a blank/`—` means "renders as its primitives, no bespoke work".
-Legend: ✅ usable today · ◐ scaffold/needs‑hardening · ○ not‑yet / deferred.
+Each composite is realized per platform from the same tokens. The columns are the **five build
+tracks of §7** — Angular (Web/Desktop‑Tauri), React, KMP/Compose, Flutter/Qt (one `helix_design`
+track), and TUI — **not** the eight per‑platform columns of the library matrix: SwiftUI and ArkTS
+have no build track of their own (iOS is planned via KMP/Compose, HarmonyOS via `helix_shims`),
+and Qt shares the `helix_design` track with Flutter. For the full per‑component **8‑column**
+breakdown (incl. SwiftUI/ArkTS/Qt cells, all ASSUMED), see
+[library/platform-map.md §3](./library/platform-map.md#3-the-matrix). The cell records the
+**realization mechanism** and honest **status**; a blank/`—` means "renders as its primitives, no
+bespoke work". Legend: ✅ usable today · ◐ scaffold/needs‑hardening · ○ not‑yet / deferred.
 
 | Composite | Angular (Web/Desktop) ✅ | React ◐ `[GAP: 8.6]` | KMP/Compose ◐ `[GAP: 8.4]` | Flutter/Qt ◐ `[GAP: 8.2/8.3]` | TUI ✅ `[VERIFIED]` |
 |-----------|-------------------------|----------------------|----------------------------|------------------------------|--------------------|

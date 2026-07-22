@@ -8,7 +8,8 @@
   Related         : ./design-system.md, ./brand-assets.md, ./theming.md,
                     ./wireframes.md, ./ux-flows.md, ./component-library.md,
                     ./prototypes.md, ./figma/README.md, ./library/README.md,
-                    ./motion/README.md, ./opendesign/DESIGN.md, ./screens/web/README.md,
+                    ./motion/README.md, ./opendesign/DESIGN.md, ./platforms/README.md,
+                    ./screens/web/README.md,
                     ./screens/mobile/README.md, ./screens/desktop/README.md,
                     ./screens/tui/README.md, ./screens/marketing/README.md,
                     ./assets/icon-export-matrix.md, ./exports/README.md,
@@ -26,6 +27,7 @@
 | 5 | 2026-07-22 | swarm (design · figma) | Added the **[figma/](./figma/README.md)** import kit to the catalogue: the canonical token set as Figma Variables JSON (`Thready / Color` Light+Dark incl. `ds-heart` alias + `Thready / Structure`), the 8-page `figma-file-plan.md` blueprint of the "Thready — Design Library" file, and the two materialization paths (Figma MCP `use_figma` Plugin API with OAuth vs manual `components-sheet.svg` + variables import). No Figma file exists yet — its creation is tracked as `[OPEN: THREADY-DES-FIG-01]` in the kit. |
 | 6 | 2026-07-22 | swarm (design · package critic) | Wired the **rendered/executable design package** into this registry: the [`opendesign/`](./opendesign/DESIGN.md) OpenDesign brand contract + `tokens.css`, the [`screens/`](./screens/web/README.md) rendered HTML surfaces (web incl. interactive [`index.html`](./screens/web/index.html), mobile, desktop, TUI, marketing), the [`library/`](./library/README.md) living component page, the [`motion/`](./motion/README.md) Lottie set, and the [`exports/`](./exports/README.md) PNG/PDF/PenPot/Figma-IR bundle — see the new [Rendered design package](#rendered-design-package-on-disk) section. Package sign-off recorded in [DESIGN_PACKAGE_REPORT.md](./DESIGN_PACKAGE_REPORT.md). |
 | 6 | 2026-07-22 | swarm (design · index) | Consolidation after the multi-agent design expansion: **subdirectory catalogue completed** — [Files in this area](#files-in-this-area) now lists every subdirectory (`library/`, `motion/`, `opendesign/`, `screens/{web,mobile,desktop,tui,marketing}/`, `assets/`, `diagrams/`, `exports/`) alongside the 7 area docs and the `figma/` kit — and the **canonical open-items registry rebuilt**: re-verified against the tree by grep (`OPEN: THREADY-…`) and expanded from `THREADY-DES-01…-14` to all **41 registered IDs** across nine families (`-15…-17`, `-LIB-01…04`, `-SCR-01…04`, `-SCR-MOB-01…03`, `-TUI-01/02`, `-MKT-01/02`, `-OD-01…03`, `-FIG-01…03`, `THREADY-MOT-01…03`). `THREADY-DES-OD-03` (link `opendesign/` from this index) is **closed by this very change**; `THREADY-MOT-03` recorded in its narrowed (2026-07-22) state per [motion.md §8](./motion/motion.md#8-gaps--open-items). |
+| 7 | 2026-07-22 | swarm (design · platforms) | Added the **[platforms/](./platforms/README.md)** per-platform customization specs closing the adversarial-review finding ("adequate-but-scattered Android/iOS, THIN HarmonyOS/Aurora, MISSING typography substitution"): `typography-substitution.md` (bundling feasibility, honest fallback stacks, TUI monospace-only reality, Cyrillic discipline, dynamic-type mapping of the token ramp), dedicated `harmonyos.md` + `aurora.md` design contracts (both clients remain skeletons `[GAP: 8.5]`), and `react-token-rebind.md` (remediation contract for `THREADY-DES-LIB-01`/`[GAP: 8.6]`). Registry extended with the new **`THREADY-DES-PLAT-01…-08`** family (41 → **49** registered IDs, ten families). |
 
 This is the canonical entry point for the **Design & UX** documentation of Helix Thready. It
 specifies the design system (derived from **OpenDesign** and the shared in‑house
@@ -91,6 +93,8 @@ specified to design depth with their scaffold gaps tracked.
 | [library/](./library/README.md) | **Design library artifacts**: `components.html` (the living component library — 14 groups, ~38 components, ≈118 state cells, each auditable in light + dark), `components-sheet.svg` (importable one‑sheet overview), `platform-map.md` (36 components × 8 platforms reusability matrix with per‑cell VERIFIED / PROPOSED / ASSUMED markers) |
 | [motion/](./motion/README.md) | **Motion package (Lottie catalogue)**: six hand‑authored vector Lottie animations + five static reduced‑motion fallback SVGs, `motion.md` (motion spec + honest validation record), `motion-manifest.json` (runtime manifest v2 with per‑animation `reducedMotionFallback`), self‑contained `preview.html` (vendored lottie‑web, zero network) |
 | [opendesign/](./opendesign/DESIGN.md) | **OpenDesign brand contract**: `DESIGN.md` (the Thready contract in the verified 9‑section OpenDesign schema, Lens A/B compliant), `tokens.css` (its machine‑readable twin — compiled CSS custom properties, light + dark, per the OpenDesign token schema), `TOOLING.md` (honest tooling capability check: daemon/CLI probes, headless‑vs‑operator matrix, exact Figma import flow) |
+| [platforms/](./platforms/README.md) | **Per-platform customization specs** (deviation contracts, complementing `library/platform-map.md` which maps components and `screens/*/README.md` which carry per-screen chrome): `typography-substitution.md` (per-platform font strategy — bundling feasibility, honest fallback stacks, TUI monospace-only reality, Cyrillic discipline, dynamic-type mapping), `harmonyos.md` + `aurora.md` (dedicated ArkTS / Qt-Silica design contracts; clients are skeletons `[GAP: 8.5]`), `react-token-rebind.md` (remediation contract for `THREADY-DES-LIB-01`/`[GAP: 8.6]`); mints `THREADY-DES-PLAT-01…-08` |
+| [tokens-bridge/](./tokens-bridge/README.md) | **Token-bridge codegen** (the generator design-system §7 / platform-map §6 referenced but which did not exist): `generate.mjs` (no-deps Node) parses `opendesign/tokens.css` — the single source — and deterministically emits the seven per-platform bindings, each `GENERATED — DO NOT EDIT` with the source sha256: W3C DTCG `web/tokens.json` (doubles as the PenPot 2.x design-tokens import file), Compose `ThreadyColors.kt`, SwiftUI `ThreadyTokens.swift`, ArkTS `thready_tokens.ets`, QML `ThreadyTokens.qml` singleton, Lipgloss `thready_palette.go` (locked to `screens/tui/lipgloss-theme.md §2` incl. its ASSUMED ANSI picks; `go vet`/`go build` verified), Flutter `thready_tokens.dart`; `--check` is the CI drift gate (byte-diff + hex round-trip). Bindings are delivery-ready **contracts** — consumer-repo wiring stays open (`[OPEN: THREADY-DES-LIB-04]` narrowed: generator DONE, wiring OPEN) |
 | [screens/web/](./screens/web/README.md) | **Web portal screen designs**: 13 self‑contained OpenDesign‑style HTML screens + the interactive prototype shell (`index.html`) walking the four ux‑flows journeys; per‑screen state contracts, light + dark, realistic Thready data |
 | [screens/mobile/](./screens/mobile/README.md) | **Mobile screen designs**: 11 device‑framed 390×844 artifacts (Android/iOS chrome toggle, HarmonyOS/Aurora port notes) covering every node of the wireframes §6 IA, plus the derived notifications centre (`[OPEN: THREADY-DES-15]`) |
 | [screens/desktop/](./screens/desktop/README.md) | **Desktop (Tauri 2) shell design**: `desktop-shell.html` (per‑OS title bar, menus, tray/notification/file‑drop mocks) + the desktop‑differences catalogue; scope beyond the wrapped web UI stays `[OPEN: THREADY-DES-08]` |
@@ -252,13 +256,13 @@ priority `[OPERATOR]`. IDs are stable and referenced verbatim by the owning file
 
 ## Open items
 
-The full, canonical open‑item registry for this area — **41 registered IDs** across nine families:
+The full, canonical open‑item registry for this area — **49 registered IDs** across ten families:
 the core `THREADY-DES-01…-17` plus the per‑directory families minted by the artifact waves
-(`-LIB`, `-SCR`, `-SCR-MOB`, `-TUI`, `-MKT`, `-OD`, `-FIG`, and `THREADY-MOT`). Each is tracked in
-its owning file; this registry is the single place to see them all and their state. Verified
-against the tree on 2026‑07‑22 by grepping `OPEN: THREADY-…` over `design/`: every ID below exists
-at its owning file, and no ID exists in the tree that is absent below. **State summary: 39 open
-(one narrowed), 2 closed (`THREADY-DES-01`, `THREADY-DES-OD-03`).**
+(`-LIB`, `-SCR`, `-SCR-MOB`, `-TUI`, `-MKT`, `-OD`, `-FIG`, `-PLAT`, and `THREADY-MOT`). Each is
+tracked in its owning file; this registry is the single place to see them all and their state.
+Verified against the tree on 2026‑07‑22 by grepping `OPEN: THREADY-…` over `design/`: every ID
+below exists at its owning file, and no ID exists in the tree that is absent below. **State
+summary: 47 open (one narrowed), 2 closed (`THREADY-DES-01`, `THREADY-DES-OD-03`).**
 
 ### Core area items (`THREADY-DES-01…-17`)
 
@@ -345,6 +349,19 @@ at its owning file, and no ID exists in the tree that is absent below. **State s
 | **THREADY-MOT-01** | `OPEN` | Verify all six Lottie files in `lottie-compose` and `lottie-ios` before mobile ships them (only `lottie-web`/jsdom + headless Chromium are verified) | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
 | **THREADY-MOT-02** | `OPEN` | Light‑theme strategy: load‑time color remap vs. shipping generated `-light` variants; wire the white‑label remap into the branding‑editor preview | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
 | **THREADY-MOT-03** | `OPEN` *(narrowed 2026‑07‑22)* | Asset half **closed** — the five static `reducedMotionFallback` SVGs are delivered, keyframe‑derived, manifest v2‑named. Remaining, narrowed: (a) independent design review / pixel A‑B of the statics against the frozen Lottie frames on a physical display; (b) the `empty-channels.svg` fallback — blocked on the `THREADY-DES-02` illustration‑grade set, delivered with it | [motion.md §8](./motion/motion.md#8-gaps--open-items) |
+
+### Platform customization (`THREADY-DES-PLAT-*`) — [platforms/](./platforms/README.md)
+
+| ID | State | Summary | Owning file(s) |
+|----|-------|---------|----------------|
+| **THREADY-DES-PLAT-01** | `OPEN` | **Font bundling decision** per platform (Android/iOS/HarmonyOS/Aurora): bundle the three brand faces vs. ship system fallback stacks (fallback‑first is the shipping default); includes per‑face license/redistribution verification for app bundles and the variable‑vs‑static‑instances choice | [platforms/typography-substitution §7](./platforms/typography-substitution.md#7-open-items) |
+| **THREADY-DES-PLAT-02** | `OPEN` | **Fallback‑stack Cyrillic** (ru / sr‑Cyrl) coverage verification per OS face (Roboto, SF Pro, HarmonyOS Sans, Aurora system default) — companion to the inherited `THREADY-DES-04` (brand‑face subsets, still open) | [platforms/typography-substitution §7](./platforms/typography-substitution.md#7-open-items) |
+| **THREADY-DES-PLAT-03** | `OPEN` | **ArkUI API verification** of every derived HarmonyOS mapping (Navigation/Tabs, `bindSheet`, `WaterFlow`, `AVSession`, `promptAction`, `font.registerFont`, Barrier‑Free attributes, safe areas, back‑at‑tab‑root rule) against the SDK/HIG + the `helix_shims` contract | [platforms/harmonyos §11](./platforms/harmonyos.md#11-open-items) |
+| **THREADY-DES-PLAT-04** | `OPEN` | **HarmonyOS motion runtime**: no Lottie player is named in ground truth (motion §6 lists web/compose/ios only); verify `@ohos/lottie` or commit to the ArkUI‑animation + poster‑frame floor | [platforms/harmonyos §11](./platforms/harmonyos.md#11-open-items) |
+| **THREADY-DES-PLAT-05** | `OPEN` | **Silica/Qt API verification** of every derived Aurora mapping (PageStack, pulley, remorse timer, `SilicaListView`/`SilicaGridView`/`SearchField`, Qt Multimedia, ambience‑read API, `Theme` units, screen‑reader maturity, hardware back key) | [platforms/aurora §10](./platforms/aurora.md#10-open-items) |
+| **THREADY-DES-PLAT-06** | `OPEN` | **Aurora motion runtime**: no Lottie player named in ground truth; evaluate rlottie‑based QML players vs. the Qt‑native animation + poster‑frame floor | [platforms/aurora §10](./platforms/aurora.md#10-open-items) |
+| **THREADY-DES-PLAT-07** | `OPEN` | **Ambience‑vs‑token policy**: ratify the proposed arbitration (tokens win for load‑bearing UI + semantics; ambience tints decorative layers only; explicit theme choice wins) with AA evidence over real ambiences | [platforms/aurora §10](./platforms/aurora.md#10-open-items) |
+| **THREADY-DES-PLAT-08** | `OPEN` | **Dynamic‑type clamp matrix**: per platform, the maximum OS font scale and evidence every screen survives 200 % scale against the token ramp without truncating load‑bearing text | [platforms/typography-substitution §7](./platforms/typography-substitution.md#7-open-items) |
 
 Detail on the two highest‑impact opens:
 

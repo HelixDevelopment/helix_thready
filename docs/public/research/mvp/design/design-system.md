@@ -16,6 +16,7 @@
 | 1 | 2026-07-21 | swarm (design) | Initial complete draft: token architecture, Thready theme, platform fan‑out, typography/spacing/motion, a11y contract, visual‑regression testing |
 | 2 | 2026-07-21 | swarm (design · review) | Second-pass review: clarified Angular 19 (product) vs 22 (marketing) per Q17; added the mandated **Challenges** scenario‑bank test type to §8/§9 (`[GAP: 9.3]` second half) |
 | 3 | 2026-07-22 | swarm (design · Pass 3) | Depth pass: re-verified every token name at source (`gh`); added the remaining verified core token (`--elev-flat`) and theme aliases (`--fg-2`/`--meta`/`--border-soft`); shipped-brand-themes reference table + measured contrasts (helix-green/vasic-red/helix-ota-blue) + the 4-step "add a theme" process (§3.4); typography weight/variable-axis detail + exact i18n keys |
+| 4 | 2026-07-22 | swarm (design · review-fixes) | Rendering fix from the adversarial platform review: the Angular 19/22 `[Q17]` blockquote had been inserted **mid-table** in §7, splitting the platform table so the Desktop/React/KMP/Flutter/TUI rows rendered as a broken second table — moved the blockquote below the (now contiguous, single) table; no row content changed |
 
 ## Table of contents
 
@@ -381,18 +382,18 @@ The design system fans to five platform variants (decision matrix §10.2). Hones
 | Platform | Package / mechanism | Status | Thready plan |
 |----------|--------------------|--------|--------------|
 | **Web / CSS + Angular 19/22** | `@vasic-digital/design-system` (`.ds-*`, adapters) | `PRODUCTION`‑usable (web‑only foundation) `[GAP: 8.1]` | Primary surface. Publish the package to npm; add Thready theme + Thready components. **Web + CLI first** `[OPERATOR]` |
+| **Desktop (Tauri 2)** | Wraps the Angular web UI (Rust core) | Inherits web | No separate token work; OS‑specific chrome overrides only |
+| **React** | `UI-Components-React` | `SCAFFOLD/FLAGGED` `[GAP: 8.6]` | Only if a React surface is needed (Catalogizer‑style); re‑audit before use |
+| **KMP / Compose (Android/iOS)** | `UI-Components-KMP` + KMP fleet | `SCAFFOLD`, **no CI/publish** `[GAP: 8.4]` | Mobile shared‑logic; needs CI + Maven publish + a token bridge (Compose `Color`/`Dp` from the CSS tokens) |
+| **Flutter + Qt/Aurora** | `helix_design` | `SCAFFOLD` ("not yet implemented") `[GAP: 8.2/8.3]` | Alternative family; the only path to HarmonyOS/Aurora is native ArkTS/Qt via `helix_shims` `[GAP: 8.5]` |
+| **TUI** | Lipgloss theme (Bubble Tea) | Pattern exists in‑house `[VERIFIED — helix_track/llms_verifier/.../tui]` | Map the token palette to a Lipgloss `Style` set (see below) |
 
 > **Angular version split `[Q17]`.** The Thready **product portal** — the primary management surface
 > specified in [wireframes.md](./wireframes.md) — is **Angular 19** (matching the HelixTrack
 > `web_client` + Tauri `desktop_client` family: Material 19, ngx‑translate 17). **Angular 22**
 > (standalone/signals, SSR + SSG/prerender, Tailwind v4 on OpenDesign tokens) is for **marketing /
 > public sites**. Both consume the same `@vasic-digital/design-system` tokens + `.ds-*` set, which is
-> why the platform row above is labelled "19/22". The design system layer itself is version‑agnostic.
-| **Desktop (Tauri 2)** | Wraps the Angular web UI (Rust core) | Inherits web | No separate token work; OS‑specific chrome overrides only |
-| **React** | `UI-Components-React` | `SCAFFOLD/FLAGGED` `[GAP: 8.6]` | Only if a React surface is needed (Catalogizer‑style); re‑audit before use |
-| **KMP / Compose (Android/iOS)** | `UI-Components-KMP` + KMP fleet | `SCAFFOLD`, **no CI/publish** `[GAP: 8.4]` | Mobile shared‑logic; needs CI + Maven publish + a token bridge (Compose `Color`/`Dp` from the CSS tokens) |
-| **Flutter + Qt/Aurora** | `helix_design` | `SCAFFOLD` ("not yet implemented") `[GAP: 8.2/8.3]` | Alternative family; the only path to HarmonyOS/Aurora is native ArkTS/Qt via `helix_shims` `[GAP: 8.5]` |
-| **TUI** | Lipgloss theme (Bubble Tea) | Pattern exists in‑house `[VERIFIED — helix_track/llms_verifier/.../tui]` | Map the token palette to a Lipgloss `Style` set (see below) |
+> why the Web platform row above is labelled "19/22". The design system layer itself is version‑agnostic.
 
 **Token bridging (the mechanism that keeps them one system).** The CSS custom properties are the
 canonical source; each non‑web platform consumes a **generated** binding, not a hand‑kept copy, so

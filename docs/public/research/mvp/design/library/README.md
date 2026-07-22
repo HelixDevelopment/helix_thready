@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design) | Initial library: living component page (all states, light+dark), overview SVG sheet, 8-platform reusability matrix |
+| 2 | 2026-07-22 | swarm (design · review-fixes) | Consistency fixes from the adversarial platform review: explicit reconciliation of the "~38 distinct components" count with the 36×8 matrix (names the merged/excluded exhibits and the two matrix-only rows; 38 − 2 − 1 − 1 + 2 = 36); added the **Marker vocabulary** note mapping VERIFIED/PROPOSED/ASSUMED ↔ `[VERIFIED]`/`[RESEARCH]`/`[GAP: id]` for cross-file audits |
 
 The **reusable design-library artifact** for Helix Thready: a self-contained, living rendering of
 every component in every state on the Thready theme, plus an importable overview sheet and the
@@ -35,6 +36,16 @@ cross-platform reusability matrix. It *instantiates* the specs in
 - **14 component groups**, ~38 distinct components, **75 rendered exhibits**,
   ≈ **118 component-state cells** — each auditable in **both** themes via the toggle
   (≈ 236 rendered states total).
+- **Reconciliation with the 36×8 matrix** ([platform-map.md §3](./platform-map.md#3-the-matrix)):
+  the ~38 distinct components collapse to **36** matrix rows because three exhibits counted here
+  have no dedicated row — the **secondary** and **ghost** button variants share the single
+  "Button primary/secondary/ghost" row, the **toast** shares the single "Toast / alert" row with
+  the alert, and the **thread-row** card exhibit has no row of its own (it is a Thready composite
+  of the Card + Badge + Hashtag-chip rows, specced in
+  [component-library.md §6.1](../component-library.md#61-additional-component-contracts)) —
+  while the matrix conversely adds two rows that are not distinct exhibits: "Button
+  loading/disabled" (a state pairing) and "Field (label/hint/error)" (a wrapper contract).
+  Net: 38 − 2 − 1 − 1 + 2 = 36.
 - Buttons: 4 variants (primary / secondary / ghost / destructive) × 5 states
   (default / hover / focus-visible / disabled / loading) = 20 cells.
 - Inputs: 6 controls (text / select / checkbox / radio / switch / date) × 4 states
@@ -66,6 +77,20 @@ cross-platform reusability matrix. It *instantiates* the specs in
   `#F8FAFC`, neutrals `#475569` / `#94A3B8`; faces Space Grotesk / Hanken Grotesk / JetBrains Mono.
 - Platform verification detail (what is real vs. scaffold per repo) lives in
   [platform-map.md §2](./platform-map.md#2-per-repo-verification-results).
+
+**Marker vocabulary (cross-file equivalence).** Two provenance vocabularies coexist in this design
+area, both implementing the same CONVENTIONS §3/§7 "no bluff" discipline. This library and its
+platform map (plus the Lipgloss theme material in design-system.md §7) use **VERIFIED / PROPOSED /
+ASSUMED**; the asset documents ([icon-export-matrix.md](../assets/icon-export-matrix.md),
+brand-assets.md) use **`[VERIFIED]` / `[RESEARCH]` / `[GAP: id]`**. The mapping for cross-file
+audits: **VERIFIED ≈ `[VERIFIED]`** (checked at source on a dated pass — repo content via `gh`, or
+platform-canonical docs); **PROPOSED ≈ a `[DEFAULT — adjustable]` proposal backed by `[RESEARCH]`**
+(a value this design area chooses and stands behind, but that must be confirmed — upstream naming
+or current OS docs — at integration); **ASSUMED ≈ `[GAP: id]`** (the consuming package/subsystem is
+a scaffold or was not inspected; nothing so marked may be claimed to work). `[RESEARCH]` has no
+exact single counterpart here: when it flags an externally sourced value pending re-verification it
+reads as PROPOSED; when the consumer itself is unverified it reads as ASSUMED. Neither vocabulary
+is being rewritten into the other — this note is the documented equivalence.
 
 ## Open items
 

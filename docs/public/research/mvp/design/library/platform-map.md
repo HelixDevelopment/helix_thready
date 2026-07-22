@@ -16,6 +16,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design) | Initial matrix: every library component × 8 platform realizations; `.ds-*` names re-verified at source via `gh` (design_system, UI-Components-React, UI-Components-KMP, helix_design trees fetched 2026-07-22); per-component customization notes; VERIFIED/ASSUMED discipline |
 | 2 | 2026-07-22 | swarm (design · library) | Second verification pass (`gh`, file contents): React `Button.tsx` styling confirmed **not token-bound** (hard-coded Tailwind palette); KMP `Theme.kt` confirmed branded for another product (Yole, Material-red) — both recorded in §2; platform fan-out diagram added (§2.1 + `diagrams/platform-fanout.mmd`) |
+| 3 | 2026-07-22 | swarm (design · review-fixes) | Consistency fixes from the adversarial platform review: §5 Angular enumeration corrected — `brand-mark` removed from the row list (it is a VERIFIED upstream class but has **no row** in the §3 matrix; noted as a brand asset instead), so the enumeration now matches the "10 of 36" count exactly; §3 legend gains an explicit note that Desktop (Tauri 2) is folded into the NG column (with pointer to `screens/desktop/README.md`), making the "8 platforms" definition unambiguous |
 
 ## Table of contents
 
@@ -103,6 +104,12 @@ Column legend — **NG**: Angular (Web/Desktop-Tauri, primary `[OPERATOR]`); **R
 (`UI-Components-React`); **CM**: Compose Multiplatform (`UI-Components-KMP`); **FL**: Flutter
 (`helix_design`); **SW**: SwiftUI; **AR**: ArkTS; **QT**: Qt/QML (Aurora); **TU**: TUI
 (Bubble Tea + Lipgloss). Cell = realization + marker (✅ VERIFIED · ⭘ PROPOSED · △ ASSUMED).
+
+> **Desktop (Tauri 2) is deliberately not a ninth column.** The desktop client wraps the Angular
+> web UI (§2.1 fan-out; design-system.md §7), so it is folded into the **NG** column — "8 platforms"
+> means exactly the eight columns NG/RE/CM/FL/SW/AR/QT/TU. Tauri readers should use the NG column
+> plus the desktop-specific chrome notes in
+> [../screens/desktop/README.md](../screens/desktop/README.md).
 
 | Component | NG Angular `.ds-*` | RE React | CM Compose | FL Flutter | SW SwiftUI | AR ArkTS | QT Qt/QML | TU TUI |
 |---|---|---|---|---|---|---|---|---|
@@ -195,7 +202,7 @@ token-bridge codegen (design-system.md §7) has a target, nothing more.
 
 | Column | VERIFIED cells | PROPOSED cells | ASSUMED cells | Basis |
 |---|---|---|---|---|
-| Angular `.ds-*` | 10 of 36 component rows ride verbatim shipped CSS/Angular (`container/section`, `btn` ×3 variants, `card`, `input`, `link`, `nav`, `footer`, `badge` ×3, `brand-mark`, `theme-toggle`, `language-picker`) | 26 rows are PROPOSED extensions authored in `components.html` | 0 | file content fetched |
+| Angular `.ds-*` | 10 of 36 component rows ride verbatim shipped CSS/Angular (`container/section`, `btn` ×3 variants, `card`, `input`, `link`, `nav`, `footer`, `badge` ×3, `theme-toggle`, `language-picker`). `.ds-brand-mark` is also VERIFIED at source (§2) but is a **brand asset, not a component row** in this matrix — see [../brand-assets.md](../brand-assets.md) | 26 rows are PROPOSED extensions authored in `components.html` | 0 | file content fetched |
 | React | 13 component files verified at HEAD (`Avatar`, `Badge`, `Button`, `Card`, `EmptyState`, `ErrorBoundary`, `Input`, `LoadingSpinner`, `Progress`, `Select`, `Switch`, `Tabs`, `Textarea`) — file existence only, package `FLAGGED` `[GAP: 8.6]` | — | all remaining rows (table, dialog, toast, tooltip, pagination, checkbox, radio, date, breadcrumbs, sidebar, chips…) | tree fetched |
 | Compose (KMP) | `Theme.kt`/`Animations.kt`/`Accessibility.kt` utilities exist (theme bridge target) | — | **all widget rows** — no components exist `[GAP: 8.4]` | tree fetched |
 | Flutter (helix_design) | repo exists but is an **empty scaffold** (verified) | — | **all rows** `[GAP: 8.2/8.3]` | tree fetched |

@@ -15,6 +15,7 @@
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · assets) | Initial matrix: exact per-platform pixel/format table for every OS surface (Web/PWA favicon + maskable, Android mipmap/adaptive/monochrome, iOS AppIcon incl. dark/tinted, Windows `.ico`, macOS `.icns`, Linux hicolor, HarmonyOS layered, Aurora); source-SVG→target mapping; output inventory tree; renderer/bundler tooling contract. Locked 1:1 to `generate-raster.sh`. |
 | 2 | 2026-07-22 | swarm (design · assets · verify) | Verification pass: all 7 master SVGs confirmed `xmllint`-valid; `generate-raster.sh` confirmed `shellcheck`-clean and executed end-to-end (chromium renderer, ImageMagick `.ico` bundler, `.icns` correctly SKIPPED with note) — **83 real rasters, no faked/blank output** (`favicon-16` non-blank, all outputs transparent-bg, `.ico` multi-res 16–256 verified). Corrected `logo-full-h64` cell 170→**169** px (⌊64·1060/400⌋) to keep the 1:1 lock with the script. `[VERIFIED — 2026-07-22 live run]` |
+| 3 | 2026-07-22 | swarm (design · review-fixes) | Consistency fixes from the adversarial platform review: stale "six"/"of the six" master-vector counts corrected to **seven** in §2/§4 (the §2 table lists seven sources; Rev 2 and §6 already said "all seven"); Android adaptive-background default recorded in §3.2 as `#FFFFFF` (= light `--bg`), citing the existing decision in brand-assets.md §5.1 `ic_launcher.xml`; explicit **TUI N/A row** added as §3.10 (terminals have no raster icon slot; glyph treatment per brand-assets §8.1) |
 
 ## Table of contents
 
@@ -30,6 +31,7 @@
   - [3.7 HarmonyOS](#37-harmonyos)
   - [3.8 Aurora](#38-aurora)
   - [3.9 Brand lockups (non-launcher, convenience raster)](#39-brand-lockups-non-launcher-convenience-raster)
+  - [3.10 TUI (no raster targets — explicit N/A)](#310-tui-no-raster-targets--explicit-na)
 - [4. Export fan-out (diagram)](#4-export-fan-out-diagram)
 - [5. Output inventory tree](#5-output-inventory-tree)
 - [6. Renderer & bundler tooling contract](#6-renderer--bundler-tooling-contract)
@@ -64,7 +66,7 @@ by a subsystem the gap register flags as a **scaffold** (do not claim that launc
 
 ## 2. Source SVGs and the source→target mapping
 
-Six hand-authored, **valid** (xmllint-clean) master vectors in this directory feed every raster.
+Seven hand-authored, **valid** (xmllint-clean) master vectors in this directory feed every raster.
 No output invents a new drawing — each is a rasterization of one master (single-source consistency,
 brand-assets.md §3).
 
@@ -125,7 +127,7 @@ Adaptive **foreground** + Android-13 **monochrome** (108 dp canvas, `res/mipmap-
 
 | Extra | Size (px) | Output | Notes |
 |-------|-----------|--------|-------|
-| Adaptive **background** | — | `@color/ic_launcher_background` | solid/token color, **not** a raster (brand-assets.md §5.1 `ic_launcher.xml`) |
+| Adaptive **background** | — | `@color/ic_launcher_background` | solid/token color, **not** a raster; default **`#FFFFFF`** (= the light `--bg` token value), as already decided in [brand-assets.md §5.1](../brand-assets.md#51-concrete-platform-manifests) `ic_launcher.xml` (`<!-- #FFFFFF light / handled by themed -->`) |
 | Play Store listing | 512 | `android/play-store-512.png` | `[VERIFIED]` |
 
 Adaptive art stays within the **66 dp inner safe circle** so no coil clips under the OS mask (§3.1).
@@ -248,6 +250,17 @@ text); never placed in an OS icon slot.
 | `brand/logo-mark-512.png` | 512×512 | `logo-mark.svg` | square mark |
 | `brand/footer-slogan-h44.png` | 560×44 | `footer-slogan.svg` | aspect 560:44 preserved |
 
+### 3.10 TUI (no raster targets — explicit N/A)
+
+The TUI is the eighth platform of the library's platform map
+([library/platform-map.md §3](../library/platform-map.md#3-the-matrix)) but has **no raster icon
+slot**: a terminal application ships no launcher/app icon, so `generate-raster.sh` intentionally
+emits nothing for it.
+
+| Output | Size (px) | Source | Purpose | Provenance |
+|--------|-----------|--------|---------|------------|
+| *(none)* | N/A | — | terminals expose no icon slot; brand presence in the TUI is the ♥ slogan glyph tinted with the Lipgloss `Accent` per [brand-assets.md §8/§8.1](../brand-assets.md#8-the-footer-slogan--heart-glyph) and the token-derived Lipgloss palette ([design-system.md §7](../design-system.md#7-per-platform-fan-out)) | `[VERIFIED — no such slot exists; glyph treatment specified in brand-assets §8.1]` |
+
 ## 4. Export fan-out (diagram)
 
 ```mermaid
@@ -275,8 +288,10 @@ flowchart LR
 
 > Rendered PNG/SVG exported via Docs Chain (§11.4.65). Source: `icon-export-fanout.mmd`.
 
-**Explanation (for readers/models that cannot see the diagram).** Three of the six master vectors
-drive the launcher outputs. The **neutral master** (`launcher-icon.svg`) is the single source for
+**Explanation (for readers/models that cannot see the diagram).** Three of the seven master vectors
+drive the launcher outputs (the remaining four are `launcher-icon-light.svg`, which feeds only the
+optional light-surface slots, and the three lockup vectors, which feed the non-launcher rasters of
+§3.9). The **neutral master** (`launcher-icon.svg`) is the single source for
 almost every platform bundle: the Web/PWA set (scalable + 16/32/48 favicons, the multi-resolution
 `.ico`, the 192/512 `purpose:any` icons, the 192/512 `maskable` icons whose art sits inside the
 Ø916 safe zone, and the 180 px apple-touch icon); the Android legacy density mipmaps (48/72/96/144/192)
