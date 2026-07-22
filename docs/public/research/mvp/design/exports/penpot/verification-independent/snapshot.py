@@ -43,19 +43,18 @@ def summarize_file(fid):
     colors = data.get("colors") or {}
     typos = data.get("typographies") or {}
     tlib = data.get("tokensLib") or {}
-    tsets = tlib.get("sets") or {}
-    tthemes = tlib.get("themes") or {}
-    token_count = 0
-    set_names = []
-    for sname, sval in tsets.items():
-        set_names.append(sval.get("name", sname) if isinstance(sval, dict) else sname)
-        if isinstance(sval, dict):
-            token_count += len(sval.get("tokens") or {})
-    theme_names = []
-    for gname, group in tthemes.items():
-        if isinstance(group, dict):
-            for tname in group:
-                theme_names.append(f"{gname}/{tname}" if gname else tname)
+    # DTCG-style: top-level set names (non-$ keys), $themes list, $metadata
+    tsets = {k: v for k, v in tlib.items() if not k.startswith("$")}
+    def _count(o):
+        if isinstance(o, dict):
+            if "$value" in o or "value" in o:
+                return 1
+            return sum(_count(v) for v in o.values())
+        return 0
+    token_count = sum(_count(v) for v in tsets.values())
+    set_names = sorted(tsets.keys())
+    theme_names = [f"{t.get('group','')}/{t.get('name','')}"
+                   for t in (tlib.get("$themes") or [])]
     media = f.get("mediaObjects") or []
     return {
         "name": f.get("name"), "revn": f.get("revn"),

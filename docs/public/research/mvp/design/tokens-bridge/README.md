@@ -2,8 +2,8 @@
   Title           : Helix Thready — Token-Bridge Codegen (CSS tokens → per-platform bindings)
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/tokens-bridge/README.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Status          : Draft — v0.2
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · tokens-bridge)
   Related         : ../opendesign/tokens.css, ../design-system.md (§3/§7),
                     ../screens/tui/lipgloss-theme.md, ../library/platform-map.md (§2),
@@ -15,6 +15,7 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · tokens-bridge) | Initial: `generate.mjs` (no-deps Node parser/emitter for `opendesign/tokens.css`), seven generated per-platform bindings, `--check` drift gate, honest validation record. Materializes the generator that `design-system.md §7`, `lipgloss-theme.md §8` and `platform-map.md §6` reference but until now did not exist (`[OPEN: THREADY-DES-LIB-04]` — see §6) |
+| 2 | 2026-07-22 | swarm (design · tokens-bridge) | PenPot defect closure (§9): the real PenPot 2.17 import proved a top-level `$description` flips the importer into single-set mode, so `web/tokens.json` is demoted to the **pure W3C DTCG canonical** artifact (PenPot-import claim removed) and a new eighth target `generated/penpot/tokens.penpot-import.json` is emitted natively (multi-set + `$themes`, no root `$description`, byte-identical to the operator-derived file that actually imported). `--check` extended with quirk guards + structural diff vs that reference; all target writes now atomic (`.tmp` + rename). PenPot's silent 71/74 drop of `duration`/`cubicBezier` recorded |
 
 ## Table of contents
 
@@ -26,6 +27,7 @@
 - [6. Closure state of THREADY-DES-LIB-04](#6-closure-state-of-thready-des-lib-04)
 - [7. What is deliberately NOT exported](#7-what-is-deliberately-not-exported)
 - [8. Open items](#8-open-items)
+- [9. Verified consumer quirks (PenPot 2.17)](#9-verified-consumer-quirks-penpot-217)
 
 ## 1. What this is (and the single-source rule)
 
@@ -63,7 +65,8 @@ claim that the consumer app exists or consumes it today.**
 
 | Target | File | Format | Intended consumer | Honest consumer status (platform-map §2) |
 |---|---|---|---|---|
-| Web / interchange | [`generated/web/tokens.json`](./generated/web/tokens.json) | **W3C DTCG** design tokens; color modes as token groups `thready-light` / `thready-dark`; `dimension`/`number`/`duration`/`cubicBezier`/`fontFamily` `$type`s; aliases as DTCG `{references}`. Doubles as the **PenPot 2.x design-tokens import file** (PenPot 2.x consumes W3C DTCG) — a concrete bridge for `[OPEN: THREADY-DES-02]` | PenPot import; any Style-Dictionary-class pipeline | Web layer itself is PRODUCTION-usable (`design_system` `.ds-*`) and consumes the CSS directly — this JSON is for tools, not the Angular app. PenPot import not yet exercised (no PenPot in this environment) |
+| Web / interchange | [`generated/web/tokens.json`](./generated/web/tokens.json) | **W3C DTCG** design tokens — the **pure DTCG canonical** interchange artifact; color modes as token groups `thready-light` / `thready-dark`; `dimension`/`number`/`duration`/`cubicBezier`/`fontFamily` `$type`s; aliases as DTCG `{references}`. **NOT the PenPot import file** — its top-level `$description` flips PenPot 2.17 into single-set mode `[VERIFIED 2026-07-22]` (§9); PenPot consumers use the `penpot/` target below | Style-Dictionary-class pipelines; generic DTCG tooling | Web layer itself is PRODUCTION-usable (`design_system` `.ds-*`) and consumes the CSS directly — this JSON is for tools, not the Angular app. A direct PenPot 2.17 import of this file **was exercised 2026-07-22 and misbehaved** (single set "tokens", 38 colors, no themes — §9), which is why the claim moved to the dedicated target |
+| PenPot import | [`generated/penpot/tokens.penpot-import.json`](./generated/penpot/tokens.penpot-import.json) | **PenPot 2.17 design-tokens import projection** of the same model: token sets `thready-light` / `thready-dark` / `thready-structure`, `$themes` (`Thready/Light`, `Thready/Dark` — UUIDs pinned to the proven import for determinism), `$metadata.tokenSetOrder`; **no root `$description` and no sha256 header** (§9 explains why). ASCII-escaped JSON, byte-identical to the operator-derived file that actually imported (`../exports/penpot/tokens.penpot-import.json`) | PenPot 2.17 tokens importer | Import **exercised 2026-07-22 in PenPot 2.17**: sets + both themes land; **71/74 tokens land** — PenPot silently drops `duration` (×2) and `cubicBezier` (×1), all three still included (§9) |
 | Compose / KMP | [`generated/compose/ThreadyColors.kt`](./generated/compose/ThreadyColors.kt) | Kotlin objects `ThreadyColors.LightColors`/`.DarkColors` (`Color(0xFF…)`), `ThreadySpacing`/`ThreadyRadius` (`Dp`), `ThreadyTypeScale` (`sp`/`em`), `ThreadyMotion`. Package `digital.vasic.thready.design` — the design-system §7 sample declares no package, so this is `[DEFAULT — adjustable]` | `UI-Components-KMP` | **Utilities-only scaffold, foreign-branded** (`Theme.kt` ships a Yole Material-red palette, zero widgets, no CI/publish) `[GAP: 8.4]`. This file is the contract that replaces the hand-kept palette when THREADY-DES-KMP-01 lands |
 | SwiftUI | [`generated/swiftui/ThreadyTokens.swift`](./generated/swiftui/ThreadyTokens.swift) | `ThreadyTokens.LightColors`/`.DarkColors` (`Color(red:green:blue:)`, 6-decimal floats that round-trip to the source hex), `Spacing`/`Radius`/`TypeScale` (`CGFloat`) | (none today) | **No in-house SwiftUI package exists** `[OPEN: THREADY-DES-LIB-02]`; the sanctioned iOS path is KMP/Compose. Contract only, in case SwiftUI shims materialize |
 | ArkTS / HarmonyOS | [`generated/arkts/thready_tokens.ets`](./generated/arkts/thready_tokens.ets) | `ThreadyColorLight`/`ThreadyColorDark` classes (ResourceColor-compatible hex strings), `ThreadySpacing`/`ThreadyRadius` (vp), `ThreadyTypeScale` (fp), `ThreadyMotion` (ms) | native ArkTS client via `helix_shims` | `helix_shims` interface **uninspected** `[GAP: 8.5]` `[OPEN: THREADY-DES-LIB-03]` — contract only |
@@ -72,7 +75,8 @@ claim that the consumer app exists or consumes it today.**
 | Flutter | [`generated/flutter/thready_tokens.dart`](./generated/flutter/thready_tokens.dart) | `ThreadyColorsLight`/`ThreadyColorsDark` (`Color(0xFF…)` via `dart:ui`), `ThreadySpacing`/`ThreadyRadius`/`ThreadyTypeScale` (`double`), `ThreadyMotion` (`int` ms) | `helix_design` Flutter arm | **Verified empty scaffold** `[GAP: 8.2/8.3]` — contract only |
 
 Token counts per target (colors count both modes; aliases included):
-`tokens.json` **74** tokens · `ThreadyColors.kt` **71** declarations · `ThreadyTokens.swift` **71** ·
+`tokens.json` **74** tokens · `tokens.penpot-import.json` **74** tokens (**71** land in PenPot 2.17 — §9) ·
+`ThreadyColors.kt` **71** declarations · `ThreadyTokens.swift` **71** ·
 `thready_tokens.ets` **70** `static readonly` + 1 exported const = **71** · `ThreadyTokens.qml` **73**
 properties · `thready_palette.go` **39** vars (13 roles × truecolor/Complete/Adaptive) ·
 `thready_tokens.dart` **70** `static const` + 1 top-level const = **71**.
@@ -101,10 +105,17 @@ re-run `node generate.mjs` and commit the regenerated outputs together with the 
    (the stand-in validation for toolchains not present on the machine — see §5).
 4. **Source consistency:** the `@media` dark block and the `[data-theme="dark"], .dark` block of
    `tokens.css` must bind identical values; `lipgloss-theme.md §2`'s truecolor column must equal
-   the parsed dark values; the DTCG output must `JSON.parse`.
+   the parsed dark values; both JSON outputs must `JSON.parse`.
+5. **PenPot quirk guards (§9):** the `penpot/` target must have **no top-level `$description`**
+   (the single-set trigger), must carry `$themes` (2) + `$metadata.tokenSetOrder` (3), and — while
+   the operator-derived reference `../exports/penpot/tokens.penpot-import.json` exists — must be
+   structurally (parsed-JSON) equal to it; the check reports `byte-identical` when the bytes match
+   too.
 
-Exercised both ways on 2026-07-22: pristine tree → 32/32 PASS, exit 0; a deliberately tampered
-hex in `ThreadyColors.kt` → `FAIL drift`, exit 1; regenerate → PASS again.
+Exercised both ways on 2026-07-22 (rev 2): pristine tree → 40/40 PASS, exit 0 (the penpot
+reference check reporting `byte-identical`); a deliberately tampered hex in
+`penpot/tokens.penpot-import.json` → `FAIL drift`, exit 1; regenerate → 40/40 PASS again. (Rev 1
+exercised the same gate at 32/32 with a tampered `ThreadyColors.kt`.)
 
 ## 5. Validation record (2026-07-22, this machine)
 
@@ -114,7 +125,8 @@ Toolchain availability was probed first: `node` v24.18.0 ✓, `go` 1.26.4 + `gof
 
 | Target | Validation method | Result |
 |---|---|---|
-| `web/tokens.json` | `JSON.parse` (node 24) + hex round-trip + DTCG `$type`/alias-reference structure emitted per spec | **PASS** (PenPot import itself not exercised — no PenPot here) |
+| `web/tokens.json` | `JSON.parse` (node 24) + hex round-trip + DTCG `$type`/alias-reference structure emitted per spec | **PASS** as DTCG. Direct PenPot 2.17 import exercised 2026-07-22 → **single-set misbehavior** (the `$description` quirk, §9) — this file is deliberately NOT the PenPot import file anymore |
+| `penpot/tokens.penpot-import.json` | `JSON.parse` + hex round-trip + no-root-`$description` guard + `$themes`/`$metadata` guard + structural diff against the operator-derived file that **actually imported into PenPot 2.17** (2026-07-22) | **PASS — byte-identical** to the proven import file (`sha256 eae6bca3…`); the import itself landed sets + 2 themes, 71/74 tokens (§9) |
 | `compose/ThreadyColors.kt` | `kotlinc` **MISSING** → structural self-checks: balanced delimiters, 71/71 `val` declarations, hex round-trip | PASS (structural only — **not compiler-verified**) |
 | `swiftui/ThreadyTokens.swift` | `swiftc` **MISSING** → structural self-checks incl. float→hex round-trip (6-decimal channels reconstruct the exact source hex) | PASS (structural only — **not compiler-verified**) |
 | `arkts/thready_tokens.ets` | No ArkTS toolchain (and no `tsc`) → structural self-checks: balanced delimiters, 70/70 `static readonly`, hex round-trip | PASS (structural only — **not compiler-verified**) |
@@ -153,8 +165,9 @@ Mirrors the precedent set by [`../figma/figma-variables.json`](../figma/figma-va
   treatments from their own state systems over the exported base colors.
 - `--elev-flat` (`none`) and `--elev-ring` (a shadow composite over `var(--border)`) — shadow
   composites, platform-specific by nature.
-- Web-only `--font-*` stacks are exported **only** to the DTCG target (`fontFamily`); native
-  targets load fonts through their own asset pipelines (`design-system.md §4`).
+- Web-only `--font-*` stacks are exported **only** to the DTCG-shaped targets
+  (`web/tokens.json`, `penpot/tokens.penpot-import.json` — `fontFamily`); native targets load
+  fonts through their own asset pipelines (`design-system.md §4`).
 - B-slot aliases (`--fg-2`, `--meta`, `--border-soft`) and `--ds-heart` **are** exported — as real
   DTCG `{references}` / language-level aliases, preserving the alias semantics of `tokens.css`.
 
@@ -163,10 +176,43 @@ Mirrors the precedent set by [`../figma/figma-variables.json`](../figma/figma-va
 - `[OPEN: THREADY-DES-LIB-04]` — narrowed per §6: generator DONE, consumer wiring OPEN.
 - `[OPEN: THREADY-DES-17]` — all ANSI-256/16 indices in the Go palette are ASSUMED nearest-color
   picks (carried verbatim, with markers, from `lipgloss-theme.md §2`); verify on real terminals.
-- `[OPEN: THREADY-DES-02]` — PenPot bridge: `web/tokens.json` is the import file; an actual
-  PenPot 2.x import run is an operator action (no PenPot in this environment).
+- `[OPEN: THREADY-DES-02]` — PenPot bridge: **import exercised 2026-07-22 in PenPot 2.17** with
+  the multi-set shape now emitted natively as `penpot/tokens.penpot-import.json`; 71/74 tokens
+  land (§9). Remaining: re-validate on future PenPot versions (the `duration`/`cubicBezier` drop
+  and the `$description` quirk are 2.17 observations) and retire the operator-derived
+  `../exports/penpot/tokens.penpot-import.json` in favour of the generated target.
 - Compiler verification of the Kotlin / Swift / ArkTS / QML / Dart outputs in consumer-repo CI
   (kotlinc/swiftc/qmllint/dart were MISSING here — §5).
+
+## 9. Verified consumer quirks (PenPot 2.17)
+
+Both quirks were found during the **real PenPot 2.17 import on 2026-07-22** — not speculation.
+
+1. **A top-level `$description` flips the tokens importer into single-set mode** `[VERIFIED
+   2026-07-22]`. Importing the then-`web/tokens.json` (which carried a root `$description`
+   provenance header) made PenPot 2.17 ingest the file as **one set named "tokens" with 38 colors
+   and no themes**, instead of the intended 3 sets + 2 themes. The importer evidently treats a
+   root that contains any `$`-doc member as a single token group. The operator worked around it by
+   hand-deriving [`../exports/penpot/tokens.penpot-import.json`](../exports/penpot/tokens.penpot-import.json)
+   (sets + `$themes` + `$metadata`, no root `$description`) — which imported correctly.
+   **Consequences baked into the generator:**
+   - `web/tokens.json` stays the pure W3C DTCG canonical artifact (root `$description` header kept
+     — harmless to DTCG tooling) and no longer claims to be the PenPot import file;
+   - `generated/penpot/tokens.penpot-import.json` is emitted natively in the proven multi-set
+     shape and is **byte-identical** to the operator-derived file (verified by `--check`, §4
+     item 5);
+   - the penpot target is the **one generated file without a sha256 provenance header**: the only
+     root members proven safe in 2.17 are the set names, `$themes` and `$metadata` — a
+     `$comment`/`$description` root member is exactly the quirk-triggering shape, and `$metadata`
+     extensions are unproven. Provenance is carried here and enforced by the `--check` byte-lock
+     instead. The `$themes` UUIDs are pinned to the proven import's ids so regeneration never
+     mints new ones (determinism, §1).
+2. **`duration` and `cubicBezier` token types are silently dropped on import — 71/74 land**
+   `[VERIFIED 2026-07-22]`. Affected: `--motion-fast` (duration), `--motion-base` (duration),
+   `--ease-standard` (cubicBezier). **Choice: they are still INCLUDED** in `thready-structure` —
+   mirroring the operator-derived file that proved the import, keeping the file lossless on the
+   DTCG side and forward-compatible with a PenPot that learns these types. The generator prints a
+   `penpot-unsupported:` note listing all three on every run so the 71/74 delta is never silent.
 
 ---
 

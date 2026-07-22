@@ -1,0 +1,96 @@
+{
+  "comment": "Prototype flow map for the live PenPot instance — consumed by penpot/import/wire-interactions.mjs. Derived from docs/public/research/mvp/design/ux-flows.md journeys, restricted to screens that exist as boards (rpc-verification.json). Light variants are the primary chains; one demonstrative dark chain only.",
+  "source": "docs/public/research/mvp/design/ux-flows.md",
+  "boardInventory": "docs/public/research/mvp/design/exports/penpot/verification/rpc-verification.json",
+  "limitations": [
+    "Board-level navigation only: boards are PNG-underlay screenshots, so interactions attach to whole boards (single outgoing edge) or to invisible equal-width column hotspot rects named 'proto-hotspot-*' (multiple outgoing edges). Hotspots are NOT aligned to real UI controls.",
+    "The 'reprocess' journey (ux-flows §3.1) is a single-screen sub-flow on post-detail (confirm → 409/202 → live pipeline); board-level navigation cannot express a self-loop, so it is recorded but not wired.",
+    "The 'messenger-signin' journey (ux-flows §2.1) is a state machine on one screen; only its screen-level hop (settings › messenger accounts → add-channel wizard step 2 in channels) is wireable.",
+    "Dark variants are not wired except the demonstrative web/dashboard · dark → web/post-detail · dark hop.",
+    "Web boards web/index, web/login, web/skills-manager, web/events-monitor and terminal screens (thread-explorer, research-viewer, assets-browser, billing) have no outgoing edges; index/login are outside the six ux-flows journeys."
+  ],
+  "files": [
+    {
+      "key": "03-screens-web",
+      "fileId": "6e660a50-7c2a-8049-8008-5d975850be0f",
+      "pageId": "6e660a50-7c2a-8049-8008-5d975850be10",
+      "startFrame": "web/dashboard · light",
+      "flowName": "web-primary",
+      "journeys": [
+        {
+          "name": "add-channel",
+          "uxFlowsSection": "§2",
+          "chains": [
+            ["web/dashboard · light", "web/channels · light", "web/thread-explorer · light"]
+          ],
+          "note": "Add-Channel wizard lives on the Channels screen (wireframes §3.4); after 201 the new channel's threads sync live (thread-explorer)."
+        },
+        {
+          "name": "messenger-signin",
+          "uxFlowsSection": "§2.1",
+          "chains": [
+            ["web/settings · light", "web/channels · light"]
+          ],
+          "note": "Sub-flow of add-channel: Settings › Messenger accounts (§3.11) → continue the wizard (Channels). The sign-in state machine itself is intra-screen."
+        },
+        {
+          "name": "process-post",
+          "uxFlowsSection": "§3",
+          "chains": [
+            ["web/dashboard · light", "web/post-detail · light", "web/research-viewer · light"]
+          ],
+          "note": "Dashboard queue → Post detail processing pipeline (§3.6) → generated research output."
+        },
+        {
+          "name": "reprocess",
+          "uxFlowsSection": "§3.1",
+          "chains": [],
+          "note": "NOT WIRED — single-screen sub-flow on web/post-detail (confirm → enqueue → live pipeline / 409 toast); no board-to-board hop exists."
+        },
+        {
+          "name": "search",
+          "uxFlowsSection": "§4",
+          "chains": [
+            ["web/dashboard · light", "web/search · light", "web/post-detail · light"],
+            ["web/search · light", "web/assets-browser · light"]
+          ],
+          "note": "Results route to Post OR Asset detail ('results → open Post/Asset'); both branches wired via hotspots on search."
+        },
+        {
+          "name": "manage-account",
+          "uxFlowsSection": "§5",
+          "chains": [
+            ["web/dashboard · light", "web/accounts-admin · light", "web/billing · light"],
+            ["web/accounts-admin · light", "web/settings · light"]
+          ],
+          "note": "Admin home (§3.10) → billing; branch: admin home → white-label branding (Settings §3.11)."
+        },
+        {
+          "name": "dark-demo",
+          "uxFlowsSection": "demonstrative dark chain (task-scoped, not a ux-flows journey)",
+          "chains": [
+            ["web/dashboard · dark", "web/post-detail · dark"]
+          ],
+          "note": "Single demonstrative dark hop: dashboard → post-detail."
+        }
+      ]
+    },
+    {
+      "key": "04-screens-mobile",
+      "fileId": "6e660a50-7c2a-8049-8008-5d97587fa515",
+      "pageId": "6e660a50-7c2a-8049-8008-5d97587fa516",
+      "startFrame": "mobile/home-feed · light",
+      "flowName": "mobile-primary",
+      "journeys": [
+        {
+          "name": "mobile-core",
+          "uxFlowsSection": "§3 consumption path on mobile surfaces",
+          "chains": [
+            ["mobile/home-feed · light", "mobile/channel-threads · light", "mobile/post-detail · light", "mobile/media-viewer · light"]
+          ],
+          "note": "Core mobile flow: home feed → channel threads → post detail → media viewer (all boards exist as light variants)."
+        }
+      ]
+    }
+  ]
+}

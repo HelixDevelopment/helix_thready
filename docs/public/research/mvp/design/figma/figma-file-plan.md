@@ -2,8 +2,8 @@
   Title           : Helix Thready — Figma File Plan ("Thready — Design Library")
   Classification  : PUBLIC
   Location        : docs/public/research/mvp/design/figma/figma-file-plan.md
-  Status          : Draft — v0.1
-  Revision        : 1 (2026-07-22)
+  Status          : Draft — v0.1 · executed against PenPot (2026-07-22) — see disposition note; Figma materialization OPTIONAL
+  Revision        : 2 (2026-07-22)
   Author          : Helix Thready documentation swarm (design · figma)
   Related         : ./README.md, ./figma-variables.json, ../opendesign/tokens.css,
                     ../opendesign/DESIGN.md, ../library/README.md, ../library/platform-map.md,
@@ -17,6 +17,39 @@
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (design · figma) | Initial 8-page blueprint: foundations, 14 component sets with variant axes, web/mobile/desktop/TUI screen frames, platform overrides, prototype wiring, Plugin-API build order. Every value traced to `tokens.css` / `DESIGN.md` / `library/` / `screens/` — nothing invented |
+| 2 | 2026-07-22 | swarm (design · figma) | Disposition note (Constitution §11.4.220 pivot): plan executed against **PenPot** — 7 files, token sets/themes 71/74, screens as light/dark board pairs, SVGs as editable vectors, native components pending rebuild (evidence `../exports/penpot/verification/rpc-verification.json`); plan body kept verbatim as the proven blueprint; `FIG-01` re-scoped to the optional Figma-cloud import, `FIG-03` closed |
+
+> **Disposition (2026-07-22) — read this first.** Constitution §11.4.220 pivoted the org to
+> self-hosted **PenPot** as the primary design platform; Figma is an **optional import/export
+> target, never source of truth**. **This plan has been executed — against PenPot** (local
+> instance, project *"Helix Thready"*), transposed essentially 1:1; the plan below is kept
+> verbatim as the **proven blueprint** — read its Figma vocabulary as the specification the
+> PenPot build followed. How the parts transposed:
+>
+> - **8 pages → 7 files** (`01 Foundations` … `07 Prototypes`): the Cover (§3) folded into
+>   `01 Foundations`, whose top-level layers include `logo-full`, `logo-mark`, `footer-slogan`
+>   and the launcher icons
+>   `[VERIFIED — ../exports/penpot/verification/rpc-verification.json → files[key="01-foundations"].topLevel]`.
+> - **Figma Variables → PenPot token sets/themes**: sets `thready-light` (19) / `thready-dark`
+>   (19) / `thready-structure` (33) with themes `Thready/Light` · `Thready/Dark` — 71 of the
+>   token-bridge's 74 tokens; PenPot's token model has no `duration`/`cubicBezier` types, so
+>   the motion durations and easing ride as annotations
+>   `[VERIFIED — rpc-verification.json → files[key="01-foundations"].tokens]`.
+> - **Screens (§§6–8) → light/dark board pairs with PNG underlays**: web 28 frames
+>   (14 screens × light/dark), mobile 22 (11 × light/dark, incl. `mobile/channels`),
+>   desktop+TUI 4, prototypes 2
+>   `[VERIFIED — rpc-verification.json → objectCountsByType/topLevel per file]`.
+> - **Component variants (§5) → editable vectors, native components pending**:
+>   `components-sheet` and `library/components` light/dark imported as vectors (973 objects);
+>   the 14 variant-axis component sets await a native PenPot component rebuild
+>   `[VERIFIED — rpc-verification.json → files[key="02-components"]]`.
+> - **Prototype wiring (§10)**: hub boards present; interactive reactions not yet transposed.
+>
+> Where §13 (and the paragraph below) conflict with this note, the note wins:
+> `THREADY-DES-FIG-01` is re-scoped to the *optional, operator-triggered Figma-cloud import*,
+> and `THREADY-DES-FIG-03` is **closed** —
+> [`../screens/mobile/channels.html`](../screens/mobile/channels.html) now exists. See
+> [`README.md`](./README.md) → Disposition + Open items.
 
 The page-by-page blueprint of the **"Thready — Design Library"** Figma file, precise enough for
 an agent with Figma Plugin API access (Figma MCP `use_figma`) to execute mechanically. The Figma

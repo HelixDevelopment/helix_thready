@@ -11,6 +11,13 @@
 # project-specific compose lives in the consuming repo; the containers/
 # submodule stays project-agnostic). Verification is anti-bluff: PASS is
 # "the user can load PenPot and log in", not "compose returned 0".
+#
+# PROJECT INSTANTIATION (thin consumer, CONST-051(B)) of the canonical
+# submodule boot wrapper: penpot/scripts/penpot_boot.sh
+# (vasic-digital/PenPot — see penpot/MECHANISMS.md row 2, MOVED 2026-07-22).
+# This wrapper carries ONLY helix_thready configuration DATA (repo-root
+# compose + .env.penpot paths); the mechanism lives in the submodule.
+# Other projects MUST NOT copy this file — consume penpot/scripts/ instead.
 # =============================================================================
 set -euo pipefail
 
