@@ -121,3 +121,15 @@ builds, vets, is gofmt-clean, and passes `-race`; `integration` compiles and
 passes `-race` through the workspace. The only non-zero exit encountered was the
 `go build ./...` workspace-root pattern error described above, which is a Go
 tooling limitation, not a source defect.
+
+## Addendum — `server` assembly (added after this sweep)
+
+A 21st Go module, `server` (`thready.server`), was added after this sweep: a
+workspace-composition module (like `integration`) that wires `rest_gateway`'s
+Service interfaces to the **real domain modules** (`user_service` PBKDF2+TOTP,
+`semantic_search` cosine-KNN, `skill_dispatch` precedence, `event_bus_service`
+pub/sub). It builds/vets/gofmt-clean and its 4 e2e tests pass under `-race`
+(`ok thready.server`), verified independently (real sibling imports + real
+domain calls confirmed by source read, substantive assertions incl. a cosine
+negative control and wrong-password/wrong-TOTP 401s). Tree total with `server`:
+**21 Go modules, 378 Go test functions, race-clean.**
