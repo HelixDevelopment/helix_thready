@@ -779,3 +779,135 @@ func TestListSkills(t *testing.T) {
 		}
 	}
 }
+
+// ==========================================================================
+// Coded-error export mechanism: an injected Service that returns a coded error
+// (via the EXPORTED NewError constructor, or by implementing the exported
+// CodedError interface directly) must be mapped by writeServiceError to the
+// matching HTTP status + envelope — NOT collapsed to a blanket 500. This is the
+// reviewer-disclosed correctness fix (a missing-post reprocess was 500, not 404).
+// ==========================================================================
+
+// newServerWithServices builds a Server over a caller-supplied Services set with
+// the same deterministic signer newTestServer uses (so login still works). It
+// lets a test swap in a Service that returns coded errors.
+func newServerWithServices(t *testing.T, svc Services) *Server {
+	t.Helper()
+	signer, err := NewSigner(SignerConfig{Secret: []byte(testSecret)})
+	if err != nil {
+		t.Fatalf("NewSigner: %v", err)
+	}
+	return New(svc, signer)
+}
+
+// codedErrPosts is a PostService whose Reprocess signals a missing post via the
+// EXPORTED gateway.NewError constructor — the mechanism an external Service uses.
+type codedErrPosts struct{}
+
+func (codedErrPosts) Get(string) (Post, bool) { return Post{}, false }
+func (codedErrPosts) Reprocess(string) (ProcessingJob, error) {
+	return ProcessingJob{}, NewError(CodeNotFound, "post not found via coded error")
+}
+
+// codedErrSearch is a SearchService whose Search returns a CodeUnavailable coded
+// error via NewError.
+type codedErrSearch struct{}
+
+func (codedErrSearch) Search(SearchRequest) (SearchResponse, error) {
+	return SearchResponse{}, NewError(CodeUnavailable, "search backend unavailable via coded error")
+}
+
+// externalCodedError implements the exported CodedError interface WITHOUT being
+// the gateway's own *apiError carrier — proving writeServiceError maps any
+// CodedError, not only its internal type, through the second errors.As branch.
+type externalCodedError struct {
+	code Code
+	msg  string
+}
+
+func (e externalCodedError) Error() string     { return e.msg }
+func (e externalCodedError) ErrorCode() string { return string(e.code) }
+
+// externalErrPosts returns the external (non-*apiError) CodedError above.
+type externalErrPosts struct{}
+
+func (externalErrPosts) Get(string) (Post, bool) { return Post{}, false }
+func (externalErrPosts) Reprocess(string) (ProcessingJob, error) {
+	return ProcessingJob{}, externalCodedError{code: CodeNotFound, msg: "missing post (external CodedError)"}
+}
+
+// --- 20. Service NewError(CodeNotFound) -> 404 + not_found envelope ---
+
+func TestServiceCodedErrorNotFound(t *testing.T) {
+	svc := NewInMemoryServices()
+	svc.Posts = codedErrPosts{} // external-style Service returning a coded error
+	srv := newServerWithServices(t, svc)
+
+	adminTok := login(t, srv, SeedAdminEmail, SeedAdminPass, SeedAdminTOTP)
+	rec := do(t, srv, http.MethodPost, "/v1/posts/whatever/reprocess", adminTok, nil, nil)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("coded not_found: want 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var eb errBody
+	if err := json.Unmarshal(rec.Body.Bytes(), &eb); err != nil {
+		t.Fatalf("decode error body: %v", err)
+	}
+	if eb.Error.Code != string(CodeNotFound) {
+		t.Fatalf("want code not_found, got %q", eb.Error.Code)
+	}
+	if eb.Error.Status != http.StatusNotFound {
+		t.Fatalf("want envelope status 404, got %d", eb.Error.Status)
+	}
+	if eb.Error.Message != "post not found via coded error" {
+		t.Fatalf("want the service message, got %q", eb.Error.Message)
+	}
+	if eb.Error.RequestID == "" {
+		t.Fatalf("error envelope missing request_id")
+	}
+}
+
+// --- 21. Service NewError(CodeUnavailable) -> 503 + unavailable envelope ---
+
+func TestServiceCodedErrorUnavailable(t *testing.T) {
+	svc := NewInMemoryServices()
+	svc.Search = codedErrSearch{}
+	srv := newServerWithServices(t, svc)
+
+	userTok := login(t, srv, SeedUserEmail, SeedUserPass, "")
+	rec := do(t, srv, http.MethodPost, "/v1/search", userTok,
+		SearchRequest{Query: "anything", TopK: 5}, nil)
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("coded unavailable: want 503, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var eb errBody
+	if err := json.Unmarshal(rec.Body.Bytes(), &eb); err != nil {
+		t.Fatalf("decode error body: %v", err)
+	}
+	if eb.Error.Code != string(CodeUnavailable) {
+		t.Fatalf("want code unavailable, got %q", eb.Error.Code)
+	}
+	if eb.Error.Status != http.StatusServiceUnavailable {
+		t.Fatalf("want envelope status 503, got %d", eb.Error.Status)
+	}
+}
+
+// --- 22. A non-*apiError CodedError implementation also maps correctly (404) ---
+
+func TestExternalCodedErrorInterface(t *testing.T) {
+	svc := NewInMemoryServices()
+	svc.Posts = externalErrPosts{}
+	srv := newServerWithServices(t, svc)
+
+	adminTok := login(t, srv, SeedAdminEmail, SeedAdminPass, SeedAdminTOTP)
+	rec := do(t, srv, http.MethodPost, "/v1/posts/x/reprocess", adminTok, nil, nil)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("external CodedError: want 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var eb errBody
+	if err := json.Unmarshal(rec.Body.Bytes(), &eb); err != nil {
+		t.Fatalf("decode error body: %v", err)
+	}
+	if eb.Error.Code != string(CodeNotFound) {
+		t.Fatalf("want code not_found, got %q", eb.Error.Code)
+	}
+}

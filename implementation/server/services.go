@@ -313,15 +313,16 @@ func (p *realPosts) Get(id string) (gateway.Post, bool) {
 // Reprocess resolves the matching Skills for the post via the real registry,
 // orders them by real precedence, and returns them in ProcessingJob.Precedence.
 //
-// NOTE: user_service/gateway coded errors (*apiError) are unexported, so an
-// external service cannot mint a 404-coded error; a missing post surfaces as a
-// generic 500 through the gateway's writeServiceError. See EVIDENCE.md.
+// A missing post is signalled with the gateway's EXPORTED coded-error
+// constructor (gateway.NewError(gateway.CodeNotFound, …)), so the gateway's
+// writeServiceError maps it to HTTP 404 — not the generic 500 it produced while
+// the coded-error type was unexported. See EVIDENCE.md.
 func (p *realPosts) Reprocess(id string) (gateway.ProcessingJob, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	post, ok := p.posts[id]
 	if !ok {
-		return gateway.ProcessingJob{}, fmt.Errorf("server: post %q not found", id)
+		return gateway.ProcessingJob{}, gateway.NewError(gateway.CodeNotFound, fmt.Sprintf("post %q not found", id))
 	}
 	sp := skilldispatch.Post{ID: post.ID, Hashtags: post.Hashtags, Text: post.Body}
 	ordered := skilldispatch.OrderByPrecedence(p.registry.Resolve(sp)) // REAL resolve + order

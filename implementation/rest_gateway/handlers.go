@@ -266,12 +266,23 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 // writeServiceError renders an error returned by a service. A structured
-// *apiError keeps its code; anything else becomes 500 internal (never leaking
-// internals to the client).
+// *apiError keeps its code + details; any other CodedError (e.g. one minted by a
+// sibling package via NewError, or an external type implementing the interface)
+// keeps its code through the same code->status table; anything else becomes 500
+// internal (never leaking internals to the client).
 func writeServiceError(w http.ResponseWriter, r *http.Request, err error) {
+	// Concrete carrier first: preserves the structured Message + Details.
 	var aerr *apiError
 	if errors.As(err, &aerr) {
 		writeError(w, r, aerr.Code, aerr.Message, aerr.Details...)
+		return
+	}
+	// Any other CodedError implementation maps to its coded HTTP status. This is
+	// what lets an EXTERNAL Service signal e.g. not_found -> 404 without importing
+	// the gateway's unexported carrier.
+	var ce CodedError
+	if errors.As(err, &ce) {
+		writeError(w, r, Code(ce.ErrorCode()), ce.Error())
 		return
 	}
 	writeError(w, r, CodeInternal, "internal server error")

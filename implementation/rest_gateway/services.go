@@ -282,7 +282,7 @@ func (p *InMemoryPosts) Reprocess(id string) (ProcessingJob, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if _, ok := p.posts[id]; !ok {
-		return ProcessingJob{}, newError(CodeNotFound, "post not found")
+		return ProcessingJob{}, NewError(CodeNotFound, "post not found")
 	}
 	p.seq++
 	return ProcessingJob{
@@ -306,7 +306,7 @@ type InMemorySearch struct {
 // it fails loudly with 503, mirroring the api/rest-endpoints.md §2.8 trap.
 func (s *InMemorySearch) Search(req SearchRequest) (SearchResponse, error) {
 	if s.embedder == "" || s.embedder == "hash" {
-		return SearchResponse{}, newError(CodeUnavailable,
+		return SearchResponse{}, NewError(CodeUnavailable,
 			"semantic search requires a real llama.cpp embedder; hash stub active")
 	}
 	terms := strings.Fields(strings.ToLower(req.Query))

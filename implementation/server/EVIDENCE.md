@@ -28,19 +28,27 @@ $ gofmt -l .
 
 ```
 === RUN   TestLogin_RealPBKDF2AndTOTP
---- PASS: TestLogin_RealPBKDF2AndTOTP (0.11s)
+--- PASS: TestLogin_RealPBKDF2AndTOTP (0.21s)
 === RUN   TestSearch_RealCosineRanking
---- PASS: TestSearch_RealCosineRanking (0.07s)
+--- PASS: TestSearch_RealCosineRanking (0.37s)
 === RUN   TestSkills_RealPrecedenceOrder
---- PASS: TestSkills_RealPrecedenceOrder (0.09s)
+--- PASS: TestSkills_RealPrecedenceOrder (0.40s)
 === RUN   TestChannels_CreateThenList
---- PASS: TestChannels_CreateThenList (0.08s)
+--- PASS: TestChannels_CreateThenList (0.30s)
+=== RUN   TestReprocessMissingPost_404
+--- PASS: TestReprocessMissingPost_404 (0.40s)
+=== RUN   TestNewServer_FailsClosedWithoutSecret
+--- PASS: TestNewServer_FailsClosedWithoutSecret (0.32s)
 PASS
-ok  	thready.server	1.364s
+ok  	thready.server	3.010s
 ?   	thready.server/cmd/thready-server	[no test files]
 ```
 
-Result line (non-verbose): **`ok  	thready.server	1.361s`**
+Result line (non-verbose): **`ok  	thready.server	1.513s`** (6 tests).
+
+> The e2e harness sets `THREADY_JWT_SECRET` via `t.Setenv` before `NewServer`
+> (the signing secret is runtime-loaded and the server fails closed without it —
+> see honest note 7); the REAL signer still runs, so sign/verify is genuine.
 
 ## Workspace resolution
 
@@ -63,6 +71,8 @@ ok  	thready.server	1.342s
 | `TestSearch_RealCosineRanking` | The corpus is chunked (`semsearch.Chunker`), embedded + indexed (`Engine.Index`), and queried (`Engine.Search`) — real cosine-KNN. A vector-DB query ranks `vectordb.md` first; a disjoint telegram query ranks `telegram.md` first (negative control). `embedder` is the honest label `semsearch/hash-deterministic`. |
 | `TestSkills_RealPrecedenceOrder` | Skills are registered in a real `skilldispatch.Registry` and returned via `skilldispatch.OrderByPrecedence` in the real stage order `download > convert > analyze > research > reply`. |
 | `TestChannels_CreateThenList` | Real in-memory channel store round-trips a create → list. |
+| `TestReprocessMissingPost_404` | Reprocessing a **missing** post returns **404** + a `not_found` envelope (was a generic 500). `realPosts.Reprocess` now signals the miss with `gateway.NewError(gateway.CodeNotFound, …)`, which the gateway's `writeServiceError` maps via the code→status table. Control: reprocessing the seed post still returns 202 — the 404 is specific to the missing post, not a broken route. |
+| `TestNewServer_FailsClosedWithoutSecret` | `NewServer` **refuses to start** when `THREADY_JWT_SECRET` is empty — no hardcoded signing-key fallback (constitution §11.4.10). A committed signing secret would let anyone forge tokens. |
 
 ## Reviewer grep (real siblings, no reimplemented domain logic)
 
@@ -109,18 +119,27 @@ These are deliberate, disclosed deviations — never a silent fallback to a stub
    Verification is parameter-agnostic (the iteration count is embedded in the
    hash string), so this is the same real algorithm at a lower cost factor.
 
-5. **Coded errors can't cross the gateway boundary.** The gateway's `*apiError`
-   (which maps a domain code → HTTP status) is unexported, so an injected
-   `Service` cannot mint a `not_found`-coded error. `PostService.Reprocess` on a
-   **missing** post therefore surfaces as a generic `500` via the gateway's
-   `writeServiceError` (which maps any non-`*apiError` to `internal`). The
-   existing-post path (the tested one) is fully real. `PostService.Get`'s
-   not-found is unaffected — the handler renders that as `404` from the `(_, false)`
-   return, not via an error.
+5. **Coded errors now cross the gateway boundary (500→404 fix).** The gateway
+   now exports a coded-error mechanism — the `gateway.CodedError` interface plus
+   the `gateway.NewError(code, message)` constructor — and its `writeServiceError`
+   recognizes it via `errors.As`. `realPosts.Reprocess` on a **missing** post
+   returns `gateway.NewError(gateway.CodeNotFound, …)`, which the gateway maps to
+   **404 + a `not_found` envelope** (asserted by `TestReprocessMissingPost_404`).
+   This replaces the previous behaviour, where the unexported `*apiError` meant a
+   missing post collapsed to a generic `500`. `PostService.Get`'s not-found is
+   still rendered as `404` from the `(_, false)` return path.
 
 6. **Channels & Accounts have no domain module.** These are gateway-level CRUD
    with no dedicated sibling; they are implemented as honest real in-memory
    stores and are **not** claimed to be domain-module-backed.
+
+7. **Signing secret is runtime-loaded and fail-closed (security fix).** The HS256
+   signing secret is read from the `THREADY_JWT_SECRET` environment variable at
+   `NewServer` time; there is **no** hardcoded/committed key. An unset/empty value
+   is a hard error (`NewServer` returns an error and the `thready-server` binary
+   exits non-zero) — never a silent fallback that would let anyone running the
+   binary forge tokens (constitution §11.4.10). Tests and the full-stack smoke
+   supply a throwaway value so the REAL signer still runs.
 
 ---
 

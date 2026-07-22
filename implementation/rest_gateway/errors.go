@@ -79,16 +79,45 @@ type errorEnvelope struct {
 	Details   []Detail `json:"details,omitempty"`
 }
 
-// apiError is an internal error carrier that a handler can return / panic-free
-// propagate to be rendered through the single envelope.
+// CodedError is an error that carries a stable, machine-readable Code. ANY
+// Service implementation — including ones in sibling packages that cannot see
+// the gateway's internal carrier — can return a CodedError so the response
+// writer maps it to the correct HTTP status + envelope (via the code->status
+// table) instead of collapsing it to a blanket 500. Build one with NewError, or
+// implement this interface directly. ErrorCode returns one of the exported Code
+// constants rendered as a string (e.g. string(CodeNotFound)).
+type CodedError interface {
+	error
+	ErrorCode() string
+}
+
+// apiError is the canonical CodedError carrier that a handler can return /
+// panic-free propagate to be rendered through the single envelope.
 type apiError struct {
 	Code    Code
 	Message string
 	Details []Detail
 }
 
+// interface guard: *apiError is a CodedError.
+var _ CodedError = (*apiError)(nil)
+
 func (e *apiError) Error() string { return string(e.Code) + ": " + e.Message }
 
+// ErrorCode satisfies CodedError, exposing the stable code as a string.
+func (e *apiError) ErrorCode() string { return string(e.Code) }
+
+// NewError is the EXPORTED constructor for a coded Service error. A Service can
+// return NewError(CodeNotFound, "…") and the gateway maps it to a 404 + the
+// canonical error envelope (see writeServiceError). It returns the error
+// interface; the concrete carrier is the same *apiError newError produces.
+func NewError(code Code, message string, details ...Detail) error {
+	return &apiError{Code: code, Message: message, Details: details}
+}
+
+// newError is the internal constructor returning the concrete *apiError, used by
+// call sites that need the concrete type (e.g. decodeJSON). It is an unexported
+// alias of NewError over the same carrier.
 func newError(code Code, message string, details ...Detail) *apiError {
 	return &apiError{Code: code, Message: message, Details: details}
 }

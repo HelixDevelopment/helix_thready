@@ -17,6 +17,10 @@ import (
 // HTTP path (routing + middleware + real domain services).
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
+	// The signer secret is runtime-loaded from the environment and NewServer
+	// fails closed without it; provide a throwaway test value so the REAL signer
+	// still runs (this exercises the genuine sign/verify path).
+	t.Setenv("THREADY_JWT_SECRET", "test-secret-thready-server-e2e-please-rotate")
 	h, err := server.NewServer()
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
@@ -251,5 +255,56 @@ func TestChannels_CreateThenList(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("created channel %q not present in list %+v", ch.ID, env.Data)
+	}
+}
+
+// Test 5: reprocessing a MISSING post returns 404 (not the generic 500 it
+// produced while the gateway coded-error type was unexported). realPosts.Reprocess
+// now signals the miss with gateway.NewError(gateway.CodeNotFound, …), which the
+// gateway's writeServiceError maps to 404 + a not_found envelope. This is the
+// reviewer-disclosed 500->404 correctness fix, asserted end-to-end over real HTTP.
+func TestReprocessMissingPost_404(t *testing.T) {
+	ts := newTestServer(t)
+	token := rootToken(t, ts)
+
+	resp := authPost(t, ts, "/v1/posts/does-not-exist/reprocess", token, nil)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("reprocess missing post: want 404, got %d (%s)", resp.StatusCode, b)
+	}
+	var env struct {
+		Error struct {
+			Code   string `json:"code"`
+			Status int    `json:"status"`
+		} `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&env); err != nil {
+		t.Fatalf("decode error envelope: %v", err)
+	}
+	if env.Error.Code != string(gateway.CodeNotFound) {
+		t.Fatalf("want envelope code not_found, got %q", env.Error.Code)
+	}
+	if env.Error.Status != http.StatusNotFound {
+		t.Fatalf("want envelope status 404, got %d", env.Error.Status)
+	}
+
+	// Control: the seed post DOES reprocess (202) — proving the 404 is specific
+	// to the missing post, not a broken route.
+	ok := authPost(t, ts, "/v1/posts/"+gateway.SeedPostA+"/reprocess", token, nil)
+	defer ok.Body.Close()
+	if ok.StatusCode != http.StatusAccepted {
+		b, _ := io.ReadAll(ok.Body)
+		t.Fatalf("reprocess seed post: want 202, got %d (%s)", ok.StatusCode, b)
+	}
+}
+
+// Test 6: NewServer fails closed when the signing secret is absent. A committed
+// signing secret would let anyone forge tokens; the server must refuse to start
+// rather than fall back to a hardcoded key (constitution §11.4.10).
+func TestNewServer_FailsClosedWithoutSecret(t *testing.T) {
+	t.Setenv("THREADY_JWT_SECRET", "") // simulate the env var being unset
+	if _, err := server.NewServer(); err == nil {
+		t.Fatal("NewServer must fail closed when THREADY_JWT_SECRET is empty, but returned nil error")
 	}
 }
