@@ -3,7 +3,7 @@
   Classification  : PUBLIC
   Location        : implementation/README.md
   Status          : Active — v1.2
-  Revision        : 4 (2026-07-22)
+  Revision        : 5 (2026-07-22)
   Author          : Helix Thready documentation swarm (implementation)
   Related         : ./QUALITY_GATE.md · ./sdk/CONFORMANCE.md · ../docs/public/research/mvp/index.md · ../docs/public/research/mvp/CONVENTIONS.md · ../docs/private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
@@ -45,6 +45,7 @@ and `cli` (password read from `THREADY_PASSWORD`, off the process argv).
 | 2 | 2026-07-22 | swarm (implementation) | Add `boba_adapter`, `config`, `sdk_go` (→ 17 standalone modules) + the `go.work` `integration` capstone; refresh the aggregate (329 test fns, 18 EVIDENCE.md, all stdlib-only) |
 | 3 | 2026-07-22 | swarm (implementation) | Cross-cutting review corrections: `ocr_adapter` recorded **race-clean** (→ **17/17** standalone suites green under `-race`, no exception); `config` redaction now masks `THREADY_NATS_URL` + `OTEL_EXPORTER_OTLP_ENDPOINT` (+1 test → 22, aggregate 330) |
 | 4 | 2026-07-22 | swarm (implementation) | **Wave-2 additions** — `cli` + `processing` Go modules, `deployment_smoke` (real 12/12 HTTP proof of `rest_gateway`), and **5 polyglot SDKs** (`sdk_py`/`sdk_ts`/`sdk_java`/`sdk_rs`/`sdk_rb`); a background security review fixed a **credential-over-cleartext-http guard** in `sdk_go` + **password-off-argv** in `cli` (see [§1.3](#13-wave-2-additions)). Consolidated real evidence in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (**20 Go modules, 374 tests, race-clean**) and [`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md) (**6 SDKs, matrix CONSISTENT**) |
+| 5 | 2026-07-22 | swarm (implementation) | **Wave-2 finish** — real-module-backed `server` (Auth→user_service PBKDF2, Search→semantic_search cosine, Skills→skill_dispatch, Events→event_bus_service) + gateway `CodedError` export (500→**404** for real Services) + `THREADY_JWT_SECRET` **fail-closed** hardening (HIGH finding) + **full-stack CLI↔binary smoke (PASS=8)** + `deployment_smoke` rootless-Podman container leg now **PASSES**. Final tally: **21 Go modules / 383 Go tests · 6-language SDKs / 117 tests · 500 automated tests total**, race-clean, all on github/gitlab/gitverse |
 
 ## Table of contents
 
@@ -277,8 +278,11 @@ below are re-verified in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (Go) and
 **`deployment_smoke`** (not a Go module) — `smoke.sh` builds the `rest_gateway` binary,
 serves `/v1` on a free port, and asserts **real HTTP**: health `200` · unauth `401` ·
 login `200`+token · authed `200` — **12/12 checks PASS**, corroborated by the server's
-structured JSON access log. A rootless-Podman `Containerfile` + `podman_smoke.sh` are
-provided; that container leg is honestly **DEFERRED** (offline base-image pull) — never faked.
+structured JSON access log. The rootless-Podman leg (`Containerfile` + `podman_smoke.sh`) also
+**PASSES** — independently re-run: a non-root (`USER 65532`) distroless static image serves
+`GET /v1/health` → 200 from *inside* the container, confirmed by the container's own access log
+(§11.4.161 satisfied). (An earlier note read DEFERRED while the first build was killed mid
+base-image-pull; once the images cached it completed and is now proven.)
 
 **`server`** (`thready.server`, a workspace-composition module like `integration`) — the
 runnable assembly that serves the gateway's `/v1` over the **real domain modules** instead
@@ -286,13 +290,17 @@ of in-memory stubs: `AuthService`→`user_service` (real PBKDF2 + RFC 6238 TOTP)
 `SearchService`→`semantic_search` (real cosine-KNN), `SkillService`→`skill_dispatch` (real
 registry/precedence), `EventService`→`event_bus_service` (real pub/sub); `Channels`/`Accounts`
 stay honest in-memory CRUD (no domain module). `cmd/thready-server` runs it on `$PORT` with
-graceful shutdown. **4 e2e tests green under `-race`** prove genuine behavior end-to-end: a
+graceful shutdown. **6 e2e tests green under `-race`** prove genuine behavior end-to-end: a
 real-PBKDF2 login (wrong password *and* wrong TOTP → 401 through the real verifiers), real
 cosine ranking (a vector-DB query ranks `vectordb.md` top, a disjoint telegram query ranks
-`telegram.md` top — a negative control), and real skill precedence order. Honest note: because
-the gateway's coded-error type is unexported, a *missing*-post reprocess surfaces as 500 (not
-404) — the tested real paths are unaffected (disclosed in `server/EVIDENCE.md`). This is the
-concrete realization of the "wire the gateway to the real modules" next-step named above.
+`telegram.md` top — a negative control), real skill precedence order, and a missing-post
+reprocess → **404** (fixed by exporting `gateway.CodedError`/`NewError`, so *any* real Service
+maps to the right status). The HS256 signing secret loads from `THREADY_JWT_SECRET` and the
+server **fails closed** if it is unset — no hardcoded key. A **full-stack smoke**
+(`server/fullstack_smoke.sh`) then drives the built `thready-server` binary with the real
+`thready` **CLI binary** over HTTP — login → channels → skills → search — **PASS=8/FAIL=0**,
+with `search` returning real `semantic_search` cosine ranking. This is the concrete realization
+of the "wire the gateway to the real modules" next-step named above.
 
 **Six-language SDK set** — one `/v1` client per language, each self-contained with its
 own native test runner. The [conformance matrix](./sdk/CONFORMANCE.md) proves all six
@@ -322,13 +330,15 @@ here would be exactly the bluff the mandate forbids. They land when their toolch
   **5 additional-language SDKs** (`sdk_py`/`sdk_ts`/`sdk_java`/`sdk_rs`/`sdk_rb`) and the
   `deployment_smoke` HTTP proof. (Wave-1 = rows 1–17 above; the wave-2 Go modules — `processing`,
   `cli`, and the real-module-backed `server` — and the polyglot SDKs are in [§1.3](#13-wave-2-additions).)
-- **Total tests:** **378 Go test functions across the 21 Go modules, 0 failures, all
-  race-clean** — the 20-module sweep in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (374) plus the
-  `server` assembly's 4 e2e (verified separately, race-green) — **plus 117 tests across the 5
-  non-Go SDKs** (Python 29 · TS 24 · Java 20 · Rust 17 · Ruby 27, all green in their native
-  runners — [`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md)), for **495 automated tests total**,
-  plus `deployment_smoke`'s **12/12** real-HTTP checks. Several Go suites layer table subtests
-  on top (e.g. `boba_adapter` 26 fn / 28 cases).
+- **Total tests:** **383 Go test functions across the 21 Go modules, 0 failures, all
+  race-clean** — the 20-module sweep in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (374) plus
+  `rest_gateway`'s +3 `CodedError` tests (19→22) and the `server` assembly's 6 e2e (verified
+  separately, race-green) — **plus 117 tests across the 5 non-Go SDKs** (Python 29 · TS 24 ·
+  Java 20 · Rust 17 · Ruby 27, all green in their native runners —
+  [`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md)), for **500 automated tests total**, plus
+  `deployment_smoke`'s **12/12** host + rootless-Podman-container real-HTTP checks and the
+  `server` **full-stack CLI↔binary smoke** (PASS=8). Several Go suites layer table subtests on
+  top (e.g. `boba_adapter` 26 fn / 28 cases).
 - **All stdlib-only:** every standalone `go.mod` has **no `require` block** — zero
   third-party Go dependencies. The only `require` anywhere is `integration/go.mod`, and
   its requires are the **in-house sibling modules** it composes (pinned to local paths via

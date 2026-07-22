@@ -131,5 +131,12 @@ Service interfaces to the **real domain modules** (`user_service` PBKDF2+TOTP,
 pub/sub). It builds/vets/gofmt-clean and its 4 e2e tests pass under `-race`
 (`ok thready.server`), verified independently (real sibling imports + real
 domain calls confirmed by source read, substantive assertions incl. a cosine
-negative control and wrong-password/wrong-TOTP 401s). Tree total with `server`:
-**21 Go modules, 378 Go test functions, race-clean.**
+negative control and wrong-password/wrong-TOTP 401s).
+
+Follow-up hardening after this sweep also moved two counts: `rest_gateway`
+gained **+3** `CodedError` tests (19→**22**, exporting `gateway.CodedError`/`NewError`
+so real Services map to 404/503 not 500), and `server` gained **+2** (a missing-post
+reprocess→404 test and a `THREADY_JWT_SECRET` fail-closed test → **6** e2e). A full-stack
+smoke (`server/fullstack_smoke.sh`) drives the real `thready` CLI binary against the real
+`thready-server` binary — PASS=8. **Final tree total: 21 Go modules, 383 Go test functions,
+race-clean** (+ 117 non-Go SDK tests = 500 automated tests overall).
