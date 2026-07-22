@@ -2,10 +2,10 @@
   Title           : Helix Thready — Implementation Phase Index
   Classification  : PUBLIC
   Location        : implementation/README.md
-  Status          : Active — v1.1
-  Revision        : 3 (2026-07-22)
+  Status          : Active — v1.2
+  Revision        : 4 (2026-07-22)
   Author          : Helix Thready documentation swarm (implementation)
-  Related         : ../docs/public/research/mvp/index.md · ../docs/public/research/mvp/CONVENTIONS.md · ../docs/private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
+  Related         : ./QUALITY_GATE.md · ./sdk/CONFORMANCE.md · ../docs/public/research/mvp/index.md · ../docs/public/research/mvp/CONVENTIONS.md · ../docs/private/research/mvp/helix_thready_subsystem_gaps_and_improvements.md
 -->
 
 # Helix Thready — Implementation Phase Index
@@ -26,17 +26,32 @@ reproducible `go build`/`go vet`/`gofmt`/`go test` capture with an honest verdic
 This index summarizes each and is grounded entirely in what those files state — the
 REAL-vs-stub column below is deliberately conservative.
 
+**Wave-2 addendum ([§1.3](#13-wave-2-additions)).**
+Since the initial 17-module wave, four kinds of work landed: two more Go modules
+(`cli`, `processing`), a real `deployment_smoke` HTTP proof of the gateway, and **five
+additional-language SDKs** (`sdk_py`, `sdk_ts`, `sdk_java`, `sdk_rs`, `sdk_rb`) — so the
+gateway now has a client in **six languages** (Go + those five). Two consolidated,
+freshly-recomputed evidence artifacts back the whole tree: **[`QUALITY_GATE.md`](./QUALITY_GATE.md)**
+(a real gate re-run — **20 Go modules · 374 test functions · race-clean**) and
+**[`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md)** (all 6 SDK suites re-run — **117 non-Go
+tests, 0 failures** — plus a source-read conformance matrix: **42/42** operation cells
+and **24/24** behavior cells match the canonical `openapi.yaml`, verdict **CONSISTENT**).
+A background security review also hardened `sdk_go` (credential-over-cleartext-http guard)
+and `cli` (password read from `THREADY_PASSWORD`, off the process argv).
+
 | Rev | Date | Author | Change |
 |-----|------|--------|--------|
 | 1 | 2026-07-22 | swarm (implementation) | Initial index over the 14-module implementation wave |
 | 2 | 2026-07-22 | swarm (implementation) | Add `boba_adapter`, `config`, `sdk_go` (→ 17 standalone modules) + the `go.work` `integration` capstone; refresh the aggregate (329 test fns, 18 EVIDENCE.md, all stdlib-only) |
 | 3 | 2026-07-22 | swarm (implementation) | Cross-cutting review corrections: `ocr_adapter` recorded **race-clean** (→ **17/17** standalone suites green under `-race`, no exception); `config` redaction now masks `THREADY_NATS_URL` + `OTEL_EXPORTER_OTLP_ENDPOINT` (+1 test → 22, aggregate 330) |
+| 4 | 2026-07-22 | swarm (implementation) | **Wave-2 additions** — `cli` + `processing` Go modules, `deployment_smoke` (real 12/12 HTTP proof of `rest_gateway`), and **5 polyglot SDKs** (`sdk_py`/`sdk_ts`/`sdk_java`/`sdk_rs`/`sdk_rb`); a background security review fixed a **credential-over-cleartext-http guard** in `sdk_go` + **password-off-argv** in `cli` (see [§1.3](#13-wave-2-additions)). Consolidated real evidence in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (**20 Go modules, 374 tests, race-clean**) and [`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md) (**6 SDKs, matrix CONSISTENT**) |
 
 ## Table of contents
 
 - [1. The modules (17 standalone + integration capstone)](#1-the-modules-17-standalone--integration-capstone)
   - [1.1 Summary table](#11-summary-table)
   - [1.2 Per-module REAL vs honest-stub detail](#12-per-module-real-vs-honest-stub-detail)
+  - [1.3 Wave-2 additions (cli, processing, deployment_smoke, polyglot SDKs)](#13-wave-2-additions)
 - [2. Status summary](#2-status-summary)
 - [3. What's real vs pending](#3-whats-real-vs-pending)
 - [4. How to run](#4-how-to-run)
@@ -245,23 +260,71 @@ Rows 1–17 are the standalone, independently-promotable modules; the final row 
 
 ---
 
+### 1.3 Wave-2 additions
+
+Landed after the initial 17-module wave — same discipline (TDD, independent anti-bluff
+review, own `EVIDENCE.md`, committed + pushed to GitHub/GitLab/GitVerse). All numbers
+below are re-verified in [`QUALITY_GATE.md`](./QUALITY_GATE.md) (Go) and
+[`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md) (SDKs).
+
+**Two more Go modules** (in the race-clean `QUALITY_GATE.md` sweep):
+
+| Module · path | Purpose | Tests · `-race` | REAL vs stub |
+|---|---|---|---|
+| **processing** · `digital.vasic.processing` | Shippable Processing-Engine orchestrator: claim (exactly-once) → resolve+order by precedence → run each w/ retry+backoff → dead-step on exhaustion → per-step events → completion callback | 17 · ✅ | **REAL:** full orchestrator over injected seams (Claimer/SkillSet/Skill/EventEmitter/Callbacker) whose shapes match the committed contracts (Post/Kind/RetryPolicy/`callback_task.Envelope`); real atomic `MemoryClaimer` exactly-once proven under 64 concurrent goroutines. Imports **no** siblings — composes at the seam. |
+| **cli** · `digital.vasic.threadycli` | Headless `/v1` CLI over `sdk_go` (login, channels, posts, reprocess, search, skills) | 25 · ✅ | **REAL:** flag parsing, command dispatch, JSON/table output, exit codes, over the real `sdk_go` client (`replace ../sdk_go`). Password read from `THREADY_PASSWORD` (off argv); `--password` warns. |
+
+**`deployment_smoke`** (not a Go module) — `smoke.sh` builds the `rest_gateway` binary,
+serves `/v1` on a free port, and asserts **real HTTP**: health `200` · unauth `401` ·
+login `200`+token · authed `200` — **12/12 checks PASS**, corroborated by the server's
+structured JSON access log. A rootless-Podman `Containerfile` + `podman_smoke.sh` are
+provided; that container leg is honestly **DEFERRED** (offline base-image pull) — never faked.
+
+**Six-language SDK set** — one `/v1` client per language, each self-contained with its
+own native test runner. The [conformance matrix](./sdk/CONFORMANCE.md) proves all six
+issue the **same** method+path for every operation (**42/42** cells) and share the same
+four behaviors (**24/24**): bearer-wins auth, `Idempotency-Key` on unsafe POSTs, idempotent-GET
+retry on 503/429, and the credential-over-cleartext-http guard.
+
+| SDK · dir | Runtime | Dependencies | Tests (real) |
+|---|---|---|---|
+| **Go** · `sdk_go` | Go 1.26 | stdlib | 20 · `go test -race` ✅ |
+| **Python** · `sdk_py` | Python 3.13 | stdlib (urllib/json) | 29 · `unittest` ✅ |
+| **TypeScript** · `sdk_ts` | Node 24 | Node built-ins (no npm) | 24 · `node:test` ✅ |
+| **Java** · `sdk_java` | JDK 21 | stdlib (no jars / build tool) | 20 · JUnit-free runner ✅ |
+| **Rust** · `sdk_rs` | rustc 1.96 | `std` only (no cargo/crates) | 17 · `rustc --test` ✅ |
+| **Ruby** · `sdk_rb` | Ruby 3.3 | core stdlib (no gems) | 27 (88 asserts) · stdlib harness ✅ |
+
+Kotlin / Swift / .NET / Dart SDKs are **deferred, not stubbed**: their toolchains are not
+installable in this offline environment, and shipping a client that cannot be compiled-and-tested
+here would be exactly the bluff the mandate forbids. They land when their toolchains are available.
+
+---
+
 ## 2. Status summary
 
-- **Total modules:** **17 standalone** Go modules (`digital.vasic.<X>`, `go 1.26`) **plus
-  the `integration` capstone** (`thready.integration`) — 18 `go.mod` in all.
-- **Total tests:** **330 top-level test functions** across the suite, **0 failures**. Per
-  standalone module (rows 1–17): 14, 16, 11, 13, 36, 13, 19, 23, 19, 34, 10, 12, 21, 19,
-  26, 22, 18; the capstone adds 4. Several suites layer table subtests on top (e.g.
-  `boba_adapter` 26 fn / 28 cases). (`config` gained a redaction test: 21 → 22.)
+- **Total modules:** **19 standalone** Go modules (`digital.vasic.<X>`, `go 1.26`) **plus
+  the `integration` capstone** — **20 Go `go.mod` in all** — alongside **5 additional-language
+  SDKs** (`sdk_py`/`sdk_ts`/`sdk_java`/`sdk_rs`/`sdk_rb`) and the `deployment_smoke` HTTP proof.
+  (Wave-1 = rows 1–17 above; the two wave-2 Go modules — `processing`, `cli` — and the
+  polyglot SDKs are in [§1.3](#13-wave-2-additions).)
+- **Total tests:** **374 Go test functions across the 20 Go modules, 0 failures, all
+  race-clean** — a real gate re-run captured verbatim in [`QUALITY_GATE.md`](./QUALITY_GATE.md)
+  — **plus 117 tests across the 5 non-Go SDKs** (Python 29 · TS 24 · Java 20 · Rust 17 ·
+  Ruby 27, all green in their native runners — [`sdk/CONFORMANCE.md`](./sdk/CONFORMANCE.md)),
+  for **491 automated tests total**, plus `deployment_smoke`'s **12/12** real-HTTP checks.
+  Several Go suites layer table subtests on top (e.g. `boba_adapter` 26 fn / 28 cases).
 - **All stdlib-only:** every standalone `go.mod` has **no `require` block** — zero
   third-party Go dependencies. The only `require` anywhere is `integration/go.mod`, and
   its requires are the **in-house sibling modules** it composes (pinned to local paths via
   `replace`, so the graph resolves offline — still no third-party). External *binaries*
   are used only where unavoidable (`ocr_adapter` shells out to `tesseract`; its tests also
   use ImageMagick to synthesize images).
-- **Green under `-race`:** **17 of 17** standalone module suites run and pass under Go's
-  race detector with `-count=1`, and the **`integration` capstone is GREEN under `-race`**
-  (stable under `-count=3`). This **includes `ocr_adapter`**: although it drives the
+- **Green under `-race`:** **19 of 19** standalone Go module suites (the wave-1 17 +
+  `processing` + `cli`) run and pass under Go's race detector with `-count=1`, and the
+  **`integration` capstone is GREEN under `-race`** (stable under `-count=3`); the whole
+  set was re-swept together in [`QUALITY_GATE.md`](./QUALITY_GATE.md). This **includes
+  `ocr_adapter`**: although it drives the
   external `tesseract` process, that is orthogonal to Go's race detector, and its suite is
   race-clean (13/13 under `-race`; captured in `ocr_adapter/EVIDENCE.md` §8). Several
   modules (download_manager, user_service, event_bus_service) additionally survive
